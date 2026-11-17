@@ -50,8 +50,9 @@ select { background: var(--surface2); color: var(--ink); border: 1px solid var(-
 .tile .mark { position: absolute; bottom: 3px; width: calc(var(--tw) * .2); height: calc(var(--tw) * .2); border-radius: 50%; background: var(--good); }
 /* artwork is centred in the face; the small red index sits in the top-right corner */
 .tile { --idx: max(8px, calc(var(--tw) * .2)); }
-.tile .pips { position: absolute; left: 50%; transform: translateX(-50%); top: calc(var(--tw) * .17); bottom: calc(var(--tw) * .05); height: auto; width: auto; aspect-ratio: 24 / 36; }
-@container (max-width: 34px) { .tile .pips { top: calc(var(--idx) + var(--tw) * .06); bottom: calc(var(--tw) * .04); } }
+.tile { --pt: calc(var(--tw) * .15); }
+.tile .pips { position: absolute; left: 50%; transform: translateX(-50%); top: var(--pt); width: auto; height: calc(var(--tw) * 1.36 - var(--pt) - var(--tw) * .06); }
+@container (max-width: 34px) { .tile .pips { top: calc(var(--idx) + var(--tw) * .04); height: calc(var(--tw) * 1.36 - var(--idx) - var(--tw) * .1); } }
 .tile .idx { position: absolute; top: calc(var(--tw) * .13); right: calc(var(--tw) * .09); font-size: var(--idx); line-height: 1; font-weight: 800; color: #c62828; font-family: system-ui, sans-serif; }
 .tile .big.man { font-size: calc(var(--tw) * .56); line-height: 1.06; }
 /* sideways tiles: the wrapper reserves the rotated footprint (1.36w x w) */

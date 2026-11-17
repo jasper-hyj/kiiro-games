@@ -4,11 +4,11 @@
    the stage layout (sizes/positions) in styles.css stays authoritative.
    ===================================================================== */
 :root {
-  --felt-0: #0a2a1e; --felt-1: #11432f; --felt-2: #1a5c42;
-  --wood-0: #24150b; --wood-1: #3b2414; --wood-2: #5a3a21;
-  --brass: #c9a24a; --brass-hi: #ecd48e; --brass-lo: #8c6a22;
+  --felt-0: #05040a; --felt-1: #0f0c1b; --felt-2: #1b1531;
+  --wood-0: #0a090f; --wood-1: #15121f; --wood-2: #231e33;
+  --brass: #c3a86d; --brass-hi: #e9dab0; --brass-lo: #75643a;
   --ivory: #f5eed9; --ivory-2: #e9dfc2; --paper-ink: #2b1d10;
-  --lacquer: #a8271a; --lacquer-hi: #cf3e2c;
+  --lacquer: #8c1c2b; --lacquer-hi: #b52a3e;
   --serif: 'Cormorant Garamond', 'Noto Serif TC', 'Songti TC', 'Songti SC', 'Hiragino Mincho ProN', Georgia, serif;
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");
   --accent: var(--brass); --accent-ink: #2a1c05;
@@ -202,3 +202,91 @@ button.rule.on .glyph { color: var(--lacquer-hi); }
 
 .page h1 { font-family: var(--serif); font-weight: 800; letter-spacing: .02em; color: var(--ivory); }
 .page h1 span { color: var(--brass-hi); letter-spacing: .2em; }
+
+
+/* =====================================================================
+   NOCTURNE — dark, mysterious, understated. Midnight indigo, obsidian,
+   antique gold, moonlit haze. No green anywhere. (Overrides the above.)
+   ===================================================================== */
+html { background: #05040a; }
+body { background: radial-gradient(90% 60% at 50% -10%, rgba(120,100,190,.22) 0%, transparent 60%), radial-gradient(70% 50% at 85% 110%, rgba(140,28,43,.18) 0%, transparent 60%), linear-gradient(180deg, #0d0a18 0%, #07060d 60%, #04030a 100%) fixed; }
+body::before { opacity: .22; }
+.muted { color: rgba(236,230,214,.58); }
+.eyebrow, .page h2 { color: var(--brass); letter-spacing: .3em; font-weight: 600; }
+
+/* quiet controls: dark glass, hairline gold */
+.btn { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); color: var(--ivory); border: 1px solid rgba(195,168,109,.32); border-radius: 10px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 8px 20px rgba(0,0,0,.45); font-weight: 600; letter-spacing: .04em; }
+.btn:hover:not(:disabled) { border-color: rgba(233,218,176,.7); background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04)); transform: none; }
+.btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 3px 8px rgba(0,0,0,.45); }
+.btn.gold { background: linear-gradient(180deg, #e9dab0, #c3a86d 60%, #a98f55); color: #1a1204; border-color: rgba(255,240,200,.5); box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 8px 26px rgba(195,168,109,.22), 0 6px 14px rgba(0,0,0,.5); }
+.btn.gold:hover:not(:disabled) { background: linear-gradient(180deg, #f3e7c4, #cdb27a 60%, #b3995d); border-color: rgba(255,240,200,.7); }
+.btn.felt { background: linear-gradient(180deg, #3b2f66, #251c47); color: var(--ivory); border-color: rgba(160,140,230,.4); box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 8px 22px rgba(80,60,170,.25), 0 6px 14px rgba(0,0,0,.5); }
+.btn.alt { background: transparent; border-color: rgba(195,168,109,.28); }
+input[type=text], .page input[type=text] { background: rgba(255,255,255,.04); border: 1px solid rgba(195,168,109,.3); color: var(--ivory); box-shadow: none; }
+input[type=text]:focus { border-color: var(--brass-hi); box-shadow: 0 0 0 3px rgba(195,168,109,.2); }
+.seg { background: rgba(255,255,255,.04); border-color: rgba(195,168,109,.24); }
+.seg button.on { background: linear-gradient(180deg, #e9dab0, #c3a86d); color: #1a1204; }
+.roomtag { background: rgba(255,255,255,.05); }
+
+/* home: cards are dark glass with a gold glyph, like tiles in lamplight */
+.hero .cjk { background: linear-gradient(180deg, #fff6d8 0%, #e9dab0 30%, #c3a86d 62%, #75643a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 22px rgba(195,168,109,.28)) drop-shadow(0 3px 0 rgba(0,0,0,.5)); }
+.hero .latin { opacity: .78; letter-spacing: .6em; }
+.hero .tagline { color: rgba(236,230,214,.62); }
+button.rule { color: var(--ivory); background: linear-gradient(180deg, rgba(34,29,52,.92), rgba(14,12,24,.96)); border: 1px solid rgba(195,168,109,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 14px 30px rgba(0,0,0,.55); }
+button.rule:hover:not(:disabled) { border-color: rgba(233,218,176,.55); transform: translateY(-2px); }
+button.rule .glyph { color: transparent; background: linear-gradient(180deg, #fff6d8, #c3a86d 70%, #75643a); -webkit-background-clip: text; background-clip: text; }
+button.rule .zh { color: var(--ivory); }
+button.rule .muted { color: rgba(236,230,214,.55); }
+button.rule.on { background: linear-gradient(180deg, rgba(52,43,82,.95), rgba(22,18,40,.98)); border-color: var(--brass-hi); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 0 1px rgba(233,218,176,.35), 0 0 38px rgba(195,168,109,.2), 0 16px 34px rgba(0,0,0,.6); transform: translateY(-3px); }
+button.rule.on .glyph { background: linear-gradient(180deg, #ffffff, #e9dab0 55%, #a98f55); -webkit-background-clip: text; background-clip: text; }
+.options { background: rgba(255,255,255,.03); border-color: rgba(195,168,109,.18); }
+.opt { color: rgba(236,230,214,.8); }
+.rack, .card { background: linear-gradient(180deg, rgba(30,25,46,.82), rgba(12,10,22,.9)); border: 1px solid rgba(195,168,109,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 24px 50px rgba(0,0,0,.55); background-blend-mode: normal; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.seatbox { background: rgba(255,255,255,.04); border-color: rgba(195,168,109,.16); }
+
+/* the table: a midnight-blue cloth under a single lamp */
+.stagewrap { background: #05040a; }
+.board { background: radial-gradient(ellipse at 50% 40%, #242b52 0%, #161b38 46%, #0a0c1c 100%); }
+.board::before { box-shadow: inset 0 0 0 5px #0d0b14, inset 0 0 0 6px var(--brass-lo), inset 0 0 0 7px rgba(0,0,0,.6), inset 0 0 180px rgba(0,0,0,.55); opacity: .9; }
+.info, .dorapanel { background: linear-gradient(180deg, rgba(10,9,20,.88), rgba(6,5,14,.9)); border: 1px solid rgba(195,168,109,.4); box-shadow: inset 0 0 0 3px rgba(0,0,0,.3), 0 8px 18px rgba(0,0,0,.45); }
+.dir.on { box-shadow: 0 0 14px rgba(233,218,176,.55); }
+.chip { background: linear-gradient(180deg, rgba(26,22,42,.94), rgba(12,10,22,.94)); color: var(--ivory); border: 1px solid rgba(195,168,109,.38); box-shadow: 0 6px 14px rgba(0,0,0,.5); }
+.chip .wind { background: rgba(255,255,255,.1); color: var(--ivory); } .chip .wind.dealer { background: var(--lacquer-hi); color: #fff; }
+.chip .pts { color: var(--brass-hi); }
+.chip.turn { background: linear-gradient(180deg, #e9dab0, #c3a86d); color: #1a1204; border-color: rgba(255,240,200,.6); box-shadow: 0 0 0 3px rgba(233,218,176,.22), 0 0 22px rgba(233,218,176,.3), 0 6px 14px rgba(0,0,0,.5); }
+.chip.turn .pts { color: #1a1204; } .chip.turn .wind { background: rgba(0,0,0,.14); color: #1a1204; }
+.statusbar { color: rgba(236,230,214,.75); }
+.statusbar.mine { background: linear-gradient(180deg, #e9dab0, #c3a86d); color: #1a1204; box-shadow: 0 0 22px rgba(233,218,176,.28), 0 5px 10px rgba(0,0,0,.4); }
+.handrow.mine { border-color: rgba(233,218,176,.55); background: linear-gradient(180deg, rgba(233,218,176,.04), rgba(233,218,176,.11)); box-shadow: 0 0 34px rgba(195,168,109,.12), inset 0 -10px 24px rgba(0,0,0,.35); }
+.callbar { background: linear-gradient(180deg, rgba(20,17,32,.96), rgba(9,8,18,.96)); border: 1px solid rgba(195,168,109,.55); }
+.cbtn { border: 1px solid rgba(255,255,255,.12); box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 6px 14px rgba(0,0,0,.5); }
+.cbtn.call { background: linear-gradient(180deg, #3d3270, #271f4d); color: var(--ivory); } .cbtn.call:hover { background: linear-gradient(180deg, #4b3e88, #30266a); }
+.cbtn.ron { background: linear-gradient(180deg, #c22f45, #8c1c2b); color: #fff2ea; } .cbtn.ron:hover { background: linear-gradient(180deg, #d93a52, #a0233a); }
+.cbtn.pass { background: linear-gradient(180deg, #2c2a38, #1a1824); color: rgba(236,230,214,.85); } .cbtn.pass:hover { background: linear-gradient(180deg, #38354a, #221f30); }
+.tile.back { background: linear-gradient(145deg, #3a3f7a, #1f2352); border-color: #12143a; }
+.waitchip { background: rgba(255,255,255,.05); border-color: rgba(195,168,109,.2); }
+.chatopen { background: rgba(255,255,255,.08); color: var(--ivory); border-color: rgba(195,168,109,.4); box-shadow: 0 4px 10px rgba(0,0,0,.45); }
+.chatpop, .bubble { background: #f2ecdb; }
+.toast { background: var(--lacquer); }
+
+/* dock + modals follow the same night palette */
+.dock summary { background: linear-gradient(180deg, #221d33, #0e0c18); border-color: rgba(195,168,109,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 14px rgba(0,0,0,.55); }
+.dockpanel { background: linear-gradient(180deg, rgba(28,23,44,.97), rgba(10,9,20,.98)); border: 1px solid rgba(195,168,109,.35); box-shadow: 0 20px 44px rgba(0,0,0,.65); }
+.dockpanel .knob { background: rgba(255,255,255,.08); }
+.overlay, .autos { --ink: #ece6d6; --surface: #15121f; --surface2: rgba(255,255,255,.06); --muted: rgba(236,230,214,.6); --line: rgba(195,168,109,.22); --good: #7fd6a6; --danger: #ff7a86; color: var(--ink); }
+.overlay { background: rgba(3,2,8,.78); }
+.modal { background: linear-gradient(180deg, #1b1729, #0f0c1b); color: var(--ivory); border: 1px solid rgba(195,168,109,.4); box-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 60px rgba(120,100,190,.12); }
+.modal h2 { color: var(--ivory); }
+.modal .muted { color: rgba(236,230,214,.58); }
+.modal .btn.alt { color: var(--ivory); border-color: rgba(195,168,109,.3); }
+.modal .limit { color: var(--brass-hi); }
+.modal .seg { background: rgba(255,255,255,.04); border-color: rgba(195,168,109,.22); } .modal .seg button { color: rgba(236,230,214,.7); } .modal .seg button.on { color: #1a1204; }
+.modal .deltas div, .modal .histrow { background: rgba(255,255,255,.05); }
+.modal input[type=text], .modal select { background: rgba(255,255,255,.06); color: var(--ivory); }
+.modal .dorabox .dlabel, .modal .dorabox .dpair .darrow { color: var(--brass-hi); }
+.pos { color: #7fd6a6; } .neg { color: #ff7a86; }
+table.ref td, table.ref th { border-bottom-color: rgba(195,168,109,.18); }
+kbd { background: rgba(255,255,255,.08); color: var(--ivory); border-color: rgba(195,168,109,.3); }
