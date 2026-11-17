@@ -20,6 +20,8 @@ export function getClientId(): string {
 /** Runs the whole table inside the browser (single player vs bots). */
 export function connectLocal(id: string, name: string, config: RoomConfig, h: Handlers): Conn {
   const table = new Table(config)
+  const sp = Number(new URLSearchParams(location.search).get('speed')) // debug: ?speed=0.03 makes bots play fast
+  if (sp > 0 && sp <= 1) table.speed = sp
   table.onChange(() => h.onView(table.view(id)))
   table.join(id, name)
   table.start(id)
