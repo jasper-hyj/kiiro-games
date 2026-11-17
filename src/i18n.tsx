@@ -11,7 +11,7 @@ const D: Record<string, [string, string]> = {
   connecting: ['Connecting…', '連線中…'],
   connLost: ['Connection lost. Trying to reconnect…', '連線中斷，重新連線中…'],
   reconnecting: ['Reconnecting…', '重新連線中…'],
-  tagline: ['Taiwanese, Hong Kong and Japanese mahjong. Play friends online — bots fill empty seats.', '台灣、香港與日本麻將。和朋友線上對戰，空位由電腦補上。'],
+  tagline: ['Taiwanese, Hong Kong, Japanese and Chinese Official mahjong. Play friends online — bots fill empty seats.', '台灣、香港、日本與國標麻將。和朋友線上對戰，空位由電腦補上。'],
   step1: ['1 · Choose rules', '1 · 選擇規則'],
   step2: ['2 · Your name', '2 · 你的暱稱'],
   step3: ['3 · Play', '3 · 開始遊戲'],

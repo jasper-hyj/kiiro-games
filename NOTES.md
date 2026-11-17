@@ -61,3 +61,4 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 - Accessibility settings: reduce motion, larger text, upright discards (`src/settings.ts`).
 - Hard bots: dora/red-five aware, riichi vs dama decision. Measured +246 pts/seat/game against Normal over 150 Riichi games; no measurable gain in Taiwanese/Hong Kong (results there are mostly luck), so Hard behaves like Normal in those.
 - Tiles: traditional style (multicolour coins, painted flower emblems, ivory face on a jade back with visible thickness). Centre: compass plate; ponds are six per row, turned toward each seat.
+- Chinese Official (MCR) ruleset (`src/engine/rules/mcr.ts`, `scripts/mcr-test.ts`): ~75 of 81 patterns with a simplified form of the official exclusion rules; knitted hands (全不靠, 七星不靠, 組合龍) and 和絕張 are not scored. Sichuan is still not built.
