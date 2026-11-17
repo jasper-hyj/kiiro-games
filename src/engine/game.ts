@@ -101,6 +101,17 @@ export class Game {
     this.startHand()
   }
 
+  // ---------- persistence ----------
+  /** Plain JSON of the whole game state (the ruleset is re-linked from its id on restore). */
+  serialize(): string { return JSON.stringify({ ruleId: this.rule.id, f: { ...this, rule: undefined } }) }
+  static restore(json: string): Game {
+    const d = JSON.parse(json) as { ruleId: RuleId; f: Record<string, unknown> }
+    const g = Object.create(Game.prototype) as Game
+    Object.assign(g, d.f)
+    g.rule = RULESETS[d.ruleId]
+    return g
+  }
+
   // ---------- helpers ----------
   get roundWind() { return Math.min(3, Math.floor(this.roundIndex / this.n)) }
   seatWind(seat: number) { return (seat - this.dealer + this.n) % this.n }

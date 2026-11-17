@@ -85,6 +85,24 @@ export class Table {
     const s = this.slots[seat]
     if (s && !s.id) { s.bot = !s.bot; this.emit() }
   }
+  /** Everything needed to rebuild this room after a server restart. */
+  serialize(): string {
+    return JSON.stringify({
+      v: 1, config: this.config, hostId: this.hostId, status: this.status, acks: [...this.acks], chatN: this.chatN,
+      slots: this.slots.map((s) => ({ id: s.id, name: s.name, bot: s.bot, afk: s.afk ?? 0 })),
+      game: this.game ? this.game.serialize() : null,
+    })
+  }
+  /** Rebuild from `serialize()`. Everyone starts disconnected; a bot covers a seat after the grace period unless the player returns. */
+  restore(json: string, resume = true) {
+    const d = JSON.parse(json)
+    if (!d || d.v !== 1) return
+    this.config = d.config; this.hostId = d.hostId ?? null; this.status = d.status; this.chatN = d.chatN ?? 0
+    this.acks = new Set<number>(d.acks ?? [])
+    this.slots = (d.slots as { id: string | null; name: string; bot: boolean; afk: number }[]).map((s) => ({ id: s.id, name: s.name, bot: s.bot, afk: s.afk, connected: false, dcAt: s.id ? Date.now() : undefined }))
+    this.game = d.game ? Game.restore(d.game) : null
+    if (resume) { this.emit(); this.drive() }
+  }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   /** Seats nobody holds are always played by bots, named Bot 1, Bot 2, ... in seat order. */
   private renameBots() { let n = 0; for (const s of this.slots) { if (!s.id) { n++; s.name = `Bot ${n}` } } }

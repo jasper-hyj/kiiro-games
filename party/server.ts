@@ -8,9 +8,27 @@ type Env = Record<string, unknown>
 export class Main extends Server<Env> {
   table = new Table()
 
-  onStart() {
+  private persistTimer: ReturnType<typeof setTimeout> | null = null
+  private store: { get<T>(k: string): Promise<T | undefined>; put(k: string, v: unknown): Promise<void>; delete(k: string): Promise<unknown> }
+  constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) { super(ctx, env); this.store = (ctx as unknown as { storage: Main['store'] }).storage }
+
+  async onStart() {
     this.table.turnTimerMs = 30000
-    this.table.onChange(() => this.broadcastViews())
+    // a restart or redeploy evicts this object from memory: bring the room back from storage
+    try {
+      const saved = await this.store.get<string>('table')
+      if (saved) this.table.restore(saved)
+    } catch (e) { console.error('restore failed', e) }
+    this.table.onChange(() => { this.broadcastViews(); this.persistSoon() })
+  }
+
+  private persistSoon() {
+    if (this.persistTimer) return
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null
+      if (!this.table.slots.some((s) => s.id)) void this.store.delete('table') // an empty room is not worth keeping
+      else void this.store.put('table', this.table.serialize())
+    }, 400)
   }
 
   private send(conn: Connection, m: ServerMsg) { conn.send(JSON.stringify(m)) }
