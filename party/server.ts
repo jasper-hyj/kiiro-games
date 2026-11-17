@@ -25,6 +25,11 @@ export class Main extends Server<Env> {
   onMessage(sender: Connection<{ id?: string }>, raw: WSMessage) {
     let m: ClientMsg
     try { m = JSON.parse(String(raw)) } catch { return }
+    if (!m || typeof m !== 'object' || typeof (m as { t?: unknown }).t !== 'string') return
+    try { this.handle(m, sender) } catch (e) { console.error('handler error', e) }
+  }
+
+  private handle(m: ClientMsg, sender: Connection<{ id?: string }>) {
     if (m.t === 'join') {
       const id = String(m.id).slice(0, 40)
       const seat = this.table.join(id, String(m.name ?? 'Player'))

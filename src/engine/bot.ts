@@ -51,6 +51,7 @@ function danger(g: Game, k: number, threats: number[], vis: Counts): number {
 }
 
 export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: number; shantenAfter: number } {
+  if (!ids.length) return { tile: -1, shantenAfter: 9 }
   const p = g.players[seat]
   const counts = toCounts(p.hand.map(kindOf))
   const vis = visibleCounts(g, seat)
@@ -76,7 +77,7 @@ export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: num
     return { ...i, score }
   })
   scored.sort((a, b) => b.score - a.score)
-  const pick = scored[0]
+  const pick = scored[0] ?? { k: kindOf(ids[0]), sh: 9 }
   const cand = ids.filter((t) => kindOf(t) === pick.k)
   // keep red fives: discard the plain copy
   cand.sort((a, b) => b - a)

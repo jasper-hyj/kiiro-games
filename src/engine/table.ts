@@ -8,7 +8,7 @@ export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1'
 export interface RoomConfig extends GameOptions { rule: RuleId }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
 
-export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean; afk?: number }
+export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean; afk?: number; dcAt?: number }
 export interface PlayerView {
   seat: number; name: string; points: number; human: boolean; connected: boolean
   handCount: number; hand: number[] | null; drawn: number | null
@@ -82,22 +82,26 @@ export class Table {
     }
   }
   toggleBot(id: string, seat: number) {
-    if (id !== this.hostId || this.status !== 'lobby') return
+    if (id !== this.hostId || this.status !== 'lobby' || !Number.isInteger(seat)) return
     const s = this.slots[seat]
     if (s && !s.id) { s.bot = !s.bot; this.emit() }
   }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   private emit() { this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
-  isBotControlled(seat: number) { const s = this.slots[seat]; return !s.id || !s.connected || (s.afk ?? 0) >= 2 }
+  /** A dropped player keeps their seat for `graceMs` (short network blips don't hand the game to a bot). */
+  graceMs = 8000
+  isBotControlled(seat: number) { const s = this.slots[seat]; return !s.id || (s.afk ?? 0) >= 2 || (!s.connected && Date.now() - (s.dcAt ?? 0) >= this.graceMs) }
 
   // ----- lobby -----
   join(id: string, name: string): number {
+    if (typeof id !== 'string' || !id || id.length > 64) return -1
+    name = typeof name === 'string' ? name.replace(/[\u0000-\u001f<>]/g, '').trim() : ''
     let seat = this.slots.findIndex((s) => s.id === id)
     if (seat < 0) seat = this.slots.findIndex((s) => s.id === null && (this.status === 'playing' || !s.bot)) // lobby: first open seat; mid-game: replace a bot
     if (seat < 0) return -1
     const s = this.slots[seat]
-    s.id = id; s.name = name.slice(0, 16) || s.name; s.connected = true
+    s.id = id; s.name = name.slice(0, 16) || s.name; s.connected = true; s.afk = 0
     if (this.game) this.game.players[seat].name = s.name
     if (!this.hostId || !this.slots.some((x) => x.id === this.hostId)) this.hostId = id
     this.emit(); this.drive()
@@ -109,13 +113,28 @@ export class Table {
     if (this.status === 'lobby') {
       this.slots[seat] = { id: null, name: BOT_NAMES[seat], connected: false, bot: false }
       if (this.hostId === id) this.hostId = this.slots.find((s) => s.id)?.id ?? null
-    } else this.slots[seat].connected = false
+    } else {
+      this.slots[seat].connected = false
+      this.slots[seat].dcAt = Date.now()
+      // when the grace period ends, a bot may need to take over this seat
+      setTimeout(() => { if (this.game && !this.slots[seat].connected) { this.emit(); this.drive() } }, this.graceMs + 20)
+    }
     this.emit(); this.drive()
   }
   seatOf(id: string) { return this.slots.findIndex((s) => s.id === id) }
   setConfig(id: string, c: Partial<RoomConfig>) {
-    if (id !== this.hostId || this.status !== 'lobby') return
-    const next = { ...this.config, ...c }
+    if (id !== this.hostId || this.status !== 'lobby' || !c || typeof c !== 'object') return
+    // accept only known keys with valid values (clients send arbitrary JSON)
+    const clean: Partial<RoomConfig> = {}
+    if (c.rule === 'riichi' || c.rule === 'hk' || c.rule === 'taiwan') clean.rule = c.rule
+    if (c.rounds === 1 || c.rounds === 2 || c.rounds === 4) clean.rounds = c.rounds
+    if (typeof c.aka === 'boolean') clean.aka = c.aka
+    if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
+    if (c.players === 3 || c.players === 4) clean.players = c.players
+    if (c.botLevel === 'easy' || c.botLevel === 'normal') clean.botLevel = c.botLevel
+    const next = { ...this.config, ...clean }
+    if (next.rule === 'taiwan' && next.rounds === 2) next.rounds = 4
+    if (next.rule !== 'taiwan' && next.rounds === 4) next.rounds = 2
     if (next.rule !== 'riichi') next.players = 4
     if (next.players === 3 && this.slots.filter((x) => x.id).length > 3) return
     this.config = next
@@ -215,30 +234,47 @@ export class Table {
   drive() {
     const g = this.game
     if (!g || this.status !== 'playing') return
+    // every drive starts from a clean slate: a timer scheduled for an older state must never fire against a newer one
+    if (this.timer) { clearTimeout(this.timer); this.timer = null }
     this.armDeadline()
     if (g.phase === 'turn') {
       const s = g.turn
       const p = g.players[s]
       if (this.isBotControlled(s)) {
-        this.later(() => { const a = botTurn(g, s, this.config.botLevel); g.act(s, a); this.emit(); this.drive() }, 750)
+        this.later(() => {
+          if (this.game !== g || g.phase !== 'turn' || g.turn !== s || !this.isBotControlled(s)) return this.drive()
+          const a = botTurn(g, s, this.config.botLevel)
+          if (!g.act(s, a)) { const o = g.turnOptions(s); if (o.discard.length) g.act(s, { type: 'discard', tile: o.discard[o.discard.length - 1] }) }
+          this.emit(); this.drive()
+        }, 750)
       } else if (p.riichi) {
         const o = g.turnOptions(s)
-        if (!o.tsumo && !o.ankan.length) this.later(() => { g.act(s, { type: 'discard', tile: o.discard[0] }); this.emit(); this.drive() }, 700)
+        if (!o.tsumo && !o.ankan.length && o.discard.length) {
+          this.later(() => {
+            if (this.game !== g || g.phase !== 'turn' || g.turn !== s) return this.drive()
+            const o2 = g.turnOptions(s)
+            if (!o2.tsumo && !o2.ankan.length && o2.discard.length) g.act(s, { type: 'discard', tile: o2.discard[0] })
+            this.emit(); this.drive()
+          }, 700)
+        }
       }
     } else if (g.phase === 'reaction') {
-      const pend = g.pendingSeats().filter((s) => this.isBotControlled(s))
-      if (pend.length) {
+      if (g.pendingSeats().some((s) => this.isBotControlled(s))) {
         this.later(() => {
-          for (const s of pend) if (g.phase === 'reaction') g.submitDecision(s, botReact(g, s, this.config.botLevel))
+          if (this.game !== g || g.phase !== 'reaction') return this.drive()
+          for (const s of g.pendingSeats().filter((x) => this.isBotControlled(x))) if (g.phase === 'reaction') g.submitDecision(s, botReact(g, s, this.config.botLevel))
           this.emit(); this.drive()
         }, 450)
       }
     } else if (g.phase === 'result') {
       const humans = g.players.map((_, i) => i).filter((s) => !this.isBotControlled(s))
       if (humans.every((s) => this.acks.has(s))) {
-        this.later(() => { g.next(); this.acks.clear(); this.emit(); this.drive() }, 300)
+        this.later(() => {
+          if (this.game !== g || g.phase !== 'result') return
+          g.next(); this.acks.clear(); this.emit(); this.drive()
+        }, 300)
       } else if (!this.ackTimer && this.speed !== 0) {
-        this.ackTimer = setTimeout(() => { this.ackTimer = null; if (g.phase === 'result') { g.next(); this.acks.clear(); this.emit(); this.drive() } }, 45000)
+        this.ackTimer = setTimeout(() => { this.ackTimer = null; if (this.game === g && g.phase === 'result') { g.next(); this.acks.clear(); this.emit(); this.drive() } }, 45000 * Math.max(this.speed, 0.001))
       }
     }
     if (g.phase !== 'result' && this.ackTimer) { clearTimeout(this.ackTimer); this.ackTimer = null }

@@ -286,6 +286,7 @@ export class Game {
   }
 
   act(seat: number, a: TurnAction): boolean {
+    if (!a || typeof a !== 'object' || typeof (a as { type?: unknown }).type !== 'string') return false
     if (this.phase !== 'turn' || this.turn !== seat) return false
     const p = this.players[seat]
     const o = this.turnOptions(seat)
@@ -413,6 +414,7 @@ export class Game {
   }
 
   submitDecision(seat: number, d: Decision): boolean {
+    if (!d || typeof d !== 'object' || typeof (d as { type?: unknown }).type !== 'string') return false
     if (this.phase !== 'reaction' || !this.reactions[seat] || this.decisions[seat]) return false
     const r = this.reactions[seat]
     const ok =
