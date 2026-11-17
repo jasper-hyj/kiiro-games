@@ -28,7 +28,7 @@ export interface WinContext {
   options: GameOptions
 }
 
-export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' }
+export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' | 'hard' }
 
 export interface YakuItem { name: string; zh?: string; value: number; yakuman?: boolean }
 export interface HandScore {

@@ -30,7 +30,7 @@ const D: Record<string, [string, string]> = {
   redFives: ['Red fives', '赤牌'],
   on: ['On', '開'], off: ['Off', '關'],
   minFan: ['Minimum fan', '最低番數'],
-  bots: ['Bots', '電腦強度'], easy: ['Easy', '簡單'], normal: ['Normal', '普通'],
+  bots: ['Bots', '電腦強度'], easy: ['Easy', '簡單'], normal: ['Normal', '普通'], hard: ['Hard', '困難'],
   rulesRef: ['Rules reference', '規則說明'],
   close: ['Close', '關閉'],
   nickname: ['Nickname', '暱稱'],

@@ -65,7 +65,7 @@ export function Options({ config, onChange, readOnly, open }: { config: RoomConf
           </div>
         )}
         <div className="opt"><span>{t('bots')}</span>
-          <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')]]} />
+          <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]]} />
         </div>
       </div>
       <button className="btn sm alt" onClick={() => setHelp(true)}>{t('rulesRef')}</button>

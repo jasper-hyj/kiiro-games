@@ -2,6 +2,8 @@ import type { Decision, Game, TurnAction } from './game'
 import { shantenAll, toCounts, type Counts } from './hand'
 import { isDragon, isHonor, isTermOrHonor, kindOf, numOf, suitOf } from './tiles'
 
+export type BotLevel = 'easy' | 'normal' | 'hard'
+
 const visibleCounts = (g: Game, seat: number): Counts => g.visibleCounts(seat)
 
 const neighbours = (counts: Counts): number[] => {
@@ -37,20 +39,28 @@ function keepValue(g: Game, seat: number, k: number, counts: Counts): number {
   return n === 5 ? 4 : n === 2 || n === 8 ? 2 : 3
 }
 
-function danger(g: Game, k: number, threats: number[], vis: Counts): number {
+function danger(g: Game, k: number, threats: number[], vis: Counts, suji = false): number {
   let worst = 0
   for (const t of threats) {
     const safe = g.players[t].discards.some((d) => kindOf(d.tile) === k)
     if (safe) continue
     let d: number
     if (isHonor(k)) d = vis[k] >= 3 ? 0.5 : vis[k] === 2 ? 1.5 : 3
-    else d = isTermOrHonor(k) ? 3 : [2, 8].includes(numOf(k)) ? 4 : 5
+    else {
+      d = isTermOrHonor(k) ? 3 : [2, 8].includes(numOf(k)) ? 4 : 5
+      // suji: a tile 3 away from one the threat discarded cannot complete the ryanmen they gave up
+      if (suji) {
+        const n = numOf(k)
+        const has = (m: number) => m >= 1 && m <= 9 && g.players[t].discards.some((x) => kindOf(x.tile) === k - n + m)
+        if (has(n - 3) || has(n + 3)) d = Math.min(d, 2)
+      }
+    }
     worst = Math.max(worst, d)
   }
   return worst
 }
 
-export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: number; shantenAfter: number } {
+export function chooseDiscard(g: Game, seat: number, ids: number[], level: BotLevel = 'normal'): { tile: number; shantenAfter: number } {
   if (!ids.length) return { tile: -1, shantenAfter: 9 }
   const p = g.players[seat]
   const counts = toCounts(p.hand.map(kindOf))
@@ -65,7 +75,8 @@ export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: num
   })
   const best = Math.min(...info.map((i) => i.sh))
   const threats = g.players.filter((q) => q.seat !== seat && q.riichi).map((q) => q.seat)
-  const fold = threats.length > 0 && (best >= 2 || (best === 1 && threats.length > 1))
+  const hard = level === 'hard'
+  const fold = threats.length > 0 && (best >= 2 || (best === 1 && (threats.length > 1 || hard)))
   let pool = info
   if (!fold) pool = info.filter((i) => i.sh === best)
   const scored = pool.map((i) => {
@@ -73,7 +84,7 @@ export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: num
     const u = i.sh === best ? ukeire(g, counts, melds, i.sh, vis) : 0
     counts[i.k]++
     let score = u * 100 - keepValue(g, seat, i.k, counts) * 10
-    if (threats.length) score -= danger(g, i.k, threats, vis) * (fold ? 1000 : 25)
+    if (threats.length) score -= danger(g, i.k, threats, vis, hard) * (fold ? 1000 : 25)
     return { ...i, score }
   })
   scored.sort((a, b) => b.score - a.score)
@@ -84,7 +95,7 @@ export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: num
   return { tile: cand[0], shantenAfter: pick.sh }
 }
 
-export function botTurn(g: Game, seat: number, level: 'easy' | 'normal' = 'normal'): TurnAction {
+export function botTurn(g: Game, seat: number, level: BotLevel = 'normal'): TurnAction {
   const p = g.players[seat]
   const o = g.turnOptions(seat)
   if (o.tsumo) return { type: 'tsumo' }
@@ -100,7 +111,7 @@ export function botTurn(g: Game, seat: number, level: 'easy' | 'normal' = 'norma
     }
     if (o.kakan.length && g.players.every((q) => !q.riichi || q.seat === seat)) return { type: 'kakan', tile: o.kakan[0] }
   }
-  const { tile, shantenAfter } = chooseDiscard(g, seat, o.discard)
+  const { tile, shantenAfter } = chooseDiscard(g, seat, o.discard, level)
   const riichi = o.riichi.includes(tile) && shantenAfter === 0
   return { type: 'discard', tile, riichi }
 }
@@ -121,7 +132,7 @@ function callAllowed(g: Game, seat: number, kind: number, remaining: Counts, mel
   return false
 }
 
-export function botReact(g: Game, seat: number, level: 'easy' | 'normal' = 'normal'): Decision {
+export function botReact(g: Game, seat: number, level: BotLevel = 'normal'): Decision {
   const r = g.reactions[seat]
   if (r.ron) return { type: 'ron' }
   if (level === 'easy' && Math.random() < 0.5) return { type: 'pass' }

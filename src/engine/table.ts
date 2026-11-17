@@ -131,7 +131,7 @@ export class Table {
     if (typeof c.aka === 'boolean') clean.aka = c.aka
     if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
     if (c.players === 3 || c.players === 4) clean.players = c.players
-    if (c.botLevel === 'easy' || c.botLevel === 'normal') clean.botLevel = c.botLevel
+    if (c.botLevel === 'easy' || c.botLevel === 'normal' || c.botLevel === 'hard') clean.botLevel = c.botLevel
     const next = { ...this.config, ...clean }
     if (next.rule === 'taiwan' && next.rounds === 2) next.rounds = 4
     if (next.rule !== 'taiwan' && next.rounds === 4) next.rounds = 2
