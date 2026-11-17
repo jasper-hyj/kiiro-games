@@ -89,6 +89,13 @@ const DATA: Record<RuleId, Data> = {
         ['Honitsu', '混一色', '3 closed / 2 open', '門清 3 翻／副露 2 翻'], ['Junchan', '純全帶幺九', '3 closed / 2 open', '門清 3 翻／副露 2 翻'],
         ['Ryanpeikou', '二盃口', '3 han, two iipeikou', '3 翻，兩組一盃口'], ['Chinitsu', '清一色', '6 closed / 5 open', '門清 6 翻／副露 5 翻'],
       ] },
+      { title: ['Bonus tiles (dora)', '寶牌'], rows: [
+        ['Dora', '寶牌', 'the tile after the indicator (1 han each). The panel shows every indicator and the tile it points to', '指示牌的下一張牌，每張 1 翻；桌面中央顯示指示牌與對應寶牌'],
+        ['Ura dora', '裏寶牌', 'the tiles under the indicators, counted only when you win after riichi', '指示牌下方的牌，只有立直後和牌才計算'],
+        ['Red fives', '赤牌', 'red 5m/5p/5s count as dora (1 han each); shown in red', '紅色的五萬/五筒/五索，每張 1 翻'],
+        ['Kan dora', '槓寶牌', 'each kan reveals another indicator', '每次開槓多翻一張指示牌'],
+        ['Nuki dora (sanma)', '拔北', 'in 3-player games each set-aside North is 1 han', '三人麻將中每張拔出的北風 1 翻'],
+      ] },
       { title: ['Yakuman', '役滿'], rows: [
         ['Kokushi Musou', '國士無雙', 'thirteen orphans', '十三幺'], ['Suuankou', '四暗刻', 'four concealed triplets', '四組暗刻'],
         ['Daisangen', '大三元', 'three dragon triplets', '三組三元牌刻子'], ['Shousuushii / Daisuushii', '小四喜/大四喜', 'little / big four winds', '小／大四喜'],

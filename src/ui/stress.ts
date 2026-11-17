@@ -2,7 +2,8 @@ import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
 
 /** Fabricated worst-case table for layout testing: ?stress=full (max tiles) | min (empty ponds) | call (full + every action button). */
-export function stressView(mode: string, players = 4): TableView {
+export function stressView(mode: string, players = 4, rule = 'taiwan'): TableView {
+  const jp = rule === 'riichi'
   const full = mode !== 'min'
   const call = mode === 'call'
   let k = 0
@@ -35,19 +36,19 @@ export function stressView(mode: string, players = 4): TableView {
   const last = lp.discards.length ? { tile: lp.discards[lp.discards.length - 1].tile, from: lp.seat } : null
   return {
     status: 'playing',
-    config: { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: players as 3 | 4, botLevel: 'normal' },
+    config: { rule: jp ? 'riichi' : 'taiwan', aka: true, rounds: 1, minFan: 3, players: players as 3 | 4, botLevel: 'normal' },
     seats: ps.map((p) => ({ name: p.name, human: p.seat === 0, connected: true, bot: false })),
     you: 0, host: true,
     game: {
-      phase: call ? 'reaction' : 'turn', turn: 0, dealer: 0, roundIndex: 0, roundWind: 0, honba: 0, sticks: 0, lian: 3,
-      wallLeft: full ? 14 : 62, dora: [], handNo: 9, players: ps, lastDiscard: last,
+      phase: call ? 'reaction' : 'turn', turn: 0, dealer: 0, roundIndex: 0, roundWind: 0, honba: jp ? 2 : 0, sticks: jp ? 3 : 0, lian: 3,
+      wallLeft: full ? 14 : 62, dora: jp ? [8 * 4, 14 * 4 + 1, 30 * 4 + 2, 22 * 4, 3 * 4].slice(0, full ? 5 : 1) : [], handNo: 9, players: ps, lastDiscard: last,
       turnOptions: call ? null : { tsumo: true, discard: ps[0].hand!.concat(ps[0].drawn!), riichi: [], ankan: [4, 5], kakan: [1], nuki: false, abort: false },
       reaction: call ? { ron: true, pon: true, minkan: true, chi: [[0, 4], [4, 12], [12, 16]] } : null,
       reactionKind: 'discard', waiting: [], timeLeft: 22000, result: null, acks: [],
       standings: ps.map((p) => ({ seat: p.seat, name: p.name, points: p.points })),
       hint: full ? { shanten: 0, waits: [1, 4, 7, 10, 13], discardWaits: {}, left: { 1: 2, 4: 0, 7: 3, 10: 1, 13: 2 }, values: { 1: { total: 6 }, 4: { total: 4 }, 7: { total: 8 }, 10: null, 13: { total: 3 } }, furiten: false } : null,
       history: [], chat: [{ n: 1, seat: 2, key: 'hello', ago: 100 }, { n: 2, seat: 1, key: 'e1', ago: 100 }, { n: 3, seat: 3, key: 'nice', ago: 100 }],
-      log: [], rule: { id: 'taiwan', name: 'Taiwanese', nSets: 5 },
+      log: [], rule: jp ? { id: 'riichi', name: 'Japanese Riichi', nSets: 4 } : { id: 'taiwan', name: 'Taiwanese', nSets: 5 },
     },
   }
 }

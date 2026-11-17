@@ -30,7 +30,7 @@ export interface HandResult {
   winner?: number; from?: number | null; tsumo?: boolean; score?: HandScore; winTile?: number
   deltas: number[]; sticksWon?: number; tenpai?: boolean[]
   hands: { hand: number[]; melds: Meld[]; flowers: number[] }[]
-  ura?: number[]; dealerBefore: number; label?: string
+  ura?: number[]; dora?: number[]; dealerBefore: number; label?: string
   /** additional winners when several players ron the same discard (Taiwanese) */
   others?: { winner: number; score: HandScore; hand: { hand: number[]; melds: Meld[]; flowers: number[] } }[]
 }
@@ -566,6 +566,7 @@ export class Game {
   }
 
   private finish(r: HandResult, dealerStays: boolean, isDraw = false) {
+    if (this.isRiichi) r.dora = this.doraIndicators().slice()
     this.players.forEach((p, i) => (p.points += r.deltas[i]))
     this.history.push({
       handNo: this.handNo, roundIndex: this.roundIndex, dealer: this.dealer,

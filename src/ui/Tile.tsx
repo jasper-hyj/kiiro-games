@@ -69,7 +69,7 @@ function Pip({ x, y, red, r }: { x: number; y: number; red?: boolean; r: number 
   )
 }
 
-function Pips({ suit, n }: { suit: 1 | 2; n: number }) {
+function Pips({ suit, n, allRed }: { suit: 1 | 2; n: number; allRed?: boolean }) {
   if (suit === 1 && n === 1) {
     return (
       <svg viewBox="0 0 24 36" className="pips">
@@ -83,13 +83,13 @@ function Pips({ suit, n }: { suit: 1 | 2; n: number }) {
   return (
     <svg viewBox="0 0 24 36" className="pips">
       {suit === 1
-        ? PIN[n].pts.map(([x, y], i) => <Pip key={i} x={x} y={y} r={PIN[n].r} red={PIN[n].red.includes(i)} />)
-        : SOU[n].pts.map(([x, y], i) => <Stick key={i} x={x} y={y} h={SOU[n].h} w={SOU[n].w} red={SOU[n].red.includes(i)} />)}
+        ? PIN[n].pts.map(([x, y], i) => <Pip key={i} x={x} y={y} r={PIN[n].r} red={allRed || PIN[n].red.includes(i)} />)
+        : SOU[n].pts.map(([x, y], i) => <Stick key={i} x={x} y={y} h={SOU[n].h} w={SOU[n].w} red={allRed || SOU[n].red.includes(i)} />)}
     </svg>
   )
 }
 
-export function Face({ kind }: { kind: number }) {
+export function Face({ kind, red }: { kind: number; red?: boolean }) {
   const s = suitOf(kind)
   if (kind >= 34) {
     const n = (kind - 34) % 4
@@ -102,9 +102,9 @@ export function Face({ kind }: { kind: number }) {
       </>
     )
   }
-  if (s === 0) return (<><span className="idx">{numOf(kind)}</span><div className="big man">{NUMS[numOf(kind) - 1]}</div><div className="big man" style={{ color: '#c62828' }}>萬</div></>)
-  if (s === 1) return <><span className="idx">{numOf(kind)}</span><Pips suit={1} n={numOf(kind)} /></>
-  if (s === 2) return <><span className="idx">{numOf(kind)}</span>{numOf(kind) === 1 ? <Bird /> : <Pips suit={2} n={numOf(kind)} />}</>
+  if (s === 0) return (<><span className="idx">{numOf(kind)}</span><div className="big man" style={red ? { color: '#d01f1f' } : undefined}>{NUMS[numOf(kind) - 1]}</div><div className="big man" style={{ color: '#c62828' }}>萬</div></>)
+  if (s === 1) return <><span className="idx">{numOf(kind)}</span><Pips suit={1} n={numOf(kind)} allRed={red} /></>
+  if (s === 2) return <><span className="idx">{numOf(kind)}</span>{numOf(kind) === 1 ? <Bird /> : <Pips suit={2} n={numOf(kind)} allRed={red} />}</>
   const h = kind - 27
   if (h < 4) return <div className="big">{'東南西北'[h]}</div>
   if (kind === 31) return <div className="white-dragon" />
@@ -113,7 +113,7 @@ export function Face({ kind }: { kind: number }) {
 }
 
 interface Props {
-  id?: number; kind?: number; back?: boolean
+  id?: number; kind?: number; back?: boolean; dora?: number
   onClick?: () => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; title?: string
   className?: string
 }
@@ -122,15 +122,16 @@ export function Side({ children, double }: { children: ReactNode; double?: boole
   return <span className={'sw' + (double ? ' dbl' : '')}>{children}</span>
 }
 
-export function Tile({ id, kind, back, onClick, selected, dim, mark, riichi, hot, title, className }: Props) {
+export function Tile({ id, kind, back, dora, onClick, selected, dim, mark, riichi, hot, title, className }: Props) {
   const aka = useContext(AkaCtx)
   const k = kind ?? (id !== undefined ? kindOf(id) : 0)
   const red = aka && id !== undefined && isRedFive(id)
   const cls = ['tile', back ? 'back' : '', selected ? 'sel' : '', dim ? 'dim' : '', riichi ? 'riichi-t' : '', hot ? 'hot' : '', onClick ? 'clickable' : '', red ? 'aka' : '', className ?? ''].join(' ')
   return (
     <div className={cls} onClick={onClick} title={title}>
-      {!back && <Face kind={k} />}
+      {!back && <Face kind={k} red={red} />}
       {red && <span className="aka-dot" />}
+      {!back && dora ? <span className="dora-badge" title="dora">★{dora > 1 ? dora : ''}</span> : null}
       {mark && <span className="mark" />}
     </div>
   )

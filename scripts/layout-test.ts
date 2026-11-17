@@ -22,7 +22,7 @@ const probe = () => {
   // 2/3/4. layout blocks: no overlap, inside the board, inside the viewport horizontally
   const blocks: [string, HTMLElement][] = []
   const add = (name: string, sel: string) => q(sel).forEach((e, i) => { if (vis(e)) blocks.push([`${name}${i}`, e]) })
-  add('pond', '.pond'); add('info', '.info')
+  add('pond', '.pond'); add('info', '.info'); add('dorapanel', '.dorapanel')
   for (const side of ['top', 'left', 'right']) { add(`${side}.chip`, `.seat.${side} > .chip`); add(`${side}.backs`, `.seat.${side} > .backs`); add(`${side}.extras`, `.seat.${side} > .extras`) }
   add('mebar', '.mebar'); add('status', '.statusbar'); add('actions', '.actions'); add('callbar', '.callbar'); add('hint', '.hint'); add('hand', '.handrow')
   for (const [n, e] of blocks) {
@@ -88,7 +88,8 @@ async function main() {
   for (const players of PLAYERS) {
     for (const state of STATES) {
       await page.setViewport({ width: 1280, height: 800 })
-      await page.goto(`${BASE}/?stress=${state}&players=${players}`, { waitUntil: 'networkidle0' })
+      const jp = state.startsWith('jp')
+      await page.goto(`${BASE}/?stress=${jp ? state.slice(2) || 'full' : state}&players=${players}${jp ? '&rule=riichi' : ''}`, { waitUntil: 'networkidle0' })
       for (const w of WIDTHS) {
         for (const h of HEIGHTS) {
           const touch = w < 900

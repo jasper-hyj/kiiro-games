@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
-import { kindOf } from '../engine/tiles'
+import { doraFrom, isRedFive, kindOf } from '../engine/tiles'
 import type { ClientMsg } from '../net/protocol'
 import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
@@ -211,6 +211,12 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
   const ruleId = v.rule.id
   const roundName = t('roundName', { wind: t('wind.' + v.roundWind), n: (v.roundIndex % n) + 1 })
   const handTiles = me.hand ?? []
+  // dora: what the indicators point at, and how many dora tiles I hold (dora + red fives + set-aside norths)
+  const doraKinds = ruleId === 'riichi' ? v.dora.map((i) => doraFrom(kindOf(i), sanma)) : []
+  const doraOf = (id: number) => doraKinds.filter((k) => k === kindOf(id)).length
+  const akaOn = ruleId === 'riichi' && view.config.aka
+  const doraInHand = ruleId !== 'riichi' ? 0
+    : [...handTiles, ...(me.drawn !== null ? [me.drawn] : []), ...me.melds.flatMap((m) => m.tiles)].reduce((a, id) => a + doraOf(id) + (akaOn && isRedFive(id) ? 1 : 0), 0) + me.nuki.length
 
   // one clear line that always says what is happening / what to do
   let status = ''
@@ -246,16 +252,27 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
       {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
       <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
-      <div className="center"><div className="cgrid">
+      <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')}>
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
+        {ruleId === 'riichi' && (
+          <div className="dorapanel">
+              <div className="dorabox">
+                <div className="dlabel">{t('doraInd')} <span className="muted">{v.dora.length}/5</span></div>
+                <div className="drow">
+                  {[0, 1, 2, 3, 4].map((i) => v.dora[i] !== undefined ? (
+                    <div className="dpair" key={i}><Tile id={v.dora[i]} /><span className="darrow">▼</span><Tile kind={doraFrom(kindOf(v.dora[i]), sanma)} /></div>
+                  ) : <div className="dpair hidden" key={i}><Tile back /></div>)}
+                </div>
+              </div>
+          </div>
+        )}
         <div className="info">
           {dirs.map(([name, r]) => <span key={name} className={`dir d-${name}` + (dirOn(r) ? ' on' : '')} />)}
           <div className="rnd">{roundName}</div>
           <div className="muted">{t('wall')} {v.wallLeft}</div>
           {ruleId === 'riichi' && (
             <>
-              <div className="doras">{[0, 1, 2, 3, 4].map((i) => (v.dora[i] !== undefined ? <Tile key={i} id={v.dora[i]} /> : <Tile key={i} back />))}</div>
               {(v.honba > 0 || v.sticks > 0) && <div className="muted">{v.honba > 0 && <>{t('honba')} {v.honba}</>}{v.honba > 0 && v.sticks > 0 && ' · '}{v.sticks > 0 && <>{t('sticks')} {v.sticks}</>}</div>}
             </>
           )}
@@ -269,6 +286,7 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
         <div className="memain">
         <div className="mebar">
           <Chip p={me} v={v} bubble={bub(me.seat)} />
+          {doraInHand > 0 && <span className="dorapill" title={t('doraInHand')}>★ {doraInHand}</span>}
           {online && (
             <div className="chatwrap">
               <button className="chatopen" aria-label={t('chatTitle')} onClick={() => setPanel(panel === 'chat' ? null : 'chat')}>💬</button>
@@ -314,12 +332,12 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
         )}
         <div className={'handrow' + (mine ? ' mine' : '')}>
           {handTiles.map((id) => (
-            <Tile key={id} id={id} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}
           {me.drawn !== null && (
             <>
               <span className="hand-extra" />
-              <Tile id={me.drawn} className="drawn" selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
+              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
             </>
           )}
         </div>

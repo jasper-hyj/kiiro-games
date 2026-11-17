@@ -293,7 +293,7 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
 
 /* centre cross: ponds are sized from the stage height so 24 discards (4 rows) always fit */
 .center { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; position: relative; }
-.cgrid { --pt: clamp(12px, calc((var(--H) - 559) / 11.7 * 1px), 34px); width: 100%; height: 100%; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: 1fr auto 1fr; align-items: center; justify-items: center; column-gap: 10px; }
+.cgrid { --infoh: 62; --pt: clamp(12px, calc((var(--H) - 474 - var(--infoh)) / 11.7 * 1px), 34px); width: 100%; height: 100%; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: 1fr auto 1fr; align-items: center; justify-items: center; column-gap: 10px; }
 .cgrid .pond { --tw: var(--pt); width: calc(var(--tw) * 7.5); display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-end; gap: calc(var(--tw) * .1) 1px; position: relative; }
 .pond.p2 { grid-column: 2; grid-row: 1; align-self: end; }
 .pond.p0 { grid-column: 2; grid-row: 3; align-self: start; }
@@ -373,3 +373,29 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
 .apbtns .cbtn { flex-direction: column; gap: 2px; min-height: min(76px, max(52px, calc(46px / var(--s)))); padding: 3px 4px; font-size: 17px; }
 .apbtns .cbtn .mini { --tw: 19px; gap: 1px; }
 .callhead { --tw: 24px; }
+
+/* ---------- dora / red fives ---------- */
+.tile .dora-badge { position: absolute; left: calc(var(--tw) * .06); bottom: calc(var(--tw) * .07); min-width: calc(var(--tw) * .3); height: calc(var(--tw) * .3); padding: 0 calc(var(--tw) * .05); border-radius: 999px; background: radial-gradient(circle at 35% 30%, #ffe27a, #e0a010); color: #5a3600; font-size: calc(var(--tw) * .24); font-weight: 900; line-height: calc(var(--tw) * .3); text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.tile.aka { background: linear-gradient(180deg, #fff1ee, #f7d6d0); }
+.tile .aka-dot { top: calc(var(--tw) * .14); left: calc(var(--tw) * .08); width: calc(var(--tw) * .2); height: calc(var(--tw) * .2); box-shadow: 0 0 0 1px rgba(255,255,255,.7); }
+.dorabox { margin: 6px 0 0; --tw: 21px; }
+.dlabel { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #ffe27a; display: flex; justify-content: center; gap: 6px; align-items: baseline; }
+.dlabel .muted { font-weight: 500; }
+.drow { display: flex; gap: 4px; justify-content: center; margin-top: 4px; }
+.dpair { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.dpair .darrow { font-size: 9px; line-height: 1; color: #ffe27a; }
+.dpair.hidden .tile { opacity: .9; }
+.dorapill { background: linear-gradient(180deg, #ffe27a, #e0a010); color: #5a3600; border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 13px; white-space: nowrap; }
+
+.cgrid.jp { --infoh: 62; }
+
+.modal .dorabox.result { --tw: 26px; display: inline-block; margin: 6px 18px 6px 0; vertical-align: top; }
+.modal .dorabox .dlabel { color: #a06a00; }
+.modal .dorabox .dpair .darrow { color: #a06a00; }
+.modal .dorabox.ura .dlabel { color: #6b3fa0; }
+
+/* compact centre box; the dora panel lives in the free corner beside the left pond, so ponds keep their size */
+.info { padding: 6px 20px; font-size: 13px; min-width: 130px; }
+.info .rnd { font-size: 20px; line-height: 1.15; }
+.dorapanel { grid-column: 1; grid-row: 1 / 4; align-self: start; justify-self: start; margin: 4px 0 0 6px; background: rgba(8,34,23,.62); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 8px 12px 10px; }
+.dorapanel .dorabox { margin: 0; --tw: 24px; }

@@ -2,8 +2,21 @@ import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import type { ClientMsg } from '../net/protocol'
 import { Tile } from './Tile'
-import { kindOf } from '../engine/tiles'
+import { doraFrom, kindOf } from '../engine/tiles'
 import { useLang, yakuName } from '../i18n'
+
+function DoraRows({ label, ids, sanma, ura }: { label: string; ids: number[]; sanma: boolean; ura?: boolean }) {
+  return (
+    <div className={'dorabox result' + (ura ? ' ura' : '')}>
+      <div className="dlabel">{label}</div>
+      <div className="drow">
+        {ids.map((id, i) => (
+          <div className="dpair" key={i}><Tile id={id} /><span className="darrow">▼</span><Tile kind={doraFrom(kindOf(id), sanma)} /></div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m: ClientMsg) => void; onLeave: () => void }) {
   const { lang, t } = useLang()
@@ -62,7 +75,8 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <>
           <h2>{r.tsumo ? t('winsTsumo', { name: w.name }) : t('winsRon', { name: w.name, from: v.players[r.from!].name })}</h2>
           <Hand h={r.hands[r.winner!]} win={r.tsumo ? undefined : r.winTile} />
-          {r.ura && r.ura.length > 0 && <div className="muted">{t('uraDora')} <span className="tilesrow" style={{ display: 'inline-flex' }}>{r.ura.map((x, i) => <Tile key={i} id={x} />)}</span></div>}
+          {r.dora && r.dora.length > 0 && <DoraRows label={t('doraRow')} ids={r.dora} sanma={v.players.length === 3} />}
+          {r.ura && r.ura.length > 0 && <DoraRows label={t('uraRow')} ids={r.ura} sanma={v.players.length === 3} ura />}
           <Yaku items={r.score.yaku} />
           <div className="limit">{label(r.score.label)} {r.score.yakuman ? '' : `${r.score.total} ${unit}`}{r.score.fu ? ` · ${r.score.fu} ${t('fu')}` : ''}</div>
         </>

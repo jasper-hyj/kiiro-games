@@ -20,7 +20,7 @@ export default function App() {
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', true))
   const stress = new URLSearchParams(location.search).get('stress')
-  const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4)) : null))
+  const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
   const [room, setRoom] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
