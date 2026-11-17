@@ -5,8 +5,10 @@ import type { ClientMsg } from '../net/protocol'
 import { RulesHelp } from './RulesHelp'
 import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
+import { Tile } from './Tile'
 
 const IDS: RuleId[] = ['taiwan', 'hk', 'riichi']
+const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日' } as Record<RuleId, string>
 type Change = (c: Partial<RoomConfig>) => void
 
 export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; onChange: Change; readOnly?: boolean }) {
@@ -18,6 +20,7 @@ export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; 
         return (
           <button key={id} type="button" disabled={readOnly} className={'rule' + (config.rule === id ? ' on' : '')}
             onClick={() => onChange({ rule: id, rounds: id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds) } as Partial<RoomConfig>)}>
+            <span className="glyph" aria-hidden="true">{GLYPH[id]}</span>
             <span className="zh">{lang === 'zh' ? r.zh : t(id + '.name')}</span>
             <span className="muted small">{t(id + '.blurb')}</span>
           </button>
@@ -81,33 +84,36 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
   const { t } = useLang()
   const [code, setCode] = useState('')
   const change: Change = (c) => setConfig({ ...config, ...c })
+  const fan = [3, 13, 31, 32, 33, 26]
   return (
-    <div className="page menu">
-      <div className="hero">
-        <h1>{t('brand')}</h1>
-        <p className="muted">{t('tagline')}</p>
-      </div>
-      <section>
-        <h2>{t('step1')}</h2>
+    <div className="page menu parlour">
+      <header className="hero">
+        <div className="fan" aria-hidden="true">
+          {fan.map((k, i) => <div key={i} className="fantile" style={{ ['--i' as string]: i - (fan.length - 1) / 2 }}><Tile kind={k} /></div>)}
+        </div>
+        <h1 className="title"><span className="cjk">麻雀</span><span className="latin">{t('brand')}</span></h1>
+        <p className="tagline">{t('tagline')}</p>
+      </header>
+      <section className="shelf">
+        <h2 className="eyebrow">{t('step1')}</h2>
         <RuleCards config={config} onChange={change} />
         <Options config={config} onChange={change} />
       </section>
-      <section>
-        <h2>{t('step2')}</h2>
-        <input type="text" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} aria-label={t('nickname')} />
-      </section>
-      <section>
-        <h2>{t('step3')}</h2>
+      <section className="rack">
+        <label className="nameplate">
+          <span className="eyebrow">{t('step2')}</span>
+          <input type="text" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} aria-label={t('nickname')} />
+        </label>
         <div className="playrow">
           <button className="btn gold big" onClick={onCreate} disabled={!onlineConfigured}>{t('playFriends')}</button>
-          <button className="btn big" onClick={onSolo}>{t('playBots')}</button>
+          <button className="btn big felt" onClick={onSolo}>{t('playBots')}</button>
         </div>
-        <div className="row joinrow">
-          <span className="muted">{t('haveCode')}</span>
-          <input type="text" placeholder={t('roomCode')} value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} style={{ width: 130 }} aria-label={t('roomCode')} />
+        <div className="joinrow">
+          <span className="eyebrow">{t('haveCode')}</span>
+          <input type="text" placeholder={t('roomCode')} value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} aria-label={t('roomCode')} />
           <button className="btn" disabled={code.length < 3} onClick={() => onJoin(code)}>{t('join')}</button>
         </div>
-        {!onlineConfigured && <p className="muted small" style={{ marginTop: 10 }}>{t('onlineOff')}</p>}
+        {!onlineConfigured && <p className="muted small onlineoff">{t('onlineOff')}</p>}
       </section>
     </div>
   )

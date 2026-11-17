@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
 import { doraFrom, isRedFive, kindOf } from '../engine/tiles'
@@ -89,10 +88,11 @@ function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['g
   )
 }
 
-export function Board({ view, send, hints, setHints, onLeave, online, rotate, setRotate }: {
+export function Board({ view, send, hints, setHints, onLeave, online, rotate, setRotate, room, status: conn }: {
+  room?: string | null; status?: string;
   view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean; rotate?: boolean; setRotate?: (b: boolean) => void
 }) {
-  const { t } = useLang()
+  const { t, lang, setLang } = useLang()
   const v = view.game!
   const you = Math.max(0, view.you)
   const n = v.players.length
@@ -106,10 +106,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   const secs = v.timeLeft == null ? null : Math.max(0, Math.ceil((v.timeLeft - (now - recv.current)) / 1000))
   const [sel, setSel] = useState<number | null>(null)
   const [riichiMode, setRiichiMode] = useState(false)
-  const [slot, setSlot] = useState<HTMLElement | null>(null)
   const autosRef = useRef<HTMLDetailsElement>(null)
   useEffect(() => {
-    setSlot(document.getElementById('topbar-slot'))
     const close = (e: MouseEvent) => { const d = autosRef.current; if (d?.open && !d.contains(e.target as Node)) d.open = false }
     document.addEventListener('mousedown', close)
     document.addEventListener('touchstart', close as never)
@@ -229,19 +227,28 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   const dirOn = (r: number) => activeSeats.some((sd) => (sd - you + n) % n === r)
   const dirs: [string, number][] = sanma ? [['bottom', 0], ['right', 1], ['left', 2]] : [['bottom', 0], ['right', 1], ['top', 2], ['left', 3]]
 
+  const closeDock = () => { if (autosRef.current) autosRef.current.open = false }
   const autoMenu = (
-    <details className="autos" ref={autosRef}>
-          <summary>⚙<span className="aut-label"> {t('auto')}</span></summary>
-          <div className="autopanel">
-            {([['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
-              <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>
-            ))}
-            <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
-            {setRotate && <label title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /> {t('rotate')}</label>}
-            <hr />
-            <button className="menuitem" onClick={() => { setPanel('history'); if (autosRef.current) autosRef.current.open = false }}>{t('history')}</button>
-            <button className="menuitem" onClick={() => { setPanel('keys'); if (autosRef.current) autosRef.current.open = false }}>{t('shortcuts')}</button>
-          </div>
+    <details className="dock" ref={autosRef}>
+      <summary aria-label={t('auto')}><span className="burger" aria-hidden="true"><i /><i /><i /></span></summary>
+      <div className="dockpanel">
+        {room && <div className="dockroom"><span className={'status-dot ' + (conn ?? '')} />{t('room')} <b>{room}</b></div>}
+        <div className="dockgroup">{t('auto')}</div>
+        {([['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
+          <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
+        ))}
+        <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
+        {setRotate && <label className="switch" title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /><span className="knob" />{t('rotate')}</label>}
+        <div className="dockrule" />
+        <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
+        <button className="menuitem" onClick={() => { setPanel('keys'); closeDock() }}>{t('shortcuts')}</button>
+        <div className="dockrule" />
+        <div className="seg langsw">
+          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
+          <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+        </div>
+        <button className="btn alt leavebtn" onClick={onLeave}>{t('leave')}</button>
+      </div>
     </details>
   )
   const tileDim = (id: number) => !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
@@ -377,7 +384,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
           </div>
         </div>
       </div>
-      {slot ? createPortal(autoMenu, slot) : autoMenu}
+      {autoMenu}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}
       {(v.phase === 'result' || v.phase === 'over') && <ResultModal view={view} send={send} onLeave={onLeave} />}

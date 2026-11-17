@@ -141,16 +141,16 @@ async function main() {
         } else if (d.name === 'phone') {
           const rot = () => p.$eval('.stagewrap', (e) => (e as HTMLElement).dataset.rotated)
           const r0 = await rot()
-          await p.click('.autos summary')
+          await p.click('.dock summary')
           await sleep(100)
-          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.autopanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
+          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.dockpanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
           await sleep(300)
           const r1 = await rot()
           check(`${tag}: rotate option toggles the stage (${r0} -> ${r1})`, r0 === '1' && r1 === '0')
-          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.autopanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
+          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.dockpanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
           await sleep(300)
           check(`${tag}: rotate back on`, (await rot()) === '1')
-          await p.evaluate(() => (document.querySelector('.autos') as HTMLDetailsElement | null)?.removeAttribute('open'))
+          await p.evaluate(() => (document.querySelector('.dock') as HTMLDetailsElement | null)?.removeAttribute('open'))
         }
         let discards = 0
         for (let i = 0; i < 60 && discards < 4; i++) {
@@ -164,9 +164,9 @@ async function main() {
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-game2.png` })
         await layout(p, `${tag} game later`)
 
-        await p.click('.autos summary')
+        await p.click('.dock summary')
         await sleep(100)
-        check(`${tag}: auto menu opens`, (await p.$('.autopanel')) !== null)
+        check(`${tag}: auto menu opens`, (await p.$('.dockpanel')) !== null)
         await clickText(p, '.menuitem', lang === 'en' ? /Round history/ : /對局紀錄/)
         await sleep(150)
         check(`${tag}: history panel opens`, (await p.$('.modal')) !== null)

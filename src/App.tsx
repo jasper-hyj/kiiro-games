@@ -84,17 +84,15 @@ export default function App() {
   return (
     <AkaCtx.Provider value={aka}>
       <div className={'app' + (playing ? ' game' : '')}>
-        <div className="topbar">
-          <span className="brand">🀄 <span className="bname">{t('brand')}</span></span>
-          {room && <span className="muted roomlabel"><span className={'status-dot ' + status} /><span className="rl">{t('room')} </span>{room}</span>}
-          <span className="grow" />
-          <span id="topbar-slot" className="slot" />
-          <div className="seg langsw">
-            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
-            <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+        {!playing && (
+          <div className="floatbar">
+            {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}
+            <div className="seg langsw">
+              <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
+              <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+            </div>
           </div>
-          {active && <button className="btn sm alt" onClick={leave}>{t('leave')}</button>}
-        </div>
+        )}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
         {!active && urlRoom && (
           <div className="page joinpage">
@@ -120,10 +118,10 @@ export default function App() {
             <button className="btn gold big" onClick={leave}>{t('backMenu')}</button>
           </div>
         )}
-        {active && !view && !joinError && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
+        {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
         {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <Stage allowRotate={rotate}><Board view={view} send={send} hints={hints} setHints={setHints} rotate={rotate} setRotate={setRotate} onLeave={leave} online={!!room || !!stress} /></Stage>}
+        {active && view && playing && <Stage allowRotate={rotate}><Board room={room} status={status} view={view} send={send} hints={hints} setHints={setHints} rotate={rotate} setRotate={setRotate} onLeave={leave} online={!!room || !!stress} /></Stage>}
       </div>
     </AkaCtx.Provider>
   )

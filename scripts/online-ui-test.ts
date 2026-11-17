@@ -137,7 +137,7 @@ async function main() {
     await B.screenshot({ path: `${SHOTS}/online-after-refresh.png` })
 
     // 7. guest leaves; host's table marks the seat away (bot takes over)
-    await B.evaluate(() => (document.querySelector('.topbar .btn') as HTMLElement)?.click())
+    await B.evaluate(() => { (document.querySelector('.dock summary') as HTMLElement)?.click(); (document.querySelector('.dock .leavebtn') as HTMLElement)?.click() })
     await sleep(1200)
     check('host sees guest as away', /away/i.test(await text(A)))
     await A.screenshot({ path: `${SHOTS}/online-guest-left.png` })

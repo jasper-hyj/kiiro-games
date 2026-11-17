@@ -40,13 +40,18 @@ const probe = () => {
     }
   }
 
-  // 5. top bar items do not overlap each other
-  const tb = [...document.querySelectorAll<HTMLElement>('.topbar > *')].filter(vis)
-  for (let i = 0; i < tb.length; i++) for (let j = i + 1; j < tb.length; j++) {
-    const a = R(tb[i]), b = R(tb[j])
-    if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2) problems.push(`topbar overlap ${tb[i].className || tb[i].tagName} x ${tb[j].className || tb[j].tagName}`)
+  // 5. the dock menu: its button is on screen, and when opened the whole panel fits the screen
+  const dock = document.querySelector<HTMLDetailsElement>('.dock')
+  if (dock) {
+    dock.open = true
+    const pr = R(dock.querySelector<HTMLElement>('.dockpanel')!)
+    if (pr.left < -2 || pr.top < -2 || pr.right > innerWidth + 2 || pr.bottom > innerHeight + 2) problems.push(`dock panel outside the screen (${Math.round(pr.left)},${Math.round(pr.top)} ${Math.round(pr.right)},${Math.round(pr.bottom)} in ${innerWidth}x${innerHeight})`)
+    for (const e of [...dock.querySelectorAll<HTMLElement>('.dockpanel button, .dockpanel label')]) {
+      const r = R(e)
+      if (r.width < 20 || r.height < 20) problems.push(`dock control too small: ${e.textContent?.trim().slice(0, 12)} ${Math.round(r.width)}x${Math.round(r.height)}`)
+    }
+    dock.open = false
   }
-  if (document.querySelector('.topbar') && R(document.querySelector<HTMLElement>('.topbar')!).height > 70) problems.push('topbar wrapped to more than one row')
 
   // 6. tile sizes stay readable
   const handTile = q('.handrow .tile')[0]
@@ -57,7 +62,7 @@ const probe = () => {
   if (meTile && R(meTile).width < 9) problems.push(`own meld tile too small (${R(meTile).width.toFixed(1)}px)`)
 
   // 7. every button / clickable tile is reachable (not covered) and buttons do not overlap each other
-  const clickables = q('.board button, .topbar button, .topbar summary, .handrow .tile.clickable').filter((e) => vis(e) && !e.closest('details:not([open]) > :not(summary)'))
+  const clickables = q('.board button, .dock summary, .handrow .tile.clickable').filter((e) => vis(e) && !e.closest('details:not([open]) > :not(summary)'))
   const rects: [string, DOMRect][] = []
   for (const e of clickables) {
     e.scrollIntoView({ block: 'center', inline: 'center' })
