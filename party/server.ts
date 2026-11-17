@@ -41,6 +41,7 @@ export class Main extends Server<Env> {
       case 'decide': this.table.decide(id, m.d); break
       case 'ack': this.table.ack(id); break
       case 'lobby': this.table.backToLobby(id); break
+      case 'toggleBot': this.table.toggleBot(id, m.seat); break
     }
   }
 

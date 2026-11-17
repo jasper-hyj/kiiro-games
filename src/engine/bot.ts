@@ -92,11 +92,13 @@ export function chooseDiscard(g: Game, seat: number, ids: number[]): { tile: num
   return { tile: cand[0], shantenAfter: pick.sh }
 }
 
-export function botTurn(g: Game, seat: number): TurnAction {
+export function botTurn(g: Game, seat: number, level: 'easy' | 'normal' = 'normal'): TurnAction {
   const p = g.players[seat]
   const o = g.turnOptions(seat)
   if (o.tsumo) return { type: 'tsumo' }
+  if (o.nuki) return { type: 'nuki' }
   if (p.riichi) return { type: 'discard', tile: o.discard[0] }
+  if (level === 'easy' && Math.random() < 0.3) return { type: 'discard', tile: o.discard[Math.floor(Math.random() * o.discard.length)] }
   if (!g.afterCall) {
     const cur = g.shanten(seat)
     for (const k of o.ankan) {
@@ -127,9 +129,10 @@ function callAllowed(g: Game, seat: number, kind: number, remaining: Counts, mel
   return false
 }
 
-export function botReact(g: Game, seat: number): Decision {
+export function botReact(g: Game, seat: number, level: 'easy' | 'normal' = 'normal'): Decision {
   const r = g.reactions[seat]
   if (r.ron) return { type: 'ron' }
+  if (level === 'easy' && Math.random() < 0.5) return { type: 'pass' }
   const p = g.players[seat]
   if (p.riichi) return { type: 'pass' }
   if (g.players.some((q) => q.seat !== seat && q.riichi)) return { type: 'pass' }

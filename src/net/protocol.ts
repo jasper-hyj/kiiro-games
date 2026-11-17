@@ -9,4 +9,5 @@ export type ClientMsg =
   | { t: 'decide'; d: Decision }
   | { t: 'ack' }
   | { t: 'lobby' }
+  | { t: 'toggleBot'; seat: number }
 export type ServerMsg = { t: 'view'; view: TableView } | { t: 'error'; message: string }

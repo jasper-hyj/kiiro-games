@@ -30,6 +30,11 @@ export function ConfigEditor({ config, onChange, readOnly }: { config: RoomConfi
           ))}
         </div>
         {config.rule === 'riichi' && (
+          <div className="seg">
+            {([4, 3] as const).map((n) => <button key={n} disabled={readOnly} className={(config.players ?? 4) === n ? 'on' : ''} onClick={() => onChange({ players: n })}>{n === 4 ? '4 players' : '3 players (sanma)'}</button>)}
+          </div>
+        )}
+        {config.rule === 'riichi' && (
           <label><input type="checkbox" disabled={readOnly} checked={config.aka} onChange={(e) => onChange({ aka: e.target.checked })} /> Red fives</label>
         )}
         {config.rule === 'hk' && (
@@ -39,6 +44,11 @@ export function ConfigEditor({ config, onChange, readOnly }: { config: RoomConfi
             </select>
           </label>
         )}
+        <label>Bots{' '}
+          <select disabled={readOnly} value={config.botLevel ?? 'normal'} onChange={(e) => onChange({ botLevel: e.target.value as 'easy' | 'normal' })}>
+            <option value="easy">Easy</option><option value="normal">Normal</option>
+          </select>
+        </label>
         <button className="btn sm alt" onClick={() => setHelp(true)}>Rules reference</button>
       </div>
       {help && <RulesHelp initial={config.rule} onClose={() => setHelp(false)} />}
@@ -99,12 +109,13 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
         </div>
       </div>
       <div className="card" style={{ marginBottom: 14 }}>
-        <h2>Seats ({humans}/4 humans — the rest are bots)</h2>
+        <h2>Seats ({humans}/{view.seats.length} humans — empty seats play as bots)</h2>
         <div className="seatlist">
           {view.seats.map((s, i) => (
             <div className="seatbox" key={i}>
               <span className={'status-dot' + (s.human ? ' open' : '')} />{s.name}{i === view.you ? ' (you)' : ''}
-              <div className="muted" style={{ fontSize: 12 }}>{s.human ? 'Human' : 'Bot'}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{s.human ? 'Human' : s.bot ? 'Bot (reserved)' : 'Open — bot if nobody joins'}</div>
+              {view.host && !s.human && <button className="btn sm alt" style={{ marginTop: 6 }} onClick={() => send({ t: 'toggleBot', seat: i })}>{s.bot ? 'Open this seat' : 'Make bot'}</button>}
             </div>
           ))}
         </div>

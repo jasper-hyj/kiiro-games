@@ -4,12 +4,13 @@ import type { RuleId } from '../src/engine/rules'
 
 const rules: RuleId[] = (process.argv[3] ? [process.argv[3]] : ['riichi', 'hk', 'taiwan']) as RuleId[]
 const ROUNDS = Number(process.argv[4] ?? 1)
+const PLAYERS = Number(process.argv[5] ?? 4)
 const N = Number(process.argv[2] ?? 6)
 for (const rule of rules) {
   const stats = { games: N, hands: 0, wins: 0, draws: 0, tsumo: 0, yaku: {} as Record<string, number>, maxTotal: 0, riichi: 0 }
   const t0 = Date.now()
   for (let n = 0; n < N; n++) {
-    const g = new Game(rule, { rule, aka: true, rounds: ROUNDS, minFan: 3 } as any, ['A', 'B', 'C', 'D'])
+    const g = new Game(rule, { rule, aka: true, rounds: ROUNDS, minFan: 3 } as any, ['A', 'B', 'C', 'D'].slice(0, PLAYERS))
     let guard = 0
     while ((g.phase as string) !== 'over' && guard++ < 50000) {
       if (g.phase === 'turn') {
@@ -21,7 +22,7 @@ for (const rule of rules) {
         const r = g.result!
         stats.hands++
         if (r.kind === 'win') {
-          stats.wins++; if (r.others) (stats as any).multiRon = ((stats as any).multiRon ?? 0) + 1; if (r.tsumo) stats.tsumo++
+          stats.wins++; if (r.score!.yaku.some((y) => y.name.startsWith('Nuki'))) (stats as any).nuki = ((stats as any).nuki ?? 0) + 1; if (r.others) (stats as any).multiRon = ((stats as any).multiRon ?? 0) + 1; if (r.tsumo) stats.tsumo++
           r.score!.yaku.forEach((y) => (stats.yaku[y.name] = (stats.yaku[y.name] ?? 0) + 1))
           stats.maxTotal = Math.max(stats.maxTotal, r.score!.total)
         } else stats.draws++

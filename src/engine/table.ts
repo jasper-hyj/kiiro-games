@@ -5,19 +5,19 @@ import { botReact, botTurn } from './bot'
 import { kindOf } from './tiles'
 
 export interface RoomConfig extends GameOptions { rule: RuleId }
-export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3 }
+export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
 
-export interface SeatSlot { id: string | null; name: string; connected: boolean }
+export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean }
 export interface PlayerView {
   seat: number; name: string; points: number; human: boolean; connected: boolean
   handCount: number; hand: number[] | null; drawn: number | null
   melds: Meld[]; discards: { tile: number; riichi: boolean; called: boolean }[]; flowers: number[]
-  riichi: boolean; seatWind: number
+  riichi: boolean; seatWind: number; nuki: number[]
 }
 export interface TableView {
   status: 'lobby' | 'playing'
   config: RoomConfig
-  seats: { name: string; human: boolean; connected: boolean }[]
+  seats: { name: string; human: boolean; connected: boolean; bot: boolean }[]
   you: number
   host: boolean
   game: null | {
@@ -55,9 +55,26 @@ export class Table {
   constructor(config: RoomConfig = DEFAULT_CONFIG) {
     this.config = config
     const names = [...BOT_NAMES].sort(() => Math.random() - 0.5)
-    this.slots = [0, 1, 2, 3].map((i) => ({ id: null, name: names[i], connected: false }))
+    this.slots = [0, 1, 2, 3].map((i) => ({ id: null, name: names[i], connected: false, bot: false }))
+    this.fitSlots()
   }
 
+  private get wantPlayers(): 3 | 4 { return this.config.rule === 'riichi' && this.config.players === 3 ? 3 : 4 }
+  private fitSlots() {
+    const n = this.wantPlayers
+    while (this.slots.length < n) this.slots.push({ id: null, name: BOT_NAMES[this.slots.length], connected: false, bot: false })
+    // move humans out of seats that are about to disappear
+    for (let i = this.slots.length - 1; i >= n; i--) {
+      const s = this.slots[i]
+      if (s.id) { const free = this.slots.findIndex((x, j) => j < n && !x.id); if (free >= 0) { this.slots[free] = { ...s, bot: false } } }
+      this.slots.pop()
+    }
+  }
+  toggleBot(id: string, seat: number) {
+    if (id !== this.hostId || this.status !== 'lobby') return
+    const s = this.slots[seat]
+    if (s && !s.id) { s.bot = !s.bot; this.emit() }
+  }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   private emit() { this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
@@ -66,7 +83,7 @@ export class Table {
   // ----- lobby -----
   join(id: string, name: string): number {
     let seat = this.slots.findIndex((s) => s.id === id)
-    if (seat < 0) seat = this.slots.findIndex((s) => s.id === null) // lobby: first free seat; mid-game: replace a bot
+    if (seat < 0) seat = this.slots.findIndex((s) => s.id === null && (this.status === 'playing' || !s.bot)) // lobby: first open seat; mid-game: replace a bot
     if (seat < 0) return -1
     const s = this.slots[seat]
     s.id = id; s.name = name.slice(0, 16) || s.name; s.connected = true
@@ -79,7 +96,7 @@ export class Table {
     const seat = this.slots.findIndex((s) => s.id === id)
     if (seat < 0) return
     if (this.status === 'lobby') {
-      this.slots[seat] = { id: null, name: BOT_NAMES[seat], connected: false }
+      this.slots[seat] = { id: null, name: BOT_NAMES[seat], connected: false, bot: false }
       if (this.hostId === id) this.hostId = this.slots.find((s) => s.id)?.id ?? null
     } else this.slots[seat].connected = false
     this.emit(); this.drive()
@@ -87,12 +104,17 @@ export class Table {
   seatOf(id: string) { return this.slots.findIndex((s) => s.id === id) }
   setConfig(id: string, c: Partial<RoomConfig>) {
     if (id !== this.hostId || this.status !== 'lobby') return
-    this.config = { ...this.config, ...c }
+    const next = { ...this.config, ...c }
+    if (next.rule !== 'riichi') next.players = 4
+    if (next.players === 3 && this.slots.filter((x) => x.id).length > 3) return
+    this.config = next
+    this.fitSlots()
     this.emit()
   }
   start(id?: string) {
     if (id !== undefined && id !== this.hostId) return
     if (this.status !== 'lobby') return
+    this.fitSlots()
     this.game = new Game(this.config.rule, this.config, this.slots.map((s) => s.name))
     this.status = 'playing'
     this.acks.clear()
@@ -102,7 +124,7 @@ export class Table {
     if (id !== this.hostId) return
     this.cancelTimers()
     this.game = null; this.status = 'lobby'
-    this.slots.forEach((s, i) => { if (!s.connected) this.slots[i] = { id: null, name: BOT_NAMES[i], connected: false } })
+    this.slots.forEach((s, i) => { if (!s.connected) this.slots[i] = { id: null, name: BOT_NAMES[i], connected: false, bot: false } })
     this.emit()
   }
 
@@ -143,7 +165,7 @@ export class Table {
       const s = g.turn
       const p = g.players[s]
       if (this.isBotControlled(s)) {
-        this.later(() => { const a = botTurn(g, s); g.act(s, a); this.emit(); this.drive() }, 750)
+        this.later(() => { const a = botTurn(g, s, this.config.botLevel); g.act(s, a); this.emit(); this.drive() }, 750)
       } else if (p.riichi) {
         const o = g.turnOptions(s)
         if (!o.tsumo && !o.ankan.length) this.later(() => { g.act(s, { type: 'discard', tile: o.discard[0] }); this.emit(); this.drive() }, 700)
@@ -152,12 +174,12 @@ export class Table {
       const pend = g.pendingSeats().filter((s) => this.isBotControlled(s))
       if (pend.length) {
         this.later(() => {
-          for (const s of pend) if (g.phase === 'reaction') g.submitDecision(s, botReact(g, s))
+          for (const s of pend) if (g.phase === 'reaction') g.submitDecision(s, botReact(g, s, this.config.botLevel))
           this.emit(); this.drive()
         }, 450)
       }
     } else if (g.phase === 'result') {
-      const humans = [0, 1, 2, 3].filter((s) => !this.isBotControlled(s))
+      const humans = g.players.map((_, i) => i).filter((s) => !this.isBotControlled(s))
       if (humans.every((s) => this.acks.has(s))) {
         this.later(() => { g.next(); this.acks.clear(); this.emit(); this.drive() }, 300)
       } else if (!this.ackTimer && this.speed !== 0) {
@@ -172,7 +194,7 @@ export class Table {
     const you = this.seatOf(id)
     const base: TableView = {
       status: this.status, config: this.config, you, host: id === this.hostId,
-      seats: this.slots.map((s) => ({ name: s.name, human: s.id !== null, connected: s.connected })),
+      seats: this.slots.map((s) => ({ name: s.name, human: s.id !== null, connected: s.connected, bot: s.bot })),
       game: null,
     }
     const g = this.game
@@ -183,7 +205,7 @@ export class Table {
       connected: this.slots[p.seat].connected,
       handCount: p.hand.length - (p.drawn !== null ? 1 : 0), hand: p.seat === you || over ? p.hand.filter((i) => i !== p.drawn) : null,
       drawn: p.seat === you || over ? p.drawn : null,
-      melds: p.melds, discards: p.discards, flowers: p.flowers, riichi: p.riichi, seatWind: g.seatWind(p.seat),
+      melds: p.melds, discards: p.discards, flowers: p.flowers, riichi: p.riichi, seatWind: g.seatWind(p.seat), nuki: p.nuki,
     }))
     let hint: NonNullable<TableView['game']>['hint'] = null
     if (you >= 0 && (g.phase === 'turn' || g.phase === 'reaction')) {

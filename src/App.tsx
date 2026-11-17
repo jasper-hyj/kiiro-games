@@ -33,7 +33,11 @@ export default function App() {
   }, [])
 
   const handlers = { onView: setView, onStatus: setStatus, onError: (m: string) => { setError(m); setTimeout(() => setError(''), 4000) } }
-  const solo = () => { setActive(true); conn.current = connectLocal(id.current, name || 'Player', config, handlers) }
+  const solo = () => {
+    const q = new URLSearchParams(location.search) // debug overrides: ?rule=riichi&players=3
+    const cfg = { ...config, ...(q.get('rule') ? { rule: q.get('rule') as RoomConfig['rule'] } : {}), ...(q.get('players') ? { players: Number(q.get('players')) as 3 | 4 } : {}) }
+    setActive(true); conn.current = connectLocal(id.current, name || 'Player', cfg, handlers)
+  }
   const joinRoom = useCallback((code: string) => {
     const c = code.toUpperCase()
     setRoom(c); setActive(true)

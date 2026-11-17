@@ -53,7 +53,7 @@ function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; 
         {extra ? <><span className="gap" /><Tile back /></> : null}
       </div>
       <div className="melds">{p.melds.map((m, i) => <MeldView key={i} m={m} />)}</div>
-      {p.flowers.length > 0 && <div className="flowers">{p.flowers.map((f) => <Tile key={f} id={f} />)}</div>}
+      {(p.flowers.length > 0 || p.nuki.length > 0) && <div className="flowers">{[...p.flowers, ...p.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
     </div>
   )
 }
@@ -63,7 +63,9 @@ export function Board({ view, send, hints, setHints, onLeave }: {
 }) {
   const v = view.game!
   const you = Math.max(0, view.you)
-  const rel = (r: number) => v.players[(you + r) % 4]
+  const n = v.players.length
+  const rel = (r: number) => v.players[(you + r) % n]
+  const sanma = n === 3
   const me = rel(0)
   const [sel, setSel] = useState<number | null>(null)
   const [riichiMode, setRiichiMode] = useState(false)
@@ -106,7 +108,7 @@ export function Board({ view, send, hints, setHints, onLeave }: {
   const tenpaiKinds = v.hint?.discardWaits ?? {}
   const selWaits = sel !== null ? tenpaiKinds[kindOf(sel)] : undefined
   const ruleId = v.rule.id
-  const roundName = `${WIND_FULL[v.roundWind]} ${(v.roundIndex % 4) + 1}`
+  const roundName = `${WIND_FULL[v.roundWind]} ${(v.roundIndex % n) + 1}`
   const dealerName = v.players[v.dealer].name
 
   const handTiles = me.hand ?? []
@@ -117,14 +119,14 @@ export function Board({ view, send, hints, setHints, onLeave }: {
 
   return (
     <div className="board">
-      <Opp p={rel(2)} v={v} pos="top" />
-      <Opp p={rel(3)} v={v} pos="left" />
+      {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" />}
+      <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" />
       <div className="center">
-        <Pond p={rel(2)} v={v} rel={2} />
-        <Pond p={rel(3)} v={v} rel={3} />
+        {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
+        <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
         <div className="info">
           <div className="rnd">{roundName}</div>
-          <div className="muted">{v.rule.name}</div>
+          <div className="muted">{v.rule.name}{sanma ? ' · 3 players' : ''}</div>
           <div>Wall <b>{v.wallLeft}</b> · Dealer {dealerName}</div>
           {ruleId === 'riichi' ? (
             <>
@@ -149,9 +151,10 @@ export function Board({ view, send, hints, setHints, onLeave }: {
         <div className="mebar">
           <Chip p={me} v={v} />
           <div className="melds">{me.melds.map((m, i) => <MeldView key={i} m={m} />)}</div>
-          {me.flowers.length > 0 && <div className="flowers">{me.flowers.map((f) => <Tile key={f} id={f} />)}</div>}
+          {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
         <div className="actions">
+          {o?.nuki && <button className="btn" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}>Nuki 北</button>}
           {o?.tsumo && <button className="btn gold" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>Tsumo (自摸)</button>}
           {o && o.riichi.length > 0 && (
             <button className={'btn ' + (riichiMode ? 'red' : '')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? 'Cancel Riichi' : 'Riichi'}</button>
