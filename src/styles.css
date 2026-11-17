@@ -399,3 +399,12 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
 .info .rnd { font-size: 20px; line-height: 1.15; }
 .dorapanel { grid-column: 1; grid-row: 1 / 4; align-self: start; justify-self: start; margin: 4px 0 0 6px; background: rgba(8,34,23,.62); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 8px 12px 10px; }
 .dorapanel .dorabox { margin: 0; --tw: 24px; }
+
+/* seats must not clip: chat pop-ups and bubbles float outside them (content is sized to fit by design) */
+.seat.me, .seat.top, .seat.left, .seat.right { overflow: visible; }
+.chatpop { bottom: calc(100% + 6px); max-height: none; }
+
+/* scale compensation is capped so pop-ups never outgrow the stage */
+.chatbtn { min-height: min(64px, max(38px, calc(46px / var(--s)))); font-size: min(26px, max(16px, calc(14px / var(--s)))); padding: 4px 10px; }
+.chatopen { width: min(56px, max(32px, calc(40px / var(--s)))); height: min(56px, max(32px, calc(40px / var(--s)))); }
+.chatpop { grid-template-columns: repeat(2, max-content); }

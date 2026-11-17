@@ -115,7 +115,7 @@ export default function App() {
         {active && !view && !joinError && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
         {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <Stage><Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room} /></Stage>}
+        {active && view && playing && <Stage><Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /></Stage>}
       </div>
     </AkaCtx.Provider>
   )

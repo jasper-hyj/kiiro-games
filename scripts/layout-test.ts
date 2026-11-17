@@ -8,6 +8,7 @@ const STATES = (process.env.STATES ?? 'full,call,min').split(',')
 const PLAYERS = (process.env.PLAYERS ?? '4,3').split(',')
 
 const probe = () => {
+  document.querySelector<HTMLElement>('.chatopen')?.click() // chat picker open: its buttons must be reachable too
   const q = (s: string) => [...document.querySelectorAll<HTMLElement>(s)]
   const vis = (e: HTMLElement) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 }
   const R = (e: HTMLElement) => e.getBoundingClientRect()
