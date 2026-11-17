@@ -97,6 +97,7 @@ const D: Record<string, [string, string]> = {
   conn_failed: ['Could not reach the game server. Check your connection and try again.', '無法連線到遊戲伺服器，請檢查網路後再試。'],
   calcTw: ['Base 30 + 10 per tai: 30 + 10 × {n} = {base} from each payer', '底 30 + 每台 10：30 + 10 × {n} = {base}（每位付款者）'],
   calcHk: ['{n} fan = {base} points (self-draw: each pays {base}; discard: the discarder pays double)', '{n} 番 = {base} 點（自摸每家付 {base}；放槍者付雙倍）'],
+  withRiichi: ['(with riichi)', '（立直後）'],
   discard: ['Discard', '打出'],
   discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],

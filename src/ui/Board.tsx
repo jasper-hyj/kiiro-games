@@ -168,7 +168,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   }
 
   // ----- keyboard shortcuts -----
-  const kb = useRef<() => void>(() => {})
   const keyHandler = (e: KeyboardEvent) => {
     const el = e.target as HTMLElement | null
     if (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) return
@@ -199,7 +198,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
       if (order[j] !== undefined) setSel(order[j])
     }
   }
-  kb.current = () => {}
   useEffect(() => {
     const h = (e: KeyboardEvent) => keyHandler(e)
     window.addEventListener('keydown', h)
@@ -313,7 +311,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
                   return (
                     <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
                       <Tile kind={k} />
-                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' ? 'fan' : 'tai')}`}` : '—'}</span></span>
+                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : '—'}</span></span>
                     </span>
                   )
                 })}

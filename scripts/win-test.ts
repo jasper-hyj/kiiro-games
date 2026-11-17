@@ -201,5 +201,27 @@ async function viaTable() {
 }
 await viaTable()
 
+
+// 10. hand-value preview: a closed tenpai hand with no yaku shows what riichi would make it worth
+async function previewTest() {
+  const tb = new Table({ rule: 'riichi', aka: false, rounds: 1, minFan: 0, players: 4, botLevel: 'normal' })
+  tb.join('me', 'Me')
+  tb.start('me')
+  const g = tb.game!
+  const used = new Map<number, number>()
+  const take = (k: number) => { const n = used.get(k) ?? 0; used.set(k, n + 1); return k * 4 + n }
+  ;['123m456p789s33z44z', JUNK, JUNK, JUNK].forEach((h, i) => { const p = g.players[i]; p.hand = sortIds(parse(h).map(take)); p.drawn = null; p.flowers = []; p.melds = []; p.discards = [{ tile: take(33), riichi: false, called: false }] })
+  g.players[1].hand = g.players[1].hand.slice(0, 13); g.players[2].hand = g.players[2].hand.slice(0, 13); g.players[3].hand = g.players[3].hand.slice(0, 13)
+  const id = take(parse('1z')[0]); g.players[1].hand.push(id); g.players[1].drawn = id
+  g.anyCall = true; g.phase = 'turn'; g.turn = 1
+  const h = tb.view('me').game!.hint
+  eq('preview: waits are 3z/4z', h?.waits.slice().sort((a, b) => a - b), [29, 30])
+  eq('preview: no yaku without riichi, but valued "with riichi"', [h?.values[29]?.riichi, (h?.values[29]?.total ?? 0) >= 1], [true, true])
+  g.players[0].riichi = true
+  const h2 = tb.view('me').game!.hint
+  eq('preview: once riichi is declared the value is real (not hypothetical)', [h2?.values[29]?.riichi ?? false, (h2?.values[29]?.total ?? 0) >= 1], [false, true])
+}
+await previewTest()
+
 console.log(fails ? `\n${fails} FAILED` : '\nall win checks passed')
 process.exit(fails ? 1 : 0)

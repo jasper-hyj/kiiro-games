@@ -34,7 +34,7 @@ export interface TableView {
     result: HandResult | null
     acks: number[]
     standings: { seat: number; name: string; points: number }[]
-    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string } | null>; furiten: boolean } | null
+    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean } | null
     history: HistoryEntry[]
     chat: { n: number; seat: number; key: string; ago: number }[]
     log: string[]
@@ -315,10 +315,17 @@ export class Table {
         hint = { shanten: g.shanten(you), waits: [], discardWaits: dw, left: leftOf(all), values: {}, furiten: false }
       } else if (me.hand.length % 3 === 1) {
         const w = g.waitsFor(you)
-        const values: Record<number, { total: number; label?: string } | null> = {}
+        const values: Record<number, { total: number; label?: string; riichi?: boolean } | null> = {}
         for (const k of w) {
-          const sc = g.checkWin(you, false, k * 4 + 3)
-          values[k] = sc ? { total: sc.total, label: sc.label } : null
+          let sc = g.checkWin(you, false, k * 4 + 3)
+          let viaRiichi = false
+          if (!sc && g.isRiichi && !me.riichi && g.isClosed(me) && me.points >= 1000) {
+            // no yaku yet: what would it be worth if riichi were declared?
+            me.riichi = true
+            try { sc = g.checkWin(you, false, k * 4 + 3) } finally { me.riichi = false }
+            viaRiichi = !!sc
+          }
+          values[k] = sc ? { total: sc.total, label: sc.label, riichi: viaRiichi || undefined } : null
         }
         hint = { shanten: g.shanten(you), waits: w, discardWaits: {}, left: leftOf(w), values, furiten: g.isFuriten(you) }
       }

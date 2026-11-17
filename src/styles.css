@@ -267,8 +267,8 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
    · 50 top bar · 60 menus · 100 modals · 200 toasts
    ===================================================================== */
 :root { --z-tile: 3; --z-call: 5; --z-pop: 30; --z-top: 50; --z-menu: 60; --z-modal: 100; --z-toast: 200; }
-.app { min-height: 100dvh; height: auto; }
-.app.game { height: 100dvh; min-height: 0; overflow: hidden; }
+.app { min-height: 100vh; min-height: 100dvh; height: auto; }
+.app.game { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
 .topbar { position: relative; z-index: var(--z-top); flex-wrap: nowrap; }
 .topbar .slot { display: flex; align-items: center; }
 .autopanel { z-index: var(--z-menu); }
