@@ -7,6 +7,14 @@ const check = (n: string, ok: boolean, extra = '') => { if (!ok) fails++; consol
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const text = (p: Page) => p.evaluate(() => document.body.innerText)
 
+async function hostCreate(p: any) {
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Play with friends
+  await p.waitForSelector('button.rule')
+  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click())  // pick Taiwanese
+  await p.waitForSelector('input.bigname')
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Create room
+}
+
 async function main() {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] })
   try {
@@ -20,9 +28,9 @@ async function main() {
     }
     const host = await mk()
     await host.goto(BASE, { waitUntil: 'networkidle0' })
-    await host.evaluate(() => (document.querySelector('.btn.big') as HTMLElement).click())
-    await host.waitForSelector('.card input[readonly]')
-    const link = await host.$eval('.card input[readonly]', (e) => (e as HTMLInputElement).value)
+    await hostCreate(host)
+    await host.waitForSelector('.copyrow input[readonly]')
+    const link = await host.$eval('.copyrow input[readonly]', (e) => (e as HTMLInputElement).value)
     const guests: Page[] = []
     for (let i = 0; i < 3; i++) {
       const g = await mk()
@@ -44,7 +52,7 @@ async function main() {
     check('…with a way back to the menu', (await late.$('.joinpage .btn.big')) !== null)
     await late.evaluate(() => (document.querySelector('.joinpage .btn.big') as HTMLElement).click())
     await sleep(300)
-    check('back button returns to the main menu', /Choose rules/i.test(await text(late)))
+    check('back button returns to the main menu', /Play vs bots/i.test(await text(late)))
     check('the full room itself is unaffected', ((await text(host)).match(/Human/g) ?? []).length === 4)
   } finally {
     await browser.close()

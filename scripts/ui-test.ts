@@ -40,13 +40,13 @@ async function newPage(b: Browser, d: Dev, lang: 'en' | 'zh' = 'en'): Promise<Pa
 }
 const text = (p: Page) => p.evaluate(() => document.body.innerText)
 const clickText = (p: Page, sel: string, re: RegExp) =>
-  p.evaluate((sel, src) => {
-    const r = new RegExp(src)
+  p.evaluate((sel, src, fl) => {
+    const r = new RegExp(src, fl)
     const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
     if (!el) return false
     el.click()
     return true
-  }, sel, re.source)
+  }, sel, re.source, re.flags)
 
 /** real mouse click / touch tap at an element's centre */
 async function tap(p: Page, d: Dev, sel: string, nth = 0) {
@@ -105,11 +105,16 @@ async function main() {
         const p = await newPage(browser, d, lang)
         await p.goto(BASE, { waitUntil: 'networkidle0' })
         const t = await text(p)
-        check(`${tag}: menu shows rule cards + play buttons`, lang === 'en' ? /Taiwanese/.test(t) && /Play vs bots/.test(t) : /台灣麻將/.test(t) && /對戰電腦/.test(t))
+        check(`${tag}: start screen shows the play buttons`, lang === 'en' ? /Play vs bots/i.test(t) && /Play with friends/i.test(t) : /對戰電腦/.test(t) && /和朋友玩/.test(t))
         await layout(p, `${tag} menu`)
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-menu.png` })
-        await p.click('details.options summary')
-        await sleep(150)
+        await clickText(p, '.btn.big', lang === 'en' ? /vs bots/i : /對戰電腦/)
+        await sleep(450)
+        const t2 = await text(p)
+        check(`${tag}: rules step shows the three rule cards`, lang === 'en' ? /Taiwanese/.test(t2) && /Hong Kong/.test(t2) && /Riichi/.test(t2) : /台灣麻將/.test(t2))
+        await layout(p, `${tag} rules step`)
+        await p.click('button.rule')
+        await sleep(450)
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-menu-options.png` })
         await layout(p, `${tag} menu+options`)
 
@@ -121,7 +126,9 @@ async function main() {
         await clickText(p, '.modal .btn', lang === 'en' ? /Close/ : /關閉/)
         await sleep(100)
 
-        await clickText(p, '.btn.big', lang === 'en' ? /vs bots/ : /對戰電腦/)
+        await clickText(p, '.btn.big', lang === 'en' ? /Continue/i : /繼續/)
+        await sleep(450)
+        await clickText(p, '.btn.big', lang === 'en' ? /Start game/i : /開始遊戲/)
         await p.waitForSelector('.board .handrow .tile', { timeout: 8000 })
         const nHand = await p.$$eval('.handrow .tile', (e) => e.length)
         check(`${tag}: game starts, hand drawn (${nHand} tiles)`, nHand >= 16)

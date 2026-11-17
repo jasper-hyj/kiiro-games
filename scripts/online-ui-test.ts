@@ -14,13 +14,13 @@ const check = (name: string, ok: boolean, extra = '') => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const text = (p: Page) => p.evaluate(() => document.body.innerText)
 const clickText = (p: Page, sel: string, re: RegExp) =>
-  p.evaluate((sel, src) => {
-    const r = new RegExp(src)
+  p.evaluate((sel, src, fl) => {
+    const r = new RegExp(src, fl)
     const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
     if (!el) return false
     el.click()
     return true
-  }, sel, re.source)
+  }, sel, re.source, re.flags)
 
 async function tapSel(p: Page, touch: boolean, sel: string, nth = 0) {
   const h = (await p.$$(sel))[nth]
@@ -47,6 +47,14 @@ async function playTurn(p: Page, touch: boolean) {
 }
 const pondCounts = (p: Page) => p.evaluate(() => ['p0', 'p1', 'p2', 'p3'].map((k) => document.querySelectorAll(`.pond.${k} .tile`).length))
 
+async function hostCreate(p: any) {
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Play with friends
+  await p.waitForSelector('button.rule')
+  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click())  // pick Taiwanese
+  await p.waitForSelector('input.bigname')
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Create room
+}
+
 async function main() {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] })
   try {
@@ -63,9 +71,9 @@ async function main() {
 
     // 1. host creates a room
     await A.goto(BASE, { waitUntil: 'networkidle0' })
-    await clickText(A, '.btn.big', /Play with friends/)
-    await A.waitForSelector('.card input[readonly]', { timeout: 8000 })
-    const link = await A.$eval('.card input[readonly]', (e) => (e as HTMLInputElement).value)
+    await hostCreate(A)
+    await A.waitForSelector('.copyrow input[readonly]', { timeout: 8000 })
+    const link = await A.$eval('.copyrow input[readonly]', (e) => (e as HTMLInputElement).value)
     check('host: room created with an invite link', /\?room=[A-Z0-9]{5}/.test(link), link)
     const code = (link.match(/room=([A-Z0-9]+)/) ?? [])[1]
     await A.screenshot({ path: `${SHOTS}/online-host-lobby.png` })
@@ -82,6 +90,7 @@ async function main() {
     await sleep(500)
     const seatsA = await A.$$eval('.seatbox', (e) => e.map((x) => (x as HTMLElement).innerText))
     check('both players seated in the lobby', seatsA.filter((s) => /Human/.test(s)).length === 2, seatsA.join(' | '))
+    for (const pg of [A, B]) await pg.evaluate(() => { (document.querySelector('.tablesettings') as HTMLDetailsElement).open = true })
     check('guest sees "waiting for the host"', /Waiting for the host/.test(await text(B)))
     check('guest cannot change settings (cards disabled)', await B.$$eval('button.rule', (e) => e.every((x) => (x as HTMLButtonElement).disabled)))
     await B.screenshot({ path: `${SHOTS}/online-guest-lobby.png` })
@@ -96,7 +105,7 @@ async function main() {
     await clickText(A, '.seatbox button', /Make bot/)
     await sleep(200)
     check('host can reserve a seat for a bot', /Bot \(reserved\)/.test(await text(A)))
-    await clickText(A, '.btn.gold', /Start game/)
+    await clickText(A, '.btn.gold', /Start game/i)
     await A.waitForSelector('.board .handrow .tile', { timeout: 8000 })
     await B.waitForSelector('.board .handrow .tile', { timeout: 8000 })
     check('game started for both', true)

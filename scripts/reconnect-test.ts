@@ -34,6 +34,14 @@ function autoPlay(p: Page, label: string) {
   return { stop: async () => { on = false; await loop } }
 }
 
+async function hostCreate(p: any) {
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Play with friends
+  await p.waitForSelector('button.rule')
+  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click())  // pick Taiwanese
+  await p.waitForSelector('input.bigname')
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Create room
+}
+
 async function main() {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] })
   try {
@@ -47,9 +55,9 @@ async function main() {
     }
     const host = await mk()
     await host.goto(BASE + '/?debug=1', { waitUntil: 'networkidle0' })
-    await host.evaluate(() => (document.querySelector('.btn.big') as HTMLElement).click())
-    await host.waitForSelector('.card input[readonly]')
-    const link = (await host.$eval('.card input[readonly]', (e) => (e as HTMLInputElement).value)) + '&debug=1'
+    await hostCreate(host)
+    await host.waitForSelector('.copyrow input[readonly]')
+    const link = (await host.$eval('.copyrow input[readonly]', (e) => (e as HTMLInputElement).value)) + '&debug=1'
     const guest = await mk()
     await guest.goto(link, { waitUntil: 'networkidle0' })
     await guest.type('#nick', 'Bob')
