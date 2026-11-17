@@ -5,6 +5,8 @@ import type { ClientMsg, ServerMsg } from './protocol'
 export interface Conn {
   send(m: ClientMsg): void
   close(): void
+  /** debug/testing: drop the connection and reconnect after `ms` */
+  drop?(ms: number): void
 }
 export type Status = 'connecting' | 'open' | 'closed'
 export interface Handlers { onView(v: TableView): void; onStatus(s: Status): void; onError(m: string): void }
@@ -63,5 +65,9 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     if (m.t === 'view') h.onView(m.view)
     else h.onError(m.message)
   })
-  return { send: (m) => ws.send(JSON.stringify(m)), close: () => ws.close() }
+  return {
+    send: (m) => ws.send(JSON.stringify(m)),
+    close: () => ws.close(),
+    drop: (ms) => { ws.close(); setTimeout(() => ws.reconnect(), ms) },
+  }
 }

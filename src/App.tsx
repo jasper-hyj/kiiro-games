@@ -56,6 +56,7 @@ export default function App() {
     setRoom(c); setActive(true)
     history.replaceState(null, '', `?room=${c}`)
     conn.current = connectRemote(c, id.current, name || 'Player', handlers)
+    if (new URLSearchParams(location.search).has('debug')) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
     setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
     // eslint-disable-next-line react-hooks/exhaustive-deps

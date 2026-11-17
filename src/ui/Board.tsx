@@ -239,8 +239,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
             <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
             {setRotate && <label title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /> {t('rotate')}</label>}
             <hr />
-            <button className="menuitem" onClick={() => setPanel('history')}>{t('history')}</button>
-            <button className="menuitem" onClick={() => setPanel('keys')}>{t('shortcuts')}</button>
+            <button className="menuitem" onClick={() => { setPanel('history'); if (autosRef.current) autosRef.current.open = false }}>{t('history')}</button>
+            <button className="menuitem" onClick={() => { setPanel('keys'); if (autosRef.current) autosRef.current.open = false }}>{t('shortcuts')}</button>
           </div>
     </details>
   )
