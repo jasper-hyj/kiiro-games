@@ -366,3 +366,10 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
 .apbtns .cbtn .mini { --tw: 20px; }
 .apbtns .cbtn.pass { grid-column: 1 / -1; }
 .apbtns .cbtn[hidden] { display: none; }
+
+/* three compact columns so even 7 simultaneous call buttons fit the panel at any scale */
+.seat.me { grid-template-columns: minmax(0, 1fr) 360px; }
+.apbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.apbtns .cbtn { flex-direction: column; gap: 2px; min-height: min(76px, max(52px, calc(46px / var(--s)))); padding: 3px 4px; font-size: 17px; }
+.apbtns .cbtn .mini { --tw: 19px; gap: 1px; }
+.callhead { --tw: 24px; }
