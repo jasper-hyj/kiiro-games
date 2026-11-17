@@ -24,6 +24,8 @@ async function tap(p: Page, touch: boolean, sel: string, nth = 0) {
 
 interface Dev { name: string; w: number; h: number; touch: boolean }
 
+const n4 = (n: number) => String(n)
+
 async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | 'zh') {
   const tag = `${rule}/${dev.name}/${lang}`
   const p = await browser.newPage()
@@ -74,6 +76,15 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
     const pts = rows.map((r) => Number((r.match(/—\s*(-?\d+)/) ?? [])[1]))
     const start = rule === 'riichi' ? 25000 : 1000
     check(`${tag}: final standings list 4 players and points add up (${pts.join(', ')})`, rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4, rows.join(' | '))
+    // hand review: open it, step to the end of the first hand and see the final hands
+    await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.overlay .btn')].find((e) => /Review hands|回顧牌局/i.test(e.innerText)); b?.click() })
+    await sleep(300)
+    check(`${tag}: hand review opens with ${n4(await p.$$eval('.rp-row', (e) => e.length))} player rows`, (await p.$$eval('.rp-row', (e) => e.length)) >= 3)
+    await p.evaluate(() => { const r = document.querySelector('.rp-ctl input[type=range]') as HTMLInputElement; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!; set.call(r, r.max); r.dispatchEvent(new Event('input', { bubbles: true })) })
+    await sleep(200)
+    check(`${tag}: review's last step shows the final hands`, (await p.$$eval('.rp-final .tile', (e) => e.length)) > 0)
+    await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.modal .btn')].find((e) => /Close|關閉/.test(e.innerText)); b?.click() })
+    await sleep(200)
     await p.evaluate(() => (document.querySelector('.overlay .btn.alt') as HTMLElement | null)?.click())
     await sleep(300)
     check(`${tag}: Leave from the game-over screen returns to the menu`, (await p.$('.menu')) !== null)

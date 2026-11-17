@@ -42,6 +42,15 @@ export interface HistoryEntry {
   deltas: number[]; points: number[]
 }
 
+/** A public snapshot taken after each discard; enough to replay a hand without revealing hidden information. */
+export interface ReplayStep { seat: number; tile: number; riichi: boolean; p: { d: [number, boolean][]; m: { type: string; tiles: number[] }[]; f: number[] }[] }
+export interface Replay {
+  handNo: number; roundIndex: number; dealer: number; steps: ReplayStep[]
+  kind: 'win' | 'draw'; winners: number[]; from: number | null; tsumo: boolean; label?: string; total: number
+  deltas: number[]; hands: { hand: number[]; melds: { type: string; tiles: number[] }[]; flowers: number[] }[]
+  winTile?: number; yaku: { name: string; zh?: string; value: number }[]
+}
+
 export const WIND_NAMES = ['East', 'South', 'West', 'North']
 
 export class Game {
@@ -74,6 +83,8 @@ export class Game {
   afterCall = false
   kuikae: number[] = []
   history: HistoryEntry[] = []
+  replays: Replay[] = []
+  private steps: ReplayStep[] = []
   handNo = 0
   private pendingKakan: { seat: number; tile: number } | null = null
   private pendingOver = false
@@ -123,6 +134,7 @@ export class Game {
     } else { this.doraPool = []; this.uraPool = [] }
     this.doraCount = 1
     this.kuikae = []; this.kanCount = 0; this.anyCall = false; this.rinshan = false; this.afterCall = false
+    this.steps = []
     this.result = null; this.reactions = {}; this.decisions = {}; this.lastDiscard = null; this.pendingKakan = null
     for (const p of this.players) {
       Object.assign(p, { hand: [], drawn: null, melds: [], discards: [], flowers: [], nuki: [], riichi: false, doubleRiichi: false, ippatsu: false, riichiPending: false, tempFuriten: false, permFuriten: false })
@@ -369,6 +381,7 @@ export class Game {
     p.tempFuriten = false
     p.ippatsu = false
     p.discards.push({ tile, riichi, called: false })
+    this.steps.push({ seat: p.seat, tile, riichi, p: this.players.map((q) => ({ d: q.discards.map((x) => [x.tile, x.riichi] as [number, boolean]), m: q.melds.map((m) => ({ type: m.type, tiles: m.tiles.slice() })), f: [...q.flowers, ...q.nuki] })) })
     if (riichi) {
       p.riichiPending = true
       p.doubleRiichi = !this.anyCall && p.discards.length === 1
@@ -575,6 +588,14 @@ export class Game {
       names: (r.score?.yaku ?? []).slice(0, 4).map((y) => ({ name: y.name, zh: y.zh })),
       deltas: r.deltas.slice(), points: this.players.map((p) => p.points),
     })
+    this.replays.push({
+      handNo: this.handNo, roundIndex: this.roundIndex, dealer: this.dealer, steps: this.steps,
+      kind: r.kind, winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [], from: r.from ?? null, tsumo: !!r.tsumo,
+      label: r.label ?? r.score?.label, total: r.score?.total ?? 0, deltas: r.deltas.slice(),
+      hands: r.hands.map((h) => ({ hand: h.hand.slice(), melds: h.melds.map((m) => ({ type: m.type, tiles: m.tiles.slice() })), flowers: h.flowers.slice() })),
+      winTile: r.winTile, yaku: (r.score?.yaku ?? []).map((y) => ({ name: y.name, zh: y.zh, value: y.value })),
+    })
+    this.steps = []
     this.result = r
     this.phase = 'result'
     if (dealerStays) {

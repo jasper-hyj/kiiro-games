@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import type { ClientMsg } from '../net/protocol'
 import { Tile } from './Tile'
 import { doraFrom, kindOf } from '../engine/tiles'
 import { useLang, yakuName } from '../i18n'
+import { ReplayModal } from './Replay'
 
 function DoraRows({ label, ids, sanma, ura }: { label: string; ids: number[]; sanma: boolean; ura?: boolean }) {
   return (
@@ -20,6 +22,7 @@ function DoraRows({ label, ids, sanma, ura }: { label: string; ids: number[]; sa
 
 export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m: ClientMsg) => void; onLeave: () => void }) {
   const { lang, t } = useLang()
+  const [review, setReview] = useState(false)
   const v = view.game!
   const r = v.result
   const you = view.you
@@ -61,8 +64,10 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <ol className="standings">{v.standings.map((s) => <li key={s.seat}><b>{s.name}</b> — {s.points} {t('pts')} {s.seat === you && `(${t('you')})`}</li>)}</ol>
         <div className="row">
           {view.host && <button className="btn gold" onClick={() => send({ t: 'lobby' })}>{t('backLobby')}</button>}
+          <button className="btn" onClick={() => setReview(true)}>{t('reviewHands')}</button>
           <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
         </div>
+        {review && <ReplayModal v={v} you={you} onClose={() => setReview(false)} />}
       </div></div>, document.body)
     )
   }

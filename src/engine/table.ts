@@ -1,4 +1,4 @@
-import { Game, type HistoryEntry, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
+import { Game, type Replay, type HistoryEntry, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
 import type { GameOptions } from './rules/types'
 import type { RuleId } from './rules'
 import { botReact, botTurn } from './bot'
@@ -36,6 +36,7 @@ export interface TableView {
     standings: { seat: number; name: string; points: number }[]
     hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean } | null
     history: HistoryEntry[]
+    replays?: Replay[]
     chat: { n: number; seat: number; key: string; ago: number }[]
     log: string[]
     rule: { id: RuleId; name: string; nSets: number }
@@ -340,6 +341,7 @@ export class Table {
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
+      replays: g.phase === 'over' ? g.replays : undefined,
       chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),
       rule: { id: g.rule.id, name: g.rule.name, nSets: g.rule.nSets },
     }
