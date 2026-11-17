@@ -88,9 +88,9 @@ export function Face({ kind }: { kind: number }) {
       </>
     )
   }
-  if (s === 0) return (<><div className="big">{NUMS[numOf(kind) - 1]}</div><div className="sm" style={{ color: '#c62828' }}>萬</div></>)
-  if (s === 1) return <Pips suit={1} n={numOf(kind)} />
-  if (s === 2) return numOf(kind) === 1 ? <Bird /> : <Pips suit={2} n={numOf(kind)} />
+  if (s === 0) return (<><div className="big man">{NUMS[numOf(kind) - 1]}</div><div className="big man" style={{ color: '#c62828' }}>萬</div></>)
+  if (s === 1) return <><span className="idx">{numOf(kind)}</span><Pips suit={1} n={numOf(kind)} /></>
+  if (s === 2) return <><span className="idx">{numOf(kind)}</span>{numOf(kind) === 1 ? <Bird /> : <Pips suit={2} n={numOf(kind)} />}</>
   const h = kind - 27
   if (h < 4) return <div className="big">{'東南西北'[h]}</div>
   if (kind === 31) return <div className="white-dragon" />
