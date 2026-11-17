@@ -240,6 +240,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         {setRotate && <label className="switch" title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /><span className="knob" />{t('rotate')}</label>}
         <div className="dockrule" />
+        {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
         <button className="menuitem" onClick={() => { setPanel('keys'); closeDock() }}>{t('shortcuts')}</button>
         <div className="dockrule" />
@@ -293,12 +294,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         <div className="mebar">
           <Chip p={me} v={v} bubble={bub(me.seat)} />
           {doraInHand > 0 && <span className="dorapill" title={t('doraInHand')}>★ {doraInHand}</span>}
-          {online && (
-            <div className="chatwrap">
-              <button className="chatopen" aria-label={t('chatTitle')} onClick={() => setPanel(panel === 'chat' ? null : 'chat')}>💬</button>
-              {panel === 'chat' && <ChatPicker onPick={(k) => { send({ t: 'chat', key: k }); setPanel(null) }} />}
-            </div>
-          )}
           <div className="melds">{me.melds.map((m, i) => <MeldView key={i} m={m} owner={me.seat} n={n} />)}</div>
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
@@ -336,18 +331,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
             )}
           </div>
         )}
-        <div className={'handrow' + (mine ? ' mine' : '')}>
-          {handTiles.map((id) => (
-            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
-          ))}
-          {me.drawn !== null && (
-            <>
-              <span className="hand-extra" />
-              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
-            </>
-          )}
-        </div>
-        </div>
         <div className="actionpanel">
           {reaction && v.lastDiscard && (
             <div className="callhead"><Tile id={v.lastDiscard.tile} hot /></div>
@@ -383,8 +366,21 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
           {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
           </div>
         </div>
+        <div className={'handrow' + (mine ? ' mine' : '')}>
+          {handTiles.map((id) => (
+            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+          ))}
+          {me.drawn !== null && (
+            <>
+              <span className="hand-extra" />
+              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
+            </>
+          )}
+        </div>
+        </div>
       </div>
       {autoMenu}
+      {panel === 'chat' && <div className="chatfloat"><ChatPicker onPick={(k) => { send({ t: 'chat', key: k }); setPanel(null) }} /><button className="btn sm alt" onClick={() => setPanel(null)}>{t('close')}</button></div>}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}
       {(v.phase === 'result' || v.phase === 'over') && <ResultModal view={view} send={send} onLeave={onLeave} />}

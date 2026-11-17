@@ -351,3 +351,20 @@ input[type=text] { font-family: var(--sans); font-weight: 500; font-size: 16px; 
 button.rule.on .glyph { color: transparent; }
 button.rule .zh { flex: 1 1 100px; }
 .options.flat > .btn { display: block; margin: 14px auto 0; }
+
+/* ---------- table, essentials only ---------- */
+/* my seat: a single column. The action row sits between the status line and the hand and is reserved (84px), so
+   buttons appear without moving anything and can never overlap tiles. */
+.seat.me { display: flex; flex-direction: column; grid-template-columns: none; }
+.seat.me .memain { flex: 1 1 auto; justify-content: flex-end; }
+.actionpanel { flex: none; height: 84px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 14px; overflow: visible; padding: 0; }
+.actionpanel:empty { display: none; }
+.actionpanel .callhead { flex: none; }
+.apbtns { display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; justify-content: center; grid-template-columns: none; }
+.apbtns:empty { display: none; }
+.apbtns .cbtn { flex-direction: row; gap: 10px; width: auto; min-width: 0; min-height: min(70px, max(52px, calc(46px / var(--s)))); padding: 4px 18px; font-size: 19px; animation: rise-in .18s ease-out both; }
+.apbtns .cbtn.pass { grid-column: auto; }
+.apbtns .cbtn .mini { --tw: 22px; flex-direction: row; }
+.chatfloat { position: absolute; top: calc(70px * var(--k, 1)); right: 14px; z-index: var(--z-menu); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.chatfloat .chatpop { position: static; }
+.chatfloat { --k: clamp(1, calc(.8 / var(--s)), 3); top: calc(66px * var(--k)); }

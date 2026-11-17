@@ -18,7 +18,7 @@ export default function App() {
   const { lang, setLang, t } = useLang()
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
-  const [hints, setHints] = useState(() => load('kiiro-hints', true))
+  const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const [rotate, setRotate] = useState(() => load('kiiro-rotate', true))
   useEffect(() => save('kiiro-rotate', rotate), [rotate])
   const stress = new URLSearchParams(location.search).get('stress')

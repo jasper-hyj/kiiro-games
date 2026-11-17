@@ -114,7 +114,9 @@ async function main() {
     await B.screenshot({ path: `${SHOTS}/online-guest-game.png` })
 
     // 4. chat
-    await tapSel(B, true, '.chatopen')
+    await tapSel(B, true, '.dock summary')
+    await sleep(200)
+    await clickText(B, '.dockpanel .menuitem', /chat/i)
     await sleep(150)
     check('chat picker opens', (await B.$('.chatpop')) !== null)
     await B.screenshot({ path: `${SHOTS}/online-chat-open.png` })
