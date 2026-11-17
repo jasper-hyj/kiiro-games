@@ -154,6 +154,7 @@ export function Board({ view, send, hints, setHints, onLeave }: {
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
         <div className="actions">
+          {o?.abort && <button className="btn alt" onClick={() => send({ t: 'act', a: { type: 'abort' } })}>Abort draw (九種九牌)</button>}
           {o?.nuki && <button className="btn" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}>Nuki 北</button>}
           {o?.tsumo && <button className="btn gold" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>Tsumo (自摸)</button>}
           {o && o.riichi.length > 0 && (

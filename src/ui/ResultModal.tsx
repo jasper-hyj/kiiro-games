@@ -62,7 +62,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         </>
       ) : (
         <>
-          <h2>Draw — wall exhausted</h2>
+          <h2>{r.label && r.label !== 'Exhaustive draw' ? r.label : 'Draw — wall exhausted'}</h2>
           {v.rule.id === 'riichi' && <p className="muted">Tenpai: {v.players.filter((_, i) => r.tenpai?.[i]).map((p) => p.name).join(', ') || 'nobody'}</p>}
         </>
       )}

@@ -22,14 +22,14 @@ const parse = (s: string): number[] => {
 const used = new Map<number, number>()
 const ids = (ks: number[]) => ks.map((k) => { const n = used.get(k) ?? 0; used.set(k, n + 1); return k * 4 + n })
 
-function setup(rule: RuleId, hand: string, win: string, o: { seat?: number; tsumo?: boolean; riichi?: boolean; melds?: { type: any; tiles: string }[] } = {}) {
+function setup(rule: RuleId, hand: string, win: string, o: { lian?: number; flowers?: number[]; seat?: number; tsumo?: boolean; riichi?: boolean; melds?: { type: any; tiles: string }[] } = {}) {
   used.clear()
   const g = new Game(rule, { rule, aka: false, rounds: 1, minFan: 3 } as any, ['a', 'b', 'c', 'd'])
-  g.dealer = 0; g.roundIndex = 0; g.lian = 0; g.honba = 0
+  g.dealer = 0; g.roundIndex = 0; g.lian = o.lian ?? 0; g.honba = 0
   g.doraPool = [120, 120, 120, 120, 120]; g.uraPool = [120, 120, 120, 120, 120]; g.doraCount = 1
   const seat = o.seat ?? 1
   const p = g.players[seat]
-  p.flowers = []
+  p.flowers = o.flowers ?? []
   p.discards = [{ tile: 0, riichi: false, called: false }]
   p.melds = (o.melds ?? []).map((m) => ({ type: m.type, tiles: ids(parse(m.tiles)), from: 0 }))
   p.hand = sortIds(ids(parse(hand)))
@@ -108,6 +108,40 @@ eq('shanten chiitoi', shantenAll(toCounts(parse('1122m3344p5566s7z')), 0, 4, { c
 {
   const t = setup('taiwan', '123m456m789m123p456p4p', '4p', { tsumo: false })
   eq('tw 16 tiles hand complete', run(t) !== null, true)
+}
+
+// --- Taiwanese ---
+const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
+{
+  const t = setup('taiwan', '111m222m333m444m555m6m', '6m', { tsumo: false })
+  const n = names(t)
+  eq('tw pure one suit + all triplets + five concealed', ['Pure One Suit', 'All Triplets', 'Five Concealed Triplets'].every((x) => n.includes(x)), true)
+}
+{
+  const t = setup('taiwan', '123m456m789m123p456p4p', '4p')
+  eq('tw concealed self-draw = 3 tai (replaces concealed + self-draw)', names(t).includes('Concealed Self-draw') && !names(t).includes('Self-draw'), true)
+}
+{
+  const t = setup('taiwan', '123m456m789m123p45p77s', '3p', { tsumo: false })
+  const sc = run(t)!
+  eq('tw pinghu ron: concealed 1 + pinghu 2 = 3 tai', [sc.yaku.map((y) => y.name).includes('Pinghu (All Sequences)'), sc.total], [true, 3])
+  eq('tw discarder-only payment; dealer discarder owes +1 tai (30+10*4)', pay(t), [-70, 70, 0, 0])
+}
+{
+  const t = setup('taiwan', '123m456m789m123p45p77s', '3p', { tsumo: false, flowers: [34, 35] })
+  eq('tw pinghu blocked by flowers', names(t).includes('Pinghu (All Sequences)'), false)
+}
+{
+  const t = setup('taiwan', '123m456m789m123p456p4p', '4p', { seat: 0, lian: 2 })
+  const sc = run(t)!
+  const y = sc.yaku.map((q) => q.name)
+  eq('tw dealer + streak counted when dealer wins', [y.includes('Dealer'), sc.yaku.find((q) => q.name.startsWith('Dealer Streak'))?.value], [true, 4])
+}
+{
+  const score = { yaku: [], total: 5, base: 80 }
+  const rule = new Game('taiwan', { rule: 'taiwan' } as any, ['a', 'b', 'c', 'd']).rule
+  eq('tw dealer pays streak bonus on ron (1+2*2 extra tai)', rule.settle(score, { winner: 1, from: 0, dealer: 0, honba: 0, lianZhuang: 2 }), [-130, 130, 0, 0])
+  eq('tw dealer pays more on tsumo, others normal', rule.settle(score, { winner: 1, from: null, dealer: 0, honba: 0, lianZhuang: 2 }), [-130, 340, -80, -80].map((x, i) => (i === 1 ? 290 : x)))
 }
 console.log(fails ? `\n${fails} FAILED` : '\nall passed')
 process.exit(fails ? 1 : 0)
