@@ -1,5 +1,5 @@
 # Optional: deploys the online-rooms server (Cloudflare Worker) when server/engine code changes.
-# A normal `git push` does NOT update Cloudflare. To enable this workflow:
+# Cloudflare auto-deploy is already set up on the owner's account, so this stays manual to avoid double deploys. To use it instead:
 #   1. Create a Cloudflare API token (template "Edit Cloudflare Workers") and add it to the repo secrets as CLOUDFLARE_API_TOKEN,
 #      plus CLOUDFLARE_ACCOUNT_ID.
 #   2. Change `on:` below to also run on push (see the commented block), or run it manually from the Actions tab.

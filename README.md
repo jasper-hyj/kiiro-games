@@ -46,7 +46,7 @@ npm run party:deploy
 # prints a URL like https://kiiro-mahjong.<you>.workers.dev
 ```
 
-A `git push` does **not** redeploy the Worker. Run `npm run party:deploy` again after changing `src/engine`, `src/net` or `party/` (or enable *Workers Builds* in the Cloudflare dashboard to deploy on push).
+If you have not connected auto-deploy (Cloudflare *Workers Builds*), a `git push` does **not** redeploy the Worker: run `npm run party:deploy` again after changing `src/engine`, `src/net` or `party/`.
 
 ### 2. Web app (Vercel)
 

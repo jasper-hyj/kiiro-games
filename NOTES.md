@@ -31,7 +31,7 @@
 ## Known limitations
 - **Small phones:** (rotate-table toggle in the Auto menu) the stage scales down, so on a 360px-wide phone tiles are ~20 px (hand) and ~10 px (ponds). Everything is correct and tappable but small. A larger-tile phone layout would need a second design.
 - **Server state is in memory.** A Cloudflare Worker restart/redeploy drops running rooms. Players can re-create the room.
-- **Cloudflare is not auto-deployed by `git push`** — run `npm run party:deploy` after engine/server changes (or enable Workers Builds in the Cloudflare dashboard). Vercel deploys on push.
+- **Deploys:** Vercel deploys on push, and Cloudflare auto-deploy is set up on the owner's account. `npm run party:deploy` stays available for manual deploys.
 - **Bots** play sensibly (shanten/ukeire, basic defence, call heuristics) but are not strong; Easy mode adds random mistakes.
 - **Taiwanese:** common tai are implemented; rarer bonuses (半求, 地聽/天聽, etc.) are not, because house rules vary.
 - **Hong Kong:** no seven pairs / nine gates; limit capped at 13 fan.
@@ -41,7 +41,7 @@
 
 ## CI / deploys
 - `.github/workflows/ci.yml` runs `npm run check` + `npm run build` on every push/PR.
-- `.github/workflows/deploy-worker.yml` deploys the Cloudflare Worker; it is manual-only until you add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets and enable its `push:` trigger.
+- `.github/workflows/deploy-worker.yml` deploys the Cloudflare Worker; it is manual-only because Cloudflare already auto-deploys; enabling its `push:` trigger as well would deploy twice.
 - Vercel redeploys on push by itself.
 
 ## Rulesets people ask about (not built)
