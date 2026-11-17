@@ -4,6 +4,7 @@ import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
 import { RulesHelp } from './RulesHelp'
 import { useLang } from '../i18n'
+import { onlineConfigured } from '../net/client'
 
 const IDS: RuleId[] = ['taiwan', 'hk', 'riichi']
 type Change = (c: Partial<RoomConfig>) => void
@@ -98,7 +99,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
       <section>
         <h2>{t('step3')}</h2>
         <div className="playrow">
-          <button className="btn gold big" onClick={onCreate}>{t('playFriends')}</button>
+          <button className="btn gold big" onClick={onCreate} disabled={!onlineConfigured}>{t('playFriends')}</button>
           <button className="btn big" onClick={onSolo}>{t('playBots')}</button>
         </div>
         <div className="row joinrow">
@@ -106,6 +107,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
           <input type="text" placeholder={t('roomCode')} value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} style={{ width: 130 }} aria-label={t('roomCode')} />
           <button className="btn" disabled={code.length < 3} onClick={() => onJoin(code)}>{t('join')}</button>
         </div>
+        {!onlineConfigured && <p className="muted small" style={{ marginTop: 10 }}>{t('onlineOff')}</p>}
       </section>
     </div>
   )

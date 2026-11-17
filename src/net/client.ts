@@ -44,7 +44,11 @@ export function connectLocal(id: string, name: string, config: RoomConfig, h: Ha
   }
 }
 
-export const PARTY_HOST = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) ?? 'localhost:8787'
+const envHost = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) || ''
+// dev default: the machine serving the page (so a phone on the LAN can use `npm run party:dev` on the same computer)
+export const PARTY_HOST = envHost || `${location.hostname || 'localhost'}:8787`
+/** false on a deployed site that has no VITE_PARTYKIT_HOST (online rooms cannot work there) */
+export const onlineConfigured = !!envHost || import.meta.env.DEV || ['localhost', '127.0.0.1', ''].includes(location.hostname)
 
 export function connectRemote(room: string, id: string, name: string, h: Handlers): Conn {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })

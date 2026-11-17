@@ -93,6 +93,8 @@ const D: Record<string, [string, string]> = {
   bad_id: ['Your browser sent an invalid player id. Reload the page and try again.', '玩家識別碼無效，請重新整理頁面後再試。'],
   rotate: ['Rotate table on phones', '手機自動旋轉牌桌'],
   rotateTip: ['Turn the table sideways when the phone is held upright, so tiles are bigger', '手機直拿時將牌桌轉成橫向，牌會更大'],
+  onlineOff: ['Online rooms are not set up on this site yet (the game server address is missing). Play vs bots instead.', '此網站尚未設定線上房間（缺少遊戲伺服器位址），請先選擇「對戰電腦」。'],
+  conn_failed: ['Could not reach the game server. Check your connection and try again.', '無法連線到遊戲伺服器，請檢查網路後再試。'],
   discard: ['Discard', '打出'],
   discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],

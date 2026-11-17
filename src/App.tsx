@@ -29,6 +29,8 @@ export default function App() {
   const [joinError, setJoinError] = useState('')
   const [active, setActive] = useState(!!stress)
   const conn = useRef<Conn | null>(null)
+  const viewRef = useRef<TableView | null>(null)
+  viewRef.current = view
   const id = useRef(getClientId())
 
   useEffect(() => save('kiiro-name', name), [name])
@@ -54,6 +56,8 @@ export default function App() {
     setRoom(c); setActive(true)
     history.replaceState(null, '', `?room=${c}`)
     conn.current = connectRemote(c, id.current, name || 'Player', handlers)
+    // give up with a clear message if the server never answers
+    setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name])
   const send = (m: ClientMsg) => conn.current?.send(m)
