@@ -1,9 +1,10 @@
-import { Game, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
+import { Game, type HistoryEntry, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
 import type { GameOptions } from './rules/types'
 import type { RuleId } from './rules'
 import { botReact, botTurn } from './bot'
 import { kindOf } from './tiles'
 
+export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
 export interface RoomConfig extends GameOptions { rule: RuleId }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
 
@@ -33,7 +34,9 @@ export interface TableView {
     result: HandResult | null
     acks: number[]
     standings: { seat: number; name: string; points: number }[]
-    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]> } | null
+    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string } | null>; furiten: boolean } | null
+    history: HistoryEntry[]
+    chat: { n: number; seat: number; key: string; ago: number }[]
     log: string[]
     rule: { id: RuleId; name: string; nSets: number }
   }
@@ -54,6 +57,8 @@ export class Table {
   speed = 1 // 0 = instant (tests)
   /** Per-decision time limit in ms for human players (0 = off). Expired turns auto-play; two in a row hands the seat to a bot. */
   turnTimerMs = 0
+  chatLog: { n: number; seat: number; key: string; at: number }[] = []
+  private chatN = 0
   private deadline: number | null = null
   private deadlineKey = ''
   private dTimer: ReturnType<typeof setTimeout> | null = null
@@ -144,6 +149,15 @@ export class Table {
     const seat = this.seatOf(id)
     if (seat < 0 || !this.game) return
     if (this.game.submitDecision(seat, d)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
+  }
+  chat(id: string, key: string) {
+    const seat = this.seatOf(id)
+    if (seat < 0 || !CHAT_KEYS.includes(key)) return
+    const last = [...this.chatLog].reverse().find((c) => c.seat === seat)
+    if (last && Date.now() - last.at < 800) return
+    this.chatLog.push({ n: ++this.chatN, seat, key, at: Date.now() })
+    if (this.chatLog.length > 12) this.chatLog.shift()
+    this.emit()
   }
   ack(id: string) {
     const seat = this.seatOf(id)
@@ -251,6 +265,8 @@ export class Table {
     let hint: NonNullable<TableView['game']>['hint'] = null
     if (you >= 0 && (g.phase === 'turn' || g.phase === 'reaction')) {
       const me = g.players[you]
+      const vis = g.visibleCounts(you)
+      const leftOf = (ks: number[]) => Object.fromEntries(ks.map((k) => [k, Math.max(0, 4 - vis[k])]))
       if (me.drawn !== null && g.phase === 'turn' && g.turn === you) {
         const dw: Record<number, number[]> = {}
         for (const id2 of new Set(me.hand.map(kindOf))) {
@@ -259,9 +275,16 @@ export class Table {
           const w = g.waitsFor(you, rest)
           if (w.length) dw[id2] = w
         }
-        hint = { shanten: g.shanten(you), waits: [], discardWaits: dw }
+        const all = [...new Set(Object.values(dw).flat())]
+        hint = { shanten: g.shanten(you), waits: [], discardWaits: dw, left: leftOf(all), values: {}, furiten: false }
       } else if (me.hand.length % 3 === 1) {
-        hint = { shanten: g.shanten(you), waits: g.waitsFor(you), discardWaits: {} }
+        const w = g.waitsFor(you)
+        const values: Record<number, { total: number; label?: string } | null> = {}
+        for (const k of w) {
+          const sc = g.checkWin(you, false, k * 4 + 3)
+          values[k] = sc ? { total: sc.total, label: sc.label } : null
+        }
+        hint = { shanten: g.shanten(you), waits: w, discardWaits: {}, left: leftOf(w), values, furiten: g.isFuriten(you) }
       }
     }
     base.game = {
@@ -273,6 +296,8 @@ export class Table {
       reactionKind: g.reactionKind, waiting: g.pendingSeats(),
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
+      history: g.history,
+      chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),
       rule: { id: g.rule.id, name: g.rule.name, nSets: g.rule.nSets },
     }
     return base

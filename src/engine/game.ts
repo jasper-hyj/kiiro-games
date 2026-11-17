@@ -35,6 +35,13 @@ export interface HandResult {
   others?: { winner: number; score: HandScore; hand: { hand: number[]; melds: Meld[]; flowers: number[] } }[]
 }
 
+export interface HistoryEntry {
+  handNo: number; roundIndex: number; dealer: number
+  kind: 'win' | 'draw'; winners: number[]; from: number | null; tsumo: boolean
+  total: number; label?: string; names: { name: string; zh?: string }[]
+  deltas: number[]; points: number[]
+}
+
 export const WIND_NAMES = ['East', 'South', 'West', 'North']
 
 export class Game {
@@ -66,6 +73,7 @@ export class Game {
   rinshan = false
   afterCall = false
   kuikae: number[] = []
+  history: HistoryEntry[] = []
   handNo = 0
   private pendingKakan: { seat: number; tile: number } | null = null
   private pendingOver = false
@@ -87,6 +95,19 @@ export class Game {
   seatWind(seat: number) { return (seat - this.dealer + this.n) % this.n }
   say(m: string) { this.log.push(m); if (this.log.length > 60) this.log.shift() }
   get isRiichi() { return this.rule.id === 'riichi' }
+  /** How many of each tile this seat can see (own hand, all discards not yet claimed, all melds, dora indicators, set-aside norths). */
+  visibleCounts(seat: number): number[] {
+    const c = new Array(34).fill(0)
+    for (const p of this.players) {
+      for (const d of p.discards) if (!d.called) c[kindOf(d.tile)]++
+      for (const m of p.melds) for (const t of m.tiles) c[kindOf(t)]++
+      for (const t of p.nuki) c[kindOf(t)]++
+    }
+    for (const t of this.players[seat].hand) c[kindOf(t)]++
+    for (const t of this.doraIndicators()) c[kindOf(t)]++
+    return c
+  }
+
   doraIndicators() { return this.isRiichi ? this.doraPool.slice(0, this.doraCount) : [] }
   isClosed(p: Player) { return p.melds.every((m) => m.type === 'ankan') }
   handCounts(p: Player): Counts { return toCounts(p.hand.map(kindOf)) }
@@ -544,6 +565,13 @@ export class Game {
 
   private finish(r: HandResult, dealerStays: boolean, isDraw = false) {
     this.players.forEach((p, i) => (p.points += r.deltas[i]))
+    this.history.push({
+      handNo: this.handNo, roundIndex: this.roundIndex, dealer: this.dealer,
+      kind: r.kind, winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [],
+      from: r.from ?? null, tsumo: !!r.tsumo, total: r.score?.total ?? 0, label: r.label ?? r.score?.label,
+      names: (r.score?.yaku ?? []).slice(0, 4).map((y) => ({ name: y.name, zh: y.zh })),
+      deltas: r.deltas.slice(), points: this.players.map((p) => p.points),
+    })
     this.result = r
     this.phase = 'result'
     if (dealerStays) {

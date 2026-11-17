@@ -35,6 +35,7 @@ export function connectLocal(id: string, name: string, config: RoomConfig, h: Ha
         case 'config': table.setConfig(id, m.config); break
         case 'start': table.start(id); break
         case 'toggleBot': table.toggleBot(id, m.seat); break
+        case 'chat': table.chat(id, m.key); break
       }
     },
     close() { table.leave(id); table.game = null },

@@ -2,16 +2,7 @@ import type { Decision, Game, TurnAction } from './game'
 import { shantenAll, toCounts, type Counts } from './hand'
 import { isDragon, isHonor, isTermOrHonor, kindOf, numOf, suitOf } from './tiles'
 
-function visibleCounts(g: Game, seat: number): Counts {
-  const c = new Array(34).fill(0)
-  for (const p of g.players) {
-    for (const d of p.discards) c[kindOf(d.tile)]++
-    for (const m of p.melds) for (const t of m.tiles) c[kindOf(t)]++
-  }
-  for (const t of g.players[seat].hand) c[kindOf(t)]++
-  for (const t of g.doraIndicators()) c[kindOf(t)]++
-  return c
-}
+const visibleCounts = (g: Game, seat: number): Counts => g.visibleCounts(seat)
 
 const neighbours = (counts: Counts): number[] => {
   const s = new Set<number>()
