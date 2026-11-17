@@ -54,3 +54,10 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 - Home is a step-by-step flow (start -> rules -> options -> name; friends skips options, join uses code -> name).
 - Table shows essentials only (hints off by default). Call buttons live in a reserved centered row above the hand. Results show headline + hand + scores with a Details toggle. Discard: double-tap or drag a tile upward.
 - Tests: `scripts/orient-test.ts` and `scripts/webkit-game-test.ts` run in WebKit/Chromium via Playwright (see their headers); `scripts/flick-test.ts` covers drag-to-discard.
+
+## Added in the Nov 2026 pass
+- Rooms persist in Durable Object storage (`party/server.ts`, `Table.serialize/restore`, `Game.serialize/restore`); `scripts/persist-test.ts` and `scripts/restart-test.ts` cover it. Empty rooms are dropped from storage.
+- Hand review (replay) after a finished game: `Game.replays` (a public snapshot per discard), shown only when the game is over (`src/ui/Replay.tsx`).
+- Accessibility settings: reduce motion, larger text, upright discards (`src/settings.ts`).
+- Hard bots: dora/red-five aware, riichi vs dama decision. Measured +246 pts/seat/game against Normal over 150 Riichi games; no measurable gain in Taiwanese/Hong Kong (results there are mostly luck), so Hard behaves like Normal in those.
+- Tiles: traditional style (multicolour coins, painted flower emblems, ivory face on a jade back with visible thickness). Centre: compass plate; ponds are six per row, turned toward each seat.
