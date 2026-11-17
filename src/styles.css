@@ -278,3 +278,28 @@ button, summary, .tile, select, label { touch-action: manipulation; -webkit-touc
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 .autos summary { min-height: 0; line-height: 1.4; }
+
+/* ---------- hints, history, chat, shortcuts ---------- */
+.hint { gap: 10px; align-items: center; padding: 2px 0; flex-wrap: wrap; justify-content: center; }
+.hstat { font-weight: 700; color: var(--ink); }
+.tag { border-radius: 999px; padding: 1px 10px; font-size: 12px; font-weight: 700; }
+.tag.warn { background: #d63a3a; color: #fff; }
+.waitlist { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.waitchip { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,.25); border-radius: 10px; padding: 3px 8px 3px 4px; --tw: 22px; }
+.waitchip.none { opacity: .5; }
+.wmeta { display: flex; flex-direction: column; line-height: 1.15; font-size: 11px; color: var(--muted); }
+.wmeta b { color: var(--ink); font-size: 12px; }
+.chatwrap { position: relative; }
+.chatopen { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; width: 32px; height: 32px; font-size: 15px; cursor: pointer; color: var(--ink); }
+.chatpop { position: absolute; bottom: 38px; left: 0; z-index: 12; display: grid; grid-template-columns: repeat(2, auto); gap: 6px; background: #fff; border: 1px solid rgba(20,24,28,.12); border-radius: 12px; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.chatbtn { background: #ece9de; border: 0; border-radius: 8px; padding: 8px 12px; font: inherit; color: #1d2026; cursor: pointer; white-space: nowrap; min-height: 38px; }
+.chip { position: relative; }
+.bubble { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #fff; color: #1d2026; border-radius: 12px; padding: 6px 12px; font-size: 14px; font-weight: 600; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.3); z-index: 15; animation: rise-in .18s ease-out; }
+.menuitem { background: none; border: 0; color: inherit; font: inherit; text-align: left; padding: 4px 0; cursor: pointer; }
+.autopanel hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
+kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 8px; font: 12px ui-monospace, monospace; }
+.hist { display: flex; flex-direction: column; gap: 8px; }
+.histrow { display: grid; grid-template-columns: 1fr; gap: 6px; background: var(--surface2); border-radius: 12px; padding: 10px 12px; }
+.hpts { display: grid; gap: 6px; text-align: center; font-size: 13px; }
+.hpts div { display: flex; flex-direction: column; }
+.hpts .me { background: rgba(229,168,35,.2); border-radius: 8px; }

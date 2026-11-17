@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
 import { ResultModal } from './ResultModal'
 import { useLang } from '../i18n'
+import { ChatPicker, EMOJI, HistoryModal, ShortcutsModal } from './Panels'
 
 const WINDS: Record<'en' | 'zh', string[]> = { en: ['E', 'S', 'W', 'N'], zh: ['東', '南', '西', '北'] }
 
@@ -38,11 +39,12 @@ function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number }) {
   return <div className="meld">{items}</div>
 }
 
-function Chip({ p, v }: { p: PlayerView; v: NonNullable<TableView['game']> }) {
+function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game']>; bubble?: string }) {
   const { lang, t } = useLang()
   const turn = v.phase === 'turn' && v.turn === p.seat
   return (
     <div className={'chip' + (turn ? ' turn' : '')}>
+      {bubble && <span className="bubble">{bubble}</span>}
       <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[lang][p.seatWind]}</span>
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
@@ -63,11 +65,11 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
   )
 }
 
-function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; pos: 'top' | 'left' | 'right' }) {
+function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['game']>; pos: 'top' | 'left' | 'right'; bubble?: string }) {
   const extra = v.phase === 'turn' && v.turn === p.seat && p.hand === null ? 1 : 0
   return (
     <div className={`seat ${pos}`}>
-      <Chip p={p} v={v} />
+      <Chip p={p} v={v} bubble={bubble} />
       <div className="backs">
         {p.hand
           ? [...p.hand.map((id) => <Tile key={id} id={id} />), ...(p.drawn !== null ? [<span key="g" className="gap" />, <Tile key="d" id={p.drawn} />] : [])]
@@ -80,8 +82,8 @@ function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; 
   )
 }
 
-export function Board({ view, send, hints, setHints, onLeave }: {
-  view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void
+export function Board({ view, send, hints, setHints, onLeave, online }: {
+  view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean
 }) {
   const { t } = useLang()
   const v = view.game!
@@ -97,6 +99,22 @@ export function Board({ view, send, hints, setHints, onLeave }: {
   const secs = v.timeLeft == null ? null : Math.max(0, Math.ceil((v.timeLeft - (now - recv.current)) / 1000))
   const [sel, setSel] = useState<number | null>(null)
   const [riichiMode, setRiichiMode] = useState(false)
+  const [panel, setPanel] = useState<null | 'history' | 'keys' | 'chat'>(null)
+  const [bubbles, setBubbles] = useState<Record<number, { text: string; until: number }>>({})
+  const seenChat = useRef(0)
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
+    for (const c of v.chat ?? []) {
+      if (c.n <= seenChat.current) continue
+      seenChat.current = c.n
+      const key = c.key
+      setBubbles((b) => ({ ...b, [c.seat]: { text: EMOJI[key] ?? t('chat.' + key), until: Date.now() + 4500 } }))
+      timers.push(setTimeout(() => setBubbles((b) => { const x = { ...b }; if (x[c.seat] && x[c.seat].until <= Date.now() + 50) delete x[c.seat]; return x }), 4600))
+    }
+    return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [v.chat])
+  const bub = (seat: number) => bubbles[seat]?.text
   const o = v.turnOptions
   useEffect(() => { setSel(null); setRiichiMode(false) }, [v.handNo, v.turn, v.phase, me.drawn, me.hand?.length])
 
@@ -133,6 +151,45 @@ export function Board({ view, send, hints, setHints, onLeave }: {
     else setSel(id)
   }
 
+  // ----- keyboard shortcuts -----
+  const kb = useRef<() => void>(() => {})
+  const keyHandler = (e: KeyboardEvent) => {
+    const el = e.target as HTMLElement | null
+    if (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) return
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    const k = e.key.toLowerCase()
+    const act = (m: ClientMsg) => { e.preventDefault(); send(m) }
+    if (v.phase === 'result') { if (k === 'enter' || k === ' ') act({ t: 'ack' }); return }
+    if (panel) { if (k === 'escape') setPanel(null); return }
+    if (reaction) {
+      if (k === 'r' && reaction.ron) act({ t: 'decide', d: { type: 'ron' } })
+      else if (k === 'p' && reaction.pon) act({ t: 'decide', d: { type: 'pon' } })
+      else if (k === 'k' && reaction.minkan) act({ t: 'decide', d: { type: 'minkan' } })
+      else if (k === 'c' && reaction.chi.length) act({ t: 'decide', d: { type: 'chi', use: reaction.chi[0] } })
+      else if (/^[1-3]$/.test(k) && reaction.chi[+k - 1]) act({ t: 'decide', d: { type: 'chi', use: reaction.chi[+k - 1] } })
+      else if (k === ' ' || k === 'escape') act({ t: 'decide', d: { type: 'pass' } })
+      return
+    }
+    if (!o) return
+    const order = [...(me.hand ?? []), ...(me.drawn !== null ? [me.drawn] : [])]
+    if (k === 't' && o.tsumo) act({ t: 'act', a: { type: 'tsumo' } })
+    else if (k === 'i' && o.riichi.length) { e.preventDefault(); setRiichiMode((x) => !x); setSel(null) }
+    else if (k === 'd' && me.drawn !== null && discardOk.has(me.drawn)) act({ t: 'act', a: { type: 'discard', tile: me.drawn } })
+    else if (k === 'enter' && sel !== null) act({ t: 'act', a: { type: 'discard', tile: sel, riichi: riichiMode } })
+    else if (k === 'arrowleft' || k === 'arrowright') {
+      e.preventDefault()
+      const i = sel === null ? order.length : order.indexOf(sel)
+      const j = Math.min(order.length - 1, Math.max(0, i + (k === 'arrowleft' ? -1 : 1)))
+      if (order[j] !== undefined) setSel(order[j])
+    }
+  }
+  kb.current = () => {}
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => keyHandler(e)
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  })
+
   const tenpaiKinds = v.hint?.discardWaits ?? {}
   const selWaits = sel !== null ? tenpaiKinds[kindOf(sel)] : undefined
   const ruleId = v.rule.id
@@ -157,8 +214,8 @@ export function Board({ view, send, hints, setHints, onLeave }: {
 
   return (
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
-      {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" />}
-      <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" />
+      {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
+      <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
       <div className="center">
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
@@ -177,10 +234,16 @@ export function Board({ view, send, hints, setHints, onLeave }: {
         <Pond p={rel(1)} v={v} rel={1} />
         <Pond p={me} v={v} rel={0} />
       </div>
-      <Opp p={rel(1)} v={v} pos="right" />
+      <Opp p={rel(1)} v={v} pos="right" bubble={bub(rel(1).seat)} />
       <div className="seat me">
         <div className="mebar">
-          <Chip p={me} v={v} />
+          <Chip p={me} v={v} bubble={bub(me.seat)} />
+          {online && (
+            <div className="chatwrap">
+              <button className="chatopen" aria-label={t('chatTitle')} onClick={() => setPanel(panel === 'chat' ? null : 'chat')}>💬</button>
+              {panel === 'chat' && <ChatPicker onPick={(k) => { send({ t: 'chat', key: k }); setPanel(null) }} />}
+            </div>
+          )}
           <div className="melds">{me.melds.map((m, i) => <MeldView key={i} m={m} owner={me.seat} n={n} />)}</div>
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
@@ -230,9 +293,32 @@ export function Board({ view, send, hints, setHints, onLeave }: {
         </div>
         {hints && v.hint && (
           <div className="hint">
-            <span>{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
-            {v.hint.waits.length > 0 && <>{t('waits')} {v.hint.waits.map((k) => <Tile key={k} kind={k} />)}</>}
-            {selWaits && <>{t('discardWaits')} {selWaits.map((k) => <Tile key={k} kind={k} />)}</>}
+            <span className="hstat">{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
+            {v.hint.furiten && <span className="tag warn">{t('furiten')}</span>}
+            {v.hint.waits.length > 0 && (
+              <span className="waitlist">
+                {v.hint.waits.map((k) => {
+                  const left = v.hint!.left[k] ?? 0
+                  const val = v.hint!.values[k]
+                  return (
+                    <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
+                      <Tile kind={k} />
+                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' ? 'fan' : 'tai')}`}` : '—'}</span></span>
+                    </span>
+                  )
+                })}
+              </span>
+            )}
+            {selWaits && (
+              <span className="waitlist">
+                <span className="muted">{t('discardWaits')}</span>
+                {selWaits.map((k) => (
+                  <span key={k} className={'waitchip' + ((v.hint!.left[k] ?? 0) === 0 ? ' none' : '')}>
+                    <Tile kind={k} /><span className="wmeta"><b>{t('leftTiles', { n: v.hint!.left[k] ?? 0 })}</b></span>
+                  </span>
+                ))}
+              </span>
+            )}
           </div>
         )}
         <div className={'handrow' + (mine ? ' mine' : '')}>
@@ -253,9 +339,14 @@ export function Board({ view, send, hints, setHints, onLeave }: {
               <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>
             ))}
             <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
+            <hr />
+            <button className="menuitem" onClick={() => setPanel('history')}>{t('history')}</button>
+            <button className="menuitem" onClick={() => setPanel('keys')}>{t('shortcuts')}</button>
           </div>
         </details>
       </div>
+      {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
+      {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}
       {(v.phase === 'result' || v.phase === 'over') && <ResultModal view={view} send={send} onLeave={onLeave} />}
     </div>
   )
