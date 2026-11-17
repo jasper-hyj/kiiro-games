@@ -72,6 +72,37 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
     )
   }
   if (!r) return null
+  if (v.rule.id === 'sichuan') {
+    const wins = r.sc?.wins ?? []
+    return createPortal(
+      <div className="overlay"><div className="modal">
+        <h2>{wins.length ? t('scWins') : t('scNone')}</h2>
+        {wins.map((w) => (
+          <div key={w.winner} className="scwin">
+            <div className="scwhead">
+              <b>#{w.order} {v.players[w.winner].name}{w.winner === you ? ` (${t('you')})` : ''}</b>
+              <span className="muted"> — {w.tsumo ? t('selfDraw') : t('winsFrom', { from: v.players[w.from!].name })}</span>
+              <span className="scpts pos">+{w.points}</span>
+            </div>
+            <Hand h={{ hand: w.hand.hand, melds: w.hand.melds, flowers: [] }} win={w.winTile} />
+            <div className="muted small">{w.score.yaku.map((y) => yakuName(y, lang)).join(' · ')} — {w.score.total} {t('fan')}</div>
+          </div>
+        ))}
+        {(r.sc?.notes ?? []).map((nt, i) => (
+          <div key={i} className="scnote">
+            <b>{lang === 'zh' ? nt.zh : nt.label}</b>
+            <span className="muted small"> {nt.deltas.map((d, k) => d ? `${v.players[k].name} ${d > 0 ? '+' : ''}${d}` : '').filter(Boolean).join(' · ')}</span>
+          </div>
+        ))}
+        <Scores />
+        <div className="row">
+          <button className="btn gold" disabled={acked} onClick={() => send({ t: 'ack' })}>{acked ? t('waitingAck', { n: v.acks.length }) : t('nextHand')}</button>
+          <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
+        </div>
+      </div></div>,
+      document.body,
+    )
+  }
   const win = r.kind === 'win'
   const w = win ? v.players[r.winner!] : null
   return createPortal(

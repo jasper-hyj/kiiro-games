@@ -85,6 +85,9 @@ function playGame(n: number, swap: boolean, level: Lv): string[] {
         if (w.points < 1 || w.points > 2 ** 4) errs.push(`win points out of range ${w.points}`)
       }
       if (g.players.reduce((a, p) => a + p.points, 0) !== 0) errs.push('points not conserved')
+      const all: number[] = [...g.wall]
+      for (const p of g.players) { all.push(...p.hand); for (const m of p.melds) all.push(...m.tiles); for (const d of p.discards) if (!d.called) all.push(d.tile) }
+      if (all.length !== 108 || new Set(all).size !== 108) errs.push(`tile conservation broken (${all.length} tiles, ${new Set(all).size} distinct)`)
       g.next()
     }
   }

@@ -480,3 +480,16 @@ html[data-ponds='flat'] .pond .pondin { transform: translate(-50%, -50%) !import
 .cw-right { right: 8px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
 
 .info .muted { white-space: nowrap; }
+
+/* ---------- Sichuan ---------- */
+.voidtag { font-family: var(--glyph); font-size: 12px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.12); color: #e6ecf8; white-space: nowrap; }
+.chip.turn .voidtag { background: rgba(0,0,0,.14); color: #0a0f1f; }
+.wintag { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: linear-gradient(180deg, #e6ecf8, #a9b6d2); color: #0a0f1f; font-weight: 700; white-space: nowrap; }
+.pickhint { align-self: center; font-size: 17px; color: rgba(236,240,250,.85); margin-right: 8px; white-space: nowrap; }
+.cbtn .mini.muted { --tw: 0; font-size: 13px; opacity: .7; }
+.shelf .grid3 { width: min(1180px, 100%); }
+.scwin { padding: 10px 0; border-top: 1px solid rgba(170,186,214,.18); }
+.scwin:first-of-type { border-top: 0; }
+.scwhead { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.scpts { margin-left: auto; font-size: 20px; font-weight: 700; }
+.scnote { padding: 6px 0; border-top: 1px dashed rgba(170,186,214,.18); }

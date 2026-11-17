@@ -58,6 +58,14 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
       await sleep(150)
       continue
     }
+    if (await p.$('.pickhint')) {   // Sichuan: pass three tiles / give up a suit
+      const confirm = await p.$('.apbtns .cbtn.call:not([disabled])')
+      if (confirm && (await p.$$('.apbtns .cbtn')).length === 1) { await tap(p, dev.touch, '.apbtns .cbtn.call'); await sleep(200); continue }
+      if ((await p.$$('.apbtns .cbtn')).length === 3) { await tap(p, dev.touch, '.apbtns .cbtn', 0); await sleep(200); continue }
+      const hand = await p.$$('.handrow .tile.clickable')
+      for (let i = 0; i < hand.length && !(await p.$('.apbtns .cbtn.call:not([disabled])')); i++) { await tap(p, dev.touch, '.handrow .tile.clickable', i); await sleep(40) }
+      continue
+    }
     if (await p.$('.cbtn.ron')) { await tap(p, dev.touch, '.cbtn.ron'); await sleep(80); continue }
     if (await p.$('.cbtn.pass')) { await tap(p, dev.touch, '.cbtn.pass'); await sleep(60); continue }
     const tiles = await p.$$('.handrow .tile.clickable')
@@ -74,7 +82,7 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
     await p.screenshot({ path: `${SHOTS}/game-${rule}-${dev.name}-${lang}-over.png` })
     const rows = await p.$$eval('.overlay .standings li', (e) => e.map((x) => (x as HTMLElement).innerText))
     const pts = rows.map((r) => Number((r.match(/—\s*(-?\d+)/) ?? [])[1]))
-    const start = rule === 'riichi' ? 25000 : rule === 'mcr' ? 0 : 1000
+    const start = rule === 'riichi' ? 25000 : rule === 'mcr' || rule === 'sichuan' ? 0 : 1000
     check(`${tag}: final standings list 4 players and points add up (${pts.join(', ')})`, rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4, rows.join(' | '))
     // hand review: open it, step to the end of the first hand and see the final hands
     await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.overlay .btn')].find((e) => /Review hands|回顧牌局/i.test(e.innerText)); b?.click() })
@@ -100,7 +108,7 @@ async function main() {
       { name: 'desktop', w: 1440, h: 900, touch: false },
       { name: 'phone', w: 390, h: 844, touch: true },
     ]
-    const rules = process.env.RULES?.split(',') ?? ['taiwan', 'hk', 'riichi', 'mcr']
+    const rules = process.env.RULES?.split(',') ?? ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
     for (const rule of rules) for (const d of devs) await playGame(browser, rule, d, d.name === 'phone' ? 'zh' : 'en')
   } finally {
     await browser.close()

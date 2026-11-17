@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
-import { doraFrom, isRedFive, kindOf } from '../engine/tiles'
+import { doraFrom, isRedFive, kindOf, suitOf } from '../engine/tiles'
 import type { ClientMsg } from '../net/protocol'
 import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
@@ -50,6 +50,8 @@ function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game'
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
       {p.riichi && <span className="riichi-stick" title={t('riichi')} />}
+      {p.voidSuit !== null && p.voidSuit !== undefined && <span className="voidtag" title={t('voidTip')}>{lang === 'zh' ? '缺' : '✕'}{'萬筒索'[p.voidSuit]}</span>}
+      {p.out && <span className="wintag">{t('won')} {p.winOrder}</span>}
     </div>
   )
 }
@@ -110,6 +112,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   const secs = v.timeLeft == null ? null : Math.max(0, Math.ceil((v.timeLeft - (now - recv.current)) / 1000))
   const [sel, setSel] = useState<number | null>(null)
   const [riichiMode, setRiichiMode] = useState(false)
+  const [swapSel, setSwapSel] = useState<number[]>([])
   const autosRef = useRef<HTMLDetailsElement>(null)
   useEffect(() => {
     const close = (e: MouseEvent) => { const d = autosRef.current; if (d?.open && !d.contains(e.target as Node)) d.open = false }
@@ -135,6 +138,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   const bub = (seat: number) => bubbles[seat]?.text
   const o = v.turnOptions
   useEffect(() => { setSel(null); setRiichiMode(false) }, [v.handNo, v.turn, v.phase, me.drawn, me.hand?.length])
+  useEffect(() => { setSwapSel([]) }, [v.handNo, v.phase])
 
   // ----- Mahjong Soul style automation -----
   const [auto, setAutoState] = useState<{ win: boolean; discard: boolean; skip: boolean }>(() => {
@@ -221,13 +225,16 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   // one clear line that always says what is happening / what to do
   let status = ''
   let mine = false
-  if (reaction) { status = t('choose'); mine = true }
+  if (v.phase === 'swap') { status = v.pick.swap[you] ? t('swapWaiting') : t('swapStatus'); mine = !v.pick.swap[you] }
+  else if (v.phase === 'void') { status = v.pick.void[you] ? t('voidWaiting') : t('voidStatus'); mine = !v.pick.void[you] }
+  else if (me.out) status = t('youWon')
+  else if (reaction) { status = t('choose'); mine = true }
   else if (v.phase === 'turn' && v.turn === you && o?.discard.length) { status = t('yourTurn'); mine = true }
   else if (v.phase === 'turn') status = t('turnOf', { name: v.players[v.turn].name })
   else if (v.phase === 'reaction') status = t('waitingOthers')
 
   // static direction bars: light the side of whoever's turn it is (or who the table is waiting on)
-  const activeSeats = v.phase === 'turn' ? [v.turn] : v.phase === 'reaction' ? v.waiting : []
+  const activeSeats = v.phase === 'turn' ? [v.turn] : v.phase === 'reaction' || v.phase === 'swap' || v.phase === 'void' ? v.waiting : []
   const dirOn = (r: number) => activeSeats.some((sd) => (sd - you + n) % n === r)
   const dirs: [string, number][] = sanma ? [['bottom', 0], ['right', 1], ['left', 2]] : [['bottom', 0], ['right', 1], ['top', 2], ['left', 3]]
 
@@ -258,9 +265,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
       </div>
     </details>
   )
-  const tileDim = (id: number) => !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
-  const tileFlick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => send({ t: 'act', a: { type: 'discard', tile: id, riichi: riichiMode } }) : undefined)
-  const tileClick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => clickTile(id) : undefined)
+  const swapping = v.phase === 'swap' && !v.pick.swap[you]
+  const swapSuit = swapSel.length ? suitOf(kindOf(swapSel[0])) : -1
+  const toggleSwap = (id: number) => setSwapSel((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : cur.length < 3 && (cur.length === 0 || suitOf(kindOf(id)) === suitOf(kindOf(cur[0]))) ? [...cur, id] : cur)
+  const tileDim = (id: number) => swapping ? swapSuit >= 0 && suitOf(kindOf(id)) !== swapSuit : !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
+  const tileFlick = (id: number) => (swapping ? undefined : o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => send({ t: 'act', a: { type: 'discard', tile: id, riichi: riichiMode } }) : undefined)
+  const tileClick = (id: number) => (swapping ? () => toggleSwap(id) : o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => clickTile(id) : undefined)
 
   return (
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
@@ -338,6 +348,21 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
           </div>
         )}
         <div className="actionpanel">
+          {v.phase === 'swap' && !v.pick.swap[you] && (
+            <div className="apbtns">
+              <span className="pickhint">{t('swapHint', { n: swapSel.length })}</span>
+              <button className="cbtn call" disabled={swapSel.length !== 3} onClick={() => send({ t: 'swap', tiles: swapSel })}><b>{t('confirm')}</b></button>
+            </div>
+          )}
+          {v.phase === 'void' && !v.pick.void[you] && (
+            <div className="apbtns">
+              <span className="pickhint">{t('voidHint')}</span>
+              {[0, 1, 2].map((su) => {
+                const have = [...handTiles, ...(me.drawn !== null ? [me.drawn] : [])].filter((i) => suitOf(kindOf(i)) === su).length
+                return <button key={su} className="cbtn call" onClick={() => send({ t: 'void', suit: su })}><b>{t('suit.' + su)}</b><span className="mini muted">{have}</span></button>
+              })}
+            </div>
+          )}
           {reaction && v.lastDiscard && (
             <div className="callhead"><Tile id={v.lastDiscard.tile} hot /></div>
           )}
@@ -374,7 +399,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         </div>
         <div className={'handrow' + (mine ? ' mine' : '')}>
           {handTiles.map((id) => (
-            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} onFlick={tileFlick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}
           {me.drawn !== null && (
             <>

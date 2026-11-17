@@ -1,5 +1,6 @@
 import { Table } from '../src/engine/table'
 import type { RuleId } from '../src/engine/rules'
+import { botSwap, botVoid } from '../src/engine/bot'
 
 /** A room must survive a server restart: serialize mid-game, restore into a fresh Table, compare, and play on to the end. */
 let fails = 0
@@ -15,6 +16,8 @@ function playSome(t: Table, ids: string[], steps: number) {
       const seat = t.seatOf(id)
       const v = t.view(id).game
       if (!v) continue
+      if (v.phase === 'swap' && !v.pick.swap[seat]) { t.swap(id, botSwap(g, seat)); continue }
+      if (v.phase === 'void' && !v.pick.void[seat]) { t.pickVoid(id, botVoid(g, seat)); continue }
       if (v.turnOptions && v.turn === seat) {
         const o = v.turnOptions
         if (o.tsumo) t.turnAction(id, { type: 'tsumo' })
@@ -26,7 +29,7 @@ function playSome(t: Table, ids: string[], steps: number) {
   }
 }
 
-for (const rule of ['taiwan', 'hk', 'riichi'] as RuleId[]) {
+for (const rule of ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan'] as RuleId[]) {
   for (let round = 0; round < 6; round++) {
     const a = new Table({ rule, aka: true, rounds: 1, minFan: 1, players: 4, botLevel: 'normal' })
     a.speed = 0

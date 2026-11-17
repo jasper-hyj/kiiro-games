@@ -138,7 +138,47 @@ const DATA: Record<TabId, Data> = {
       ] },
     ],
   },
-  sichuan: { intro: [], sections: [] },
+  sichuan: {
+    intro: [
+      ['Sichuan mahjong ("Blood Battle", 血戰到底) uses only the 108 number tiles — no winds, dragons or flowers — and no chi. Each hand starts with an optional swap of three tiles, then every player gives up one suit. You cannot win while you still hold a tile of the suit you gave up, so you discard those tiles first.', '四川麻將（血戰到底）只用 108 張數牌，沒有風牌、三元牌與花牌，也不能吃。每局開始可先換三張，再由每位玩家定缺一門；手上還有缺的那一門就不能胡牌，所以要先打掉那一門的牌。'],
+      ['Play does not stop when someone wins. The winner leaves the hand (their tiles are shown) and the others keep playing until three players have won or the wall runs out. Several players can win off the same discard. Seats rotate after every hand.', '有人胡牌後牌局不會結束：胡牌者離場（亮出手牌），其他人繼續打，直到三家都胡牌或牌牆摸完。同一張牌可以多家同時胡。每局結束後座位輪轉。'],
+    ],
+    sections: [
+      { title: ['Start of a hand', '開局'], rows: [
+        ['Swap three (optional)', '換三張（可關閉）', 'each player passes three tiles of one suit to another player (right, across or left, chosen at random)', '每人選三張同花色的牌換給另一家（右家、對家或左家，隨機決定）'],
+        ['Give up a suit', '定缺', 'everyone picks one suit (characters, circles or bamboo) to give up; it is shown beside your name', '每人選一門（萬、筒、索）作為缺門，顯示在名字旁邊'],
+        ['Discarding', '打牌', 'while you hold any tile of the given-up suit you may only discard those tiles; you cannot pon or kong them', '手上還有缺門的牌時只能打缺門的牌，也不能碰、槓缺門的牌'],
+      ] },
+      { title: ['Winning hands and fan', '胡牌與番數'], rows: [
+        ['Winning hand', '胡牌牌型', '4 sets + a pair, or seven pairs; any complete hand wins (no minimum fan)', '四組面子加一對眼，或七對；只要完成牌型就能胡（沒有最低番數）'],
+        ['Plain Hand', '平胡', '0 fan', '0 番'],
+        ['All Pungs', '對對胡', '+1 fan', '+1 番'],
+        ['Pure Suit', '清一色', '+2 fan (the whole hand in one suit)', '+2 番（全手牌同一花色）'],
+        ['Seven Pairs', '七對', '+2 fan', '+2 番'],
+        ['Terminals in Every Set', '帶幺九', '+2 fan (every set and the pair contain a 1 or a 9)', '+2 番（每組與眼都含 1 或 9）'],
+        ['Twos, Fives and Eights', '將對', '+2 fan on top of All Pungs (every tile is a 2, 5 or 8)', '+2 番，須同時對對胡（全是 2、5、8）'],
+        ['Golden Hook', '金鉤釣', '+1 fan: four exposed sets and a single tile waiting for its pair', '+1 番：四組都已碰槓，單釣一張'],
+        ['Root', '根', '+1 fan for every set of four identical tiles in your hand (kongs included)', '手上每有一組四張相同的牌（含槓）+1 番'],
+        ['Self-draw', '自摸', '+1 fan', '+1 番'],
+        ['Win on Kong / Robbing the Kong / Last tile', '槓上開花／搶槓胡／海底', '+1 fan each', '各 +1 番'],
+        ['Heavenly / Earthly Hand', '天胡／地胡', 'counts as the maximum', '直接算最大番數'],
+      ] },
+      { title: ['Points and kongs', '計分與槓'], rows: [
+        ['Win value', '胡牌分數', '2 to the power of the fan count, capped at 4 fan = 16 points', '2 的番數次方，上限 4 番 = 16 分'],
+        ['Self-draw', '自摸', 'every player still in the hand pays the value', '仍在局中的三家各付該分數'],
+        ['Win by discard', '放槍', 'only the discarder pays; each winner is paid separately', '只由放槍者付，每位胡牌者各自計算'],
+        ['Closed kong', '暗槓', '2 points from each player still in', '仍在局中的每家付 2 分'],
+        ['Added kong / open kong', '加槓／明槓', '1 point from each player still in / 1 point from the discarder', '每家付 1 分／由放槍者付 1 分'],
+      ] },
+      { title: ['When the wall runs out', '牌牆摸完時'], rows: [
+        ['Flower pig', '查花豬', 'players still holding all three suits pay every other player the maximum (16)', '手上仍有三門牌的玩家，付給其他每位玩家最大分數（16）'],
+        ['Not ready', '查大叫', 'players not one tile from winning pay each ready player the value of that player\'s best hand', '沒有聽牌的玩家，付給每位聽牌者其最大牌型的分數'],
+      ] },
+      { title: ['Not included', '未收錄'], text: [
+        ['Transfer of kong points when the kong maker is robbed or wins (呼叫轉移), 過水不胡, and the Blood River variant are not implemented. Variants differ between tables; the rules above are the common core.', '槓牌被搶或槓上炮時的點數轉移（呼叫轉移）、過水不胡與血流成河玩法沒有收錄。各地玩法不同，以上是通用的核心規則。'],
+      ] },
+    ],
+  },
   mcr: {
     intro: [
       ['Chinese Official (Guobiao / MCR) is the international tournament standard. 13 tiles, 144 tiles with 8 flowers, and a hand needs at least 8 fan (flowers do not count toward the 8). Seats rotate after every hand and there is no dealer bonus or streak.', '國標麻將（國際比賽標準）。每人 13 張，144 張含 8 張花牌；胡牌至少要 8 番（花牌不計入這 8 番）。每一局結束後座位輪轉，沒有莊家加成或連莊。'],
@@ -263,7 +303,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
           <button className="btn sm alt" onClick={onClose}>{t('close')}</button>
         </div>
         <div className="tabs">
-          {(['basics', 'taiwan', 'hk', 'riichi', 'mcr'] as const).map((k) => (
+          {(['basics', 'taiwan', 'hk', 'riichi', 'mcr', 'sichuan'] as const).map((k) => (
             <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>

@@ -7,8 +7,8 @@ import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
 import { Tile } from './Tile'
 
-const IDS: RuleId[] = ['taiwan', 'hk', 'riichi', 'mcr']
-const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日', mcr: '國' } as Record<RuleId, string>
+const IDS: RuleId[] = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
+const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日', mcr: '國', sichuan: '川' } as Record<RuleId, string>
 type Change = (c: Partial<RoomConfig>) => void
 
 export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; onChange: Change; readOnly?: boolean }) {
@@ -54,6 +54,11 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
         {config.rule === 'riichi' && (
           <div className="opt"><span>{t('players')}</span>
             <Seg disabled={readOnly} value={config.players ?? 4} onPick={(n) => onChange({ players: n as 3 | 4 })} items={[[4, '4'], [3, t('sanma')]]} />
+          </div>
+        )}
+        {config.rule === 'sichuan' && (
+          <div className="opt"><span>{t('swapOpt')}</span>
+            <Seg disabled={readOnly} value={config.swap !== false} onPick={(v) => onChange({ swap: v })} items={[[true, t('on')], [false, t('off')]]} />
           </div>
         )}
         {config.rule === 'riichi' && (

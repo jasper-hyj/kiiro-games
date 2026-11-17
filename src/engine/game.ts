@@ -627,7 +627,7 @@ export class Game {
   private scApply(d: number[]) {
     d.forEach((x, i) => { this.players[i].points += x; this.sc.deltas[i] += x })
   }
-  private scWin(w: number, tsumo: boolean, from: number | null, tile: number | undefined, chankan: boolean) {
+  private scWin(w: number, tsumo: boolean, from: number | null, tile: number | undefined, chankan: boolean, takeTile = true) {
     const p = this.players[w]
     const score = this.checkWin(w, tsumo, tile, chankan)!
     const pts = score.base
@@ -637,24 +637,26 @@ export class Game {
     this.scApply(d)
     const winTile = tsumo ? p.drawn! : tile!
     if (!tsumo && !chankan) { const fp = this.players[from!]; fp.discards[fp.discards.length - 1].called = true }
-    if (!tsumo) p.hand.push(tile!)
+    // when several players win off one tile, only the first keeps it in their hand (so no tile exists twice); all of them show it in the result
+    if (!tsumo && takeTile) p.hand.push(tile!)
     sortIds(p.hand)
     p.drawn = null
     p.out = true
-    this.sc.wins.push({ winner: w, from: tsumo ? null : from, tsumo, score, points: pts, order: this.sc.wins.length + 1, winTile, hand: { hand: p.hand.slice(), melds: p.melds.map((m) => ({ ...m })) } })
+    this.sc.wins.push({ winner: w, from: tsumo ? null : from, tsumo, score, points: pts, order: this.sc.wins.length + 1, winTile, hand: { hand: sortIds([...p.hand, ...(!tsumo && !takeTile ? [tile!] : [])]), melds: p.melds.map((m) => ({ ...m })) } })
     this.say(`${p.name} wins${tsumo ? ' by self-draw' : ''} (+${pts})`)
   }
   private scDeclare(winner: number, tsumo: boolean, from: number | null, tile: number | undefined, chankan: boolean, extra: number[]) {
-    for (const w of [winner, ...extra]) this.scWin(w, tsumo, from, tile, chankan)
+    if (chankan) {
+      // the robbed tile goes to the winner(s); the kong maker keeps the pon and has nothing left to discard
+      const kp = this.players[from!]
+      const at = kp.hand.indexOf(tile!)
+      if (at >= 0) kp.hand.splice(at, 1)
+      if (kp.drawn === tile) kp.drawn = null
+      this.pendingKakan = null
+    }
+    ;[winner, ...extra].forEach((w, i) => this.scWin(w, tsumo, from, tile, chankan, i === 0))
     this.reactions = {}; this.decisions = {}
     if (this.players.filter((q) => !q.out).length <= 1) return this.finishSichuan(false)
-    if (chankan) {
-      // the kong was robbed: the kong maker keeps the pon and still has to discard
-      const { seat } = this.pendingKakan!
-      this.pendingKakan = null
-      this.phase = 'turn'; this.turn = seat; this.afterCall = true; this.rinshan = false
-      return
-    }
     this.phase = 'turn'
     this.beginTurn(((tsumo ? winner : from!) + 1) % this.n, false)
   }

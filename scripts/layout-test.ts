@@ -4,7 +4,7 @@ const BASE = process.env.BASE ?? 'http://localhost:5199'
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const WIDTHS = (process.env.WIDTHS ?? '320,360,375,390,414,480,540,600,640,700,768,820,900,1024,1180,1280,1366,1440,1600,1920,2560').split(',').map(Number)
 const HEIGHTS = (process.env.HEIGHTS ?? '568,640,700,768,800,900,1024,1080,1440').split(',').map(Number)
-const STATES = (process.env.STATES ?? 'full,call,min').split(',')
+const STATES = (process.env.STATES ?? 'full,call,min,scfull,scswap,scvoid').split(',')
 const PLAYERS = (process.env.PLAYERS ?? '4,3').split(',')
 
 const probe = () => {
@@ -95,7 +95,8 @@ async function main() {
     for (const state of STATES) {
       await page.setViewport({ width: 1280, height: 800 })
       const jp = state.startsWith('jp')
-      await page.goto(`${BASE}/?stress=${jp ? state.slice(2) || 'full' : state}&players=${players}${jp ? '&rule=riichi' : ''}`, { waitUntil: 'networkidle0' })
+      const sc = state.startsWith('sc')
+      await page.goto(`${BASE}/?stress=${jp || sc ? state.slice(2) || 'full' : state}&players=${players}${jp ? '&rule=riichi' : sc ? '&rule=sichuan' : ''}`, { waitUntil: 'networkidle0' })
       for (const w of WIDTHS) {
         for (const h of HEIGHTS) {
           const touch = w < 900

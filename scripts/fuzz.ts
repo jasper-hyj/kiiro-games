@@ -23,7 +23,7 @@ function inv(t: Table): string[] {
     for (const d of p.discards) if (!d.called) ids.push(d.tile)
   }
   ids.push(...g.wall, ...g.dead, ...g.doraPool, ...g.uraPool)
-  const expected = g.rule.flowers ? 144 : g.sanma ? 108 : 136
+  const expected = g.rule.id === 'sichuan' ? 108 : g.rule.flowers ? 144 : g.sanma ? 108 : 136
   if (new Set(ids).size !== ids.length) errs.push('duplicate tile ids on the table')
   if (ids.length !== expected && g.phase !== 'over') errs.push(`tile count ${ids.length} != ${expected}`)
   // 2. hand sizes
@@ -42,7 +42,7 @@ function inv(t: Table): string[] {
   if (sum !== start * g.n) errs.push(`points not conserved: ${sum} vs ${start * g.n}`)
   if (g.players.some((p) => !Number.isInteger(p.points))) errs.push('non-integer points')
   // 4. phase sanity
-  if (!['turn', 'reaction', 'result', 'over'].includes(g.phase)) errs.push('bad phase ' + g.phase)
+  if (!['swap', 'void', 'turn', 'reaction', 'result', 'over'].includes(g.phase)) errs.push('bad phase ' + g.phase)
   if (g.phase === 'reaction' && !Object.keys(g.reactions).length) errs.push('reaction phase with nobody to react')
   if (g.wall.length < 0) errs.push('negative wall')
   return errs
@@ -53,9 +53,9 @@ function leaks(t: Table, id: string): string[] {
   const errs: string[] = []
   try { JSON.stringify(v) } catch { errs.push('view not serialisable') }
   const g = v.game
-  if (g && (g.phase === 'turn' || g.phase === 'reaction')) {
+  if (g && (g.phase === 'turn' || g.phase === 'reaction' || g.phase === 'swap' || g.phase === 'void')) {
     for (const p of g.players) {
-      if (p.seat !== v.you && (p.hand !== null || p.drawn !== null)) errs.push(`view for ${id} leaks seat ${p.seat}'s hand`)
+      if (p.seat !== v.you && !p.out && (p.hand !== null || p.drawn !== null)) errs.push(`view for ${id} leaks seat ${p.seat}'s hand`)
     }
     if (g.result) errs.push('result visible while playing')
   }
@@ -63,7 +63,7 @@ function leaks(t: Table, id: string): string[] {
 }
 
 async function scenario(n: number): Promise<void> {
-  const rule = pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr'])
+  const rule = pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr', 'sichuan'])
   const cfg: RoomConfig = { rule, aka: Math.random() < 0.5, rounds: rule === 'taiwan' ? pick([1, 4] as const) : pick([1, 2] as const), minFan: rnd(5), players: rule === 'riichi' && Math.random() < 0.4 ? 3 : 4, botLevel: pick(['easy', 'normal'] as const) }
   const t = new Table(cfg)
   t.speed = 0.003
@@ -95,7 +95,7 @@ async function scenario(n: number): Promise<void> {
         // lobby phase
         if (seat < 0) { if (t.join(c.id, c.name + rnd(99)) < 0) stats.rejected++ }
         else if (roll < 0.1) t.leave(c.id)
-        else if (roll < 0.25) t.setConfig(c.id, { rule: pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr']), rounds: pick([1, 2, 4] as const), aka: Math.random() < 0.5, players: pick([3, 4] as const), botLevel: pick(['easy', 'normal'] as const), minFan: rnd(6) } as Partial<RoomConfig>)
+        else if (roll < 0.25) t.setConfig(c.id, { rule: pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr', 'sichuan']), rounds: pick([1, 2, 4] as const), aka: Math.random() < 0.5, players: pick([3, 4] as const), botLevel: pick(['easy', 'normal'] as const), minFan: rnd(6) } as Partial<RoomConfig>)
         else if (roll < 0.35) t.toggleBot(c.id, rnd(5))
         else if (roll < 0.55) t.start(c.id)
         else if (roll < 0.65) t.chat(c.id, pick([...CHAT_KEYS, 'bogus']))
