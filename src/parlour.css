@@ -379,3 +379,14 @@ button.rule .zh { flex: 1 1 100px; }
 
 /* quiet toasts at the bottom edge */
 .toast { top: auto; bottom: calc(22px + env(safe-area-inset-bottom)); background: rgba(14,20,40,.94); color: var(--ivory); border: 1px solid rgba(170,186,214,.35); border-radius: 999px; padding: 10px 22px; font-family: var(--sans); font-size: 14px; font-weight: 500; letter-spacing: .02em; box-shadow: 0 10px 30px rgba(0,0,0,.5); animation: rise-in .2s ease-out; pointer-events: none; }
+
+/* ---------- turn cue: silver glow that breathes slowly ---------- */
+@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 3px rgba(226,234,248,.18), 0 0 16px rgba(226,234,248,.22), 0 6px 14px rgba(0,0,0,.5); } 50% { box-shadow: 0 0 0 4px rgba(226,234,248,.34), 0 0 30px rgba(226,234,248,.45), 0 6px 14px rgba(0,0,0,.5); } }
+.chip.turn { animation: breathe 2.8s ease-in-out infinite; }
+
+/* ---------- home: slow drifting haze behind the title ---------- */
+.page.menu::before { content: ''; position: fixed; inset: -20%; pointer-events: none; z-index: -1;
+  background: radial-gradient(40% 30% at 30% 35%, rgba(70,110,230,.18), transparent 70%), radial-gradient(35% 28% at 72% 62%, rgba(150,170,230,.12), transparent 70%);
+  animation: haze 26s ease-in-out infinite alternate; }
+@keyframes haze { from { transform: translate3d(-3%, -2%, 0) scale(1); } to { transform: translate3d(4%, 3%, 0) scale(1.12); } }
+.page.menu { padding-bottom: 100px; }
