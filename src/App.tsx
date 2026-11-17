@@ -24,6 +24,7 @@ export default function App() {
   const [room, setRoom] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
+  const [joinError, setJoinError] = useState('')
   const [active, setActive] = useState(!!stress)
   const conn = useRef<Conn | null>(null)
   const id = useRef(getClientId())
@@ -34,12 +35,12 @@ export default function App() {
 
   const leave = useCallback(() => {
     conn.current?.close(); conn.current = null
-    setView(null); setRoom(null); setActive(false); setStatus('closed')
+    setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
     try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
     history.replaceState(null, '', location.pathname)
   }, [])
 
-  const handlers = { onView: setView, onStatus: setStatus, onError: (m: string) => { setError(m); setTimeout(() => setError(''), 4000) } }
+  const handlers = { onView: setView, onStatus: setStatus, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
   const solo = () => {
     const q = new URLSearchParams(location.search) // debug overrides: ?rule=riichi&players=3
     const cfg = { ...config, ...(q.get('rule') ? { rule: q.get('rule') as RoomConfig['rule'] } : {}), ...(q.get('players') ? { players: Number(q.get('players')) as 3 | 4 } : {}) }
@@ -86,7 +87,7 @@ export default function App() {
           </div>
           {active && <button className="btn sm alt" onClick={leave}>{t('leave')}</button>}
         </div>
-        {error && <div className="toast">{error}</div>}
+        {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
         {!active && urlRoom && (
           <div className="page joinpage">
             <h1>{t('joinRoomTitle')} <span style={{ color: 'var(--accent)' }}>{urlRoom.toUpperCase()}</span></h1>
@@ -104,7 +105,14 @@ export default function App() {
             <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onCreate={() => joinRoom(makeCode())} onJoin={joinRoom} />
           </>
         )}
-        {active && !view && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
+        {active && !view && joinError && (
+          <div className="page joinpage">
+            <h1>{t('cantJoin')}</h1>
+            <p className="muted">{t(joinError) !== joinError ? t(joinError) : joinError}</p>
+            <button className="btn gold big" onClick={leave}>{t('backMenu')}</button>
+          </div>
+        )}
+        {active && !view && !joinError && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
         {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
         {active && view && playing && <Stage><Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room} /></Stage>}
