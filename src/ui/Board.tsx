@@ -214,6 +214,11 @@ export function Board({ view, send, hints, setHints, onLeave }: {
           {secs !== null && mine && <span className="timer"> · {t('timeLeft', { s: secs })}</span>}
         </div>}
         <div className="actions">
+          {o && sel !== null && (
+            <button className="cbtn call" disabled={riichiMode && !riichiOk.has(sel)} onClick={() => send({ t: 'act', a: { type: 'discard', tile: sel, riichi: riichiMode } })}>
+              <b>{riichiMode ? t('riichi') + ' · ' : ''}{t('discard')}</b><span className="mini"><Tile id={sel} /></span>
+            </button>
+          )}
           {o?.tsumo && <button className="cbtn ron" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
           {o && o.riichi.length > 0 && (
             <button className={'btn ' + (riichiMode ? 'red' : '')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
@@ -237,7 +242,7 @@ export function Board({ view, send, hints, setHints, onLeave }: {
           {me.drawn !== null && (
             <>
               <span className="hand-extra" />
-              <Tile id={me.drawn} selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
+              <Tile id={me.drawn} className="drawn" selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
             </>
           )}
         </div>

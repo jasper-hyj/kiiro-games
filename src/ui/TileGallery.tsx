@@ -5,16 +5,17 @@ export function TileGallery() {
   const kinds = Array.from({ length: 42 }, (_, i) => i)
   const idOf = (k: number) => (k >= 34 ? 136 + (k - 34) : k * 4 + 1)
   return (
-    <div className="page" style={{ '--tw': '44px' } as React.CSSProperties}>
+    <div className="page" style={{ maxWidth: 1500 }}>
       <h1>Tiles</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '14px 0 22px' }}>
-        {kinds.map((k) => <Tile key={k} id={idOf(k)} />)}
-        <Tile back />
-      </div>
-      <h2>Small (pond size)</h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, margin: '10px 0 22px', ['--tw' as string]: '20px' }}>
-        {kinds.slice(0, 34).map((k) => <Tile key={k} id={idOf(k)} />)}
-      </div>
+      {[68, 44, 30, 20].map((w) => (
+        <div key={w}>
+          <h2>{w}px wide</h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: Math.max(3, w / 8), margin: '8px 0 18px', ['--tw' as string]: w + 'px' }}>
+            {kinds.map((k) => <Tile key={k} id={idOf(k)} />)}
+            <Tile back />
+          </div>
+        </div>
+      ))}
       <h2>Melds &amp; riichi</h2>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', margin: '10px 0' }}>
         <div className="meld"><Side><Tile id={idOf(4)} hot /></Side><Tile id={idOf(3)} /><Tile id={idOf(5)} /></div>

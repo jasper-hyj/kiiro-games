@@ -19,7 +19,7 @@ const PIN_COL = ['#1b5fa8', '#c62828', '#2e7d32']
 
 function Bird() {
   return (
-    <svg viewBox="0 0 24 34" className="pips">
+    <svg viewBox="0 0 24 36" className="pips">
       <path d="M4 24 Q2 29 7 31 L11 26 Z" fill="#1f7a3a" />
       <ellipse cx="12" cy="19" rx="7" ry="7.5" fill="#1f7a3a" />
       <path d="M7 19 Q12 13 17 19 Q12 24 7 19Z" fill="#8fd6a2" />
@@ -45,32 +45,42 @@ function Stick({ x, y, red }: { x: number; y: number; red?: boolean }) {
   )
 }
 
+function Pip({ x, y, red, r = 3.5 }: { x: number; y: number; red?: boolean; r?: number }) {
+  const c = red ? '#c62828' : '#23272e'
+  return (
+    <g>
+      <circle cx={x} cy={y} r={r} fill={c} />
+      <circle cx={x} cy={y} r={r * 0.74} fill="#eceae3" />
+      <circle cx={x} cy={y} r={r * 0.6} fill="none" stroke={c} strokeWidth={r * 0.14} strokeDasharray={`${r * 0.5} ${r * 0.32}`} />
+      <circle cx={x} cy={y} r={r * 0.3} fill={c} />
+    </g>
+  )
+}
+
+// which pips are red for each count (centre pip on odd counts, a few accents on larger ones)
+// pip size grows as the count shrinks, like a real set
+const PIN_R: Record<number, number> = { 2: 5.2, 3: 4.7, 4: 5, 5: 4.6, 6: 3.7, 7: 3.35, 8: 3.65, 9: 3.4 }
+const RED_PIPS: Record<number, number[]> = { 3: [1], 5: [2], 7: [0, 1, 2], 9: [1, 4, 7], 6: [4, 5], 2: [], 4: [], 8: [] }
+
 function Pips({ suit, n }: { suit: 1 | 2; n: number }) {
   const pts = PIPS[n]
   const X = (c: number) => 5 + c * 7
-  const Y = (r: number) => 6 + r * 8.5
+  const Y = (r: number) => 6.6 + r * 7.6
   if (suit === 1 && n === 1) {
     return (
-      <svg viewBox="0 0 24 34" className="pips">
-        <circle cx="12" cy="17" r="10.5" fill="#2e7d32" /><circle cx="12" cy="17" r="8.4" fill="#f7f3e6" />
-        <circle cx="12" cy="17" r="7" fill="#1b5fa8" /><circle cx="12" cy="17" r="5" fill="#f7f3e6" />
-        <circle cx="12" cy="17" r="3.4" fill="#c62828" />
+      <svg viewBox="0 0 24 36" className="pips">
+        <circle cx="12" cy="18" r="11" fill="#23272e" /><circle cx="12" cy="18" r="9.6" fill="#eceae3" />
+        <circle cx="12" cy="18" r="8.2" fill="none" stroke="#23272e" strokeWidth="1.2" strokeDasharray="3 2" />
+        <circle cx="12" cy="18" r="5.6" fill="#23272e" /><circle cx="12" cy="18" r="4.3" fill="#eceae3" />
+        <circle cx="12" cy="18" r="2.8" fill="#c62828" />
       </svg>
     )
   }
   return (
-    <svg viewBox="0 0 24 34" className="pips">
-      {pts.map(([c, r], i) => {
-        if (suit === 2) return <Stick key={i} x={X(c)} y={Y(r)} red={n === 5 && c === 1 && r === 1.5} />
-        const col = PIN_COL[(c + Math.floor(r)) % 3]
-        return (
-          <g key={i}>
-            <circle cx={X(c)} cy={Y(r)} r="3.5" fill={col} />
-            <circle cx={X(c)} cy={Y(r)} r="2.2" fill="#f7f3e6" />
-            <circle cx={X(c)} cy={Y(r)} r="1.2" fill={col} />
-          </g>
-        )
-      })}
+    <svg viewBox="0 0 24 36" className="pips">
+      {pts.map(([c, r], i) =>
+        suit === 2 ? <Stick key={i} x={X(c)} y={Y(r)} red={n === 5 && c === 1 && r === 1.5} /> : <Pip key={i} x={X(c)} y={Y(r)} r={PIN_R[n]} red={RED_PIPS[n].includes(i)} />,
+      )}
     </svg>
   )
 }
@@ -88,7 +98,7 @@ export function Face({ kind }: { kind: number }) {
       </>
     )
   }
-  if (s === 0) return (<><div className="big man">{NUMS[numOf(kind) - 1]}</div><div className="big man" style={{ color: '#c62828' }}>萬</div></>)
+  if (s === 0) return (<><span className="idx">{numOf(kind)}</span><div className="big man">{NUMS[numOf(kind) - 1]}</div><div className="big man" style={{ color: '#c62828' }}>萬</div></>)
   if (s === 1) return <><span className="idx">{numOf(kind)}</span><Pips suit={1} n={numOf(kind)} /></>
   if (s === 2) return <><span className="idx">{numOf(kind)}</span>{numOf(kind) === 1 ? <Bird /> : <Pips suit={2} n={numOf(kind)} />}</>
   const h = kind - 27
