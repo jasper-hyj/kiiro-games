@@ -5,9 +5,48 @@ import { useLang } from '../i18n'
 
 // [English name, 中文名, English description, 中文說明]
 type Row = [string, string, string, string]
-interface Data { intro: [string, string][]; sections: { title: [string, string]; rows: Row[] }[] }
+interface Section { title: [string, string]; text?: [string, string][]; rows?: Row[] }
+interface Data { intro: [string, string][]; sections: Section[] }
+type TabId = RuleId | 'basics'
 
-const DATA: Record<RuleId, Data> = {
+const DATA: Record<TabId, Data> = {
+  basics: {
+    intro: [
+      ['Mahjong is a draw-and-discard game for four players (three in Riichi sanma). Everyone builds a hand of complete sets plus a pair; the first to complete a legal hand wins. These basics are shared by every ruleset here — the other tabs list what differs.', '麻將是四人（日麻三人制為三人）輪流摸牌、打牌的遊戲。每人把手牌湊成數組面子加一對眼，最先湊成合法牌型者獲勝。這裡是所有規則共通的基礎，其他分頁說明各規則的差異。'],
+    ],
+    sections: [
+      { title: ['Tiles', '牌種'], rows: [
+        ['Characters (萬)', '萬子', '1–9, four copies each', '一～九，每種 4 張'],
+        ['Circles (筒)', '筒子', '1–9, four copies each', '一～九，每種 4 張'],
+        ['Bamboo (索)', '索子', '1–9, four copies each (the 1 is drawn as a bird)', '一～九，每種 4 張（一索畫成小鳥）'],
+        ['Winds', '風牌', 'East 東, South 南, West 西, North 北 — four copies each', '東南西北，每種 4 張'],
+        ['Dragons', '三元牌', 'Red 中, Green 發, White 白 (the blank frame) — four copies each', '紅中、綠發、白板（空框），每種 4 張'],
+        ['Flowers', '花牌', 'Taiwanese and Hong Kong only: 梅蘭菊竹 and 春夏秋冬, one copy each. They are never part of your hand', '只有台灣與香港麻將使用：梅蘭菊竹、春夏秋冬各 1 張，不屬於手牌'],
+      ] },
+      { title: ['Sets and the winning hand', '面子與胡牌牌型'], rows: [
+        ['Sequence (chi)', '順子', 'three consecutive numbers of one suit, e.g. 3-4-5 circles. Honors never form sequences', '同花色三張連號，如三四五筒；字牌不能組順子'],
+        ['Triplet (pon)', '刻子', 'three identical tiles', '三張相同的牌'],
+        ['Kan', '槓', 'four identical tiles; counts as one triplet and you draw a replacement tile', '四張相同的牌，算一組刻子，並補摸一張'],
+        ['Pair', '眼（將）', 'two identical tiles', '兩張相同的牌'],
+        ['Winning hand', '胡牌', 'Riichi and Hong Kong: 4 sets + 1 pair (14 tiles). Taiwanese: 5 sets + 1 pair (17 tiles)', '日麻與港麻：4 組面子 + 1 對眼（14 張）；台灣麻將：5 組面子 + 1 對眼（17 張）'],
+      ] },
+      { title: ['How a turn works', '回合流程'], text: [
+        ['1. On your turn you draw one tile, then discard one tile (the hand always returns to its normal size).', '1. 輪到你時摸一張牌，再打出一張牌，手牌張數回到原本數量。'],
+        ['2. After anyone discards, the other players may claim the tile. Priority: win (ron) beats pon / kan, which beats chi. If several players can win off the same discard, they all win (double ron).', '2. 有人打牌後，其他玩家可以選擇要不要那張牌。優先順序：胡牌（榮和）> 碰／槓 > 吃。若多人能胡同一張牌，則同時胡牌（一炮多響）。'],
+        ['3. Chi takes the discard of the player on your left only and completes a sequence. Pon takes a discard from anyone to make a triplet. After any claim you do not draw — you discard immediately.', '3. 吃只能吃上家（你左手邊玩家）的牌，組成順子。碰可以碰任何人的牌，組成刻子。吃或碰之後不用摸牌，直接打出一張。'],
+        ['4. Kan: open (claim a discard with three in hand), concealed (all four in hand) or added (a fourth tile onto an existing pon). After a kan you draw from the end of the wall.', '4. 槓：明槓（用手上三張槓別人的牌）、暗槓（手上四張）、加槓（把第四張加到已碰的刻子）。槓牌後從牌牆尾補摸一張。'],
+        ['5. Win by self-draw (tsumo) when the tile you draw completes your hand, or by ron when someone discards the tile you need. A hand with an open claim is "exposed"; without any it is "concealed".', '5. 自己摸到完成牌型的牌為自摸；別人打出你要的牌為榮和（放槍）。有吃碰槓的手牌稱為副露（不門清），沒有則是門清。'],
+        ['6. If the wall runs out with no winner, the hand is a draw.', '6. 牌牆摸完仍無人胡牌則流局。'],
+      ] },
+      { title: ['Controls in this game', '操作方式'], rows: [
+        ['Discard', '打牌', 'double-tap (or double-click) a tile, or drag it upward onto the table', '連點兩下牌，或把牌往上拖到桌面'],
+        ['Calls', '吃碰槓胡', 'buttons appear in a row above your hand only when an action exists; Pass skips', '只有能做動作時，按鈕才會出現在手牌上方；按「過」放棄'],
+        ['Auto options', '自動功能', 'corner menu: auto-win, auto-discard, skip calls, hints, rotate table on phones', '右上角選單：自動胡牌、自動打牌、不吃碰、提示、手機自動旋轉'],
+        ['Keyboard', '鍵盤', 'Enter / Space and letter shortcuts — see "Keyboard shortcuts" in the menu', 'Enter／空白鍵與字母快捷鍵，請看選單中的「鍵盤快捷鍵」'],
+        ['Bots', '電腦', 'empty seats are always filled by Bot 1, Bot 2, Bot 3; a bot also takes over if you disconnect for more than a few seconds', '空位一律自動由電腦 1、2、3 補上；斷線超過數秒也會由電腦接手'],
+      ] },
+    ],
+  },
   taiwan: {
     intro: [
       ['16 tiles (5 sets + a pair) from a 144-tile set with 8 flowers. There is no minimum — any complete hand wins.', '每人 16 張（5 組面子 + 一對眼），共 144 張牌含 8 張花牌。沒有最低台數，只要胡牌就算贏。'],
@@ -35,6 +74,25 @@ const DATA: Record<RuleId, Data> = {
         ['All Honors', '字一色', '16', '16 台'], ['Heavenly / Earthly Hand', '天胡/地胡', '16', '16 台'],
         ['Eight Flowers', '八仙過海', '8', '8 台'],
       ] },
+      { title: ['Rounds and the dealer', '局數與莊家'], text: [
+        ['Everyone starts with 1000 points. The first dealer sits East. If the dealer wins or the hand is drawn, the dealer keeps the seat (連莊) and the streak grows; if another player wins, the deal passes to the next seat.', '每人起始 1000 點。第一位莊家坐東。莊家胡牌或流局時繼續做莊（連莊），連莊數增加；其他人胡牌則換下家當莊。'],
+        ['"East round" is one wind (four deals); "Full game" plays all four winds. The round wind (圈風) advances after every four deals and scores 1 tai for a matching triplet.', '「東風戰」打一個圈風（四個莊）；「全場」打完四個圈風。每四個莊換一次圈風，對應的刻子 1 台。'],
+      ] },
+      { title: ['Flowers', '花牌'], text: [
+        ['Flowers are revealed as soon as you draw them and replaced from the end of the wall. Your seat flowers are 梅 春 (East), 蘭 夏 (South), 菊 秋 (West), 竹 冬 (North): each matching flower is 1 tai. Four plants or four seasons is a flower set (花槓, 2 tai). All eight flowers wins on the spot (八仙過海, 8 tai).', '花牌一摸到就亮出，並從牌牆尾補牌。正花：東家梅、春，南家蘭、夏，西家菊、秋，北家竹、冬，每張 1 台。集齊四季或四君子為花槓（2 台）。集齊八張花牌直接胡牌（八仙過海，8 台）。'],
+      ] },
+      { title: ['Payment examples', '計分範例'], rows: [
+        ['Win by discard, 3 tai', '放槍胡 3 台', '30 + 3 × 10 = 60 — only the discarder pays', '30 + 3 × 10 = 60，只由放槍者支付'],
+        ['Self-draw, 5 tai', '自摸 5 台', '30 + 5 × 10 = 80 from each opponent (240 total)', '30 + 5 × 10 = 80，三家各付（共 240）'],
+        ['Dealer wins, streak 2', '莊家連 2 胡牌', 'dealer +1, streak +4: 5 extra tai on top of the hand', '莊家 +1 台、連莊 +4 台，共多 5 台'],
+        ['Double win', '一炮雙響', 'both winners are paid in full by the discarder', '兩位胡家都由放槍者全額支付'],
+      ] },
+      { title: ['Draws', '流局'], text: [
+        ['When the wall is down to the last 16 tiles the hand is drawn. Nobody pays. The dealer keeps the seat and the streak counter still goes up.', '牌牆剩最後 16 張時流局，不輸贏。莊家連莊，連莊數仍然增加。'],
+      ] },
+      { title: ['Not included', '未收錄'], text: [
+        ['Rare local bonuses that differ between tables (for example 半求 or 地聽/天聽) are not scored. Everything listed in the tables above is.', '各地不同的少見牌型（例如半求、地聽／天聽）沒有計分。上面表格列出的全部都有計。'],
+      ] },
     ],
   },
   hk: {
@@ -60,6 +118,23 @@ const DATA: Record<RuleId, Data> = {
         ['All Honors / All Terminals', '字一色/清幺九', '10', '10 番'], ['Four Concealed Triplets', '四暗刻', '8', '8 番'],
         ['Big Four Winds / Four Kongs / Thirteen Orphans', '大四喜/十八羅漢/十三幺', '13 (limit)', '13 番（滿番）'],
         ['Heavenly / Earthly Hand', '天胡/地胡', '13', '13 番'],
+      ] },
+      { title: ['Rounds and the dealer', '局數與莊家'], text: [
+        ['Everyone starts with 1000 points. The dealer keeps the seat after winning or a draw; otherwise the deal passes on. "East only" is four deals, "East + South" is eight.', '每人起始 1000 點。莊家胡牌或流局時連莊，否則輪到下家。「東風戰」共四個莊，「東南戰」共八個莊。'],
+      ] },
+      { title: ['Flowers', '花牌'], text: [
+        ['Flowers are set aside on draw and replaced. A flower matching your seat (梅 春 East, 蘭 夏 South, 菊 秋 West, 竹 冬 North) is 1 fan; having no flowers at all is 1 fan; a full set of four plants or seasons is 2 fan.', '花牌一摸到就放一旁並補牌。與座位相同的花（東家梅、春，南家蘭、夏，西家菊、秋，北家竹、冬）1 番；完全沒有花 1 番；集齊四季或四君子 2 番。'],
+      ] },
+      { title: ['Payment examples', '計分範例'], rows: [
+        ['5 fan, self-draw', '5 番自摸', '24 from each opponent (72 total)', '三家各付 24（共 72）'],
+        ['5 fan, discard win', '5 番放槍', 'the discarder pays double: 48', '放槍者付雙倍：48'],
+        ['Fewer than the minimum', '未達最低番數', 'the hand cannot win — the Win button never appears', '不能胡牌，「胡」按鈕不會出現'],
+      ] },
+      { title: ['Draws', '流局'], text: [
+        ['When the dead wall is reached the hand is drawn: nobody pays and the dealer keeps the seat.', '摸到牌牆最後的死牌區時流局：不輸贏，莊家連莊。'],
+      ] },
+      { title: ['Not included', '未收錄'], text: [
+        ['Seven pairs, nine gates and other optional patterns differ between Hong Kong tables, so they are not scored. Thirteen orphans is.', '七對子、九蓮寶燈等各地不同的選用牌型沒有計分。十三幺有計。'],
       ] },
     ],
   },
@@ -97,6 +172,31 @@ const DATA: Record<RuleId, Data> = {
         ['Kan dora', '槓寶牌', 'each kan reveals another indicator', '每次開槓多翻一張指示牌'],
         ['Nuki dora (sanma)', '拔北', 'in 3-player games each set-aside North is 1 han', '三人麻將中每張拔出的北風 1 翻'],
       ] },
+      { title: ['Riichi, furiten and calls', '立直、振聽與副露'], rows: [
+        ['Riichi', '立直', 'closed hand one tile from winning: pay 1000, declare, then you can only discard the tile you draw (unless a kan keeps the wait)', '門清聽牌時付 1000 點宣告立直，之後只能打摸進的牌（除非暗槓不改變聽牌）'],
+        ['Furiten', '振聽', 'you cannot ron if any tile you wait on is in your own discards. Passing a winning discard also blocks ron until your next discard (permanently after riichi). Tsumo is always allowed', '自己捨牌中有你聽的牌就不能榮和；放過一次胡牌，直到下次打牌前都不能榮和（立直後為永久）。自摸不受限制'],
+        ['Swap-calling', '食替', 'after calling, you may not discard the same tile (or the other end of the sequence) that you just claimed', '吃碰之後，不能立刻打出同一張牌（或吃牌兩端的同一張）'],
+        ['Chi', '吃', 'only from the player on your left', '只能吃上家'],
+        ['Closed vs open', '門清與副露', 'riichi, pinfu, iipeikou and several others need a closed hand; some yaku lose 1 han when open', '立直、平和、一盃口等需要門清；部分役副露時少 1 翻'],
+      ] },
+      { title: ['Scoring', '計分'], rows: [
+        ['Fu', '符', 'start at 20; +10 closed ron; +2 tsumo; triplets 2 (simple open) / 4 (terminal open or simple closed) / 8 (terminal closed), ×4 for kans; +2 pair of dragons / seat or round wind; +2 for a single-tile wait; round up to 10. Seven pairs is a flat 25', '底符 20；門清榮和 +10；自摸 +2；刻子：中張明刻 2、么九明刻或中張暗刻 4、么九暗刻 8，槓 ×4；役牌眼 +2；單騎、邊張、嵌張 +2；最後進位到 10。七對子固定 25 符'],
+        ['Base points', '基本點', 'fu × 2^(2 + han), capped: 5 han = mangan 2000, 6–7 = haneman 3000, 8–10 = baiman 4000, 11–12 = sanbaiman 6000, 13+ or yakuman = 8000 per yakuman', '符 × 2^(2 + 翻)，上限：5 翻滿貫 2000，6–7 跳滿 3000，8–10 倍滿 4000，11–12 三倍滿 6000，13 翻以上／役滿 8000（每個役滿）'],
+        ['Ron', '榮和', 'the discarder pays 4× base (dealer wins: 6×), rounded up to 100', '放槍者付基本點 4 倍（莊家胡 6 倍），進位到 100'],
+        ['Tsumo', '自摸', 'non-dealer winner: dealer pays 2×, others 1×. Dealer winner: everyone pays 2×', '閒家自摸：莊家付 2 倍，其他閒家付 1 倍；莊家自摸：三家各付 2 倍'],
+        ['Honba', '本場', 'each repeat adds 300 (ron) or 100 per payer (tsumo) to the winner', '每一本場，榮和多 300，自摸每家多 100'],
+        ['Riichi sticks', '立直棒', 'the winner of the next hand takes every stick on the table', '下一位胡牌者拿走桌上所有立直棒'],
+      ] },
+      { title: ['Draws', '流局'], rows: [
+        ['Exhaustive draw', '荒牌流局', 'when the live wall is empty, players not in tenpai pay 3000 in total to those who are; dealer stays only if tenpai', '牌牆摸完時，未聽牌者共付 3000 給聽牌者；莊家聽牌才連莊'],
+        ['Nine terminals', '九種九牌', 'on your first draw with nine different terminal/honor tiles you may abort the hand', '第一巡手牌有九種幺九字牌可宣告流局'],
+        ['Four winds / four riichi / four kans / triple ron', '四風連打／四家立直／四槓散了／三家和', 'the hand is abandoned and the dealer stays', '該局中止，莊家連莊'],
+      ] },
+      { title: ['Three-player (sanma)', '三人麻將'], rows: [
+        ['Tiles', '牌', '2m–8m removed (108 tiles); North tiles are set aside as bonus dora (nuki), each 1 han', '去除二～八萬（共 108 張）；北風拔出當寶牌，每張 1 翻'],
+        ['Points', '點數', 'everyone starts with 35,000; target to end the game is 40,000', '起始 35,000 點，結束門檻 40,000 點'],
+        ['Chi', '吃', 'not allowed in the three-player game', '三人麻將不能吃'],
+      ] },
       { title: ['Yakuman', '役滿'], rows: [
         ['Kokushi Musou', '國士無雙', 'thirteen orphans', '十三幺'], ['Suuankou', '四暗刻', 'four concealed triplets', '四組暗刻'],
         ['Daisangen', '大三元', 'three dragon triplets', '三組三元牌刻子'], ['Shousuushii / Daisuushii', '小四喜/大四喜', 'little / big four winds', '小／大四喜'],
@@ -110,7 +210,7 @@ const DATA: Record<RuleId, Data> = {
 
 export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () => void }) {
   const { lang, t } = useLang()
-  const [id, setId] = useState<RuleId>(initial)
+  const [id, setId] = useState<TabId>(initial)
   const L = lang === 'zh' ? 1 : 0
   const d = DATA[id]
   return createPortal(
@@ -121,22 +221,23 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
           <button className="btn sm alt" onClick={onClose}>{t('close')}</button>
         </div>
         <div className="tabs">
-          {(['taiwan', 'hk', 'riichi'] as const).map((k) => (
-            <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{t(k + '.name')}</button>
+          {(['basics', 'taiwan', 'hk', 'riichi'] as const).map((k) => (
+            <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>
         {d.intro.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
         {d.sections.map((s) => (
           <div key={s.title[0]}>
             <h2>{s.title[L]}</h2>
-            <table className="ref"><tbody>
+            {s.text?.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
+            {s.rows && <table className="ref"><tbody>
               {s.rows.map((r, i) => (
                 <tr key={i}>
                   <td>{L === 1 ? r[1] : r[0]}{L === 0 && <span className="muted"> {r[1]}</span>}</td>
                   <td>{r[2 + L]}</td>
                 </tr>
               ))}
-            </tbody></table>
+            </tbody></table>}
           </div>
         ))}
       </div>

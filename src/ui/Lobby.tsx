@@ -186,8 +186,7 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
         {view.seats.map((s, i) => (
           <div className={'seatbox' + (s.human ? ' here' : '')} key={i}>
             <span className={'status-dot' + (s.human ? ' open' : '')} />{s.name}{i === view.you ? ` (${t('you')})` : ''}
-            <div className="muted" style={{ fontSize: 12 }}>{s.human ? t('human') : s.bot ? t('botReserved') : t('openSeat')}</div>
-            {view.host && !s.human && <button className="btn sm alt" style={{ marginTop: 6 }} onClick={() => send({ t: 'toggleBot', seat: i })}>{s.bot ? t('openThis') : t('makeBot')}</button>}
+            <div className="muted" style={{ fontSize: 12 }}>{s.human ? t('human') : t('botSeat')}</div>
           </div>
         ))}
       </div>

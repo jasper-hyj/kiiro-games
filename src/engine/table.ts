@@ -42,7 +42,6 @@ export interface TableView {
   }
 }
 
-const BOT_NAMES = ['Hana', 'Ryo', 'Mei', 'Kai', 'Yuki', 'Sora']
 
 export class Table {
   config: RoomConfig
@@ -65,15 +64,14 @@ export class Table {
 
   constructor(config: RoomConfig = DEFAULT_CONFIG) {
     this.config = config
-    const names = [...BOT_NAMES].sort(() => Math.random() - 0.5)
-    this.slots = [0, 1, 2, 3].map((i) => ({ id: null, name: names[i], connected: false, bot: false }))
-    this.fitSlots()
+    this.slots = [0, 1, 2, 3].map(() => ({ id: null, name: '', connected: false, bot: false }))
+    this.fitSlots(); this.renameBots()
   }
 
   private get wantPlayers(): 3 | 4 { return this.config.rule === 'riichi' && this.config.players === 3 ? 3 : 4 }
   private fitSlots() {
     const n = this.wantPlayers
-    while (this.slots.length < n) this.slots.push({ id: null, name: BOT_NAMES[this.slots.length], connected: false, bot: false })
+    while (this.slots.length < n) this.slots.push({ id: null, name: '', connected: false, bot: false })
     // move humans out of seats that are about to disappear
     for (let i = this.slots.length - 1; i >= n; i--) {
       const s = this.slots[i]
@@ -87,7 +85,9 @@ export class Table {
     if (s && !s.id) { s.bot = !s.bot; this.emit() }
   }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
-  private emit() { this.listeners.forEach((f) => f()) }
+  /** Seats nobody holds are always played by bots, named Bot 1, Bot 2, ... in seat order. */
+  private renameBots() { let n = 0; for (const s of this.slots) { if (!s.id) { n++; s.name = `Bot ${n}` } } }
+  private emit() { this.renameBots(); this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
   /** A dropped player keeps their seat for `graceMs` (short network blips don't hand the game to a bot). */
   graceMs = 8000
@@ -101,7 +101,7 @@ export class Table {
     if (seat < 0) seat = this.slots.findIndex((s) => s.id === null && (this.status === 'playing' || !s.bot)) // lobby: first open seat; mid-game: replace a bot
     if (seat < 0) return -1
     const s = this.slots[seat]
-    s.id = id; s.name = name.slice(0, 16) || s.name; s.connected = true; s.afk = 0
+    s.id = id; s.name = name.slice(0, 16) || 'Player'; s.connected = true; s.afk = 0
     if (this.game) this.game.players[seat].name = s.name
     if (!this.hostId || !this.slots.some((x) => x.id === this.hostId)) this.hostId = id
     this.emit(); this.drive()
@@ -111,7 +111,7 @@ export class Table {
     const seat = this.slots.findIndex((s) => s.id === id)
     if (seat < 0) return
     if (this.status === 'lobby') {
-      this.slots[seat] = { id: null, name: BOT_NAMES[seat], connected: false, bot: false }
+      this.slots[seat] = { id: null, name: '', connected: false, bot: false }
       if (this.hostId === id) this.hostId = this.slots.find((s) => s.id)?.id ?? null
     } else {
       this.slots[seat].connected = false
@@ -144,7 +144,7 @@ export class Table {
   start(id?: string) {
     if (id !== undefined && id !== this.hostId) return
     if (this.status !== 'lobby') return
-    this.fitSlots()
+    this.fitSlots(); this.renameBots()
     this.game = new Game(this.config.rule, this.config, this.slots.map((s) => s.name))
     this.status = 'playing'
     this.acks.clear()
@@ -154,7 +154,7 @@ export class Table {
     if (id !== this.hostId) return
     this.cancelTimers()
     this.game = null; this.status = 'lobby'
-    this.slots.forEach((s, i) => { if (!s.connected) this.slots[i] = { id: null, name: BOT_NAMES[i], connected: false, bot: false } })
+    this.slots.forEach((s, i) => { if (!s.connected) this.slots[i] = { id: null, name: '', connected: false, bot: false } })
     this.emit()
   }
 
