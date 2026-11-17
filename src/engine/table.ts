@@ -66,10 +66,11 @@ export class Table {
   // ----- lobby -----
   join(id: string, name: string): number {
     let seat = this.slots.findIndex((s) => s.id === id)
-    if (seat < 0 && this.status === 'lobby') seat = this.slots.findIndex((s) => s.id === null)
+    if (seat < 0) seat = this.slots.findIndex((s) => s.id === null) // lobby: first free seat; mid-game: replace a bot
     if (seat < 0) return -1
     const s = this.slots[seat]
     s.id = id; s.name = name.slice(0, 16) || s.name; s.connected = true
+    if (this.game) this.game.players[seat].name = s.name
     if (!this.hostId || !this.slots.some((x) => x.id === this.hostId)) this.hostId = id
     this.emit(); this.drive()
     return seat
