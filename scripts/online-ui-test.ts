@@ -74,8 +74,8 @@ async function main() {
     await hostCreate(A)
     await A.waitForSelector('.copyrow input[readonly]', { timeout: 8000 })
     const link = await A.$eval('.copyrow input[readonly]', (e) => (e as HTMLInputElement).value)
-    check('host: room created with an invite link', /\?room=[A-Z0-9]{5}/.test(link), link)
-    const code = (link.match(/room=([A-Z0-9]+)/) ?? [])[1]
+    check('host: room created with an invite link', /\?room=\d{6}/.test(link), link)
+    const code = (link.match(/room=(\d+)/) ?? [])[1]
     await A.screenshot({ path: `${SHOTS}/online-host-lobby.png` })
 
     // 2. friend opens the invite link -> asked for a nickname straight away

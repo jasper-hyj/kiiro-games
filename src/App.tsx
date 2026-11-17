@@ -12,7 +12,7 @@ import { stressView } from './ui/stress'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
-const makeCode = () => Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('')
+const makeCode = () => String(Math.floor(Math.random() * 900000) + 100000) // six digits, never starts with 0
 
 export default function App() {
   const { lang, setLang, t } = useLang()

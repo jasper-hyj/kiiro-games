@@ -147,8 +147,8 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
         {step === 'code' && (
           <section className="shelf narrow">
             <h2 className="eyebrow">{t('roomCode')}</h2>
-            <input className="bigcode" type="text" autoFocus placeholder="ABCDE" value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === 'Enter' && code.length >= 3) next() }} aria-label={t('roomCode')} />
-            <button className="btn gold big" disabled={code.length < 3} onClick={next}>{t('continue')}</button>
+            <input className="bigcode" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoFocus placeholder="000000" value={code} maxLength={6} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6) next() }} aria-label={t('roomCode')} />
+            <button className="btn gold big" disabled={code.length !== 6} onClick={next}>{t('continue')}</button>
           </section>
         )}
         {step === 'name' && (
