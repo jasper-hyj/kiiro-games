@@ -8,7 +8,7 @@ const fit = (aw: number, ah: number) => {
   return { dh, s: Math.min(aw / STAGE_W, ah / dh) }
 }
 
-export function Stage({ children }: { children: ReactNode }) {
+export function Stage({ children, allowRotate = true }: { children: ReactNode; allowRotate?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
@@ -22,7 +22,7 @@ export function Stage({ children }: { children: ReactNode }) {
   }, [])
   const land = fit(box.w, box.h)
   const port = fit(box.h, box.w)
-  const rotate = box.w > 0 && port.s > land.s * 1.05
+  const rotate = allowRotate && box.w > 0 && port.s > land.s * 1.05
   const f = rotate ? port : land
   const style = {
     width: STAGE_W, height: f.dh,

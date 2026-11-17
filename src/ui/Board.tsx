@@ -89,8 +89,8 @@ function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['g
   )
 }
 
-export function Board({ view, send, hints, setHints, onLeave, online }: {
-  view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean
+export function Board({ view, send, hints, setHints, onLeave, online, rotate, setRotate }: {
+  view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean; rotate?: boolean; setRotate?: (b: boolean) => void
 }) {
   const { t } = useLang()
   const v = view.game!
@@ -239,6 +239,7 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
               <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>
             ))}
             <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
+            {setRotate && <label title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /> {t('rotate')}</label>}
             <hr />
             <button className="menuitem" onClick={() => setPanel('history')}>{t('history')}</button>
             <button className="menuitem" onClick={() => setPanel('keys')}>{t('shortcuts')}</button>

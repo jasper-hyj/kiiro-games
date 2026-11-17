@@ -19,6 +19,8 @@ export default function App() {
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', true))
+  const [rotate, setRotate] = useState(() => load('kiiro-rotate', true))
+  useEffect(() => save('kiiro-rotate', rotate), [rotate])
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
   const [room, setRoom] = useState<string | null>(null)
@@ -115,7 +117,7 @@ export default function App() {
         {active && !view && !joinError && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
         {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <Stage><Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /></Stage>}
+        {active && view && playing && <Stage allowRotate={rotate}><Board view={view} send={send} hints={hints} setHints={setHints} rotate={rotate} setRotate={setRotate} onLeave={leave} online={!!room || !!stress} /></Stage>}
       </div>
     </AkaCtx.Provider>
   )

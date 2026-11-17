@@ -129,6 +129,29 @@ async function main() {
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-game.png` })
         await layout(p, `${tag} game`)
 
+        if (!d.touch) {
+          const before = await p.$$eval('.pond.p0 .tile', (e) => e.length)
+          await p.keyboard.press('ArrowLeft')
+          await sleep(150)
+          check(`${tag}: ArrowLeft selects a tile`, (await p.$('.handrow .tile.sel')) !== null)
+          await p.keyboard.press('Enter')
+          await sleep(500)
+          const after = await p.$$eval('.pond.p0 .tile', (e) => e.length)
+          check(`${tag}: Enter discards the selected tile`, after === before + 1, `${before} -> ${after}`)
+        } else if (d.name === 'phone') {
+          const rot = () => p.$eval('.stagewrap', (e) => (e as HTMLElement).dataset.rotated)
+          const r0 = await rot()
+          await p.click('.autos summary')
+          await sleep(100)
+          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.autopanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
+          await sleep(300)
+          const r1 = await rot()
+          check(`${tag}: rotate option toggles the stage (${r0} -> ${r1})`, r0 === '1' && r1 === '0')
+          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.autopanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
+          await sleep(300)
+          check(`${tag}: rotate back on`, (await rot()) === '1')
+          await p.evaluate(() => (document.querySelector('.autos') as HTMLDetailsElement | null)?.removeAttribute('open'))
+        }
         let discards = 0
         for (let i = 0; i < 60 && discards < 4; i++) {
           const r = await playTurn(p, d)

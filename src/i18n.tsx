@@ -91,6 +91,8 @@ const D: Record<string, [string, string]> = {
   cantJoin: ["Can't join this room", '無法加入此房間'],
   room_full: ['This room is full — all four seats are taken by players.', '此房間已滿，四個座位都有玩家。'],
   bad_id: ['Your browser sent an invalid player id. Reload the page and try again.', '玩家識別碼無效，請重新整理頁面後再試。'],
+  rotate: ['Rotate table on phones', '手機自動旋轉牌桌'],
+  rotateTip: ['Turn the table sideways when the phone is held upright, so tiles are bigger', '手機直拿時將牌桌轉成橫向，牌會更大'],
   discard: ['Discard', '打出'],
   discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],
