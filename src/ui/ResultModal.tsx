@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import type { ClientMsg } from '../net/protocol'
 import { Tile } from './Tile'
@@ -42,20 +43,20 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
 
   if (over) {
     return (
-      <div className="overlay"><div className="modal">
+      createPortal(<div className="overlay"><div className="modal">
         <h2>{t('gameOver')}</h2>
         <ol className="standings">{v.standings.map((s) => <li key={s.seat}><b>{s.name}</b> — {s.points} {t('pts')} {s.seat === you && `(${t('you')})`}</li>)}</ol>
         <div className="row">
           {view.host && <button className="btn gold" onClick={() => send({ t: 'lobby' })}>{t('backLobby')}</button>}
           <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
         </div>
-      </div></div>
+      </div></div>, document.body)
     )
   }
   if (!r) return null
   const win = r.kind === 'win'
   const w = win ? v.players[r.winner!] : null
-  return (
+  return createPortal(
     <div className="overlay"><div className="modal">
       {win && w && r.score ? (
         <>
@@ -85,6 +86,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <button className="btn gold" disabled={acked} onClick={() => send({ t: 'ack' })}>{acked ? t('waitingAck', { n: v.acks.length }) : t('nextHand')}</button>
         <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
       </div>
-    </div></div>
+    </div></div>,
+    document.body,
   )
 }

@@ -4,83 +4,87 @@ import { isRedFive, kindOf, numOf, suitOf } from '../engine/tiles'
 export const AkaCtx = createContext(false)
 
 const NUMS = '一二三四五六七八九'
-const PIPS: Record<number, [number, number][]> = {
-  1: [[1, 1.5]],
-  2: [[1, 0.5], [1, 2.5]],
-  3: [[0, 0.5], [1, 1.5], [2, 2.5]],
-  4: [[0, 0.5], [2, 0.5], [0, 2.5], [2, 2.5]],
-  5: [[0, 0.5], [2, 0.5], [1, 1.5], [0, 2.5], [2, 2.5]],
-  6: [[0, 0.4], [2, 0.4], [0, 1.5], [2, 1.5], [0, 2.6], [2, 2.6]],
-  7: [[0, 0], [1, 0.5], [2, 1], [0, 2.1], [2, 2.1], [0, 3], [2, 3]],
-  8: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2], [0, 3], [2, 3]],
-  9: [[0, 0.5], [1, 0.5], [2, 0.5], [0, 1.5], [1, 1.5], [2, 1.5], [0, 2.5], [1, 2.5], [2, 2.5]],
+// Pip layouts are drawn in a 24 x 36 box and spread to fill the whole tile face (no empty band below).
+type Pt = [number, number]
+const PIN: Record<number, { pts: Pt[]; r: number; red: number[] }> = {
+  2: { pts: [[12, 10], [12, 26]], r: 5.4, red: [] },
+  3: { pts: [[6, 8], [12, 18], [18, 28]], r: 4.9, red: [1] },
+  4: { pts: [[6, 9], [18, 9], [6, 27], [18, 27]], r: 5.2, red: [] },
+  5: { pts: [[6, 9], [18, 9], [12, 18], [6, 27], [18, 27]], r: 4.8, red: [2] },
+  6: { pts: [[7, 8], [17, 8], [7, 18], [17, 18], [7, 28], [17, 28]], r: 4.4, red: [4, 5] },
+  7: { pts: [[5, 6], [12, 10], [19, 14], [7, 23], [17, 23], [7, 31], [17, 31]], r: 3.5, red: [0, 1, 2] },
+  8: { pts: [[7, 6], [17, 6], [7, 14], [17, 14], [7, 22], [17, 22], [7, 30], [17, 30]], r: 3.8, red: [] },
+  9: { pts: [[5, 8], [12, 8], [19, 8], [5, 18], [12, 18], [19, 18], [5, 28], [12, 28], [19, 28]], r: 3.5, red: [3, 4, 5] },
 }
-const PIN_COL = ['#1b5fa8', '#c62828', '#2e7d32']
+const SOU: Record<number, { pts: Pt[]; h: number; w: number; red: number[] }> = {
+  2: { pts: [[12, 10], [12, 26]], h: 14, w: 5, red: [] },
+  3: { pts: [[12, 9], [7, 26], [17, 26]], h: 13, w: 4.8, red: [] },
+  4: { pts: [[7, 10], [17, 10], [7, 26], [17, 26]], h: 14, w: 4.8, red: [] },
+  5: { pts: [[6, 9], [18, 9], [12, 18], [6, 27], [18, 27]], h: 12, w: 4.6, red: [2] },
+  6: { pts: [[7, 8], [17, 8], [7, 18], [17, 18], [7, 28], [17, 28]], h: 9.4, w: 4.4, red: [] },
+  7: { pts: [[12, 6], [5, 17], [12, 17], [19, 17], [5, 29], [12, 29], [19, 29]], h: 9.4, w: 4.2, red: [0] },
+  8: { pts: [[7, 6], [17, 6], [7, 14], [17, 14], [7, 22], [17, 22], [7, 30], [17, 30]], h: 7.6, w: 4.4, red: [] },
+  9: { pts: [[5, 8], [12, 8], [19, 8], [5, 18], [12, 18], [19, 18], [5, 28], [12, 28], [19, 28]], h: 9.4, w: 4.2, red: [3, 4, 5] },
+}
 
 function Bird() {
   return (
     <svg viewBox="0 0 24 36" className="pips">
-      <path d="M4 24 Q2 29 7 31 L11 26 Z" fill="#1f7a3a" />
-      <ellipse cx="12" cy="19" rx="7" ry="7.5" fill="#1f7a3a" />
-      <path d="M7 19 Q12 13 17 19 Q12 24 7 19Z" fill="#8fd6a2" />
-      <circle cx="15.5" cy="11" r="4" fill="#1f7a3a" />
-      <path d="M13 6.5 L14.5 3 L16 6.5Z" fill="#c62828" />
-      <path d="M19 10 L23 11.5 L19 13Z" fill="#e08a1e" />
-      <circle cx="16.4" cy="10.4" r="1" fill="#f3f0e6" />
-      <path d="M10 26 L9 31 M14 26 L15 31" stroke="#c62828" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M3 27 Q1 33 7 34 L11 28 Z" fill="#1f7a3a" />
+      <ellipse cx="12" cy="21" rx="7.5" ry="8.5" fill="#1f7a3a" />
+      <path d="M6.5 21 Q12 14 17.5 21 Q12 27 6.5 21Z" fill="#8fd6a2" />
+      <circle cx="15.5" cy="11" r="4.4" fill="#1f7a3a" />
+      <path d="M12.8 6.2 L14.6 2 L16.4 6.2Z" fill="#c62828" />
+      <path d="M19.4 10 L23.5 11.6 L19.4 13.2Z" fill="#e08a1e" />
+      <circle cx="16.5" cy="10.3" r="1.1" fill="#f3f0e6" />
+      <path d="M10 29 L9 35 M14 29 L15 35" stroke="#c62828" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   )
 }
 
-function Stick({ x, y, red }: { x: number; y: number; red?: boolean }) {
+function Stick({ x, y, h, w, red }: { x: number; y: number; h: number; w: number; red?: boolean }) {
   const c = red ? '#c62828' : '#1f7a3a', d = red ? '#7d1414' : '#0f4a22', l = red ? '#f08a8a' : '#8fd6a2'
+  const t = y - h / 2
+  const joints = h > 11 ? [0.33, 0.66] : [0.5]
   return (
     <g>
-      <rect x={x - 2} y={y - 4.4} width="4" height="8.8" rx="1.6" fill={c} />
-      <rect x={x - 0.9} y={y - 3.6} width="0.9" height="7.2" fill={l} opacity=".8" />
-      <rect x={x - 2} y={y - 0.5} width="4" height="1" fill={d} />
-      <rect x={x - 2} y={y - 4.4} width="4" height="0.9" fill={d} />
-      <rect x={x - 2} y={y + 3.5} width="4" height="0.9" fill={d} />
+      <rect x={x - w / 2} y={t} width={w} height={h} rx={w * 0.4} fill={c} />
+      <rect x={x - w * 0.28} y={t + 0.8} width={w * 0.2} height={h - 1.6} fill={l} opacity=".8" />
+      {joints.map((j, i) => <rect key={i} x={x - w / 2} y={t + h * j - 0.45} width={w} height="0.9" fill={d} />)}
+      <rect x={x - w / 2} y={t} width={w} height="0.9" fill={d} />
+      <rect x={x - w / 2} y={t + h - 0.9} width={w} height="0.9" fill={d} />
     </g>
   )
 }
 
-function Pip({ x, y, red, r = 3.5 }: { x: number; y: number; red?: boolean; r?: number }) {
+function Pip({ x, y, red, r }: { x: number; y: number; red?: boolean; r: number }) {
   const c = red ? '#c62828' : '#23272e'
   return (
     <g>
       <circle cx={x} cy={y} r={r} fill={c} />
-      <circle cx={x} cy={y} r={r * 0.74} fill="#eceae3" />
-      <circle cx={x} cy={y} r={r * 0.6} fill="none" stroke={c} strokeWidth={r * 0.14} strokeDasharray={`${r * 0.5} ${r * 0.32}`} />
+      <circle cx={x} cy={y} r={r * 0.76} fill="#eceae3" />
+      <circle cx={x} cy={y} r={r * 0.6} fill="none" stroke={c} strokeWidth={r * 0.16} strokeDasharray={`${r * 0.5} ${r * 0.3}`} />
       <circle cx={x} cy={y} r={r * 0.3} fill={c} />
     </g>
   )
 }
 
-// which pips are red for each count (centre pip on odd counts, a few accents on larger ones)
-// pip size grows as the count shrinks, like a real set
-const PIN_R: Record<number, number> = { 2: 5.2, 3: 4.7, 4: 5, 5: 4.6, 6: 3.7, 7: 3.35, 8: 3.65, 9: 3.4 }
-const RED_PIPS: Record<number, number[]> = { 3: [1], 5: [2], 7: [0, 1, 2], 9: [1, 4, 7], 6: [4, 5], 2: [], 4: [], 8: [] }
-
 function Pips({ suit, n }: { suit: 1 | 2; n: number }) {
-  const pts = PIPS[n]
-  const X = (c: number) => 5 + c * 7
-  const Y = (r: number) => 6.6 + r * 7.6
   if (suit === 1 && n === 1) {
     return (
       <svg viewBox="0 0 24 36" className="pips">
-        <circle cx="12" cy="18" r="11" fill="#23272e" /><circle cx="12" cy="18" r="9.6" fill="#eceae3" />
-        <circle cx="12" cy="18" r="8.2" fill="none" stroke="#23272e" strokeWidth="1.2" strokeDasharray="3 2" />
-        <circle cx="12" cy="18" r="5.6" fill="#23272e" /><circle cx="12" cy="18" r="4.3" fill="#eceae3" />
-        <circle cx="12" cy="18" r="2.8" fill="#c62828" />
+        <circle cx="12" cy="18" r="11.4" fill="#23272e" /><circle cx="12" cy="18" r="10" fill="#eceae3" />
+        <circle cx="12" cy="18" r="8.6" fill="none" stroke="#23272e" strokeWidth="1.2" strokeDasharray="3 2" />
+        <circle cx="12" cy="18" r="5.9" fill="#23272e" /><circle cx="12" cy="18" r="4.5" fill="#eceae3" />
+        <circle cx="12" cy="18" r="2.9" fill="#c62828" />
       </svg>
     )
   }
   return (
     <svg viewBox="0 0 24 36" className="pips">
-      {pts.map(([c, r], i) =>
-        suit === 2 ? <Stick key={i} x={X(c)} y={Y(r)} red={n === 5 && c === 1 && r === 1.5} /> : <Pip key={i} x={X(c)} y={Y(r)} r={PIN_R[n]} red={RED_PIPS[n].includes(i)} />,
-      )}
+      {suit === 1
+        ? PIN[n].pts.map(([x, y], i) => <Pip key={i} x={x} y={y} r={PIN[n].r} red={PIN[n].red.includes(i)} />)
+        : SOU[n].pts.map(([x, y], i) => <Stick key={i} x={x} y={y} h={SOU[n].h} w={SOU[n].w} red={SOU[n].red.includes(i)} />)}
     </svg>
   )
 }

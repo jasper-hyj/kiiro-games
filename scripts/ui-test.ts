@@ -88,9 +88,9 @@ async function playTurn(p: Page, d: Dev): Promise<'discarded' | 'passed' | 'resu
   }
   const tiles = await p.$$('.handrow .tile.clickable')
   if (tiles.length) {
-    await tap(p, d, '.handrow .tile.clickable', tiles.length - 1)
-    await sleep(120)
-    if (!(await tap(p, d, '.actions .cbtn.call'))) await tap(p, d, '.handrow .tile.sel')
+    await tap(p, d, '.handrow .tile.clickable', tiles.length - 1)   // first tap selects
+    await sleep(150)
+    await tap(p, d, '.handrow .tile.sel')                            // second tap on the same tile discards
     return 'discarded'
   }
   return 'idle'
@@ -137,7 +137,7 @@ async function main() {
           await sleep(r === 'idle' ? 400 : 250)
         }
         const pond = await p.$$eval('.pond.p0 .tile', (e) => e.length)
-        check(`${tag}: select tile + Discard puts tiles in my pond (${pond})`, pond >= 1)
+        check(`${tag}: tap a tile twice puts tiles in my pond (${pond})`, pond >= 1)
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-game2.png` })
         await layout(p, `${tag} game later`)
 

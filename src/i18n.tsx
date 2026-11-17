@@ -88,7 +88,7 @@ const D: Record<string, [string, string]> = {
   discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],
   auto: ['Auto', '自動'],
-  yourTurn: ['Your turn — tap a tile, then Discard', '輪到你了 — 點選一張牌再按「打出」'],
+  yourTurn: ['Your turn — tap a tile twice to discard', '輪到你了 — 點兩下牌即可打出'],
   turnOf: ["{name}'s turn", '{name} 的回合'],
   waitingOthers: ['Waiting for other players…', '等待其他玩家…'],
   wall: ['Wall', '牌山'],

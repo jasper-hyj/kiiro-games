@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
 import { kindOf } from '../engine/tiles'
@@ -54,8 +55,10 @@ function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game'
 }
 
 function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>; rel: number }) {
+  const { lang } = useLang()
   return (
     <div className={`pond p${rel}`}>
+      <span className={'pondtag' + (p.seat === v.dealer ? ' dealer' : '') + (v.phase === 'turn' ? (v.turn === p.seat ? ' on' : '') : v.phase === 'reaction' && v.waiting.includes(p.seat) ? ' on' : '')}>{WINDS[lang][p.seatWind]} {p.name}</span>
       {p.discards.map((d, i) => {
         const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
         const tile = <Tile key={i} id={d.tile} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
@@ -76,8 +79,12 @@ function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['g
           : [...Array(p.handCount)].map((_, i) => <Tile key={i} back />)}
         {extra ? <><span className="gap" /><Tile back /></> : null}
       </div>
-      <div className="melds">{p.melds.map((m, i) => <MeldView key={i} m={m} owner={p.seat} n={v.players.length} />)}</div>
-      {(p.flowers.length > 0 || p.nuki.length > 0) && <div className="flowers">{[...p.flowers, ...p.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
+      {(p.melds.length > 0 || p.flowers.length > 0 || p.nuki.length > 0) && (
+        <div className="extras">
+          {p.melds.length > 0 && <div className="melds">{p.melds.map((m, i) => <MeldView key={i} m={m} owner={p.seat} n={v.players.length} />)}</div>}
+          {(p.flowers.length > 0 || p.nuki.length > 0) && <div className="flowers">{[...p.flowers, ...p.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
+        </div>
+      )}
     </div>
   )
 }
@@ -99,6 +106,15 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
   const secs = v.timeLeft == null ? null : Math.max(0, Math.ceil((v.timeLeft - (now - recv.current)) / 1000))
   const [sel, setSel] = useState<number | null>(null)
   const [riichiMode, setRiichiMode] = useState(false)
+  const [slot, setSlot] = useState<HTMLElement | null>(null)
+  const autosRef = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    setSlot(document.getElementById('topbar-slot'))
+    const close = (e: MouseEvent) => { const d = autosRef.current; if (d?.open && !d.contains(e.target as Node)) d.open = false }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('touchstart', close as never)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('touchstart', close as never) }
+  }, [])
   const [panel, setPanel] = useState<null | 'history' | 'keys' | 'chat'>(null)
   const [bubbles, setBubbles] = useState<Record<number, { text: string; until: number }>>({})
   const seenChat = useRef(0)
@@ -209,6 +225,20 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
   const dirOn = (r: number) => activeSeats.some((sd) => (sd - you + n) % n === r)
   const dirs: [string, number][] = sanma ? [['bottom', 0], ['right', 1], ['left', 2]] : [['bottom', 0], ['right', 1], ['top', 2], ['left', 3]]
 
+  const autoMenu = (
+    <details className="autos" ref={autosRef}>
+          <summary>⚙ {t('auto')}</summary>
+          <div className="autopanel">
+            {([['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
+              <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>
+            ))}
+            <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
+            <hr />
+            <button className="menuitem" onClick={() => setPanel('history')}>{t('history')}</button>
+            <button className="menuitem" onClick={() => setPanel('keys')}>{t('shortcuts')}</button>
+          </div>
+    </details>
+  )
   const tileDim = (id: number) => !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
   const tileClick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => clickTile(id) : undefined)
 
@@ -216,7 +246,7 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
       {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
       <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
-      <div className="center">
+      <div className="center"><div className="cgrid">
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
         <div className="info">
@@ -233,9 +263,10 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
         </div>
         <Pond p={rel(1)} v={v} rel={1} />
         <Pond p={me} v={v} rel={0} />
-      </div>
+      </div></div>
       <Opp p={rel(1)} v={v} pos="right" bubble={bub(rel(1).seat)} />
       <div className="seat me">
+        <div className="memain">
         <div className="mebar">
           <Chip p={me} v={v} bubble={bub(me.seat)} />
           {online && (
@@ -247,50 +278,10 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
           <div className="melds">{me.melds.map((m, i) => <MeldView key={i} m={m} owner={me.seat} n={n} />)}</div>
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
-        {reaction && v.lastDiscard && (
-          <div className="callbar">
-            <div className="callhead">{t('discarded', { name: v.players[v.lastDiscard.from].name })} <Tile id={v.lastDiscard.tile} hot /></div>
-            <div className="callbtns">
-              {reaction.ron && <button className="cbtn ron" onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
-              {reaction.pon && (
-                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
-                  <b>{t('pon')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
-                </button>
-              )}
-              {reaction.minkan && (
-                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
-                  <b>{t('kan')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
-                </button>
-              )}
-              {reaction.chi.map((c, i) => (
-                <button key={i} className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
-                  <b>{t('chi')}</b>
-                  <span className="mini">{[...c, v.lastDiscard!.tile].sort((x, y) => kindOf(x) - kindOf(y)).map((id) => <Tile key={id} id={id} hot={id === v.lastDiscard!.tile} />)}</span>
-                </button>
-              ))}
-              <button className="cbtn pass" onClick={() => send({ t: 'decide', d: { type: 'pass' } })}><b>{t('pass')}</b></button>
-            </div>
+          <div className={'statusbar' + (mine ? ' mine' : '')}>
+            {reaction && v.lastDiscard ? t('discarded', { name: v.players[v.lastDiscard.from].name }) : status}
+            {secs !== null && mine && <span className="timer"> · {t('timeLeft', { s: secs })}</span>}
           </div>
-        )}
-        {!reaction && <div className={'statusbar' + (mine ? ' mine' : '')}>
-          {status}
-          {secs !== null && mine && <span className="timer"> · {t('timeLeft', { s: secs })}</span>}
-        </div>}
-        <div className="actions">
-          {o && sel !== null && (
-            <button className="cbtn call" disabled={riichiMode && !riichiOk.has(sel)} onClick={() => send({ t: 'act', a: { type: 'discard', tile: sel, riichi: riichiMode } })}>
-              <b>{riichiMode ? t('riichi') + ' · ' : ''}{t('discard')}</b><span className="mini"><Tile id={sel} /></span>
-            </button>
-          )}
-          {o?.tsumo && <button className="cbtn ron" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
-          {o && o.riichi.length > 0 && (
-            <button className={'btn ' + (riichiMode ? 'red' : '')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
-          )}
-          {o?.nuki && <button className="btn" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}>{t('nuki')}</button>}
-          {o?.ankan.map((k) => <button key={'a' + k} className="btn" onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}>{t('kan')} <Tile kind={k} className="inline" /></button>)}
-          {o?.kakan.map((id) => <button key={'k' + id} className="btn" onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}>{t('addKan')}</button>)}
-          {o?.abort && <button className="btn alt" onClick={() => send({ t: 'act', a: { type: 'abort' } })}>{t('abortDraw')}</button>}
-        </div>
         {hints && v.hint && (
           <div className="hint">
             <span className="hstat">{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
@@ -332,19 +323,44 @@ export function Board({ view, send, hints, setHints, onLeave, online }: {
             </>
           )}
         </div>
-        <details className="autos">
-          <summary>⚙ {t('auto')}</summary>
-          <div className="autopanel">
-            {([['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
-              <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>
-            ))}
-            <label title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /> {t('hints')}</label>
-            <hr />
-            <button className="menuitem" onClick={() => setPanel('history')}>{t('history')}</button>
-            <button className="menuitem" onClick={() => setPanel('keys')}>{t('shortcuts')}</button>
+        </div>
+        <div className="actionpanel">
+          {reaction && v.lastDiscard && (
+            <div className="callhead"><Tile id={v.lastDiscard.tile} hot /></div>
+          )}
+          <div className="apbtns">
+            {reaction && v.lastDiscard && (<>
+              {reaction.ron && <button className="cbtn ron" onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
+              {reaction.pon && (
+                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
+                  <b>{t('pon')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
+                </button>
+              )}
+              {reaction.minkan && (
+                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
+                  <b>{t('kan')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
+                </button>
+              )}
+              {reaction.chi.map((c, i) => (
+                <button key={i} className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
+                  <b>{t('chi')}</b>
+                  <span className="mini">{[...c, v.lastDiscard!.tile].sort((x, y) => kindOf(x) - kindOf(y)).map((id) => <Tile key={id} id={id} hot={id === v.lastDiscard!.tile} />)}</span>
+                </button>
+              ))}
+            </>)}
+            {reaction && <button className="cbtn pass" onClick={() => send({ t: 'decide', d: { type: 'pass' } })}><b>{t('pass')}</b></button>}
+          {o?.tsumo && <button className="cbtn ron" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
+          {o && o.riichi.length > 0 && (
+            <button className={'cbtn ' + (riichiMode ? 'ron' : 'call')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
+          )}
+          {o?.nuki && <button className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}><b>{t('nuki')}</b></button>}
+          {o?.ankan.map((k) => <button key={'a' + k} className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}><b>{t('kan')}</b><span className="mini"><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /></span></button>)}
+          {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b><span className="mini"><Tile id={id} /></span></button>)}
+          {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
           </div>
-        </details>
+        </div>
       </div>
+      {slot ? createPortal(autoMenu, slot) : autoMenu}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}
       {(v.phase === 'result' || v.phase === 'over') && <ResultModal view={view} send={send} onLeave={onLeave} />}

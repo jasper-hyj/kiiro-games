@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { RuleId } from '../engine/rules'
 import { useLang } from '../i18n'
 
@@ -104,7 +105,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
   const [id, setId] = useState<RuleId>(initial)
   const L = lang === 'zh' ? 1 : 0
   const d = DATA[id]
-  return (
+  return createPortal(
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -131,6 +132,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
           </div>
         ))}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import { CHAT_KEYS } from '../engine/table'
 import { useLang, yakuName } from '../i18n'
@@ -7,7 +8,7 @@ export const EMOJI: Record<string, string> = { e1: '👍', e2: '😂', e3: '😮
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const { t } = useLang()
-  return (
+  return createPortal(
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
@@ -16,7 +17,8 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

@@ -4,9 +4,11 @@ import { connectLocal, connectRemote, getClientId, type Conn, type Status } from
 import type { ClientMsg } from './net/protocol'
 import { Menu, RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
+import { Stage } from './ui/Stage'
 import { AkaCtx } from './ui/Tile'
 import { useLang } from './i18n'
 import { TileGallery } from './ui/TileGallery'
+import { stressView } from './ui/stress'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
@@ -17,11 +19,12 @@ export default function App() {
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', true))
-  const [view, setView] = useState<TableView | null>(null)
+  const stress = new URLSearchParams(location.search).get('stress')
+  const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4)) : null))
   const [room, setRoom] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(!!stress)
   const conn = useRef<Conn | null>(null)
   const id = useRef(getClientId())
 
@@ -71,11 +74,12 @@ export default function App() {
 
   return (
     <AkaCtx.Provider value={aka}>
-      <div className="app">
+      <div className={'app' + (playing ? ' game' : '')}>
         <div className="topbar">
           <span className="brand">🀄 <span className="bname">{t('brand')}</span></span>
           {room && <span className="muted"><span className={'status-dot ' + status} />{t('room')} {room}</span>}
           <span className="grow" />
+          <span id="topbar-slot" className="slot" />
           <div className="seg langsw">
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
             <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
@@ -103,7 +107,7 @@ export default function App() {
         {active && !view && <div className="page muted">{status === 'closed' ? t('connLost') : t('connecting')}</div>}
         {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room} />}
+        {active && view && playing && <Stage><Board view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room} /></Stage>}
       </div>
     </AkaCtx.Provider>
   )
