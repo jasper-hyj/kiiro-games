@@ -40,7 +40,7 @@ export function connectLocal(id: string, name: string, config: RoomConfig, h: Ha
   }
 }
 
-export const PARTY_HOST = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) ?? 'localhost:1999'
+export const PARTY_HOST = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) ?? 'localhost:8787'
 
 export function connectRemote(room: string, id: string, name: string, h: Handlers): Conn {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })

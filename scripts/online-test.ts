@@ -1,7 +1,7 @@
 import PartySocket from 'partysocket'
 import type { TableView } from '../src/engine/table'
 
-const host = 'localhost:1999'
+const host = 'localhost:8787'
 const room = 'test' + Math.floor(Math.random() * 1e6)
 const mk = (id: string, name: string) => {
   const c = { view: null as TableView | null, errors: [] as string[], ws: new PartySocket({ host, room, WebSocket: WebSocket as any }) }
