@@ -411,3 +411,10 @@ kbd { background: var(--surface2); border: 1px solid var(--line); border-bottom-
 
 .app.game, .app.game * { overscroll-behavior: none; }
 body:has(.app.game) { overscroll-behavior: none; overflow: hidden; }
+
+/* top bar stays on one row at any width */
+.topbar { gap: 8px; }
+.topbar * { white-space: nowrap; }
+.topbar .roomlabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.topbar .seg button { padding-left: 10px; padding-right: 10px; }
+@media (max-width: 520px) { .topbar .rl, .topbar .aut-label, .topbar .bname { display: none; } .topbar { padding-left: 10px; padding-right: 10px; } }

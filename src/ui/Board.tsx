@@ -233,7 +233,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
 
   const autoMenu = (
     <details className="autos" ref={autosRef}>
-          <summary>⚙ {t('auto')}</summary>
+          <summary>⚙<span className="aut-label"> {t('auto')}</span></summary>
           <div className="autopanel">
             {([['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
               <label key={k} title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /> {t(label)}</label>

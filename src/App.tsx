@@ -84,7 +84,7 @@ export default function App() {
       <div className={'app' + (playing ? ' game' : '')}>
         <div className="topbar">
           <span className="brand">🀄 <span className="bname">{t('brand')}</span></span>
-          {room && <span className="muted"><span className={'status-dot ' + status} />{t('room')} {room}</span>}
+          {room && <span className="muted roomlabel"><span className={'status-dot ' + status} /><span className="rl">{t('room')} </span>{room}</span>}
           <span className="grow" />
           <span id="topbar-slot" className="slot" />
           <div className="seg langsw">

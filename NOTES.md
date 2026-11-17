@@ -17,6 +17,15 @@
 | `npx tsx scripts/ui-test.ts` | real clicks/taps through every screen on 6 device profiles, EN + 繁中 |
 | `npx tsx scripts/online-ui-test.ts` | two browsers: invite link, lobby, start, chat, play, refresh/rejoin (needs vite + `npm run party:dev`) |
 | `npx tsx scripts/server-fuzz.ts` | hostile WebSocket client against the real server |
+| `npx tsx scripts/game-test.ts` | full games to the game-over screen with real clicks/taps, all rulesets, desktop + touch phone |
+| `npx tsx scripts/room-full-test.ts` | five browsers: the 'room is full' screen and way back |
+| `npx tsx scripts/bot-strength.ts N [rule]` | Normal vs Easy bot tournament (Normal wins clearly) |
+
+## Results of the last full test pass
+- Unit/scoring: 77 checks (every Taiwanese tai and Hong Kong fan item, dora, Riichi match end, win flows).
+- Fuzz: ~280k random operations over 24 parallel tables (all rules, 3/4 players, easy/normal, timers on/off, disconnects, late joins, garbage input): no invariant violations after fixes.
+- Layout sweep: 1,134 window sizes x worst-case tables x EN/繁中 (+ Riichi/dora tables): no overlaps, clipping, covered or overlapping buttons.
+- UI: 192+ real-input checks on 6 device profiles; full games to game-over on desktop and touch phone for all three rulesets; two-browser online play; hostile WebSocket client.
 
 ## Known limitations
 - **Small phones:** the stage scales down, so on a 360px-wide phone tiles are ~20 px (hand) and ~10 px (ponds). Everything is correct and tappable but small. A larger-tile phone layout would need a second design.
