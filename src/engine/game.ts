@@ -586,7 +586,19 @@ export class Game {
       this.lian = 0
       this.honba = this.isRiichi && isDraw ? this.honba + 1 : 0
     }
-    this.pendingOver = this.roundIndex >= this.opts.rounds * this.n || (this.isRiichi && this.players.some((p) => p.points < 0))
+    const nominal = this.opts.rounds * this.n
+    let over = this.roundIndex >= nominal
+    if (this.isRiichi) {
+      // standard Riichi match end: bust ends it; if nobody reached the return points the game extends one more wind
+      // (West / South); the dealer winning the final hand in first place ends it immediately (agari-yame)
+      const ret = this.sanma ? 40000 : 30000
+      const top = this.players.reduce((m, p) => Math.max(m, p.points), -Infinity)
+      over = this.players.some((p) => p.points < 0)
+      if (this.roundIndex >= nominal) over = over || top >= ret || this.roundIndex >= nominal + this.n
+      else if (dealerStays && this.roundIndex === nominal - 1 && r.kind === 'win' && (r.winner === this.dealer || r.others?.some((o) => o.winner === this.dealer))
+        && this.players[this.dealer].points === top && top >= ret) over = true
+    }
+    this.pendingOver = over
     if (this.pendingOver && this.isRiichi && this.sticks > 0) {
       const top = this.players.reduce((a, b) => (b.points > a.points ? b : a))
       top.points += this.sticks * 1000

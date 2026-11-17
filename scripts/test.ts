@@ -87,6 +87,53 @@ const pay = (t: ReturnType<typeof setup>) => {
   eq('open yakuhai ron han/fu', [sc.total, sc.fu], [1, 30])
   eq('1han30fu ron non-dealer pays 1000', pay(t)[0], -1000)
 }
+
+// --- Dora (Riichi) ---
+import { doraFrom } from '../src/engine/tiles'
+eq('dora: 9m indicator -> 1m', doraFrom(8), 0)
+eq('dora: 5p -> 6p', doraFrom(13), 14)
+eq('dora: North -> East', doraFrom(30), 27)
+eq('dora: Red dragon -> White', doraFrom(33), 31)
+eq('dora (sanma): 1m indicator -> 9m, 9m -> 1m', [doraFrom(0, true), doraFrom(8, true)], [8, 0])
+{
+  // closed hand 234m 456p 678s 33z + 11m(pair?) -> use a simple tanyao-free valid hand with 2 dora
+  const t = setup('riichi', '123m456p789s5566z', '6z', { tsumo: false, riichi: true })
+  t.g.doraPool = [parse('4s')[0] * 4]            // indicator 4s -> dora 5s ... hand has none
+  eq('no dora in hand -> no dora entry', run(t)!.yaku.some((y) => y.name === 'Dora'), false)
+  t.g.doraPool = [parse('9m')[0] * 4]            // 9m -> 1m : hand holds one 1m
+  eq('one dora tile in hand counted', run(t)!.yaku.find((y) => y.name === 'Dora')?.value, 1)
+  t.g.doraPool = [parse('4z')[0] * 4]            // North -> East: none
+  t.g.uraPool = [parse('9m')[0] * 4]             // ura indicator 9m -> 1m, riichi hand -> +1 ura
+  t.p.riichi = true
+  eq('ura dora counts only with riichi', run(t)!.yaku.find((y) => y.name === 'Ura Dora')?.value, 1)
+  t.p.riichi = false
+  eq('no ura dora without riichi', run(t)!.yaku?.some((y) => y.name === 'Ura Dora') ?? false, false)
+}
+
+
+// --- Riichi match ending ---
+{
+  const mk = (rounds: 1 | 2, players = 4) => new Game('riichi', { rule: 'riichi', aka: true, rounds, minFan: 0 } as any, ['a', 'b', 'c', 'd'].slice(0, players))
+  const finishDraw = (g: Game, dealerStays: boolean) => (g as any).finish({ kind: 'draw', deltas: new Array(g.n).fill(0), tenpai: [], hands: [], dealerBefore: g.dealer }, dealerStays, true)
+  const finishWin = (g: Game, winner: number, dealerStays: boolean) => (g as any).finish({ kind: 'win', winner, from: null, tsumo: true, score: { yaku: [], total: 1, base: 1000 }, deltas: new Array(g.n).fill(0), hands: [], dealerBefore: g.dealer }, dealerStays, false)
+  let g = mk(2); g.roundIndex = 7; g.players.forEach((p, i) => (p.points = [26000, 25000, 24000, 25000][i])); finishDraw(g, false)
+  eq('end of South with nobody at 30000 -> extends into West', (g as any).pendingOver, false)
+  g = mk(2); g.roundIndex = 7; g.players.forEach((p, i) => (p.points = [31000, 25000, 20000, 24000][i])); finishDraw(g, false)
+  eq('end of South with a player at 30000+ -> game over', (g as any).pendingOver, true)
+  g = mk(2); g.roundIndex = 11; g.players.forEach((p) => (p.points = 25000)); finishDraw(g, false)
+  eq('extension is limited to one more wind', (g as any).pendingOver, true)
+  g = mk(2); g.roundIndex = 7; g.dealer = 3; g.players.forEach((p, i) => (p.points = [20000, 22000, 23000, 35000][i])); finishWin(g, 3, true)
+  eq('agari-yame: dealer wins the last hand in 1st with 30000+ -> over', (g as any).pendingOver, true)
+  g = mk(2); g.roundIndex = 7; g.dealer = 3; g.players.forEach((p, i) => (p.points = [20000, 22000, 33000, 25000][i])); finishWin(g, 3, true)
+  eq('dealer wins last hand but is not 1st -> game continues', (g as any).pendingOver, false)
+  g = mk(2); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [-100, 30000, 40000, 30100][i])); finishDraw(g, false)
+  eq('a bust (below 0) ends the game', (g as any).pendingOver, true)
+  g = mk(1, 3); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [30000, 35000, 40000][i])); finishDraw(g, false)
+  eq('sanma return is 40000: 40000 reached -> over', (g as any).pendingOver, true)
+  g = mk(1, 3); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [30000, 35000, 38000][i])); finishDraw(g, false)
+  eq('sanma: nobody at 40000 -> extends', (g as any).pendingOver, false)
+}
+
 // --- Shanten ---
 eq('shanten tenpai', shantenAll(toCounts(parse('123m456p789s1155z').slice(0, 13)), 0, 4, {}), 0)
 eq('shanten complete', shantenAll(toCounts(parse('123m456p789s111z22z')), 0, 4, {}), -1)

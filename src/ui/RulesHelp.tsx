@@ -68,6 +68,7 @@ const DATA: Record<RuleId, Data> = {
       ['13 tiles, 136-tile set (no flowers); red fives optional. You need at least one yaku to win — dora alone never counts. 3-player (sanma) removes 2m–8m and sets North tiles aside as bonus dora.', '每人 13 張，共 136 張（無花牌），可選赤牌。胡牌必須至少有一個役，寶牌不算役。三人麻將去除二～八萬，北風可拔出當寶牌。'],
       ['Chi only from the player to your left. Riichi: closed tenpai hand, bet 1000, the hand is then locked. Furiten (a winning tile is in your own discards, or you passed a ron) blocks ron but not tsumo.', '吃只能吃上家的牌。立直：門清聽牌，押 1000 點，之後不能改牌。振聽（自己捨牌中有胡牌，或放過一次榮和）不能榮和但可以自摸。'],
       ['Payment: han + fu → base points. 5 han mangan, 6–7 haneman, 8–10 baiman, 11–12 sanbaiman, 13+ yakuman. Draw: noten players pay 3000 total to tenpai players. Abortive draws: nine terminals, four winds, four riichi, four kans, triple ron.', '計分：翻數與符數換算基本點。5 翻滿貫，6–7 跳滿，8–10 倍滿，11–12 三倍滿，13 翻以上役滿。流局時未聽牌者共付 3000 給聽牌者。途中流局：九種九牌、四風連打、四家立直、四槓散了、三家和。'],
+      ['Match end: the game ends after the East (or East + South) round. If nobody has reached 30,000 points (40,000 in 3-player) it extends by one more wind (max). It also ends if someone drops below 0, or if the dealer wins the final hand while in first place with 30,000+ (agari-yame).', '終局：打完東風（或東南）戰後結束；若無人達到 30,000 點（三麻 40,000）則再延長一個風（最多一次）。有人點數低於 0 或最後一局莊家在首位且 30,000 點以上和牌時也會結束（和了止め）。'],
     ],
     sections: [
       { title: ['1 han', '1 翻'], rows: [
