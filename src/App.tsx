@@ -54,9 +54,10 @@ export default function App() {
     const c = code.toUpperCase()
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
     setRoom(c); setActive(true)
-    history.replaceState(null, '', `?room=${c}`)
+    const dbg = new URLSearchParams(location.search).has('debug')
+    history.replaceState(null, '', `?room=${c}${dbg ? '&debug=1' : ''}`)
     conn.current = connectRemote(c, id.current, name || 'Player', handlers)
-    if (new URLSearchParams(location.search).has('debug')) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
+    if (dbg) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
     setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
