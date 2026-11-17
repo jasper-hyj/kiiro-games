@@ -57,7 +57,7 @@ const probe = () => {
   const handTile = q('.handrow .tile')[0]
   if (handTile && R(handTile).width < 16) problems.push(`hand tile too small (${R(handTile).width.toFixed(1)}px)`)
   const pondTile = q('.pond .tile:not(.called)')[0]
-  if (pondTile && R(pondTile).width < 8) problems.push(`pond tile too small (${R(pondTile).width.toFixed(1)}px)`)
+  if (pondTile) { const r = R(pondTile), side = Math.min(r.width, r.height); if (side < 5.5) problems.push(`pond tile too small (${side.toFixed(1)}px short side)`) } // ponds are rotated toward each seat, so measure the short side
   const meTile = q('.mebar .tile')[0]
   if (meTile && R(meTile).width < 9) problems.push(`own meld tile too small (${R(meTile).width.toFixed(1)}px)`)
 

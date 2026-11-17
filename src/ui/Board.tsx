@@ -59,11 +59,13 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
   return (
     <div className={`pond p${rel}`}>
       <span className={'pondtag' + (p.seat === v.dealer ? ' dealer' : '') + (v.phase === 'turn' ? (v.turn === p.seat ? ' on' : '') : v.phase === 'reaction' && v.waiting.includes(p.seat) ? ' on' : '')}>{WINDS[lang][p.seatWind]} {p.name}</span>
-      {p.discards.map((d, i) => {
-        const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
-        const tile = <Tile key={i} id={d.tile} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
-        return d.riichi ? <Side key={i}>{tile}</Side> : tile
-      })}
+      <div className="pondin">
+        {p.discards.map((d, i) => {
+          const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
+          const tile = <Tile key={i} id={d.tile} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
+          return d.riichi ? <Side key={i}>{tile}</Side> : tile
+        })}
+      </div>
     </div>
   )
 }
@@ -242,6 +244,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         {setRotate && <label className="switch" title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /><span className="knob" />{t('rotate')}</label>}
         <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
+        <label className="switch"><input type="checkbox" checked={settings.flatPonds} onChange={() => setSetting('flatPonds', !settings.flatPonds)} /><span className="knob" />{t('flatPonds')}</label>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
@@ -279,15 +282,14 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
           </div>
         )}
         <div className="info">
-          {dirs.map(([name, r]) => <span key={name} className={`dir d-${name}` + (dirOn(r) ? ' on' : '')} />)}
+          {dirs.map(([name, r]) => <span key={name} className={`cw cw-${name}` + (dirOn(r) ? ' on' : '')}>{WINDS[lang][rel(r).seatWind]}</span>)}
           <div className="rnd">{roundName}</div>
-          <div className="muted">{t('wall')} {v.wallLeft}</div>
-          {ruleId === 'riichi' && (
-            <>
-              {(v.honba > 0 || v.sticks > 0) && <div className="muted">{v.honba > 0 && <>{t('honba')} {v.honba}</>}{v.honba > 0 && v.sticks > 0 && ' · '}{v.sticks > 0 && <>{t('sticks')} {v.sticks}</>}</div>}
-            </>
-          )}
-          {ruleId !== 'riichi' && v.lian > 0 && <div className="muted">{t('streak')} ×{v.lian}</div>}
+          <div className="muted">{[
+            `${t('wall')} ${v.wallLeft}`,
+            ruleId === 'riichi' && v.honba > 0 ? `${t('honba')} ${v.honba}` : '',
+            ruleId === 'riichi' && v.sticks > 0 ? `${t('sticks')} ${v.sticks}` : '',
+            ruleId !== 'riichi' && v.lian > 0 ? `${t('streak')} ×${v.lian}` : '',
+          ].filter(Boolean).join(' · ')}</div>
         </div>
         <Pond p={rel(1)} v={v} rel={1} />
         <Pond p={me} v={v} rel={0} />

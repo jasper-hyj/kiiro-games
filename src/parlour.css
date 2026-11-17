@@ -434,3 +434,49 @@ html[data-text='large'] .page, html[data-text='large'] .modal { zoom: 1.18; }
 .switch input:checked + .knob { background: linear-gradient(180deg, #e6ecf8, #a9b6d2); }
 .switch input:checked + .knob::after { left: 23px; background: #fff; }
 .switch input:focus-visible + .knob { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+
+/* =====================================================================
+   TILES — traditional ivory face on a jade back: visible thickness, soft top light
+   ===================================================================== */
+.tile { --cap: inset 0 1px 0 rgba(255,255,255,.95), inset 0 -2px 3px rgba(120,100,60,.18);
+  --edge: 0 calc(var(--tw) * .05) 0 #e0d6b8, 0 calc(var(--tw) * .12) 0 #2f8f6b, 0 calc(var(--tw) * .12 + 2px) 0 #1c5e45, 0 calc(var(--tw) * .2) calc(var(--tw) * .12) rgba(0,0,0,.5);
+  background: linear-gradient(170deg, #fffdf4 0%, #f3ecd6 60%, #e7dfc4 100%); border: 1px solid #cfc5a4; padding-top: calc(var(--tw) * .05); --pt: calc(var(--tw) * .1); }
+.tile .idx { top: calc(var(--tw) * .08); color: #b3261e; }
+.tile.back { background: linear-gradient(150deg, #3fa27c 0%, #2b7f60 55%, #1f6a50 100%); border-color: #17503c;
+  --cap: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 calc(var(--tw) * .06) rgba(255,255,255,.07);
+  --edge: 0 calc(var(--tw) * .05) 0 #e0d6b8, 0 calc(var(--tw) * .1) 0 #cfc3a0, 0 calc(var(--tw) * .18) calc(var(--tw) * .1) rgba(0,0,0,.5); }
+.tile.aka { background: linear-gradient(170deg, #fff6f2, #f6dcd4); }
+.tile .blossom { width: 62%; height: auto; margin-top: calc(var(--tw) * .02); flex: none; }
+.tile .big.flw { font-size: calc(var(--tw) * .5); }
+.tile.sel { box-shadow: var(--cap), 0 0 0 2px #e6ecf8, 0 0 22px rgba(226,234,248,.5), var(--edge); }
+.tile.hot { box-shadow: var(--cap), 0 0 0 2px var(--danger), var(--edge); }
+
+/* =====================================================================
+   CENTRE — a compass plate (seat winds on four sides, the active seat lights up)
+   and tidy six-per-row discard blocks turned toward each seat, as on a real table
+   ===================================================================== */
+.cgrid { row-gap: 4px; --infoh: 90; --pt: clamp(12px, calc((var(--H) - 474 - var(--infoh)) / 11.8 * 1px), 34px); }
+.cgrid .pond { --tw: var(--pt); width: calc(var(--tw) * 6.5 + 6px); height: calc(var(--tw) * 5.8); display: block; position: relative; }
+.cgrid .pond.p1, .cgrid .pond.p3 { width: calc(var(--tw) * 5.8); height: calc(var(--tw) * 6.5 + 6px); }
+.pond .pondin { position: absolute; left: 50%; top: 50%; width: calc(var(--tw) * 6.5 + 6px); height: calc(var(--tw) * 5.8); display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-end; gap: calc(var(--tw) * .1) 1px; transform: translate(-50%, -50%); }
+.pond.p2 .pondin { transform: translate(-50%, -50%) rotate(180deg); }
+.pond.p1 .pondin { transform: translate(-50%, -50%) rotate(-90deg); }
+.pond.p3 .pondin { transform: translate(-50%, -50%) rotate(90deg); }
+html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 6.5 + 6px); height: calc(var(--tw) * 5.8); }
+html[data-ponds='flat'] .pond .pondin { transform: translate(-50%, -50%) !important; }
+.pond > .tile, .pond > .sw { animation: none; } .pond .pondin > .tile, .pond .pondin > .sw { animation: drop-in .2s ease-out; }
+.pond .tile.called { opacity: .3; }
+
+.info { width: 250px; min-height: 78px; padding: 20px 30px; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px;
+  background: radial-gradient(circle at 50% 40%, rgba(30,44,90,.9), rgba(5,8,20,.95) 75%); border: 1px solid rgba(170,186,214,.45);
+  box-shadow: inset 0 0 0 4px rgba(0,0,0,.35), inset 0 0 0 5px rgba(170,186,214,.18), 0 10px 22px rgba(0,0,0,.5); }
+.info .rnd { font-size: 18px; line-height: 1.15; letter-spacing: .12em; color: #eef2fa; }
+.info .muted { font-size: 12px; line-height: 1.3; }
+.cw { position: absolute; font-family: var(--glyph); font-size: 15px; line-height: 1; color: rgba(236,240,250,.38); transition: color .25s, text-shadow .25s; }
+.cw.on { color: #fff; text-shadow: 0 0 12px rgba(226,234,248,.95), 0 0 24px rgba(150,180,255,.7); }
+.cw-bottom { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.cw-top { top: 4px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+.cw-left { left: 8px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.cw-right { right: 8px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+.info .muted { white-space: nowrap; }

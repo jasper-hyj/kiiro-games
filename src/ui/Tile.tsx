@@ -27,6 +27,24 @@ const SOU: Record<number, { pts: Pt[]; h: number; w: number; red: number[] }> = 
   9: { pts: [[5, 8], [12, 8], [19, 8], [5, 18], [12, 18], [19, 18], [5, 28], [12, 28], [19, 28]], h: 9.4, w: 4.2, red: [3, 4, 5] },
 }
 
+/** Small painted emblem above each flower tile: plum, orchid, chrysanthemum, bamboo / the four seasons. */
+function Blossom({ n, season }: { n: number; season: boolean }) {
+  const petals = (count: number, r: number, rx: number, fill: string, cx = 12, cy = 10) =>
+    Array.from({ length: count }, (_, i) => <ellipse key={i} cx={cx} cy={cy - r} rx={rx} ry={r} fill={fill} transform={`rotate(${(360 / count) * i} ${cx} ${cy})`} />)
+  return (
+    <svg viewBox="0 0 24 14" className="blossom" aria-hidden="true">
+      {!season && n === 0 && <>{petals(5, 3.6, 2.5, '#e8788f')}<circle cx="12" cy="10" r="1.6" fill="#f6d86b" /></>}
+      {!season && n === 1 && <>{petals(3, 4.6, 1.7, '#8a63c7')}<path d="M12 11 Q6 6 2 11 M12 11 Q18 6 22 11" stroke="#2e7d32" strokeWidth="1.4" fill="none" /></>}
+      {!season && n === 2 && <>{petals(12, 4.4, 1.2, '#e9b92a')}<circle cx="12" cy="10" r="1.8" fill="#c6531a" /></>}
+      {!season && n === 3 && <><path d="M7 14 V2 M12 14 V0 M17 14 V3" stroke="#2e7d32" strokeWidth="2.2" /><path d="M6 6 H8 M11 4 H13 M16 7 H18" stroke="#0f4a22" strokeWidth="1" /></>}
+      {season && n === 0 && <path d="M3 12 Q12 -2 21 12 Q12 8 3 12Z" fill="#6bbf59" />}
+      {season && n === 1 && <><circle cx="12" cy="7" r="4.2" fill="#f0a02c" />{Array.from({ length: 8 }, (_, i) => <path key={i} d="M12 1 V-1" stroke="#f0a02c" strokeWidth="1.4" transform={`rotate(${i * 45} 12 7)`} />)}</>}
+      {season && n === 2 && <path d="M4 11 Q9 -1 14 6 Q17 1 20 8 Q12 14 4 11Z" fill="#c8641a" />}
+      {season && n === 3 && <><path d="M12 1 V13 M7 3 L17 11 M17 3 L7 11" stroke="#5da4d6" strokeWidth="1.6" strokeLinecap="round" /></>}
+    </svg>
+  )
+}
+
 function Bird() {
   return (
     <svg viewBox="0 0 24 36" className="pips">
@@ -57,8 +75,9 @@ function Stick({ x, y, h, w, red }: { x: number; y: number; h: number; w: number
   )
 }
 
-function Pip({ x, y, red, r }: { x: number; y: number; red?: boolean; r: number }) {
-  const c = red ? '#c62828' : '#23272e'
+function Pip({ x, y, red, r, i = 0 }: { x: number; y: number; red?: boolean; r: number; i?: number }) {
+  // traditional coins alternate blue and green, with red ones where the set calls for them
+  const c = red ? '#c62828' : i % 2 === 0 ? '#1d4f9c' : '#1f7a3a'
   return (
     <g>
       <circle cx={x} cy={y} r={r} fill={c} />
@@ -73,17 +92,17 @@ function Pips({ suit, n, allRed }: { suit: 1 | 2; n: number; allRed?: boolean })
   if (suit === 1 && n === 1) {
     return (
       <svg viewBox="0 0 24 36" className="pips">
-        <circle cx="12" cy="18" r="11.4" fill="#23272e" /><circle cx="12" cy="18" r="10" fill="#eceae3" />
-        <circle cx="12" cy="18" r="8.6" fill="none" stroke="#23272e" strokeWidth="1.2" strokeDasharray="3 2" />
-        <circle cx="12" cy="18" r="5.9" fill="#23272e" /><circle cx="12" cy="18" r="4.5" fill="#eceae3" />
-        <circle cx="12" cy="18" r="2.9" fill="#c62828" />
+        <circle cx="12" cy="18" r="11.4" fill="#1f7a3a" /><circle cx="12" cy="18" r="10" fill="#f1ecdd" />
+        <circle cx="12" cy="18" r="8.6" fill="none" stroke="#1f7a3a" strokeWidth="1.2" strokeDasharray="3 2" />
+        <circle cx="12" cy="18" r="6.4" fill="#1d4f9c" /><circle cx="12" cy="18" r="5" fill="#f1ecdd" />
+        <circle cx="12" cy="18" r="3.2" fill="#c62828" /><circle cx="12" cy="18" r="1.1" fill="#f1ecdd" />
       </svg>
     )
   }
   return (
     <svg viewBox="0 0 24 36" className="pips">
       {suit === 1
-        ? PIN[n].pts.map(([x, y], i) => <Pip key={i} x={x} y={y} r={PIN[n].r} red={allRed || PIN[n].red.includes(i)} />)
+        ? PIN[n].pts.map(([x, y], i) => <Pip key={i} i={i} x={x} y={y} r={PIN[n].r} red={allRed || PIN[n].red.includes(i)} />)
         : SOU[n].pts.map(([x, y], i) => <Stick key={i} x={x} y={y} h={SOU[n].h} w={SOU[n].w} red={allRed || SOU[n].red.includes(i)} />)}
     </svg>
   )
@@ -97,7 +116,8 @@ export function Face({ kind, red }: { kind: number; red?: boolean }) {
     const ch = season ? '春夏秋冬'[n] : '梅蘭菊竹'[n]
     return (
       <>
-        <div className="big" style={{ color: season ? '#b8541a' : '#2e7d32' }}>{ch}</div>
+        <Blossom n={n} season={season} />
+        <div className="big flw" style={{ color: season ? '#b8541a' : '#2e7d32' }}>{ch}</div>
         <div className="sm" style={{ color: '#777' }}>{n + 1}</div>
       </>
     )
