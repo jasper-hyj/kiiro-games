@@ -147,6 +147,11 @@ export function Board({ view, send, hints, setHints, onLeave }: {
   else if (v.phase === 'turn') status = t('turnOf', { name: v.players[v.turn].name })
   else if (v.phase === 'reaction') status = t('waitingOthers')
 
+  // static direction bars: light the side of whoever's turn it is (or who the table is waiting on)
+  const activeSeats = v.phase === 'turn' ? [v.turn] : v.phase === 'reaction' ? v.waiting : []
+  const dirOn = (r: number) => activeSeats.some((sd) => (sd - you + n) % n === r)
+  const dirs: [string, number][] = sanma ? [['bottom', 0], ['right', 1], ['left', 2]] : [['bottom', 0], ['right', 1], ['top', 2], ['left', 3]]
+
   const tileDim = (id: number) => !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
   const tileClick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => clickTile(id) : undefined)
 
@@ -158,6 +163,7 @@ export function Board({ view, send, hints, setHints, onLeave }: {
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
         <div className="info">
+          {dirs.map(([name, r]) => <span key={name} className={`dir d-${name}` + (dirOn(r) ? ' on' : '')} />)}
           <div className="rnd">{roundName}</div>
           <div className="muted">{t('wall')} {v.wallLeft}</div>
           {ruleId === 'riichi' && (
@@ -178,12 +184,37 @@ export function Board({ view, send, hints, setHints, onLeave }: {
           <div className="melds">{me.melds.map((m, i) => <MeldView key={i} m={m} owner={me.seat} n={n} />)}</div>
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
-        <div className={'statusbar' + (mine ? ' mine' : '')}>
+        {reaction && v.lastDiscard && (
+          <div className="callbar">
+            <div className="callhead">{t('discarded', { name: v.players[v.lastDiscard.from].name })} <Tile id={v.lastDiscard.tile} hot /></div>
+            <div className="callbtns">
+              {reaction.ron && <button className="cbtn ron" onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
+              {reaction.pon && (
+                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
+                  <b>{t('pon')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
+                </button>
+              )}
+              {reaction.minkan && (
+                <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
+                  <b>{t('kan')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
+                </button>
+              )}
+              {reaction.chi.map((c, i) => (
+                <button key={i} className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
+                  <b>{t('chi')}</b>
+                  <span className="mini">{[...c, v.lastDiscard!.tile].sort((x, y) => kindOf(x) - kindOf(y)).map((id) => <Tile key={id} id={id} hot={id === v.lastDiscard!.tile} />)}</span>
+                </button>
+              ))}
+              <button className="cbtn pass" onClick={() => send({ t: 'decide', d: { type: 'pass' } })}><b>{t('pass')}</b></button>
+            </div>
+          </div>
+        )}
+        {!reaction && <div className={'statusbar' + (mine ? ' mine' : '')}>
           {status}
           {secs !== null && mine && <span className="timer"> · {t('timeLeft', { s: secs })}</span>}
-        </div>
+        </div>}
         <div className="actions">
-          {o?.tsumo && <button className="btn gold" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
+          {o?.tsumo && <button className="cbtn ron" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
           {o && o.riichi.length > 0 && (
             <button className={'btn ' + (riichiMode ? 'red' : '')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
           )}
@@ -191,19 +222,6 @@ export function Board({ view, send, hints, setHints, onLeave }: {
           {o?.ankan.map((k) => <button key={'a' + k} className="btn" onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}>{t('kan')} <Tile kind={k} className="inline" /></button>)}
           {o?.kakan.map((id) => <button key={'k' + id} className="btn" onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}>{t('addKan')}</button>)}
           {o?.abort && <button className="btn alt" onClick={() => send({ t: 'act', a: { type: 'abort' } })}>{t('abortDraw')}</button>}
-          {reaction && (
-            <>
-              {reaction.ron && <button className="btn gold" onClick={() => send({ t: 'decide', d: { type: 'ron' } })}>{t('ron')}</button>}
-              {reaction.pon && <button className="btn" onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>{t('pon')}</button>}
-              {reaction.minkan && <button className="btn" onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>{t('kan')}</button>}
-              {reaction.chi.map((c, i) => (
-                <button key={i} className="chi-btn" onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
-                  {t('chi')} <Tile id={c[0]} /><Tile id={v.lastDiscard!.tile} hot /><Tile id={c[1]} />
-                </button>
-              ))}
-              <button className="btn alt" onClick={() => send({ t: 'decide', d: { type: 'pass' } })}>{t('pass')}</button>
-            </>
-          )}
         </div>
         {hints && v.hint && (
           <div className="hint">
@@ -212,7 +230,7 @@ export function Board({ view, send, hints, setHints, onLeave }: {
             {selWaits && <>{t('discardWaits')} {selWaits.map((k) => <Tile key={k} kind={k} />)}</>}
           </div>
         )}
-        <div className="handrow">
+        <div className={'handrow' + (mine ? ' mine' : '')}>
           {handTiles.map((id) => (
             <Tile key={id} id={id} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}

@@ -199,3 +199,29 @@ button.rule .zh { font-size: 20px; font-weight: 700; }
 .info .rnd { font-size: 20px; font-weight: 700; letter-spacing: 0; }
 .info .muted { font-size: 12px; }
 .doras { margin: 4px 0 2px; }
+
+/* ---------- call bar (chi / pon / kan / ron) ---------- */
+.callbar { align-self: center; display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(10,14,13,.8); border: 1px solid rgba(242,184,75,.45); border-radius: 16px; padding: 10px 14px; margin: 2px 0 4px; max-width: 100%; }
+.callhead { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; --tw: 26px; }
+.callbtns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 84px; min-height: 58px; padding: 8px 18px; border-radius: 14px; border: 0; font: inherit; font-size: 20px; color: #fff; cursor: pointer; }
+.cbtn b { font-weight: 800; letter-spacing: .02em; }
+.cbtn .mini { display: flex; gap: 2px; --tw: 20px; }
+.cbtn.call { background: #2f8a67; }
+.cbtn.call:hover { background: #38a07a; }
+.cbtn.ron { background: var(--accent); color: var(--accent-ink); }
+.cbtn.ron:hover { background: #f7c76a; }
+.cbtn.pass { background: #3a4048; min-width: 72px; }
+.cbtn.pass:hover { background: #4a515b; }
+.actions { gap: 10px; }
+
+/* ---------- turn indicator ---------- */
+.info { position: relative; padding: 12px 20px; }
+.dir { position: absolute; background: rgba(255,255,255,.12); border-radius: 3px; }
+.dir.on { background: var(--accent); }
+.dir.d-top, .dir.d-bottom { left: 18%; right: 18%; height: 5px; }
+.dir.d-top { top: 3px; } .dir.d-bottom { bottom: 3px; }
+.dir.d-left, .dir.d-right { top: 22%; bottom: 22%; width: 5px; }
+.dir.d-left { left: 3px; } .dir.d-right { right: 3px; }
+.handrow { border: 2px solid transparent; border-radius: 14px; padding-left: 10px; padding-right: 10px; align-self: center; }
+.handrow.mine { border-color: var(--accent); background: rgba(242,184,75,.07); box-shadow: 0 0 0 3px rgba(242,184,75,.18); }

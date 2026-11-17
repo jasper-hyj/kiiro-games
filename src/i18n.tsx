@@ -70,6 +70,7 @@ const D: Record<string, [string, string]> = {
   autoDiscardTip: ['Automatically discard the tile you draw (unless you can win)', '自動打出摸到的牌（可胡時除外）'],
   skipCallsTip: ['Automatically pass on chi / pon / kan', '自動略過吃／碰／槓'],
   hintsTip: ['Show waits and shanten', '顯示聽牌與向聽數'],
+  discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],
   auto: ['Auto', '自動'],
   yourTurn: ['Your turn — tap a tile twice to discard', '輪到你了 — 點兩下牌即可打出'],
