@@ -17,7 +17,7 @@ function evaluate(ctx: WinContext): HandScore | null {
     const y: YakuItem[] = []
     if (ctx.dealer) {
       y.push({ name: 'Dealer', zh: '莊家', value: 1 })
-      if (ctx.lianZhuang > 0) y.push({ name: `Dealer Streak ×${ctx.lianZhuang}`, zh: '連莊拉莊', value: 2 * ctx.lianZhuang })
+      if (ctx.lianZhuang > 0) y.push({ name: `Dealer Streak ×${ctx.lianZhuang}`, zh: `連莊拉莊 ×${ctx.lianZhuang}`, value: 2 * ctx.lianZhuang })
     }
     if (closed && ctx.tsumo) y.push({ name: 'Concealed Self-draw', zh: '門清自摸', value: 3 })
     else if (closed) y.push({ name: 'Concealed Hand', zh: '門清', value: 1 })
@@ -32,7 +32,7 @@ function evaluate(ctx: WinContext): HandScore | null {
       if (t.kind === rw) y.push({ name: 'Round Wind', zh: '圈風', value: 1 })
     }
     const own = ctx.flowers.filter((k) => flowerSeat(k) === ctx.seatWind).length
-    if (own) y.push({ name: `Seat Flower ×${own}`, zh: '花牌', value: own })
+    if (own) y.push({ name: `Seat Flower ×${own}`, zh: `花牌 ×${own}`, value: own })
     const fs = flowerSetBonus(ctx.flowers)
     if (fs) y.push({ name: 'Flower Set', zh: '花槓', value: 2 * fs })
     if (seqs.length === 5 && sc[3] === 0 && ctx.flowers.length === 0 && it.waitKind === 'ryanmen') y.push({ name: 'Pinghu (All Sequences)', zh: '平胡', value: 2 })

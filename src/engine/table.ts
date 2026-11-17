@@ -7,7 +7,7 @@ import { kindOf } from './tiles'
 export interface RoomConfig extends GameOptions { rule: RuleId }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
 
-export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean }
+export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean; afk?: number }
 export interface PlayerView {
   seat: number; name: string; points: number; human: boolean; connected: boolean
   handCount: number; hand: number[] | null; drawn: number | null
@@ -29,6 +29,7 @@ export interface TableView {
     reaction: ReactionOptions | null
     reactionKind: string
     waiting: number[]
+    timeLeft?: number | null
     result: HandResult | null
     acks: number[]
     standings: { seat: number; name: string; points: number }[]
@@ -51,6 +52,11 @@ export class Table {
   private timer: ReturnType<typeof setTimeout> | null = null
   private ackTimer: ReturnType<typeof setTimeout> | null = null
   speed = 1 // 0 = instant (tests)
+  /** Per-decision time limit in ms for human players (0 = off). Expired turns auto-play; two in a row hands the seat to a bot. */
+  turnTimerMs = 0
+  private deadline: number | null = null
+  private deadlineKey = ''
+  private dTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(config: RoomConfig = DEFAULT_CONFIG) {
     this.config = config
@@ -78,7 +84,7 @@ export class Table {
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   private emit() { this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
-  isBotControlled(seat: number) { return !this.slots[seat].id || !this.slots[seat].connected }
+  isBotControlled(seat: number) { const s = this.slots[seat]; return !s.id || !s.connected || (s.afk ?? 0) >= 2 }
 
   // ----- lobby -----
   join(id: string, name: string): number {
@@ -132,12 +138,12 @@ export class Table {
   turnAction(id: string, a: TurnAction) {
     const seat = this.seatOf(id)
     if (seat < 0 || !this.game) return
-    if (this.game.act(seat, a)) { this.emit(); this.drive() }
+    if (this.game.act(seat, a)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
   }
   decide(id: string, d: Decision) {
     const seat = this.seatOf(id)
     if (seat < 0 || !this.game) return
-    if (this.game.submitDecision(seat, d)) { this.emit(); this.drive() }
+    if (this.game.submitDecision(seat, d)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
   }
   ack(id: string) {
     const seat = this.seatOf(id)
@@ -147,6 +153,8 @@ export class Table {
   }
 
   private cancelTimers() {
+    if (this.dTimer) clearTimeout(this.dTimer)
+    this.dTimer = null; this.deadline = null; this.deadlineKey = ''
     if (this.timer) clearTimeout(this.timer)
     if (this.ackTimer) clearTimeout(this.ackTimer)
     this.timer = this.ackTimer = null
@@ -157,10 +165,43 @@ export class Table {
     this.timer = setTimeout(() => { this.timer = null; fn() }, ms * this.speed)
   }
 
+  private armDeadline() {
+    const g = this.game!
+    let seats: number[] = []
+    if (g.phase === 'turn' && !this.isBotControlled(g.turn)) seats = [g.turn]
+    else if (g.phase === 'reaction') seats = g.pendingSeats().filter((s) => !this.isBotControlled(s))
+    if (!this.turnTimerMs || !seats.length) {
+      if (this.dTimer) clearTimeout(this.dTimer)
+      this.dTimer = null; this.deadline = null; this.deadlineKey = ''
+      return
+    }
+    const key = [g.handNo, g.phase, g.turn, g.players.reduce((a, p) => a + p.discards.length + p.melds.length, 0), seats.join()].join(':')
+    if (key === this.deadlineKey) return
+    this.deadlineKey = key
+    this.deadline = Date.now() + this.turnTimerMs
+    if (this.dTimer) clearTimeout(this.dTimer)
+    this.dTimer = setTimeout(() => this.onTimeout(key), this.turnTimerMs)
+  }
+
+  private onTimeout(key: string) {
+    const g = this.game
+    if (!g || key !== this.deadlineKey) return
+    if (g.phase === 'turn') {
+      const s = g.turn
+      const o = g.turnOptions(s)
+      this.slots[s].afk = (this.slots[s].afk ?? 0) + 1
+      g.act(s, o.tsumo ? { type: 'tsumo' } : { type: 'discard', tile: o.discard[o.discard.length - 1] })
+    } else if (g.phase === 'reaction') {
+      for (const s of g.pendingSeats()) if (!this.isBotControlled(s)) { this.slots[s].afk = (this.slots[s].afk ?? 0) + 1; g.submitDecision(s, { type: 'pass' }) }
+    }
+    this.emit(); this.drive()
+  }
+
   /** Runs bots / auto-advances. Safe to call after any change. */
   drive() {
     const g = this.game
     if (!g || this.status !== 'playing') return
+    this.armDeadline()
     if (g.phase === 'turn') {
       const s = g.turn
       const p = g.players[s]
@@ -230,6 +271,7 @@ export class Table {
       turnOptions: you >= 0 && g.phase === 'turn' && g.turn === you ? g.turnOptions(you) : null,
       reaction: you >= 0 && g.phase === 'reaction' && g.reactions[you] && !g.decisions[you] ? g.reactions[you] : null,
       reactionKind: g.reactionKind, waiting: g.pendingSeats(),
+      timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       rule: { id: g.rule.id, name: g.rule.name, nSets: g.rule.nSets },
     }

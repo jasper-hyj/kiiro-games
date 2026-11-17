@@ -9,6 +9,7 @@ export class Main extends Server<Env> {
   table = new Table()
 
   onStart() {
+    this.table.turnTimerMs = 30000
     this.table.onChange(() => this.broadcastViews())
   }
 

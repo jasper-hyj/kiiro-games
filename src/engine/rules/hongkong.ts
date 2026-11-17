@@ -21,7 +21,7 @@ function evaluate(ctx: WinContext): HandScore | null {
     if (ctx.firstTurn && ctx.tsumo) y.push(ctx.dealer ? { name: 'Heavenly Hand', zh: '天胡', value: 13 } : { name: 'Earthly Hand', zh: '地胡', value: 13 })
     // flowers
     const own = ctx.flowers.filter((k) => flowerSeat(k) === ctx.seatWind).length
-    if (own) y.push({ name: `Seat Flower ×${own}`, zh: '正花', value: own })
+    if (own) y.push({ name: `Seat Flower ×${own}`, zh: `正花 ×${own}`, value: own })
     if (ctx.flowers.length === 0) y.push({ name: 'No Flowers', zh: '無花', value: 1 })
     const fs = flowerSetBonus(ctx.flowers)
     if (fs) y.push({ name: 'Complete Flower Set', zh: '一台花', value: 2 * fs })

@@ -3,130 +3,148 @@ import type { RoomConfig, TableView } from '../engine/table'
 import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
 import { RulesHelp } from './RulesHelp'
+import { useLang } from '../i18n'
 
-const IDS: RuleId[] = ['riichi', 'hk', 'taiwan']
+const IDS: RuleId[] = ['taiwan', 'hk', 'riichi']
+type Change = (c: Partial<RoomConfig>) => void
 
-export function ConfigEditor({ config, onChange, readOnly }: { config: RoomConfig; onChange: (c: Partial<RoomConfig>) => void; readOnly?: boolean }) {
-  const [help, setHelp] = useState(false)
+export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; onChange: Change; readOnly?: boolean }) {
+  const { lang, t } = useLang()
   return (
-    <div>
-      <div className="grid3">
-        {IDS.map((id) => {
-          const r = RULESETS[id]
-          return (
-            <div key={id} className={'card rule' + (config.rule === id ? ' on' : '')} onClick={() => !readOnly && onChange({ rule: id, rounds: id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds) } as Partial<RoomConfig>)}>
-              <div className="zh">{r.zh}</div>
-              <b>{r.name}</b>
-              <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{r.blurb}</div>
-            </div>
-          )
-        })}
-      </div>
-      <div className="row" style={{ marginTop: 14 }}>
-        <span>Length</span>
-        <div className="seg">
-          {(config.rule === 'taiwan' ? [[1, 'East round'], [4, 'Full (4 winds)']] : [[1, 'East only'], [2, 'East + South']] as [number, string][]).map(([n, label]) => (
-            <button key={n} disabled={readOnly} className={config.rounds === n ? 'on' : ''} onClick={() => onChange({ rounds: n as 1 | 2 | 4 })}>{label}</button>
-          ))}
-        </div>
-        {config.rule === 'riichi' && (
-          <div className="seg">
-            {([4, 3] as const).map((n) => <button key={n} disabled={readOnly} className={(config.players ?? 4) === n ? 'on' : ''} onClick={() => onChange({ players: n })}>{n === 4 ? '4 players' : '3 players (sanma)'}</button>)}
-          </div>
-        )}
-        {config.rule === 'riichi' && (
-          <label><input type="checkbox" disabled={readOnly} checked={config.aka} onChange={(e) => onChange({ aka: e.target.checked })} /> Red fives</label>
-        )}
-        {config.rule === 'hk' && (
-          <label>Min fan{' '}
-            <select disabled={readOnly} value={config.minFan} onChange={(e) => onChange({ minFan: +e.target.value })}>
-              {[0, 1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </label>
-        )}
-        <label>Bots{' '}
-          <select disabled={readOnly} value={config.botLevel ?? 'normal'} onChange={(e) => onChange({ botLevel: e.target.value as 'easy' | 'normal' })}>
-            <option value="easy">Easy</option><option value="normal">Normal</option>
-          </select>
-        </label>
-        <button className="btn sm alt" onClick={() => setHelp(true)}>Rules reference</button>
-      </div>
-      {help && <RulesHelp initial={config.rule} onClose={() => setHelp(false)} />}
+    <div className="grid3">
+      {IDS.map((id) => {
+        const r = RULESETS[id]
+        return (
+          <button key={id} type="button" disabled={readOnly} className={'rule' + (config.rule === id ? ' on' : '')}
+            onClick={() => onChange({ rule: id, rounds: id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds) } as Partial<RoomConfig>)}>
+            <span className="zh">{lang === 'zh' ? r.zh : t(id + '.name')}</span>
+            <span className="muted small">{t(id + '.blurb')}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-type Mode = 'menu' | 'online'
+function Seg<T extends string | number | boolean>({ value, items, onPick, disabled }: { value: T; items: [T, string][]; onPick: (v: T) => void; disabled?: boolean }) {
+  return (
+    <div className="seg">
+      {items.map(([v, label]) => <button key={String(v)} disabled={disabled} className={value === v ? 'on' : ''} onClick={() => onPick(v)}>{label}</button>)}
+    </div>
+  )
+}
+
+export function Options({ config, onChange, readOnly, open }: { config: RoomConfig; onChange: Change; readOnly?: boolean; open?: boolean }) {
+  const { t } = useLang()
+  const [help, setHelp] = useState(false)
+  const tw = config.rule === 'taiwan'
+  return (
+    <details className="options" open={open}>
+      <summary>{t('options')}</summary>
+      <div className="optgrid">
+        <div className="opt"><span>{t('length')}</span>
+          <Seg disabled={readOnly} value={config.rounds as number} onPick={(n) => onChange({ rounds: n as 1 | 2 | 4 })}
+            items={tw ? [[1, t('eastRound')], [4, t('fullGame')]] : [[1, t('eastOnly')], [2, t('eastSouth')]]} />
+        </div>
+        {config.rule === 'riichi' && (
+          <div className="opt"><span>{t('players')}</span>
+            <Seg disabled={readOnly} value={config.players ?? 4} onPick={(n) => onChange({ players: n as 3 | 4 })} items={[[4, '4'], [3, t('sanma')]]} />
+          </div>
+        )}
+        {config.rule === 'riichi' && (
+          <div className="opt"><span>{t('redFives')}</span>
+            <Seg disabled={readOnly} value={config.aka} onPick={(v) => onChange({ aka: v })} items={[[true, t('on')], [false, t('off')]]} />
+          </div>
+        )}
+        {config.rule === 'hk' && (
+          <div className="opt"><span>{t('minFan')}</span>
+            <select disabled={readOnly} value={config.minFan} onChange={(e) => onChange({ minFan: +e.target.value })}>
+              {[0, 1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="opt"><span>{t('bots')}</span>
+          <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')]]} />
+        </div>
+      </div>
+      <button className="btn sm alt" onClick={() => setHelp(true)}>{t('rulesRef')}</button>
+      {help && <RulesHelp initial={config.rule} onClose={() => setHelp(false)} />}
+    </details>
+  )
+}
 
 export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoin }: {
   name: string; setName: (s: string) => void; config: RoomConfig; setConfig: (c: RoomConfig) => void
   onSolo: () => void; onCreate: () => void; onJoin: (code: string) => void
 }) {
-  const [mode, setMode] = useState<Mode>('menu')
+  const { t } = useLang()
   const [code, setCode] = useState('')
+  const change: Change = (c) => setConfig({ ...config, ...c })
   return (
-    <div className="page">
-      <h1>🀄 Kiiro Mahjong</h1>
-      <p className="muted">Japanese Riichi, Hong Kong and Taiwanese mahjong. Play against bots, or invite friends to a room (bots fill empty seats).</p>
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="row"><span>Nickname</span><input type="text" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} /></div>
+    <div className="page menu">
+      <div className="hero">
+        <h1>{t('brand')}</h1>
+        <p className="muted">{t('tagline')}</p>
       </div>
-      <div className="card" style={{ marginBottom: 14 }}>
-        <h2>Ruleset</h2>
-        <ConfigEditor config={config} onChange={(c) => setConfig({ ...config, ...c })} />
-      </div>
-      <div className="card">
-        <div className="tabs">
-          <button className={'btn ' + (mode === 'menu' ? 'gold' : 'alt')} onClick={() => setMode('menu')}>Play vs bots</button>
-          <button className={'btn ' + (mode === 'online' ? 'gold' : 'alt')} onClick={() => setMode('online')}>Online room</button>
+      <section>
+        <h2>{t('step1')}</h2>
+        <RuleCards config={config} onChange={change} />
+        <Options config={config} onChange={change} />
+      </section>
+      <section>
+        <h2>{t('step2')}</h2>
+        <input type="text" value={name} maxLength={16} onChange={(e) => setName(e.target.value)} aria-label={t('nickname')} />
+      </section>
+      <section>
+        <h2>{t('step3')}</h2>
+        <div className="playrow">
+          <button className="btn gold big" onClick={onCreate}>{t('playFriends')}</button>
+          <button className="btn big" onClick={onSolo}>{t('playBots')}</button>
         </div>
-        {mode === 'menu' ? (
-          <div className="row"><button className="btn gold" onClick={onSolo}>Start game</button><span className="muted">You vs 3 bots, runs entirely in your browser.</span></div>
-        ) : (
-          <div className="row">
-            <button className="btn gold" onClick={onCreate}>Create room</button>
-            <span className="muted">or join:</span>
-            <input type="text" placeholder="Room code" value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} style={{ width: 130 }} />
-            <button className="btn" disabled={code.length < 3} onClick={() => onJoin(code)}>Join</button>
-          </div>
-        )}
-      </div>
+        <div className="row joinrow">
+          <span className="muted">{t('haveCode')}</span>
+          <input type="text" placeholder={t('roomCode')} value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} style={{ width: 130 }} aria-label={t('roomCode')} />
+          <button className="btn" disabled={code.length < 3} onClick={() => onJoin(code)}>{t('join')}</button>
+        </div>
+      </section>
     </div>
   )
 }
 
 export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room: string; send: (m: ClientMsg) => void; onLeave: () => void }) {
+  const { t } = useLang()
   const link = `${location.origin}${location.pathname}?room=${room}`
   const [copied, setCopied] = useState(false)
   const humans = view.seats.filter((s) => s.human).length
   return (
     <div className="page">
-      <h1>Room <span style={{ color: 'var(--accent)' }}>{room}</span></h1>
+      <h1>{t('room')} <span style={{ color: 'var(--accent)' }}>{room}</span></h1>
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="row">
           <input type="text" readOnly value={link} style={{ flex: 1, minWidth: 220 }} onFocus={(e) => e.currentTarget.select()} />
-          <button className="btn" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>{copied ? 'Copied!' : 'Copy invite link'}</button>
+          <button className="btn" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>{copied ? t('copied') : t('inviteLink')}</button>
         </div>
       </div>
       <div className="card" style={{ marginBottom: 14 }}>
-        <h2>Seats ({humans}/{view.seats.length} humans — empty seats play as bots)</h2>
+        <h2>{t('seats')} · {humans}/{view.seats.length} {t('seatsNote')}</h2>
         <div className="seatlist">
           {view.seats.map((s, i) => (
             <div className="seatbox" key={i}>
-              <span className={'status-dot' + (s.human ? ' open' : '')} />{s.name}{i === view.you ? ' (you)' : ''}
-              <div className="muted" style={{ fontSize: 12 }}>{s.human ? 'Human' : s.bot ? 'Bot (reserved)' : 'Open — bot if nobody joins'}</div>
-              {view.host && !s.human && <button className="btn sm alt" style={{ marginTop: 6 }} onClick={() => send({ t: 'toggleBot', seat: i })}>{s.bot ? 'Open this seat' : 'Make bot'}</button>}
+              <span className={'status-dot' + (s.human ? ' open' : '')} />{s.name}{i === view.you ? ` (${t('you')})` : ''}
+              <div className="muted" style={{ fontSize: 12 }}>{s.human ? t('human') : s.bot ? t('botReserved') : t('openSeat')}</div>
+              {view.host && !s.human && <button className="btn sm alt" style={{ marginTop: 6 }} onClick={() => send({ t: 'toggleBot', seat: i })}>{s.bot ? t('openThis') : t('makeBot')}</button>}
             </div>
           ))}
         </div>
       </div>
       <div className="card" style={{ marginBottom: 14 }}>
-        <h2>Game settings {view.host ? '' : '(host decides)'}</h2>
-        <ConfigEditor config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
+        <h2>{t('gameSettings')} {view.host ? '' : t('hostDecides')}</h2>
+        <RuleCards config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
+        <Options open config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
       </div>
       <div className="row">
-        {view.host ? <button className="btn gold" onClick={() => send({ t: 'start' })}>Start game</button> : <span className="muted">Waiting for the host to start…</span>}
-        <button className="btn alt" onClick={onLeave}>Leave</button>
+        {view.host ? <button className="btn gold" onClick={() => send({ t: 'start' })}>{t('startGame')}</button> : <span className="muted">{t('waitHost')}</span>}
+        <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
       </div>
     </div>
   )
