@@ -75,12 +75,23 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <>
           <h2>{r.tsumo ? t('winsTsumo', { name: w.name }) : t('winsRon', { name: w.name, from: v.players[r.from!].name })}</h2>
           <Hand h={r.hands[r.winner!]} win={r.tsumo ? undefined : r.winTile} />
-          {r.dora && r.dora.length > 0 && <DoraRows label={t('doraRow')} ids={r.dora} sanma={v.players.length === 3} />}
-          {r.ura && r.ura.length > 0 && <DoraRows label={t('uraRow')} ids={r.ura} sanma={v.players.length === 3} ura />}
-          <Yaku items={r.score.yaku} />
           <div className="limit">{label(r.score.label)} {r.score.yakuman ? '' : `${r.score.total} ${unit}`}{r.score.fu ? ` · ${r.score.fu} ${t('fu')}` : ''}</div>
-          {v.rule.id === 'taiwan' && <div className="muted small">{t('calcTw', { n: r.score.total, base: r.score.base })}</div>}
-          {v.rule.id === 'hk' && <div className="muted small">{t('calcHk', { n: r.score.total, base: r.score.base })}</div>}
+          <details className="detail">
+            <summary>{t('details')}</summary>
+            {r.dora && r.dora.length > 0 && <DoraRows label={t('doraRow')} ids={r.dora} sanma={v.players.length === 3} />}
+            {r.ura && r.ura.length > 0 && <DoraRows label={t('uraRow')} ids={r.ura} sanma={v.players.length === 3} ura />}
+            <Yaku items={r.score.yaku} />
+            {v.rule.id === 'taiwan' && <div className="muted small">{t('calcTw', { n: r.score.total, base: r.score.base })}</div>}
+            {v.rule.id === 'hk' && <div className="muted small">{t('calcHk', { n: r.score.total, base: r.score.base })}</div>}
+            {r.others?.map((o, k) => (
+              <div key={k} style={{ marginTop: 10, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
+                <b>{t('alsoWins', { name: v.players[o.winner].name })}</b>
+                <Hand h={o.hand} />
+                <Yaku items={o.score.yaku} />
+                <b>{o.score.total} {unit}</b>
+              </div>
+            ))}
+          </details>
         </>
       ) : (
         <>
@@ -88,14 +99,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
           {v.rule.id === 'riichi' && <p className="muted">{t('tenpaiPlayers', { names: v.players.filter((_, i) => r.tenpai?.[i]).map((p) => p.name).join(', ') || t('nobody') })}</p>}
         </>
       )}
-      {r.others?.map((o, k) => (
-        <div key={k} style={{ marginTop: 10, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
-          <b>{t('alsoWins', { name: v.players[o.winner].name })}</b>
-          <Hand h={o.hand} />
-          <Yaku items={o.score.yaku} />
-          <b>{o.score.total} {unit}</b>
-        </div>
-      ))}
+      {r.others && r.others.length > 0 && <div className="muted">{r.others.map((o) => t('alsoWins', { name: v.players[o.winner].name })).join(' · ')}</div>}
       {r.sticksWon ? <div className="muted">{t('riichiSticksWon', { n: r.sticksWon })}</div> : null}
       <Scores />
       <div className="row">

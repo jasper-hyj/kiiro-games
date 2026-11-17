@@ -253,6 +253,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
     </details>
   )
   const tileDim = (id: number) => !!o && (!discardOk.has(id) || (riichiMode && !riichiOk.has(id)))
+  const tileFlick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => send({ t: 'act', a: { type: 'discard', tile: id, riichi: riichiMode } }) : undefined)
   const tileClick = (id: number) => (o && discardOk.has(id) && (!riichiMode || riichiOk.has(id)) ? () => clickTile(id) : undefined)
 
   return (
@@ -368,12 +369,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         </div>
         <div className={'handrow' + (mine ? ' mine' : '')}>
           {handTiles.map((id) => (
-            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id} onClick={tileClick(id)} onFlick={tileFlick(id)} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}
           {me.drawn !== null && (
             <>
               <span className="hand-extra" />
-              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
+              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} onFlick={tileFlick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
             </>
           )}
         </div>

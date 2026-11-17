@@ -368,3 +368,14 @@ button.rule .zh { flex: 1 1 100px; }
 .chatfloat { position: absolute; top: calc(70px * var(--k, 1)); right: 14px; z-index: var(--z-menu); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
 .chatfloat .chatpop { position: static; }
 .chatfloat { --k: clamp(1, calc(.8 / var(--s)), 3); top: calc(66px * var(--k)); }
+
+/* ---------- results: headline first, breakdown on demand ---------- */
+.modal .detail { margin: 8px 0 4px; border-top: 1px solid rgba(170,186,214,.18); }
+.modal .detail summary { cursor: pointer; padding: 10px 0; font-family: var(--sans); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: rgba(236,240,250,.6); list-style: none; }
+.modal .detail summary::-webkit-details-marker { display: none; }
+.modal .detail summary::before { content: '＋ '; } .modal .detail[open] summary::before { content: '－ '; }
+.modal .limit { font-size: 34px; margin: 8px 0 6px; }
+.handrow .tile.clickable { touch-action: none; }
+
+/* quiet toasts at the bottom edge */
+.toast { top: auto; bottom: calc(22px + env(safe-area-inset-bottom)); background: rgba(14,20,40,.94); color: var(--ivory); border: 1px solid rgba(170,186,214,.35); border-radius: 999px; padding: 10px 22px; font-family: var(--sans); font-size: 14px; font-weight: 500; letter-spacing: .02em; box-shadow: 0 10px 30px rgba(0,0,0,.5); animation: rise-in .2s ease-out; pointer-events: none; }

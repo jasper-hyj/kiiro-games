@@ -46,3 +46,11 @@
 
 ## Rulesets people ask about (not built)
 Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, missing suit), Guangdong (ghost/wild tiles), Singapore/Malaysia (HK-like with animals), Shanghai/Nanjing variants, American (NMJL card + jokers).
+
+
+## Design (Nov 2026 redesign)
+- Look: midnight blue / black / silver, ivory tiles with amber caps. Fonts: Italiana (display), Zen Antique (title/glyphs), LXGW WenKai TC (Chinese UI), Instrument Sans (UI), loaded from Google Fonts with system fallbacks. All styling overrides live in `src/parlour.css` (loaded after `styles.css`); the stage layout (sizes/positions) stays in `styles.css`.
+- No top bar: menus are full-screen; the table has a corner dock (burger) with auto options, hints, chat, history, shortcuts, language, leave.
+- Home is a step-by-step flow (start -> rules -> options -> name; friends skips options, join uses code -> name).
+- Table shows essentials only (hints off by default). Call buttons live in a reserved centered row above the hand. Results show headline + hand + scores with a Details toggle. Discard: double-tap or drag a tile upward.
+- Tests: `scripts/orient-test.ts` and `scripts/webkit-game-test.ts` run in WebKit/Chromium via Playwright (see their headers); `scripts/flick-test.ts` covers drag-to-discard.

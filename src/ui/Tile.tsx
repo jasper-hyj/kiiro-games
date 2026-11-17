@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useRef, type ReactNode } from 'react'
 import { isRedFive, kindOf, numOf, suitOf } from '../engine/tiles'
 
 export const AkaCtx = createContext(false)
@@ -114,7 +114,7 @@ export function Face({ kind, red }: { kind: number; red?: boolean }) {
 
 interface Props {
   id?: number; kind?: number; back?: boolean; dora?: number
-  onClick?: () => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; title?: string
+  onClick?: () => void; onFlick?: () => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; title?: string
   className?: string
 }
 /** Rotated tile (called tile in a meld, riichi discard). `double` stacks two tiles (added kan). */
@@ -122,13 +122,24 @@ export function Side({ children, double }: { children: ReactNode; double?: boole
   return <span className={'sw' + (double ? ' dbl' : '')}>{children}</span>
 }
 
-export function Tile({ id, kind, back, dora, onClick, selected, dim, mark, riichi, hot, title, className }: Props) {
+export function Tile({ id, kind, back, dora, onClick, onFlick, selected, dim, mark, riichi, hot, title, className }: Props) {
   const aka = useContext(AkaCtx)
   const k = kind ?? (id !== undefined ? kindOf(id) : 0)
   const red = aka && id !== undefined && isRedFive(id)
   const cls = ['tile', back ? 'back' : '', selected ? 'sel' : '', dim ? 'dim' : '', riichi ? 'riichi-t' : '', hot ? 'hot' : '', onClick ? 'clickable' : '', red ? 'aka' : '', className ?? ''].join(' ')
+  const start = useRef<{ y: number; x: number } | null>(null)
+  const flicked = useRef(false)
+  // drag a tile upward onto the table to discard it (the double-tap still works)
+  const flick = onFlick ? {
+    onPointerDown: (e: React.PointerEvent) => { start.current = { x: e.clientX, y: e.clientY }; flicked.current = false; try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ } },
+    onPointerUp: (e: React.PointerEvent) => {
+      const s0 = start.current; start.current = null
+      if (s0 && s0.y - e.clientY > 40 && Math.abs(e.clientX - s0.x) < (s0.y - e.clientY)) { flicked.current = true; onFlick() }
+    },
+    onPointerCancel: () => { start.current = null },
+  } : {}
   return (
-    <div className={cls} onClick={onClick} title={title}>
+    <div className={cls} onClick={(e) => { if (flicked.current) { flicked.current = false; e.stopPropagation(); return } onClick?.() }} title={title} {...flick}>
       {!back && <Face kind={k} red={red} />}
       {red && <span className="aka-dot" />}
       {!back && dora ? <span className="dora-badge" aria-hidden="true">★{dora > 1 ? dora : ''}</span> : null}
