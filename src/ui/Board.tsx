@@ -319,7 +319,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
                   return (
                     <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
                       <Tile kind={k} />
-                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : '—'}</span></span>
+                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' || ruleId === 'mcr' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : '—'}</span></span>
                     </span>
                   )
                 })}

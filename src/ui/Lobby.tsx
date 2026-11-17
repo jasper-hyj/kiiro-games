@@ -7,8 +7,8 @@ import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
 import { Tile } from './Tile'
 
-const IDS: RuleId[] = ['taiwan', 'hk', 'riichi']
-const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日' } as Record<RuleId, string>
+const IDS: RuleId[] = ['taiwan', 'hk', 'riichi', 'mcr']
+const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日', mcr: '國' } as Record<RuleId, string>
 type Change = (c: Partial<RoomConfig>) => void
 
 export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; onChange: Change; readOnly?: boolean }) {
@@ -61,10 +61,10 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
             <Seg disabled={readOnly} value={config.aka} onPick={(v) => onChange({ aka: v })} items={[[true, t('on')], [false, t('off')]]} />
           </div>
         )}
-        {config.rule === 'hk' && (
+        {(config.rule === 'hk' || config.rule === 'mcr') && (
           <div className="opt"><span>{t('minFan')}</span>
             <select disabled={readOnly} value={config.minFan} onChange={(e) => onChange({ minFan: +e.target.value })}>
-              {[0, 1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+              {(config.rule === 'mcr' ? [0, 4, 6, 8] : [0, 1, 2, 3, 4, 5]).map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
         )}
@@ -99,7 +99,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
   const finish = () => (mode === 'friends' ? onCreate() : mode === 'bots' ? onSolo() : onJoin(code))
   const fan = [3, 13, 31, 32, 33, 26]
   const pickRule = (id: RuleId) => {
-    setConfig({ ...config, rule: id, rounds: (id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds)) as 1 | 2 | 4 })
+    setConfig({ ...config, rule: id, rounds: (id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds)) as 1 | 2 | 4, minFan: id === 'mcr' ? 8 : id === 'hk' ? 3 : config.minFan })
     next()
   }
   return (

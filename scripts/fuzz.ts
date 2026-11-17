@@ -63,7 +63,7 @@ function leaks(t: Table, id: string): string[] {
 }
 
 async function scenario(n: number): Promise<void> {
-  const rule = pick<RuleId>(['riichi', 'hk', 'taiwan'])
+  const rule = pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr'])
   const cfg: RoomConfig = { rule, aka: Math.random() < 0.5, rounds: rule === 'taiwan' ? pick([1, 4] as const) : pick([1, 2] as const), minFan: rnd(5), players: rule === 'riichi' && Math.random() < 0.4 ? 3 : 4, botLevel: pick(['easy', 'normal'] as const) }
   const t = new Table(cfg)
   t.speed = 0.003
@@ -95,7 +95,7 @@ async function scenario(n: number): Promise<void> {
         // lobby phase
         if (seat < 0) { if (t.join(c.id, c.name + rnd(99)) < 0) stats.rejected++ }
         else if (roll < 0.1) t.leave(c.id)
-        else if (roll < 0.25) t.setConfig(c.id, { rule: pick<RuleId>(['riichi', 'hk', 'taiwan']), rounds: pick([1, 2, 4] as const), aka: Math.random() < 0.5, players: pick([3, 4] as const), botLevel: pick(['easy', 'normal'] as const), minFan: rnd(6) } as Partial<RoomConfig>)
+        else if (roll < 0.25) t.setConfig(c.id, { rule: pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr']), rounds: pick([1, 2, 4] as const), aka: Math.random() < 0.5, players: pick([3, 4] as const), botLevel: pick(['easy', 'normal'] as const), minFan: rnd(6) } as Partial<RoomConfig>)
         else if (roll < 0.35) t.toggleBot(c.id, rnd(5))
         else if (roll < 0.55) t.start(c.id)
         else if (roll < 0.65) t.chat(c.id, pick([...CHAT_KEYS, 'bogus']))

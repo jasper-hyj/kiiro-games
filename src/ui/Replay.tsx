@@ -26,7 +26,7 @@ export function ReplayModal({ v, you, onClose }: { v: Game; you: number; onClose
     return () => clearTimeout(i)
   }, [playing, step, last])
   if (!r) return <Modal title={t('replay')} onClose={onClose}><p className="muted">{t('noHistory')}</p></Modal>
-  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' ? 'fan' : 'tai')
+  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' || v.rule.id === 'mcr' ? 'fan' : 'tai')
   const s = r.steps[Math.min(step, r.steps.length - 1)]
   const atEnd = step === r.steps.length
   const round = t('roundName', { wind: t('wind.' + Math.min(3, Math.floor(r.roundIndex / n))), n: (r.roundIndex % n) + 1 })

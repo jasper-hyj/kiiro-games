@@ -26,7 +26,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
   const v = view.game!
   const r = v.result
   const you = view.you
-  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' ? 'fan' : 'tai')
+  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' || v.rule.id === 'mcr' ? 'fan' : 'tai')
   const over = v.phase === 'over'
   const acked = v.acks.includes(you)
   const label = (l?: string) => (l ? (t('label.' + l) !== 'label.' + l ? t('label.' + l) : l) : '')
@@ -88,6 +88,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
             <Yaku items={r.score.yaku} />
             {v.rule.id === 'taiwan' && <div className="muted small">{t('calcTw', { n: r.score.total, base: r.score.base })}</div>}
             {v.rule.id === 'hk' && <div className="muted small">{t('calcHk', { n: r.score.total, base: r.score.base })}</div>}
+            {v.rule.id === 'mcr' && <div className="muted small">{t('calcMcr', { n: r.score.total })}</div>}
             {r.others?.map((o, k) => (
               <div key={k} style={{ marginTop: 10, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
                 <b>{t('alsoWins', { name: v.players[o.winner].name })}</b>

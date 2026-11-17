@@ -138,6 +138,47 @@ const DATA: Record<TabId, Data> = {
       ] },
     ],
   },
+  mcr: {
+    intro: [
+      ['Chinese Official (Guobiao / MCR) is the international tournament standard. 13 tiles, 144 tiles with 8 flowers, and a hand needs at least 8 fan (flowers do not count toward the 8). Seats rotate after every hand and there is no dealer bonus or streak.', '國標麻將（國際比賽標準）。每人 13 張，144 張含 8 張花牌；胡牌至少要 8 番（花牌不計入這 8 番）。每一局結束後座位輪轉，沒有莊家加成或連莊。'],
+      ['Payment: the winner scores 8 + fan. Self-draw: every opponent pays 8 + fan. Win by discard: the discarder pays 8 + fan and the other two pay 8 each. Everyone starts at 0 and can go negative.', '計分：胡牌者得 8 + 番數。自摸：三家各付 8 + 番數。放槍：放槍者付 8 + 番數，另外兩家各付 8。起始 0 點，可以是負數。'],
+      ['Overlapping patterns follow the official "does not count" rules — for example Full Flush already covers No Honors and One Voided Suit — and only the highest-scoring reading of your hand is used. A hand with no other pattern at all is a Chicken Hand worth 8.', '重疊的番種依官方「不計」規則處理，例如清一色已含無字、缺一門；只採用得分最高的牌型解讀。完全沒有其他番種的牌為無番和，算 8 番。'],
+    ],
+    sections: [
+      { title: ['88 fan', '88 番'], rows: [
+        ['Big Four Winds / Big Three Dragons', '大四喜／大三元', 'pungs of all four winds / all three dragons', '四風刻／三元牌刻子'],
+        ['All Green / Nine Gates', '綠一色／九蓮寶燈', 'only 2 3 4 6 8 bamboo and green dragon / 1112345678999 in one suit plus any tile', '只用二三四六八索與發／同花色 1112345678999 再加任一張'],
+        ['Four Kongs / Seven Shifted Pairs', '四槓／連七對', 'four kongs / seven consecutive pairs in one suit', '四組槓／同花色七個連續對子'],
+        ['Thirteen Orphans', '十三幺', 'one of each terminal and honor plus a pair of any of them', '十三種幺九字牌各一張再加其中一張'],
+      ] },
+      { title: ['64 – 24 fan', '64 – 24 番'], rows: [
+        ['64 · All Terminals, Little Four Winds, Little Three Dragons, All Honors, Four Concealed Pungs, Pure Terminal Chows', '64 · 清幺九、小四喜、小三元、字一色、四暗刻、一色雙龍會', '', ''],
+        ['48 · Quadruple Chow, Four Pure Shifted Pungs', '48 · 一色四同順、一色四節高', '', ''],
+        ['32 · Four Pure Shifted Chows, Three Kongs, All Terminals and Honors', '32 · 一色四步高、三槓、混幺九', '', ''],
+        ['24 · Seven Pairs, Full Flush, Pure Triple Chow, Pure Shifted Pungs, All Even Pungs, Upper / Middle / Lower Tiles', '24 · 七對、清一色、一色三同順、一色三節高、全雙刻、全大／全中／全小', '', ''],
+      ] },
+      { title: ['16 – 8 fan', '16 – 8 番'], rows: [
+        ['16 · Pure Straight, Three-Suited Terminal Chows, Pure Shifted Chows, All Fives, Triple Pung, Three Concealed Pungs', '16 · 清龍、三色雙龍會、一色三步高、全帶五、三同刻、三暗刻', '', ''],
+        ['12 · Big Three Winds, Upper Four, Lower Four', '12 · 三風刻、大於五、小於五', '', ''],
+        ['8 · Mixed Straight, Reversible Tiles, Mixed Triple Chow, Mixed Shifted Pungs, Chicken Hand', '8 · 花龍、推不倒、三色三同順、三色三節高、無番和', '', ''],
+        ['8 · Last Tile Draw (self-drawn last wall tile), Last Tile Claim (win on the last discard), Out with Replacement Tile (after a kong), Robbing the Kong', '8 · 妙手回春（自摸最後一張）、海底撈月（最後一張放槍）、槓上開花、搶槓和', '', ''],
+      ] },
+      { title: ['6 – 1 fan', '6 – 1 番'], rows: [
+        ['6 · All Pungs, Half Flush, Mixed Shifted Chows, All Types, Melded Hand, Two Concealed Kongs, Two Dragon Pungs', '6 · 碰碰和、混一色、三色三步高、五門齊、全求人、雙暗槓、雙箭刻', '', ''],
+        ['5 · Concealed and Melded Kong', '5 · 明暗槓', '', ''],
+        ['4 · Outside Hand, Fully Concealed Hand, Two Melded Kongs', '4 · 全帶幺、不求人、雙明槓', '', ''],
+        ['2 · Dragon Pung, Prevalent Wind, Seat Wind, Concealed Hand, All Chows, Tile Hog, Double Pung, Two Concealed Pungs, Concealed Kong, All Simples', '2 · 箭刻、圈風刻、門風刻、門前清、平和、四歸一、雙同刻、雙暗刻、暗槓、斷幺', '', ''],
+        ['1 · Pure Double Chow, Mixed Double Chow, Short Straight, Two Terminal Chows, Pung of Terminals or Honors, Melded Kong, One Voided Suit, No Honors, Edge / Closed / Single Wait, Self-Drawn', '1 · 一般高、喜相逢、連六、老少副、幺九刻、明槓、缺一門、無字、邊張、嵌張、單釘、自摸', '', ''],
+        ['Flowers', '花牌', 'each flower is 1 fan, added after the 8-fan minimum is met', '每張花牌 1 番，在達到 8 番後才加上'],
+      ] },
+      { title: ['Rounds and draws', '局數與流局'], text: [
+        ['"East only" is four hands and "East + South" is eight. The seats rotate every hand whether or not anyone wins. When the wall is down to the last 14 tiles the hand is drawn and nobody pays.', '「東風戰」共四局，「東南戰」共八局。不論是否有人胡牌，每局後座位都輪轉。牌牆剩最後 14 張時流局，不輸贏。'],
+      ] },
+      { title: ['Not included', '未收錄'], text: [
+        ['The knitted hands (全不靠, 七星不靠, 組合龍) and Last Tile (和絕張) are not scored, and the "does not count" relationships are applied in a simplified form. Everything listed above is scored.', '全不靠、七星不靠、組合龍與和絕張沒有計分，不計關係為簡化版。上面列出的番種全部有計。'],
+      ] },
+    ],
+  },
   riichi: {
     intro: [
       ['13 tiles, 136-tile set (no flowers); red fives optional. You need at least one yaku to win — dora alone never counts. 3-player (sanma) removes 2m–8m and sets North tiles aside as bonus dora.', '每人 13 張，共 136 張（無花牌），可選赤牌。胡牌必須至少有一個役，寶牌不算役。三人麻將去除二～八萬，北風可拔出當寶牌。'],
@@ -221,7 +262,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
           <button className="btn sm alt" onClick={onClose}>{t('close')}</button>
         </div>
         <div className="tabs">
-          {(['basics', 'taiwan', 'hk', 'riichi'] as const).map((k) => (
+          {(['basics', 'taiwan', 'hk', 'riichi', 'mcr'] as const).map((k) => (
             <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>

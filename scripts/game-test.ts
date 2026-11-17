@@ -74,7 +74,7 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
     await p.screenshot({ path: `${SHOTS}/game-${rule}-${dev.name}-${lang}-over.png` })
     const rows = await p.$$eval('.overlay .standings li', (e) => e.map((x) => (x as HTMLElement).innerText))
     const pts = rows.map((r) => Number((r.match(/—\s*(-?\d+)/) ?? [])[1]))
-    const start = rule === 'riichi' ? 25000 : 1000
+    const start = rule === 'riichi' ? 25000 : rule === 'mcr' ? 0 : 1000
     check(`${tag}: final standings list 4 players and points add up (${pts.join(', ')})`, rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4, rows.join(' | '))
     // hand review: open it, step to the end of the first hand and see the final hands
     await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.overlay .btn')].find((e) => /Review hands|回顧牌局/i.test(e.innerText)); b?.click() })
@@ -100,7 +100,7 @@ async function main() {
       { name: 'desktop', w: 1440, h: 900, touch: false },
       { name: 'phone', w: 390, h: 844, touch: true },
     ]
-    const rules = process.env.RULES?.split(',') ?? ['taiwan', 'hk', 'riichi']
+    const rules = process.env.RULES?.split(',') ?? ['taiwan', 'hk', 'riichi', 'mcr']
     for (const rule of rules) for (const d of devs) await playGame(browser, rule, d, d.name === 'phone' ? 'zh' : 'en')
   } finally {
     await browser.close()

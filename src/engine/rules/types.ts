@@ -1,6 +1,6 @@
 import type { Counts, SetInfo } from '../hand'
 
-export type RuleId = 'riichi' | 'hk' | 'taiwan'
+export type RuleId = 'riichi' | 'hk' | 'taiwan' | 'mcr'
 
 export interface MeldInfo { type: 'chi' | 'pon' | 'minkan' | 'ankan' | 'kakan'; tiles: number[]; from: number }
 

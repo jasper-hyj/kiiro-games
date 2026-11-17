@@ -187,7 +187,7 @@ export class Game {
     while (isFlowerId(t)) {
       p.flowers.push(t)
       this.say(`${p.name} reveals a flower`)
-      if (p.flowers.length === 8) return this.flowerWin(seat)
+      if (p.flowers.length === 8 && this.rule.id !== 'mcr') return this.flowerWin(seat)
       t = this.drawReplacement()
     }
     p.hand.push(t)
@@ -216,7 +216,7 @@ export class Game {
       if (this.opts.aka) aka = allIds.filter(isRedFive).length
     }
     let waitCount = 0
-    if (this.rule.id === 'taiwan') {
+    if (this.rule.id === 'taiwan' || this.rule.id === 'mcr') {
       const c = counts.slice(); c[winKind]--
       waitCount = waitsOf(c, this.rule.specials).length
     }
@@ -590,6 +590,7 @@ export class Game {
   }
 
   private finish(r: HandResult, dealerStays: boolean, isDraw = false) {
+    if (this.rule.id === 'mcr') dealerStays = false // official rules: the seats rotate after every hand
     if (this.isRiichi) r.dora = this.doraIndicators().slice()
     this.players.forEach((p, i) => (p.points += r.deltas[i]))
     this.history.push({

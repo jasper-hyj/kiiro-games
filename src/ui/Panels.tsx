@@ -24,7 +24,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 
 export function HistoryModal({ v, you, onClose }: { v: Game; you: number; onClose: () => void }) {
   const { lang, t } = useLang()
-  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' ? 'fan' : 'tai')
+  const unit = t(v.rule.id === 'riichi' ? 'han' : v.rule.id === 'hk' || v.rule.id === 'mcr' ? 'fan' : 'tai')
   const n = v.players.length
   const rows = [...v.history].reverse()
   return (

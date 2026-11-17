@@ -46,6 +46,8 @@ const D: Record<string, [string, string]> = {
   'hk.name': ['Hong Kong', '香港麻將'],
   'hk.blurb': ['13 tiles · 8 flowers · 3-fan minimum · fan doubling table', '13 張 · 8 張花牌 · 最低 3 番起胡 · 番數倍增'],
   'taiwan.name': ['Taiwanese', '台灣麻將'],
+  'mcr.name': ['Chinese Official', '國標麻將'], 'mcr.blurb': ['13 tiles · 8 flowers · 8-fan minimum · ~80 scoring patterns', '13 張 · 8 張花牌 · 最低 8 番起胡 · 約 80 種番種'],
+  calcMcr: ['{n} fan: the winner collects 8 + {n} (self-draw: from everyone; discard: from the discarder) and 8 from each other player', '{n} 番：胡牌者收 8 + {n}（自摸三家各付；放槍由放槍者付），其餘兩家各付 8'],
   'taiwan.blurb': ['16 tiles · 8 flowers · tai scoring · dealer streaks', '16 張 · 8 張花牌 · 台數計分 · 連莊拉莊'],
   // room lobby
   inviteLink: ['Copy invite link', '複製邀請連結'],

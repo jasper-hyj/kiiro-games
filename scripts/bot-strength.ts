@@ -11,7 +11,7 @@ for (const rule of rules) {
   let normal = 0, easy = 0, nWins = 0, eWins = 0, games = 0
   const t0 = Date.now()
   for (let n = 0; n < N; n++) {
-    const g = new Game(rule, { rule, aka: true, rounds: 1, minFan: 3 } as never, ['A', 'B', 'C', 'D'])
+    const g = new Game(rule, { rule, aka: true, rounds: 1, minFan: rule === 'mcr' ? 8 : 3 } as never, ['A', 'B', 'C', 'D'])
     const rot = n % 4
     const level = (seat: number) => ((seat + rot) % 2 === 0 ? A : B) as 'normal' | 'easy' | 'hard'
     let guard = 0

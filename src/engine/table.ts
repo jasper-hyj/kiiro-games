@@ -145,13 +145,14 @@ export class Table {
     if (id !== this.hostId || this.status !== 'lobby' || !c || typeof c !== 'object') return
     // accept only known keys with valid values (clients send arbitrary JSON)
     const clean: Partial<RoomConfig> = {}
-    if (c.rule === 'riichi' || c.rule === 'hk' || c.rule === 'taiwan') clean.rule = c.rule
+    if (c.rule === 'riichi' || c.rule === 'hk' || c.rule === 'taiwan' || c.rule === 'mcr') clean.rule = c.rule
     if (c.rounds === 1 || c.rounds === 2 || c.rounds === 4) clean.rounds = c.rounds
     if (typeof c.aka === 'boolean') clean.aka = c.aka
     if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
     if (c.players === 3 || c.players === 4) clean.players = c.players
     if (c.botLevel === 'easy' || c.botLevel === 'normal' || c.botLevel === 'hard') clean.botLevel = c.botLevel
     const next = { ...this.config, ...clean }
+    if (clean.rule && clean.rule !== this.config.rule && clean.minFan === undefined) next.minFan = clean.rule === 'mcr' ? 8 : clean.rule === 'hk' ? 3 : next.minFan
     if (next.rule === 'taiwan' && next.rounds === 2) next.rounds = 4
     if (next.rule !== 'taiwan' && next.rounds === 4) next.rounds = 2
     if (next.rule !== 'riichi') next.players = 4
