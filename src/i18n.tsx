@@ -6,7 +6,7 @@ export type Lang = 'en' | 'zh'
 const D: Record<string, [string, string]> = {
   brand: ['Kiiro Mahjong', 'Kiiro 麻將'],
   leave: ['Leave', '離開'],
-  details: ['Details', '詳細內容'], replay: ['Hand review', '牌局回顧'], reviewHands: ['Review hands', '回顧牌局'], replayStart: ['First step', '第一步'], replayPrev: ['Previous', '上一步'], replayNext: ['Next', '下一步'], back: ['Back', '返回'], continue: ['Continue', '繼續'], chooseRules: ['Choose your rules', '選擇規則'], createRoom: ['Create room', '建立房間'],
+  details: ['Details', '詳細內容'], settings: ['Settings', '設定'], reduceMotion: ['Reduce motion', '減少動態'], largeText: ['Larger text', '放大文字'], replay: ['Hand review', '牌局回顧'], reviewHands: ['Review hands', '回顧牌局'], replayStart: ['First step', '第一步'], replayPrev: ['Previous', '上一步'], replayNext: ['Next', '下一步'], back: ['Back', '返回'], continue: ['Continue', '繼續'], chooseRules: ['Choose your rules', '選擇規則'], createRoom: ['Create room', '建立房間'],
   room: ['Room', '房間'],
   connecting: ['Connecting…', '連線中…'],
   connLost: ['Connection lost. Trying to reconnect…', '連線中斷，重新連線中…'],

@@ -9,6 +9,7 @@ import { AkaCtx } from './ui/Tile'
 import { useLang } from './i18n'
 import { TileGallery } from './ui/TileGallery'
 import { stressView } from './ui/stress'
+import { setSetting, useSettings } from './settings'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
@@ -16,6 +17,7 @@ const makeCode = () => String(Math.floor(Math.random() * 900000) + 100000) // si
 
 export default function App() {
   const { lang, setLang, t } = useLang()
+  const settings = useSettings()
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
@@ -87,6 +89,13 @@ export default function App() {
         {!playing && (
           <div className="floatbar">
             {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}
+            <details className="gear">
+              <summary aria-label={t('settings')}>⚙</summary>
+              <div className="gearpanel">
+                <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
+                <label className="switch"><input type="checkbox" checked={settings.largeText} onChange={() => setSetting('largeText', !settings.largeText)} /><span className="knob" />{t('largeText')}</label>
+              </div>
+            </details>
             <div className="seg langsw">
               <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>

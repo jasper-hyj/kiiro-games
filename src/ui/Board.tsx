@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
 import { ResultModal } from './ResultModal'
 import { useLang } from '../i18n'
+import { setSetting, useSettings } from '../settings'
 import { ChatPicker, EMOJI, HistoryModal, ShortcutsModal } from './Panels'
 
 const WINDS: Record<'en' | 'zh', string[]> = { en: ['E', 'S', 'W', 'N'], zh: ['東', '南', '西', '北'] }
@@ -93,6 +94,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
   view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean; rotate?: boolean; setRotate?: (b: boolean) => void
 }) {
   const { t, lang, setLang } = useLang()
+  const settings = useSettings()
   const v = view.game!
   const you = Math.max(0, view.you)
   const n = v.players.length
@@ -239,6 +241,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, rotate, se
         ))}
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         {setRotate && <label className="switch" title={t('rotateTip')}><input type="checkbox" checked={!!rotate} onChange={() => setRotate(!rotate)} /><span className="knob" />{t('rotate')}</label>}
+        <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
