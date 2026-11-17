@@ -64,6 +64,8 @@ export class Main extends Server<Env> {
       case 'start': this.table.start(id); break
       case 'act': this.table.turnAction(id, m.a); break
       case 'decide': this.table.decide(id, m.d); break
+      case 'swap': this.table.swap(id, Array.isArray(m.tiles) ? m.tiles.map(Number) : []); break
+      case 'void': this.table.pickVoid(id, Number(m.suit)); break
       case 'ack': this.table.ack(id); break
       case 'lobby': this.table.backToLobby(id); break
       case 'toggleBot': this.table.toggleBot(id, m.seat); break

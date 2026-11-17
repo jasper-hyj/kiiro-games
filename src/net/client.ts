@@ -34,6 +34,8 @@ export function connectLocal(id: string, name: string, config: RoomConfig, h: Ha
       switch (m.t) {
         case 'act': table.turnAction(id, m.a); break
         case 'decide': table.decide(id, m.d); break
+        case 'swap': table.swap(id, m.tiles); break
+        case 'void': table.pickVoid(id, m.suit); break
         case 'ack': table.ack(id); break
         case 'lobby': table.backToLobby(id); break
         case 'config': table.setConfig(id, m.config); break

@@ -1,6 +1,6 @@
 import type { Counts, SetInfo } from '../hand'
 
-export type RuleId = 'riichi' | 'hk' | 'taiwan' | 'mcr'
+export type RuleId = 'riichi' | 'hk' | 'taiwan' | 'mcr' | 'sichuan'
 
 export interface MeldInfo { type: 'chi' | 'pon' | 'minkan' | 'ankan' | 'kakan'; tiles: number[]; from: number }
 
@@ -24,11 +24,12 @@ export interface WinContext {
   firstTurn: boolean        // tenhou / chiihou
   dora: number; ura: number; aka: number; nuki: number
   lianZhuang: number
+  voidSuit?: number | null  // Sichuan: the suit this player gave up (a hand holding it cannot win)
   waitCount: number         // distinct winning tiles before the win (single-wait detection)
   options: GameOptions
 }
 
-export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' | 'hard' }
+export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' | 'hard'; swap?: boolean; cap?: number }
 
 export interface YakuItem { name: string; zh?: string; value: number; yakuman?: boolean }
 export interface HandScore {

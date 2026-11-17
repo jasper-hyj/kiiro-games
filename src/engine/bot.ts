@@ -124,6 +124,32 @@ function wantsRiichi(g: Game, seat: number, tile: number): boolean {
   return left >= 3
 }
 
+/** Sichuan: how many tiles of each number suit the bot holds, and how connected each suit is (fewer + looser = better to give up). */
+function suitProfile(g: Game, seat: number) {
+  const cnt = [0, 0, 0], conn = [0, 0, 0]
+  const c = toCounts(g.players[seat].hand.map(kindOf))
+  for (let k = 0; k < 27; k++) {
+    if (!c[k]) continue
+    const su = suitOf(k)
+    cnt[su] += c[k]
+    conn[su] += (c[k] >= 2 ? 3 : 0) + (k % 9 < 8 && c[k + 1] ? 2 : 0) + (k % 9 < 7 && c[k + 2] ? 1 : 0)
+  }
+  return { cnt, conn }
+}
+/** Sichuan: the suit to give up — the one with the fewest, loosest tiles. */
+export function botVoid(g: Game, seat: number): number {
+  const { cnt, conn } = suitProfile(g, seat)
+  return [0, 1, 2].sort((a, b) => cnt[a] * 10 + conn[a] - (cnt[b] * 10 + conn[b]) || Math.random() - 0.5)[0]
+}
+/** Sichuan: three tiles of one suit to pass on: the thinnest suit with at least three tiles, loosest tiles first. */
+export function botSwap(g: Game, seat: number): number[] {
+  const { cnt, conn } = suitProfile(g, seat)
+  const suit = [0, 1, 2].filter((x) => cnt[x] >= 3).sort((a, b) => cnt[a] * 10 + conn[a] - (cnt[b] * 10 + conn[b]) || Math.random() - 0.5)[0]
+  const c = toCounts(g.players[seat].hand.map(kindOf))
+  const loose = (id: number) => { const k = kindOf(id); return (c[k] >= 2 ? 3 : 0) + (k % 9 < 8 && c[k + 1] ? 2 : 0) + (k % 9 > 0 && c[k - 1] ? 2 : 0) + (k % 9 < 7 && c[k + 2] ? 1 : 0) + (k % 9 > 1 && c[k - 2] ? 1 : 0) }
+  return g.players[seat].hand.filter((i) => suitOf(kindOf(i)) === suit).sort((a, b) => loose(a) - loose(b)).slice(0, 3)
+}
+
 export function botTurn(g: Game, seat: number, level: BotLevel = 'normal'): TurnAction {
   const p = g.players[seat]
   const o = g.turnOptions(seat)
@@ -149,7 +175,7 @@ export function botTurn(g: Game, seat: number, level: BotLevel = 'normal'): Turn
 function callAllowed(g: Game, seat: number, kind: number, remaining: Counts, meldsAfter: Game['players'][0]['melds']): boolean {
   const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
   const yakuhai = isDragon(kind) || kind === sw || kind === rw
-  if (g.rule.id === 'taiwan') return true
+  if (g.rule.id === 'taiwan' || g.rule.id === 'sichuan') return true
   if (yakuhai && meldsAfter.some((m) => m.type === 'pon' && kindOf(m.tiles[0]) === kind)) return true
   const all = remaining.slice()
   for (const m of meldsAfter) for (const t of m.tiles) all[kindOf(t)]++

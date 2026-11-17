@@ -1,7 +1,7 @@
 import { Game, type Replay, type HistoryEntry, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
 import type { GameOptions } from './rules/types'
 import type { RuleId } from './rules'
-import { botReact, botTurn } from './bot'
+import { botReact, botSwap, botTurn, botVoid } from './bot'
 import { kindOf } from './tiles'
 
 export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
@@ -14,6 +14,7 @@ export interface PlayerView {
   handCount: number; hand: number[] | null; drawn: number | null
   melds: Meld[]; discards: { tile: number; riichi: boolean; called: boolean }[]; flowers: number[]
   riichi: boolean; seatWind: number; nuki: number[]
+  voidSuit: number | null; out: boolean; winOrder: number; swapIn: number[]
 }
 export interface TableView {
   status: 'lobby' | 'playing'
@@ -28,6 +29,7 @@ export interface TableView {
     lastDiscard: { tile: number; from: number } | null
     turnOptions: TurnOptions | null
     reaction: ReactionOptions | null
+    pick: { swap: boolean[]; void: boolean[]; mine: number[] | null; dir: number }
     reactionKind: string
     waiting: number[]
     timeLeft?: number | null
@@ -145,7 +147,8 @@ export class Table {
     if (id !== this.hostId || this.status !== 'lobby' || !c || typeof c !== 'object') return
     // accept only known keys with valid values (clients send arbitrary JSON)
     const clean: Partial<RoomConfig> = {}
-    if (c.rule === 'riichi' || c.rule === 'hk' || c.rule === 'taiwan' || c.rule === 'mcr') clean.rule = c.rule
+    if (c.rule === 'riichi' || c.rule === 'hk' || c.rule === 'taiwan' || c.rule === 'mcr' || c.rule === 'sichuan') clean.rule = c.rule
+    if (typeof c.swap === 'boolean') clean.swap = c.swap
     if (c.rounds === 1 || c.rounds === 2 || c.rounds === 4) clean.rounds = c.rounds
     if (typeof c.aka === 'boolean') clean.aka = c.aka
     if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
@@ -183,6 +186,16 @@ export class Table {
     const seat = this.seatOf(id)
     if (seat < 0 || !this.game) return
     if (this.game.act(seat, a)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
+  }
+  swap(id: string, tiles: number[]) {
+    const seat = this.seatOf(id)
+    if (seat < 0 || !this.game) return
+    if (this.game.submitSwap(seat, tiles)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
+  }
+  pickVoid(id: string, suit: number) {
+    const seat = this.seatOf(id)
+    if (seat < 0 || !this.game) return
+    if (this.game.submitVoid(seat, suit)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
   }
   decide(id: string, d: Decision) {
     const seat = this.seatOf(id)
@@ -223,6 +236,7 @@ export class Table {
     let seats: number[] = []
     if (g.phase === 'turn' && !this.isBotControlled(g.turn)) seats = [g.turn]
     else if (g.phase === 'reaction') seats = g.pendingSeats().filter((s) => !this.isBotControlled(s))
+    else if (g.phase === 'swap' || g.phase === 'void') seats = this.pickPending(g).filter((s) => !this.isBotControlled(s))
     if (!this.turnTimerMs || !seats.length) {
       if (this.dTimer) clearTimeout(this.dTimer)
       this.dTimer = null; this.deadline = null; this.deadlineKey = ''
@@ -236,9 +250,24 @@ export class Table {
     this.dTimer = setTimeout(() => this.onTimeout(key), this.turnTimerMs)
   }
 
+  private pickPending(g: Game): number[] {
+    if (g.phase === 'swap') return g.players.filter((p) => !p.swapTiles).map((p) => p.seat)
+    if (g.phase === 'void') return g.players.filter((p) => p.voidSuit === null).map((p) => p.seat)
+    return []
+  }
+  private botPick(g: Game, s: number) {
+    if (g.phase === 'swap' && !g.players[s].swapTiles) g.submitSwap(s, botSwap(g, s))
+    else if (g.phase === 'void' && g.players[s].voidSuit === null) g.submitVoid(s, botVoid(g, s))
+  }
+
   private onTimeout(key: string) {
     const g = this.game
     if (!g || key !== this.deadlineKey) return
+    if (g.phase === 'swap' || g.phase === 'void') {
+      for (const s of this.pickPending(g)) if (!this.isBotControlled(s)) { this.slots[s].afk = (this.slots[s].afk ?? 0) + 1; this.botPick(g, s) }
+      this.emit(); this.drive()
+      return
+    }
     if (g.phase === 'turn') {
       const s = g.turn
       const o = g.turnOptions(s)
@@ -278,6 +307,15 @@ export class Table {
           }, 700)
         }
       }
+    } else if (g.phase === 'swap' || g.phase === 'void') {
+      const phase = g.phase
+      if (this.pickPending(g).some((s) => this.isBotControlled(s))) {
+        this.later(() => {
+          if (this.game !== g || g.phase !== phase) return this.drive()
+          for (const s of this.pickPending(g).filter((x) => this.isBotControlled(x))) this.botPick(g, s)
+          this.emit(); this.drive()
+        }, 600)
+      }
     } else if (g.phase === 'reaction') {
       if (g.pendingSeats().some((s) => this.isBotControlled(s))) {
         this.later(() => {
@@ -314,9 +352,11 @@ export class Table {
     const players: PlayerView[] = g.players.map((p) => ({
       seat: p.seat, name: p.name, points: p.points, human: this.slots[p.seat].id !== null,
       connected: this.slots[p.seat].connected,
-      handCount: p.hand.length - (p.drawn !== null ? 1 : 0), hand: p.seat === you || over ? p.hand.filter((i) => i !== p.drawn) : null,
+      handCount: p.hand.length - (p.drawn !== null ? 1 : 0), hand: p.seat === you || over || p.out ? p.hand.filter((i) => i !== p.drawn) : null,
       drawn: p.seat === you || over ? p.drawn : null,
       melds: p.melds, discards: p.discards, flowers: p.flowers, riichi: p.riichi, seatWind: g.seatWind(p.seat), nuki: p.nuki,
+      voidSuit: g.phase === 'swap' || g.phase === 'void' ? (p.seat === you ? p.voidSuit : null) : p.voidSuit,
+      out: p.out, winOrder: g.sc.wins.find((w) => w.winner === p.seat)?.order ?? 0, swapIn: p.seat === you ? p.swapIn : [],
     }))
     let hint: NonNullable<TableView['game']>['hint'] = null
     if (you >= 0 && (g.phase === 'turn' || g.phase === 'reaction')) {
@@ -356,8 +396,9 @@ export class Table {
       lastDiscard: g.lastDiscard,
       turnOptions: you >= 0 && g.phase === 'turn' && g.turn === you ? g.turnOptions(you) : null,
       reaction: you >= 0 && g.phase === 'reaction' && g.reactions[you] && !g.decisions[you] ? g.reactions[you] : null,
-      reactionKind: g.reactionKind, waiting: g.pendingSeats(),
-      timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
+      pick: { swap: g.players.map((p) => !!p.swapTiles), void: g.players.map((p) => p.voidSuit !== null), mine: you >= 0 ? g.players[you].swapTiles : null, dir: g.swapDir },
+      reactionKind: g.reactionKind, waiting: g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g) : g.pendingSeats(),
+      timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g).includes(you) : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
       replays: g.phase === 'over' ? g.replays : undefined,

@@ -7,6 +7,8 @@ export type ClientMsg =
   | { t: 'start' }
   | { t: 'act'; a: TurnAction }
   | { t: 'decide'; d: Decision }
+  | { t: 'swap'; tiles: number[] }
+  | { t: 'void'; suit: number }
   | { t: 'ack' }
   | { t: 'lobby' }
   | { t: 'toggleBot'; seat: number }

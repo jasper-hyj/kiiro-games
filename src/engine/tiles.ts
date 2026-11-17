@@ -29,8 +29,8 @@ export function doraFrom(ind: number, sanma = false): number {
 
 export const sortIds = (ids: number[]) => ids.sort((a, b) => kindOf(a) - kindOf(b) || a - b)
 
-export function freshWall(withFlowers: boolean, sanma = false): number[] {
-  const n = withFlowers ? 144 : 136
+export function freshWall(withFlowers: boolean, sanma = false, sichuan = false): number[] {
+  const n = sichuan ? 108 : withFlowers ? 144 : 136 // Sichuan: only the three number suits
   let w = Array.from({ length: n }, (_, i) => i)
   if (sanma) w = w.filter((id) => id >= 136 || id >> 2 === 0 || id >> 2 > 7) // drop 2m-8m
   for (let i = w.length - 1; i > 0; i--) {

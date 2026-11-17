@@ -138,6 +138,7 @@ const DATA: Record<TabId, Data> = {
       ] },
     ],
   },
+  sichuan: { intro: [], sections: [] },
   mcr: {
     intro: [
       ['Chinese Official (Guobiao / MCR) is the international tournament standard. 13 tiles, 144 tiles with 8 flowers, and a hand needs at least 8 fan (flowers do not count toward the 8). Seats rotate after every hand and there is no dealer bonus or streak.', '國標麻將（國際比賽標準）。每人 13 張，144 張含 8 張花牌；胡牌至少要 8 番（花牌不計入這 8 番）。每一局結束後座位輪轉，沒有莊家加成或連莊。'],
