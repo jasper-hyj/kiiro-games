@@ -10,7 +10,8 @@
     "party:dev": "wrangler dev",
     "party:deploy": "wrangler deploy",
     "sim": "tsx scripts/sim.ts",
-    "test": "tsx scripts/test.ts"
+    "test": "tsx scripts/test.ts",
+    "check": "tsc --noEmit && tsx scripts/test.ts && tsx scripts/win-test.ts"
   },
   "dependencies": {
     "partyserver": "^0.5.10",
