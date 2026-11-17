@@ -13,12 +13,32 @@ export function Stage({ children, allowRotate = true }: { children: ReactNode; a
   const [box, setBox] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
     const el = ref.current!
-    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight })
+    const measure = () => setBox((b) => (b.w === el.clientWidth && b.h === el.clientHeight ? b : { w: el.clientWidth, h: el.clientHeight }))
+    // iOS Safari can report the old size right after a rotation or while the URL bar animates,
+    // so re-measure on every signal and again shortly after
+    const timers: number[] = []
+    const settle = () => {
+      measure()
+      timers.forEach(clearTimeout)
+      timers.length = 0
+      for (const ms of [100, 300, 700]) timers.push(window.setTimeout(measure, ms))
+    }
     measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    window.addEventListener('orientationchange', measure)
-    return () => { ro.disconnect(); window.removeEventListener('orientationchange', measure) }
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(el)
+    const vv = window.visualViewport
+    window.addEventListener('orientationchange', settle)
+    window.addEventListener('resize', settle)
+    window.addEventListener('pageshow', settle)
+    vv?.addEventListener('resize', settle)
+    return () => {
+      ro?.disconnect()
+      timers.forEach(clearTimeout)
+      window.removeEventListener('orientationchange', settle)
+      window.removeEventListener('resize', settle)
+      window.removeEventListener('pageshow', settle)
+      vv?.removeEventListener('resize', settle)
+    }
   }, [])
   const land = fit(box.w, box.h)
   const port = fit(box.h, box.w)
