@@ -79,7 +79,8 @@ const probe = () => {
 async function main() {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] })
   const page = await browser.newPage()
-  await page.evaluateOnNewDocument(() => { (window as any).__name = (f: unknown) => f; try { localStorage.setItem('kiiro-lang', 'en') } catch { /* ignore */ } })
+  const LANG = process.env.LANG_UI ?? 'en'
+  await page.evaluateOnNewDocument((l) => { (window as any).__LANG = l; (window as any).__name = (f: unknown) => f; try { localStorage.setItem('kiiro-lang', (window as any).__LANG ?? 'en') } catch { /* ignore */ } }, LANG)
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)))
   const failures = new Map<string, string[]>()

@@ -31,8 +31,9 @@ export class Main extends Server<Env> {
 
   private handle(m: ClientMsg, sender: Connection<{ id?: string }>) {
     if (m.t === 'join') {
-      const id = String(m.id).slice(0, 40)
-      const seat = this.table.join(id, String(m.name ?? 'Player'))
+      if (typeof m.id !== 'string' || !m.id || m.id.length > 64) return this.send(sender, { t: 'error', message: 'Invalid player id.' })
+      const id = m.id
+      const seat = this.table.join(id, typeof m.name === 'string' ? m.name : 'Player')
       if (seat < 0) return this.send(sender, { t: 'error', message: 'Room is full or the game has already started.' })
       sender.setState({ id })
       this.broadcastViews()
