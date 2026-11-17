@@ -95,6 +95,8 @@ const D: Record<string, [string, string]> = {
   rotateTip: ['Turn the table sideways when the phone is held upright, so tiles are bigger', '手機直拿時將牌桌轉成橫向，牌會更大'],
   onlineOff: ['Online rooms are not set up on this site yet (the game server address is missing). Play vs bots instead.', '此網站尚未設定線上房間（缺少遊戲伺服器位址），請先選擇「對戰電腦」。'],
   conn_failed: ['Could not reach the game server. Check your connection and try again.', '無法連線到遊戲伺服器，請檢查網路後再試。'],
+  calcTw: ['Base 30 + 10 per tai: 30 + 10 × {n} = {base} from each payer', '底 30 + 每台 10：30 + 10 × {n} = {base}（每位付款者）'],
+  calcHk: ['{n} fan = {base} points (self-draw: each pays {base}; discard: the discarder pays double)', '{n} 番 = {base} 點（自摸每家付 {base}；放槍者付雙倍）'],
   discard: ['Discard', '打出'],
   discarded: ['{name} discarded', '{name} 打出'],
   choose: ['Choose an action', '請選擇動作'],

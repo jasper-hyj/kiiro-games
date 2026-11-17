@@ -49,7 +49,7 @@ function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game'
       <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[lang][p.seatWind]}</span>
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
-      {p.riichi && <span className="riichi-stick" title="Riichi" />}
+      {p.riichi && <span className="riichi-stick" title={t('riichi')} />}
     </div>
   )
 }

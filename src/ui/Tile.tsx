@@ -131,7 +131,7 @@ export function Tile({ id, kind, back, dora, onClick, selected, dim, mark, riich
     <div className={cls} onClick={onClick} title={title}>
       {!back && <Face kind={k} red={red} />}
       {red && <span className="aka-dot" />}
-      {!back && dora ? <span className="dora-badge" title="dora">★{dora > 1 ? dora : ''}</span> : null}
+      {!back && dora ? <span className="dora-badge" aria-hidden="true">★{dora > 1 ? dora : ''}</span> : null}
       {mark && <span className="mark" />}
     </div>
   )
