@@ -1,6 +1,6 @@
 import { Game } from '../src/engine/game'
 import { Table } from '../src/engine/table'
-import { kindOf, sortIds } from '../src/engine/tiles'
+import { sortIds } from '../src/engine/tiles'
 import type { RuleId } from '../src/engine/rules'
 
 let fails = 0

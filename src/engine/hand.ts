@@ -1,4 +1,4 @@
-import { NUM_KINDS, suitOf, numOf, isTermOrHonor } from './tiles'
+import { NUM_KINDS, suitOf, numOf } from './tiles'
 
 export type Counts = number[]
 export interface SetInfo { type: 'seq' | 'tri'; kind: number; open?: boolean; kan?: boolean }
@@ -158,4 +158,3 @@ export function suitCounts(c: Counts) {
   for (let k = 0; k < NUM_KINDS; k++) out[suitOf(k)] += c[k]
   return out
 }
-export const allTermHonor = (c: Counts) => c.every((v, k) => v === 0 || isTermOrHonor(k))

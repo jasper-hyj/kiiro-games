@@ -40,7 +40,8 @@ function checkReaction(g: Game, seat: number, from: number, tile: number) {
     if (kinds[0] % 9 > 6) fail('chi sequence wraps around a suit')
   }
   // every possible run is offered when it exists, and none otherwise
-  if (!g.sanma && !g.sichuan && (from + 1) % g.n === seat && k < 27 && g.wall.length > 0 && !p.riichi) {
+  if (g.reactionKind === 'chankan') { /* robbing a kan: only ron is offered, never a chi or pon */ }
+  else if (!g.sanma && !g.sichuan && (from + 1) % g.n === seat && k < 27 && g.wall.length > 0 && !p.riichi) {
     const n = numOf(k)
     const has = (kk: number) => kk >= 0 && kk < 27 && suitOf(kk) === suitOf(k) && c[kk] > 0
     let want = 0

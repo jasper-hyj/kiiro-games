@@ -95,7 +95,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         ))}
         {(r.sc?.notes ?? []).map((nt, i) => (
           <div key={i} className="scnote">
-            <b>{lang === 'zh' ? nt.zh : nt.label}</b>
+            <b>{lang === 'en' ? nt.label : nt.zh}</b>
             <span className="muted small"> {nt.deltas.map((d, k) => d ? `${v.players[k].name} ${d > 0 ? '+' : ''}${d}` : '').filter(Boolean).join(' · ')}</span>
           </div>
         ))}
@@ -132,7 +132,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
             {v.rule.id === 'riichi' && !r.score.yakuman && r.score.fuDetail && (
               <div className="hsblock">
                 <div className="hshead">{t('hsFu')}</div>
-                {r.score.fuDetail.map((f, i) => <div className="hsrow" key={i}><span>{lang === 'zh' ? f.label[1] : f.label[0]}</span><span>{f.value > 0 && i > 0 && r.score!.fuDetail!.length > 1 ? '+' : ''}{r.score!.fuDetail!.length > 1 || i > 0 ? f.value : ''}</span></div>)}
+                {r.score.fuDetail.map((f, i) => <div className="hsrow" key={i}><span>{lang === 'en' ? f.label[0] : f.label[1]}</span><span>{f.value > 0 && i > 0 && r.score!.fuDetail!.length > 1 ? '+' : ''}{r.score!.fuDetail!.length > 1 || i > 0 ? f.value : ''}</span></div>)}
                 <div className="hsrow strong"><span>{t('hsFuTotal')}</span><span>{r.score.fu}</span></div>
                 <div className="hsline">{t('hsBase', { fu: r.score.fu ?? 0, han: Math.min(r.score.total, 13), pow: 2 ** (2 + Math.min(r.score.total, 13)), raw: (r.score.fu ?? 0) * 2 ** (2 + Math.min(r.score.total, 13)) })}</div>
                 {r.score.label && <div className="hsline">{t('hsLimit', { label: label(r.score.label), base: r.score.base })}</div>}

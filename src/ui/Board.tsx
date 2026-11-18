@@ -378,7 +378,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     return () => { ro?.disconnect(); window.removeEventListener('resize', measure) }
   }, [])
   // the hand is drawn at real size across the full width: as large as fits, never huge
-  const handCount = handTiles.length + (me.drawn !== null ? 1 : 0)
   const usable = Math.max(200, barW - 24)
   // The hand tile size depends only on the screen width and the ruleset (never on how many tiles are in the hand right now),
   // so tiles do not change size while drawing, discarding or calling. Melds sit in the room freed by the tiles they replace.

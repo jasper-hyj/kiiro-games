@@ -1,5 +1,5 @@
 import { Game } from '../src/engine/game'
-import { kindOf, sortIds } from '../src/engine/tiles'
+import { sortIds } from '../src/engine/tiles'
 import { shantenAll, toCounts } from '../src/engine/hand'
 import type { RuleId } from '../src/engine/rules'
 

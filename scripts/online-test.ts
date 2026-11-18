@@ -29,7 +29,7 @@ check('hand size 13 (+flowers/draw)', ga!.players[0].hand!.length >= 12)
 // play: whoever's turn it is discards; passes on reactions; run for a while
 let turns = 0
 for (let i = 0; i < 400; i++) {
-  for (const [c, seat] of [[a, 0], [b, 1]] as const) {
+  for (const [c] of [[a, 0], [b, 1]] as const) {
     const g = c.view?.game
     if (!g) continue
     if (g.turnOptions && g.turnOptions.discard.length) { c.ws.send(JSON.stringify({ t: 'act', a: g.turnOptions.tsumo ? { type: 'tsumo' } : { type: 'discard', tile: g.turnOptions.discard[g.turnOptions.discard.length - 1] } })); turns++ }

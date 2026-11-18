@@ -17,7 +17,7 @@ export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; 
       {IDS.map((id) => {
         const r = RULESETS[id]
         return (
-          <button key={id} type="button" disabled={readOnly} className={'rule' + (config.rule === id ? ' on' : '')}
+          <button key={id} type="button" disabled={readOnly} data-rule={id} className={'rule' + (config.rule === id ? ' on' : '')}
             onClick={() => onChange({ rule: id, rounds: id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds) } as Partial<RoomConfig>)}>
             <span className="glyph" aria-hidden="true">{GLYPH[id]}</span>
             <span className="zh">{lang === 'zh' ? r.zh : t(id + '.name')}</span>

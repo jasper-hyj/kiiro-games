@@ -345,14 +345,14 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
   const d = DATA[id]
   return createPortal(
     <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" data-rule={id === 'basics' ? undefined : id} onClick={(e) => e.stopPropagation()}>
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <h2>{t('rulesRef')}</h2>
           <button className="btn sm alt" onClick={onClose}>{t('close')}</button>
         </div>
         <div className="tabs">
           {(['basics', 'taiwan', 'hk', 'riichi', 'mcr', 'sichuan'] as const).map((k) => (
-            <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : L === 2 ? '基本' : 'Basics') : t(k + '.name')}</button>
+            <button key={k} data-rule={k === 'basics' ? undefined : k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : L === 2 ? '基本' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>
         <div className="goalbox"><b>{d.goal && tx(d.goal, L)}</b></div>

@@ -3,11 +3,9 @@
 // Flower kinds: 34-37 plum/orchid/chrysanthemum/bamboo, 38-41 spring/summer/autumn/winter.
 export const NUM_KINDS = 34
 export const FLOWER_BASE = 34
-export const WHITE = 31, GREEN = 32, RED = 33
 
 export const kindOf = (id: number) => (id >= 136 ? FLOWER_BASE + (id - 136) : id >> 2)
 export const isFlowerId = (id: number) => id >= 136
-export const isFlowerKind = (k: number) => k >= FLOWER_BASE
 export const suitOf = (k: number) => (k >= 27 ? 3 : Math.floor(k / 9)) // 0 man 1 pin 2 sou 3 honor
 export const numOf = (k: number) => (k >= 27 ? 0 : (k % 9) + 1)
 export const isHonor = (k: number) => k >= 27 && k < 34
@@ -40,8 +38,3 @@ export function freshWall(withFlowers: boolean, sanma = false, sichuan = false):
   return w
 }
 
-const SUITS = ['m', 'p', 's']
-export function kindName(k: number): string {
-  if (k < 27) return `${numOf(k)}${SUITS[suitOf(k)]}`
-  return ['East', 'South', 'West', 'North', 'White', 'Green', 'Red'][k - 27] ?? `F${k - 33}`
-}

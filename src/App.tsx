@@ -9,6 +9,7 @@ import { useLang } from './i18n'
 import { TileGallery } from './ui/TileGallery'
 import { stressView } from './ui/stress'
 import { RulesHelp } from './ui/RulesHelp'
+import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
 import { RotatePrompt } from './ui/RotatePrompt'
 
@@ -19,11 +20,14 @@ const makeCode = () => String(Math.floor(Math.random() * 900000) + 100000) // si
 export default function App() {
   const { lang, setLang, t } = useLang()
   const [rulesOpen, setRulesOpen] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
+  // the page takes the accent colour of the game being set up or played (see the [data-rule] block in parlour.css)
+  useEffect(() => { document.documentElement.dataset.rule = (view?.config.rule ?? config.rule) as string }, [view?.config.rule, config.rule])
   const [room, setRoom] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
@@ -98,6 +102,7 @@ export default function App() {
         {!playing && (
           <div className="floatbar">
             {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}
+            <button className="rulesfab" onClick={() => setGuideOpen(true)}><span aria-hidden="true">🎓</span> {t('guideBtn')}</button>
             <button className="rulesfab" onClick={() => setRulesOpen(true)}><span aria-hidden="true">📖</span> {t('rulesRef')}</button>
             <div className="seg langsw">
               <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
@@ -108,6 +113,7 @@ export default function App() {
         )}
         {room && active && view && <ConnBadge status={status} latency={latency} />}
         {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
+        {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={tutorial} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
         {!active && urlRoom && (
           <div className="page joinpage">

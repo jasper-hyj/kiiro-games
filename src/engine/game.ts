@@ -202,7 +202,7 @@ export class Game {
   private doSwap() {
     const give = this.players.map((p) => p.swapTiles!)
     for (const p of this.players) p.hand = p.hand.filter((i) => !give[p.seat].includes(i))
-    this.players.forEach((p, s) => { const to = this.players[(s + this.swapDir) % this.n]; to.hand.push(...give[s]); to.swapIn = give[s].slice() })
+    this.players.forEach((_p, s) => { const to = this.players[(s + this.swapDir) % this.n]; to.hand.push(...give[s]); to.swapIn = give[s].slice() })
     for (const p of this.players) sortIds(p.hand)
     this.say(`Three tiles passed ${this.swapDir === 2 ? 'across' : this.swapDir === 1 ? 'to the right' : 'to the left'}`)
     this.phase = 'void'

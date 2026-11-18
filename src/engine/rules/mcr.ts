@@ -55,7 +55,6 @@ const EXCLUDES: Record<string, string[]> = {
   allChows: ['noHonors'],
 }
 
-export const mcrFan = (ctx: WinContext, total: number) => total - ctx.flowers.length
 
 function tileFans(ctx: WinContext, out: Fan[]) {
   const kinds = ctx.allKinds.map((v, k) => (v ? k : -1)).filter((k) => k >= 0)
