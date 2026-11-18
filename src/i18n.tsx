@@ -136,6 +136,8 @@ const D: Record<string, [string, string]> = {
   tsumo: ['Tsumo', '自摸'], ron: ['Ron', '胡'], pon: ['Pon', '碰'], kan: ['Kan', '槓'], chi: ['Chi', '吃'], pass: ['Pass', '過'],
   riichi: ['Riichi', '立直'], cancelRiichi: ['Cancel Riichi', '取消立直'], addKan: ['Add Kan', '加槓'], nuki: ['Nuki', '拔北'],
   abortDraw: ['Abort draw (9 terminals/honors)', '九種九牌流局'],
+  chatPlaceholder: ['Message everyone… (Enter to send)', '輸入訊息…（按 Enter 送出）'], 'sc.chat': ['Open chat', '開啟聊天'],
+  qWin: ['Win', '胡'], qDiscard: ['Draw-discard', '摸切'], qSkip: ['Pass', '過'],
   autoWin: ['Auto-win', '自動胡牌'], autoDiscard: ['Auto-discard', '自動摸切'], skipCalls: ['Skip calls', '不吃碰槓'], hints: ['Hints', '提示'],
   autoWinTip: ['Automatically declare ron / tsumo when you can win', '可胡牌時自動胡牌／自摸'],
   autoDiscardTip: ['Automatically discard the tile you draw (unless you can win)', '自動打出摸到的牌（可胡時除外）'],

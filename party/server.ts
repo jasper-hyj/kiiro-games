@@ -71,6 +71,7 @@ export class Main extends Server<Env> {
       case 'lobby': this.table.backToLobby(id); break
       case 'toggleBot': this.table.toggleBot(id, m.seat); break
       case 'chat': this.table.chat(id, String(m.key)); break
+      case 'say': this.table.say(id, m.text); break
       case 'here': this.table.here(id); break
     }
   }

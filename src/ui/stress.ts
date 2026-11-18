@@ -51,6 +51,7 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
     you: 0, host: true,
     game: {
       phase: pickPhase ?? (call ? 'reaction' : 'turn'), turn: 0, dealer: 0, roundIndex: 0, roundWind: 0, honba: jp ? 2 : 0, sticks: jp ? 3 : 0, lian: 3,
+      feed: [{ n: 1, seat: 1, key: '', text: 'hello!' }, { n: 2, seat: 2, key: '', text: 'good luck everyone' }, { n: 3, seat: 0, key: '', text: 'nice discard' }],
       wallLeft: full ? 14 : 62, dora: jp ? [8 * 4, 14 * 4 + 1, 30 * 4 + 2, 22 * 4, 3 * 4].slice(0, full ? 5 : 1) : [], handNo: 9, players: ps, lastDiscard: last,
       turnOptions: call || pickPhase ? null : { tsumo: true, discard: ps[0].hand!.concat(ps[0].drawn!), riichi: [], ankan: [4, 5], kakan: [1], nuki: false, abort: false },
       reaction: call ? { ron: true, pon: true, minkan: true, chi: [[0, 4], [4, 12], [12, 16]] } : null,

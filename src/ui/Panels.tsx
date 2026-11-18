@@ -66,7 +66,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
   const rows: [string, string][] = [
     ['← →', t('sc.move')], ['Enter', t('sc.discard')], ['D', t('sc.tsumogiri')], ['T', t('sc.tsumo')],
     ['R', t('sc.ron')], ['P', t('sc.pon')], ['C / 1-3', t('sc.chi')], ['K', t('sc.kan')],
-    ['Space / Esc', t('sc.pass')], ['I', t('sc.riichi')], ['Enter', t('sc.next')],
+    ['Space / Esc', t('sc.pass')], ['I', t('sc.riichi')], ['Enter', t('sc.next')], ['/  Enter', t('sc.chat')],
   ]
   return (
     <Modal title={t('shortcuts')} onClose={onClose}>

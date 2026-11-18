@@ -5,12 +5,14 @@ import { doraFrom, isRedFive, kindOf, suitOf } from '../engine/tiles'
 import type { ClientMsg } from '../net/protocol'
 import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
+import { ChatFeed } from './ChatFeed'
+import { IconChat, IconCoach, IconHint, IconLog, IconSort } from './Icons'
 import { ResultModal } from './ResultModal'
 import { useLang } from '../i18n'
 import { setSetting, useSettings } from '../settings'
 import { RulesHelp } from './RulesHelp'
 import { Stage } from './Stage'
-import { ChatPicker, EMOJI, HistoryModal, ShortcutsModal } from './Panels'
+import { HistoryModal, ShortcutsModal } from './Panels'
 
 const WINDS: Record<'en' | 'zh', string[]> = { en: ['E', 'S', 'W', 'N'], zh: ['東', '南', '西', '北'] }
 const wk = (l: string): 'en' | 'zh' => (l === 'en' ? 'en' : 'zh')
@@ -43,14 +45,13 @@ export function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number })
   return <div className="meld">{items}</div>
 }
 
-function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game']>; bubble?: string }) {
+function Chip({ p, v }: { p: PlayerView; v: NonNullable<TableView['game']> }) {
   const rr = v.phase === 'result' ? v.result : null
   const isWinner = !!rr && rr.kind === 'win' && (rr.winner === p.seat || !!rr.others?.some((x) => x.winner === p.seat))
   const { lang, t } = useLang()
   const turn = v.phase === 'turn' && v.turn === p.seat
   return (
     <div className={'chip' + (turn ? ' turn' : '') + (p.human && !p.connected ? ' away' : '') + (isWinner ? ' winner' : '')}>
-      {bubble && <span className="bubble">{bubble}</span>}
       <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[wk(lang)][p.seatWind]}</span>
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
@@ -70,7 +71,7 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
       <div className="pondin">
         {p.discards.map((d, i) => {
           const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
-          const tile = <Tile key={i} id={d.tile} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
+          const tile = <Tile key={i} id={d.tile} from={WINDS[wk(lang)][p.seatWind]} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
           return d.riichi ? <Side key={i}>{tile}</Side> : tile
         })}
       </div>
@@ -78,13 +79,13 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
   )
 }
 
-function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['game']>; pos: 'top' | 'left' | 'right'; bubble?: string }) {
+function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; pos: 'top' | 'left' | 'right' }) {
   // a freshly drawn tile sits apart from the hand. After a chi / pon nothing was drawn (the player already holds the tile to discard),
   // so the extra tile only shows when the concealed count is one more than a multiple of three (13 or 16 tiles before a draw)
   const extra = v.phase === 'turn' && v.turn === p.seat && p.hand === null && p.handCount % 3 === 1 ? 1 : 0
   return (
     <div className={`seat ${pos}`}>
-      <Chip p={p} v={v} bubble={bubble} />
+      <Chip p={p} v={v} />
       <div className="backs">
         {p.hand
           ? [...p.hand.map((id) => <Tile key={id} id={id} />), ...(p.drawn !== null ? [<span key="g" className="gap" />, <Tile key="d" id={p.drawn} />] : [])]
@@ -142,22 +143,15 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     document.addEventListener('touchstart', close as never)
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('touchstart', close as never) }
   }, [])
-  const [panel, setPanel] = useState<null | 'history' | 'keys' | 'chat' | 'rules'>(null)
-  const [bubbles, setBubbles] = useState<Record<number, { text: string; until: number }>>({})
-  const seenChat = useRef(0)
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    for (const c of v.chat ?? []) {
-      if (c.n <= seenChat.current) continue
-      seenChat.current = c.n
-      const key = c.key
-      setBubbles((b) => ({ ...b, [c.seat]: { text: EMOJI[key] ?? t('chat.' + key), until: Date.now() + 4500 } }))
-      timers.push(setTimeout(() => setBubbles((b) => { const x = { ...b }; if (x[c.seat] && x[c.seat].until <= Date.now() + 50) delete x[c.seat]; return x }), 4600))
-    }
-    return () => timers.forEach(clearTimeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v.chat])
-  const bub = (seat: number) => bubbles[seat]?.text
+    const hb = document.querySelector('.handbar') as HTMLElement | null
+    if (!hb) return
+    const set = () => document.documentElement.style.setProperty('--hbh', hb.offsetHeight + 'px')
+    set()
+    const ro = new ResizeObserver(set); ro.observe(hb)
+    return () => ro.disconnect()
+  }, [])
+  const [panel, setPanel] = useState<null | 'history' | 'keys' | 'chat' | 'rules'>(null)
   const o = v.turnOptions
   useEffect(() => { setSel(null); setRiichiMode(false) }, [v.handNo, v.turn, v.phase, me.drawn, me.hand?.length])
   useEffect(() => { setSwapSel([]) }, [v.handNo, v.phase])
@@ -207,6 +201,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     const act = (m: ClientMsg) => { e.preventDefault(); send(m) }
     if (v.phase === 'result') { if (k === 'enter' || k === ' ') act({ t: 'ack' }); return }
     if (panel) { if (k === 'escape') setPanel(null); return }
+    if (online && (k === '/' || (k === 'enter' && !(o && sel !== null) && !reaction))) { e.preventDefault(); setPanel('chat'); return }
     if (reaction) {
       if (k === 'r' && reaction.ron) act({ t: 'decide', d: { type: 'ron' } })
       else if (k === 'p' && reaction.pon) act({ t: 'decide', d: { type: 'pon' } })
@@ -289,15 +284,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <button className="menuitem rulesbtn" onClick={() => { setPanel('rules'); closeDock() }}>{t('rulesRef')}</button>
         <div className={'auditline' + (v.audit.ok ? ' ok' : ' bad')} title={v.audit.problems.join('\n')}>{v.audit.ok ? t('auditOk', { n: v.audit.checks }) : t('auditBad')}</div>
         <div className="dockrule" />
-        <div className="dockgroup">{t('auto')}</div>
-        {([['sort', 'autoSort', auto.sort], ['coach', 'coachSwitch', auto.coach], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
-          <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
-        ))}
-        <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
         <div className="dockrule" />
-        {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
-        <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
         <button className="menuitem" onClick={() => { setPanel('keys'); closeDock() }}>{t('shortcuts')}</button>
         <div className="dockrule" />
         <div className="seg langsw">
@@ -401,13 +389,27 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         </div>
       )}
-      <button className="rulechip" onClick={() => setPanel('rules')} title={t('ind.open')} aria-label={t('ind.open')}>
-        <b>{ruleLabel}</b><span>{ruleDetail}</span><i aria-hidden="true">i</i>
-      </button>
+      <div className="toprow">
+        <button className="rulechip" onClick={() => setPanel('rules')} title={t('ind.open')} aria-label={t('ind.open')}>
+          <b>{ruleLabel}</b><span>{ruleDetail}</span><i aria-hidden="true">i</i>
+        </button>
+        {room && <span className="roomchip" title={t('room')}><span className="rl">{t('room')}</span> <b>{room}</b></span>}
+        <div className="quickauto" role="group" aria-label={t('auto')}>
+          {([['sort', <IconSort />, 'autoSort'], ['coach', <IconCoach />, 'coachSwitch']] as const).map(([k, ic, long]) => (
+            <button key={k} type="button" className={'ic' + (auto[k] ? ' on' : '')} aria-pressed={auto[k]} title={t(long) + ' — ' + t(long + 'Tip')} onClick={() => setAuto(k)}>{ic}</button>
+          ))}
+          {([['win', 'qWin', 'autoWin'], ['discard', 'qDiscard', 'autoDiscard'], ['skip', 'qSkip', 'skipCalls']] as const).map(([k, short, long]) => (
+            <button key={k} type="button" className={auto[k] ? 'on' : ''} aria-pressed={auto[k]} title={t(long) + ' — ' + t(long + 'Tip')} onClick={() => setAuto(k)}><span className="full">{t(short)}</span><span className="abbr" aria-hidden="true">{[...t(short)][0]}</span></button>
+          ))}
+        </div>
+        <button className={'iconbtn' + (hints ? ' on' : '')} aria-pressed={hints} onClick={() => setHints(!hints)} title={t('hints') + ' — ' + t('hintsTip')} aria-label={t('hints')}><IconHint /></button>
+        <button className="iconbtn" onClick={() => setPanel('history')} title={t('history')} aria-label={t('history')}><IconLog /></button>
+        {online && <button className={'iconbtn' + (panel === 'chat' ? ' on' : '')} onClick={() => setPanel(panel === 'chat' ? null : 'chat')} title={t('chatTitle')} aria-label={t('chatTitle')}><IconChat /></button>}
+      </div>
       <Stage allowRotate={false}>
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
-      {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
-      <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
+      {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" />}
+      <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" />
       <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')} style={{ ['--rows' as string]: Math.min(5, Math.max(3, Math.ceil(Math.max(0, ...v.players.map((q) => q.discards.length)) / 6))) }}>
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
@@ -437,7 +439,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <Pond p={rel(1)} v={v} rel={1} />
         <Pond p={me} v={v} rel={0} />
       </div></div>
-      <Opp p={rel(1)} v={v} pos="right" bubble={bub(rel(1).seat)} />
+      <Opp p={rel(1)} v={v} pos="right" />
       </div>
       </Stage>
       <div className={'handbar' + (popOpen ? ' acting' : '')} ref={barRef} style={{ ['--hw' as string]: tw + 'px' }}>
@@ -520,7 +522,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         </div>
         <div className="infoline">
           <div className="infoleft">
-          <Chip p={me} v={v} bubble={bub(me.seat)} />
+          <Chip p={me} v={v} />
           {doraInHand > 0 && <span className="dorapill" title={t('doraInHand')}>★ {doraInHand}</span>}
           {(me.flowers.length > 0 || me.nuki.length > 0) && <div className="flowers">{[...me.flowers, ...me.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
         </div>
@@ -575,7 +577,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       </div>
       {autoMenu}
       {note && <div className="toast" role="status">{note}</div>}
-      {panel === 'chat' && <div className="chatfloat"><ChatPicker onPick={(k) => { send({ t: 'chat', key: k }); setPanel(null) }} /><button className="btn sm alt" onClick={() => setPanel(null)}>{t('close')}</button></div>}
+      {online && <ChatFeed v={v} send={send} open={panel === 'chat'} onClose={() => setPanel(null)} />}
       {panel === 'rules' && <RulesHelp initial={ruleId} onClose={() => setPanel(null)} />}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}

@@ -14,5 +14,6 @@ export type ClientMsg =
   | { t: 'toggleBot'; seat: number }
   | { t: 'chat'; key: string }
   | { t: 'here' }
+  | { t: 'say'; text: string }
   | { t: 'ping'; ts: number }
 export type ServerMsg = { t: 'view'; view: TableView } | { t: 'error'; message: string } | { t: 'pong'; ts: number }

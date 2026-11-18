@@ -34,7 +34,7 @@ export default function App() {
   }, [view, t])
   // the page takes the accent colour of the game being set up or played (see the [data-rule] block in parlour.css)
   useEffect(() => { document.documentElement.dataset.rule = (view?.config.rule ?? config.rule) as string }, [view?.config.rule, config.rule])
-  const [room, setRoom] = useState<string | null>(() => (new URLSearchParams(location.search).get('stress') === 'lobby' ? '482913' : null))
+  const [room, setRoom] = useState<string | null>(() => (new URLSearchParams(location.search).get('stress') ? '4829' : null))
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
   const [joinError, setJoinError] = useState('')
@@ -117,7 +117,7 @@ export default function App() {
             </div>
           </div>
         )}
-        {room && active && view && <ConnBadge status={status} latency={latency} />}
+        {room && !stress && active && view && <ConnBadge status={status} latency={latency} />}
         {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
         {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={tutorial} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}

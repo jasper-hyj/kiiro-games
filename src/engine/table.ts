@@ -46,7 +46,8 @@ export interface TableView {
     audit: { ok: boolean; checks: number; problems: string[] }
     notice: import('./game').WinNotice | null
     replays?: Replay[]
-    chat: { n: number; seat: number; key: string; ago: number }[]
+    chat: { n: number; seat: number; key: string; text?: string; ago: number }[]
+    feed: { n: number; seat: number; key: string; text?: string }[]
     log: string[]
     rule: { id: RuleId; name: string; nSets: number }
   }
@@ -68,7 +69,7 @@ export class Table {
   randomize = true
   /** Per-decision time limit in ms for human players (0 = off). Expired turns auto-play; two in a row hands the seat to a bot. */
   turnTimerMs = 0
-  chatLog: { n: number; seat: number; key: string; at: number }[] = []
+  chatLog: { n: number; seat: number; key: string; text?: string; at: number }[] = []
   private chatN = 0
   private deadline: number | null = null
   private deadlineKey = ''
@@ -241,7 +242,21 @@ export class Table {
     const last = [...this.chatLog].reverse().find((c) => c.seat === seat)
     if (last && Date.now() - last.at < 800) return
     this.chatLog.push({ n: ++this.chatN, seat, key, at: Date.now() })
-    if (this.chatLog.length > 12) this.chatLog.shift()
+    if (this.chatLog.length > 40) this.chatLog.shift()
+    this.emit()
+  }
+  /** Free-text chat: trimmed, control characters removed, 80 characters max, rate limited. */
+  say(id: string, raw: string) {
+    const seat = this.seatOf(id)
+    if (seat < 0 || typeof raw !== 'string') return
+    const text = raw.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)
+    if (!text) return
+    const now = Date.now()
+    const mine = this.chatLog.filter((c) => c.seat === seat)
+    if (mine.length && now - mine[mine.length - 1].at < 800) return
+    if (mine.filter((c) => now - c.at < 10000).length >= 6) return
+    this.chatLog.push({ n: ++this.chatN, seat, key: '', text, at: now })
+    if (this.chatLog.length > 40) this.chatLog.shift()
     this.emit()
   }
   ack(id: string) {
@@ -469,7 +484,8 @@ export class Table {
       coach: you >= 0 ? this.coachFor(g, you) : null,
       audit: { ok: this.auditProblems.length === 0, checks: this.auditRuns, problems: this.auditProblems.slice(0, 3) },
       replays: g.phase === 'over' ? g.replays : undefined,
-      chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),
+      chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, text: c.text, ago: Date.now() - c.at })),
+      feed: this.chatLog.slice(-8).map((c) => ({ n: c.n, seat: c.seat, key: c.key, text: c.text })),
       rule: { id: g.rule.id, name: g.rule.name, nSets: g.rule.nSets },
     }
     return base

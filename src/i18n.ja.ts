@@ -61,7 +61,7 @@ export const JA: Record<string, string> = {
   startGame: '対局開始', waitHost: 'ホストの開始を待っています…',
   tsumo: 'ツモ', ron: 'ロン', pon: 'ポン', kan: 'カン', chi: 'チー', pass: 'パス', riichi: 'リーチ', cancelRiichi: 'リーチ取消', addKan: '加槓', nuki: '北抜き',
   abortDraw: '九種九牌で流局',
-  autoWin: '自動和了', autoDiscard: 'ツモ切り', skipCalls: '鳴かない', hints: 'ヒント',
+  chatPlaceholder: 'メッセージ…（Enterで送信）', 'sc.chat': 'チャットを開く', qWin: '和了', qDiscard: 'ツモ切', qSkip: '見送', autoWin: '自動和了', autoDiscard: 'ツモ切り', skipCalls: '鳴かない', hints: 'ヒント',
   autoWinTip: '和了できるとき自動でロン／ツモします', autoDiscardTip: '引いた牌を自動で切ります（和了できる場合を除く）',
   skipCallsTip: 'チー・ポン・カンを自動でパスします', hintsTip: '待ちとシャンテン数を表示します',
   history: '対局履歴', noHistory: 'まだ対局がありません。', drawShort: '流局', shortcuts: 'キーボードショートカット',
