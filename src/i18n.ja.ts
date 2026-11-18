@@ -66,7 +66,7 @@ export const JA: Record<string, string> = {
   room_full: 'この部屋は満席です。4席すべてプレイヤーで埋まっています。', bad_id: 'プレイヤーIDが不正です。再読み込みしてください。',
   onlineOff: 'このサイトではオンライン部屋はまだ設定されていません。', conn_failed: 'ゲームサーバーに接続できませんでした。接続を確認してください。',
   withRiichi: '（リーチ時）', discard: '打牌', discarded: '{name} が打牌', choose: '操作を選んでください', auto: '自動',
-  yourTurn: 'あなたの番です — 牌を2回タップして打牌', waitingOthers: '他のプレイヤーを待っています…',
+  yourTurn: 'あなたの番です', waitingOthers: '他のプレイヤーを待っています…',
   wall: '牌山', dealer: '親', streak: '連荘', honba: '本場', sticks: 'リーチ棒', away: '離席', complete: '和了形！', tenpai: 'テンパイ', shanten: '{n}シャンテン',
   waits: '待ち：', discardWaits: '打牌 → 待ち：', threePlayers: '3人', timeLeft: '残り{s}秒',
   'wind.0': '東', 'wind.1': '南', 'wind.2': '西', 'wind.3': '北', roundName: '{wind}{n}局',
