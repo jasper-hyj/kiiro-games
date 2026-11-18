@@ -420,7 +420,6 @@ select option { background: #101830; color: #ece6d6; }
 .rp-ctl input[type=range] { flex: 1; min-width: 120px; accent-color: #a9b6d2; }
 
 /* ---------- accessibility: reduce motion, larger text ---------- */
-html[data-motion='reduce'] *, html[data-motion='reduce'] *::before, html[data-motion='reduce'] *::after { animation: none !important; transition: none !important; }
 .gear { position: relative; }
 .gear summary { list-style: none; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; color: var(--ivory); background: rgba(255,255,255,.05); border: 1px solid rgba(170,186,214,.3); }
 .gear summary::-webkit-details-marker { display: none; }
@@ -461,8 +460,6 @@ html[data-motion='reduce'] *, html[data-motion='reduce'] *::before, html[data-mo
 .pond.p2 .pondin { transform: translate(-50%, -50%) rotate(180deg); }
 .pond.p1 .pondin { transform: translate(-50%, -50%) rotate(-90deg); }
 .pond.p3 .pondin { transform: translate(-50%, -50%) rotate(90deg); }
-html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 6.5 + 6px); height: calc(var(--tw) * 5.8); }
-html[data-ponds='flat'] .pond .pondin { transform: translate(-50%, -50%) !important; }
 .pond > .tile, .pond > .sw { animation: none; } .pond .pondin > .tile, .pond .pondin > .sw { animation: drop-in .2s ease-out; }
 .pond .tile.called { opacity: .3; }
 
@@ -530,7 +527,6 @@ html[data-ponds='flat'] .pond .pondin { transform: translate(-50%, -50%) !import
 .cgrid .pond { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
 .cgrid .pond.p1, .cgrid .pond.p3 { width: calc(var(--tw) * 4.5); height: calc(var(--tw) * 8.4 + 8px); }
 .pond .pondin { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
-html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
 
 /* =====================================================================
    LANDSCAPE-FIRST GAME LAYOUT (like Mahjong Soul on a phone)
@@ -658,7 +654,6 @@ body { font-size: 16px; }
 .board .info .cw.east b { color: #ff9aa5; }
 .cgrid .pond.p0, .cgrid .pond.p2 { width: calc(var(--tw) * 12.4 + 12px); height: calc(var(--tw) * 3); }
 .cgrid .pond.p0 .pondin, .cgrid .pond.p2 .pondin { width: calc(var(--tw) * 12.4 + 12px); height: calc(var(--tw) * 3); }
-html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
 /* the top opponent: plate and tiles on one line */
 .board .seat.top { height: 88px; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; }
 .board .seat.top .backs { flex-wrap: nowrap; max-width: none; flex: 0 1 auto; }
@@ -666,8 +661,6 @@ html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3
 .board .info .infolines { display: flex; flex-direction: column; align-items: center; line-height: 1.25; }
 .board .info .rnd { margin-top: -6px; }
 /* upright rivers (the default): every river reads left to right; only the riichi tile is turned sideways */
-html[data-ponds='flat'] .cgrid { --pt: clamp(12px, calc((var(--H) - 122 - var(--infoh)) / 6 * 1px), 42px); }
-html[data-ponds='flat'] .cgrid .pond.p2 .pondin { transform: translate(-50%, -50%) !important; }
 
 /* =====================================================================
    VISIBILITY PASS — the small corner numbers on tiles, names, plates and labels are larger and higher-contrast
@@ -710,7 +703,6 @@ html[data-ponds='flat'] .cgrid .pond.p2 .pondin { transform: translate(-50%, -50
 
 /* a little smaller rivers */
 .cgrid { --pt: clamp(11px, min(calc((var(--H) - 122 - var(--infoh)) / 6.8 * 1px), calc((var(--H) - 114) / 9.2 * 1px)), 36px); }
-html[data-ponds='flat'] .cgrid { --pt: clamp(11px, calc((var(--H) - 122 - var(--infoh)) / 6.8 * 1px), 36px); }
 
 /* same-tile highlight */
 .tile.hl { box-shadow: var(--cap), 0 0 0 3px #ffd75e, 0 0 16px 2px rgba(255,215,94,.85), var(--edge); z-index: 2; }
@@ -719,7 +711,6 @@ html[data-ponds='flat'] .cgrid { --pt: clamp(11px, calc((var(--H) - 122 - var(--
 .cgrid .pond.p0, .cgrid .pond.p2, .cgrid .pond.p0 .pondin, .cgrid .pond.p2 .pondin { width: calc(var(--tw) * 12.8 + 12px); }
 .cgrid .pond.p1 .pondin, .cgrid .pond.p3 .pondin { width: calc(var(--tw) * 8.8 + 8px); }
 .cgrid .pond.p1, .cgrid .pond.p3 { height: calc(var(--tw) * 8.8 + 8px); }
-html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.8 + 8px); height: calc(var(--tw) * 4.5); }
 .auditline { grid-column: 1 / -1; font-size: .8em; padding: 6px 10px; border-radius: 10px; }
 .auditline.ok { color: #9be8c0; background: rgba(95,224,164,.1); border: 1px solid rgba(95,224,164,.3); }
 .auditline.bad { color: #ffd6d6; background: rgba(255,107,107,.18); border: 1px solid rgba(255,107,107,.55); }
@@ -773,11 +764,9 @@ body::before { mix-blend-mode: normal !important; opacity: .07 !important; }
    (Upright rivers remain a setting.) The plate is as wide as a side block is long, so everything lines up.
    ===================================================================== */
 .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 15.4 * 1px), 34px); --infoh: calc(var(--pt) * 6.4); column-gap: 6px; row-gap: 4px; }
-html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 15.4 * 1px), 34px); }
 .board .cgrid .pond.p0, .board .cgrid .pond.p2 { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); }
 .board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * 4.4); height: calc(var(--tw) * 6.4 + 6px); }
 .board .cgrid .pond .pondin { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); gap: calc(var(--tw) * .06) 0; }
-html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); }
 .board .info { zoom: 1; width: calc(var(--pt) * 6.4); height: calc(var(--pt) * 6.4); min-width: 118px; min-height: 118px; }
 .board .info .rnd { font-size: clamp(18px, calc(var(--pt) * 1.05), 34px); margin: 0; }
 .board .info .infolines .muted { font-size: clamp(12px, calc(var(--pt) * .62), 22px); }
@@ -790,11 +779,9 @@ html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .
 
 /* seven per row x three rows = 21 discards, enough for a whole hand without a clipped fourth row */
 .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 14.8 * 1px), 34px); --infoh: calc(var(--pt) * 5.8); }
-html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 14.8 * 1px), 34px); }
 .board .cgrid .pond.p0, .board .cgrid .pond.p2 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
 .board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * 4.4); height: calc(var(--tw) * 7.4 + 7px); }
 .board .cgrid .pond .pondin { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
-html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
 .board .info { width: calc(var(--pt) * 5.8); height: calc(var(--pt) * 5.8); min-width: 118px; min-height: 118px; }
 
 .actionpop { max-height: none; overflow: visible; }
@@ -884,11 +871,9 @@ html[data-idx='off'] .tile .idx { display: none; }
 
 /* a river that needs a fourth row grows the block (and everything shrinks a little) instead of spilling over the neighbours */
 .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / (var(--rows, 3) * 2.94 + 6) * 1px), 34px); }
-html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / (var(--rows, 3) * 2.94 + 6) * 1px), 34px); }
 .board .cgrid .pond.p0, .board .cgrid .pond.p2 { height: calc(var(--tw) * var(--rows, 3) * 1.47); }
 .board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * var(--rows, 3) * 1.47); }
 .board .cgrid .pond .pondin { height: calc(var(--tw) * var(--rows, 3) * 1.47); }
-html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * var(--rows, 3) * 1.47); }
 
 /* a lighter status line and a more compact action pop-up: less of the table is covered */
 .infoline .statusbar { font-size: 15px; padding: 3px 12px; font-weight: 600; }
@@ -919,7 +904,6 @@ html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .
 .board .info .infolines .muted { font-size: clamp(11px, calc(var(--pt) * .5), 18px); }
 .board .info .cw b { font-size: clamp(13px, calc(var(--pt) * .7), 24px); }
 .board .cgrid { --infoh: calc(var(--pt) * 4.8); --pt: clamp(11px, calc((var(--H) - 104) / (var(--rows, 3) * 2.94 + 5) * 1px), 38px); }
-html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 104) / (var(--rows, 3) * 2.94 + 5) * 1px), 38px); }
 .board .dorapanel { zoom: .85; }
 .handbar .hint { font-size: 13px; }
 .infoline .statusbar { font-size: 14px; }
@@ -928,3 +912,44 @@ html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 104) 
 /* the room code and other big numbers use clear lining digits (the display serif has old-style numerals) */
 .bigroom, .bigcode { font-family: var(--sans) !important; font-weight: 600; font-variant-numeric: lining-nums tabular-nums; letter-spacing: .22em; padding-left: .22em; }
 .bigroom { font-size: clamp(48px, 11vw, 92px); text-shadow: 0 0 30px rgba(120,160,240,.4); }
+
+/* =====================================================================
+   REDESIGNED CONTROLS: clear ON / OFF switches, a menu button that turns into a close button, smaller rule cards
+   ===================================================================== */
+.switch .knob { width: 68px; height: 30px; border-radius: 999px; background: #131a30; border: 1px solid rgba(170,186,214,.35); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); transition: background .2s, border-color .2s, box-shadow .2s; flex: none; position: relative; }
+.switch .knob::before { content: 'OFF'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font: 700 10px var(--sans); letter-spacing: .08em; color: rgba(236,240,250,.45); transition: opacity .15s; }
+.switch .knob::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(180deg, #cfd7ea, #8e9ab8); transform: none; box-shadow: 0 2px 4px rgba(0,0,0,.5); transition: left .2s cubic-bezier(.3,.9,.3,1), background .2s; }
+.switch input:checked + .knob { background: linear-gradient(180deg, #4f8cff, #2a55c2); border-color: rgba(190,215,255,.8); box-shadow: 0 0 14px rgba(90,140,255,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+.switch input:checked + .knob::before { content: 'ON'; right: auto; left: 10px; color: #fff; }
+.switch input:checked + .knob::after { left: 43px; background: linear-gradient(180deg, #ffffff, #dfe8ff); }
+.switch:hover .knob { border-color: rgba(226,234,248,.7); }
+.switch input:focus-visible + .knob { outline: 2px solid #9fc4ff; outline-offset: 2px; }
+.switch:active .knob::after { width: 26px; }
+.dockpanel .knob, .dockpanel .switch .knob { width: 68px; height: 30px; }
+.dockpanel .knob::after { top: 3px; left: 3px; width: 22px; height: 22px; transform: none; }
+.dockpanel input:checked + .knob::after { left: 43px; }
+.dockpanel .knob::before { right: 9px; left: auto; }
+.dockpanel input:checked + .knob::before { left: 10px; right: auto; }
+
+/* menu button: a rounded square whose three lines become a cross when the menu is open */
+.dock summary { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(180deg, #27345f, #0f1631); border: 1px solid rgba(190,210,245,.65); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px rgba(0,0,0,.55); transition: background .2s, box-shadow .2s, transform .1s; }
+.dock summary:hover { background: linear-gradient(180deg, #31427a, #141d40); }
+.dock summary:active { transform: scale(.94); }
+.dock[open] summary { transform: none; background: linear-gradient(180deg, #4a6ad0, #2a43a0); box-shadow: 0 0 18px rgba(100,150,255,.6), inset 0 1px 0 rgba(255,255,255,.3); }
+.burger { gap: 5px; position: relative; } .burger i { width: 22px; height: 2.5px; background: #eaf0ff; border-radius: 2px; transition: transform .22s, opacity .15s; }
+.dock[open] .burger i:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.dock[open] .burger i:nth-child(2) { opacity: 0; }
+.dock[open] .burger i:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+/* the Rules button sits in the top-right corner of the menus */
+.rulesfab { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(170,186,214,.35); border-radius: 999px; padding: 6px 14px; color: var(--ivory); font: 600 13px var(--sans); letter-spacing: .03em; min-height: 36px; }
+.rulesfab:hover { background: rgba(255,255,255,.12); border-color: rgba(226,234,248,.7); }
+
+/* smaller rule cards */
+.grid3 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+button.rule { min-height: 0; padding: 18px 12px 10px; gap: 2px 10px; border-radius: 12px; }
+button.rule .glyph { font-size: 38px; width: 46px; }
+button.rule .zh { font-size: 19px; flex: 1 1 80px; }
+button.rule .muted { font-size: 12px; line-height: 1.3; }
+.shelf .grid3 { width: min(1000px, 100%); }
+.tablesettings .grid3 { margin: 4px 0 8px; }

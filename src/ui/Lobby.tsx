@@ -2,7 +2,6 @@ import { useState } from 'react'
 import type { RoomConfig, TableView } from '../engine/table'
 import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
-import { RulesHelp } from './RulesHelp'
 import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
 import { Tile } from './Tile'
@@ -40,7 +39,6 @@ function Seg<T extends string | number | boolean>({ value, items, onPick, disabl
 
 export function Options({ config, onChange, readOnly, open, flat }: { config: RoomConfig; onChange: Change; readOnly?: boolean; open?: boolean; flat?: boolean }) {
   const { t } = useLang()
-  const [help, setHelp] = useState(false)
   const tw = config.rule === 'taiwan'
   const Wrap = flat ? 'div' : 'details'
   return (
@@ -77,8 +75,6 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
           <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]]} />
         </div>
       </div>
-      <button className="btn sm alt" onClick={() => setHelp(true)}>{t('rulesRef')}</button>
-      {help && <RulesHelp initial={config.rule} onClose={() => setHelp(false)} />}
     </Wrap>
   )
 }

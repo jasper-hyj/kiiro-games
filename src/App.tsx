@@ -8,7 +8,7 @@ import { AkaCtx } from './ui/Tile'
 import { useLang } from './i18n'
 import { TileGallery } from './ui/TileGallery'
 import { stressView } from './ui/stress'
-import { setSetting, useSettings } from './settings'
+import { RulesHelp } from './ui/RulesHelp'
 import { ConnBadge } from './ui/ConnBadge'
 import { RotatePrompt } from './ui/RotatePrompt'
 
@@ -18,7 +18,7 @@ const makeCode = () => String(Math.floor(Math.random() * 900000) + 100000) // si
 
 export default function App() {
   const { lang, setLang, t } = useLang()
-  const settings = useSettings()
+  const [rulesOpen, setRulesOpen] = useState(false)
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
@@ -98,12 +98,7 @@ export default function App() {
         {!playing && (
           <div className="floatbar">
             {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}
-            <details className="gear">
-              <summary aria-label={t('settings')}>⚙</summary>
-              <div className="gearpanel">
-                <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
-              </div>
-            </details>
+            <button className="rulesfab" onClick={() => setRulesOpen(true)}><span aria-hidden="true">📖</span> {t('rulesRef')}</button>
             <div className="seg langsw">
               <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
@@ -112,6 +107,7 @@ export default function App() {
           </div>
         )}
         {room && active && view && <ConnBadge status={status} latency={latency} />}
+        {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
         {!active && urlRoom && (
           <div className="page joinpage">

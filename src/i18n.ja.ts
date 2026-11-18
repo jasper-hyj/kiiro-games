@@ -1,7 +1,7 @@
 /** Japanese UI strings. Any key missing here falls back to English. */
 export const JA: Record<string, string> = {
   brand: 'Kiiro 麻雀',
-  leave: '退出', details: '詳細', settings: '設定', reduceMotion: '動きを減らす', flatPonds: '河を正面向きにする（見やすい）',
+  leave: '退出', details: '詳細', settings: '設定',
   replay: '対局の振り返り', reviewHands: '振り返る', replayStart: '最初へ', replayPrev: '前へ', replayNext: '次へ',
   back: '戻る', continue: '続ける', chooseRules: 'ルールを選ぶ', createRoom: '部屋を作る', room: '部屋',
   connecting: '接続中…', connLost: '接続が切れました。再接続しています…', reconnecting: '再接続中…',

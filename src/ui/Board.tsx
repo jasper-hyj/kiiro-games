@@ -285,9 +285,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
         ))}
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
-        <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
         <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
-        <label className="switch"><input type="checkbox" checked={settings.flatPonds} onChange={() => setSetting('flatPonds', !settings.flatPonds)} /><span className="knob" />{t('flatPonds')}</label>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>

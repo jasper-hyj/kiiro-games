@@ -232,7 +232,6 @@ button, summary, .tile, select, label { touch-action: manipulation; -webkit-touc
 .statusbar.mine { animation: fade-in .2s ease-out; }
 .overlay { animation: fade-in .15s ease-out; }
 .modal { animation: rise-in .2s ease-out; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 .autos summary { min-height: 0; line-height: 1.4; }
 
