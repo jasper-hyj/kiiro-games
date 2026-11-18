@@ -1225,7 +1225,8 @@ html[data-rule] .handrow.mine { box-shadow: none; }
 /* IDLE / AFK: tags on player chips and the "are you there?" bar */
 .idletag { font-size: .78em; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: #f0b33e; color: #1a1204; }
 .idletag.auto { background: #ff7a7a; color: #2a0a0a; }
-@media (max-width: 560px), (max-height: 520px) { :root:root:root .handbar .calltimer.low { color: #ff8a8a; border-color: #ff8a8a; animation: breathe 1s ease-in-out infinite; }
+
+:root:root:root .handbar .calltimer.low { color: #ff8a8a; border-color: #ff8a8a; animation: breathe 1s ease-in-out infinite; }
 
 /* flowers face their owner, like the rivers: top seat upside down, side seats on their side */
 .seat.top .flowers .tile { transform: rotate(180deg); }
