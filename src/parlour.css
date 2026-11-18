@@ -1306,3 +1306,7 @@ html[data-idx='off'] .tile .frm { display: none; }
 :root:root:root .tablesettings.always .opt > span:first-child, :root:root:root .shelf .opt > span:first-child { flex: 0 0 7.5em; }
 :root:root:root .opt select, :root:root:root .opt .seg { max-width: calc(100% - 8.7em); }
 @media (max-width: 480px) { :root:root:root .tablesettings.always .opt > span:first-child, :root:root:root .shelf .opt > span:first-child { flex-basis: 6.5em; } :root:root:root .opt select, :root:root:root .opt .seg { max-width: calc(100% - 7.7em); } }
+.gamecol > .dock { z-index: 120; }
+:root:root:root .dockpanel .switch { overflow-wrap: anywhere; word-break: normal; }
+.stagewrap[data-narrow='1'] .seat.left .chip, .stagewrap[data-narrow='1'] .seat.right .chip { padding: 2px 6px 2px 3px; max-width: 100%; box-sizing: border-box; }
+.stagewrap[data-narrow='1'] .seat.left .chip .nm, .stagewrap[data-narrow='1'] .seat.right .chip .nm { display: none; }

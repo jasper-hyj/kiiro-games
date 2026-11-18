@@ -102,7 +102,8 @@ const probe = () => {
     const box = boxOf(it.el)
     if (box && box !== it.el) {
       const br = box.getBoundingClientRect()
-      if (br.width > 4 && (it.r.left < br.left - 2 || it.r.right > br.right + 2 || it.r.top < br.top - 2 || it.r.bottom > br.bottom + 2)) push('OVERFLOWS ITS BOX', it, null, ` out of <${describe(box)}>`)
+      const sy = scrolls(box) // a scrolling box may hold more than fits: only sideways spill counts
+      if (br.width > 4 && (it.r.left < br.left - 2 || it.r.right > br.right + 2 || (!sy && (it.r.top < br.top - 2 || it.r.bottom > br.bottom + 2)))) push('OVERFLOWS ITS BOX', it, null, ` out of <${describe(box)}>`)
     }
   }
   // horizontal overflow of the page
