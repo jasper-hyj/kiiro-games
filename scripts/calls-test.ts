@@ -47,7 +47,7 @@ function checkReaction(g: Game, seat: number, from: number, tile: number) {
     if (n >= 3 && has(k - 2) && has(k - 1)) want++
     if (n >= 2 && n <= 8 && has(k - 1) && has(k + 1)) want++
     if (n <= 7 && has(k + 1) && has(k + 2)) want++
-    if (r.chi.length !== want) fail(`chi options ${r.chi.length} but ${want} runs exist for kind ${k}`)
+    if (r.chi.length !== want) fail(`chi options ${r.chi.length} but ${want} runs exist for kind ${k} [rule ${g.rule.id} n=${g.n} wall=${g.wall.length} hand=${p.hand.map(kindOf).sort((a, b) => a - b)} melds=${p.melds.length} riichi=${p.riichi} out=${p.out} void=${p.voidSuit} from=${from} seat=${seat}]`)
   } else if (r.chi.length) fail('chi offered where chi is not allowed')
 }
 

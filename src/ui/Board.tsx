@@ -15,7 +15,7 @@ import { ChatPicker, EMOJI, HistoryModal, ShortcutsModal } from './Panels'
 const WINDS: Record<'en' | 'zh', string[]> = { en: ['E', 'S', 'W', 'N'], zh: ['東', '南', '西', '北'] }
 const wk = (l: string): 'en' | 'zh' => (l === 'en' ? 'en' : 'zh')
 
-function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number }) {
+export function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number }) {
   if (m.type === 'ankan') {
     return <div className="meld">{m.tiles.map((id, i) => <Tile key={i} id={id} back={i === 0 || i === 3} />)}</div>
   }
@@ -78,7 +78,9 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
 }
 
 function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['game']>; pos: 'top' | 'left' | 'right'; bubble?: string }) {
-  const extra = v.phase === 'turn' && v.turn === p.seat && p.hand === null ? 1 : 0
+  // a freshly drawn tile sits apart from the hand. After a chi / pon nothing was drawn (the player already holds the tile to discard),
+  // so the extra tile only shows when the concealed count is one more than a multiple of three (13 or 16 tiles before a draw)
+  const extra = v.phase === 'turn' && v.turn === p.seat && p.hand === null && p.handCount % 3 === 1 ? 1 : 0
   return (
     <div className={`seat ${pos}`}>
       <Chip p={p} v={v} bubble={bubble} />
