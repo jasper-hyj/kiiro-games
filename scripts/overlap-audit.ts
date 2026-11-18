@@ -84,6 +84,27 @@ const probe = () => {
     if (top === document.documentElement || top === document.body) continue
     push('TEXT COVERED', it, null, ` by <${describe(top)}>`)
   }
+  // content that spills out of the box it sits in, or off the screen
+  const boxOf = (el: Element) => {
+    for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+      if (a.matches(SKIP)) return null
+      const cs = getComputedStyle(a)
+      const hasBorder = ['Top', 'Right', 'Bottom', 'Left'].some((d) => parseFloat((cs as any)['border' + d + 'Width']) > 0 && (cs as any)['border' + d + 'Style'] !== 'none' && !/, 0\)$/.test((cs as any)['border' + d + 'Color']))
+      const hasBg = cs.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|, 0\)$/.test(cs.backgroundColor)
+      if ((hasBorder || hasBg) && cs.position !== 'fixed') return a
+    }
+    return null
+  }
+  const scrolls = (el: Element) => { for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) { const o = getComputedStyle(a); if (/(auto|scroll)/.test(o.overflowY + o.overflowX)) return true } return false }
+  for (const it of items) {
+    if (scrolls(it.el) && it.kind === 'text') { /* inside a scroller: only the box check below */ }
+    else if (it.r.left < -1 || it.r.right > innerWidth + 1) push('OFF SCREEN', it, null, ` (${Math.round(it.r.left)},${Math.round(it.r.top)} ${Math.round(it.r.width)}x${Math.round(it.r.height)} in ${innerWidth}x${innerHeight})`)
+    const box = boxOf(it.el)
+    if (box && box !== it.el) {
+      const br = box.getBoundingClientRect()
+      if (br.width > 4 && (it.r.left < br.left - 2 || it.r.right > br.right + 2 || it.r.top < br.top - 2 || it.r.bottom > br.bottom + 2)) push('OVERFLOWS ITS BOX', it, null, ` out of <${describe(box)}>`)
+    }
+  }
   // horizontal overflow of the page
   if (document.documentElement.scrollWidth > innerWidth + 2) out.push(`PAGE SCROLLS SIDEWAYS (${document.documentElement.scrollWidth} > ${innerWidth})`)
   return out
@@ -136,7 +157,6 @@ for (const [w, h, touch] of VIEWPORTS) {
       for (const rule of ['taiwan', 'riichi']) { const p = await open(`/?stress=lobby&rule=${rule}`); await check(p, `lobby ${rule}`); await p.close() }
     })
     await run('table', async () => {
-      if (w <= 480 && h > w) return // portrait phones show the 'turn your phone' screen instead of the table
       for (const [mode, rule, pl] of [['full', 'riichi', 4], ['full', 'taiwan', 4], ['call', 'taiwan', 4], ['call', 'riichi', 3], ['swap', 'sichuan', 4], ['void', 'sichuan', 4], ['min', 'hk', 4], ['full&idle=slow', 'taiwan', 4], ['call&idle=auto', 'riichi', 4]] as const) {
         const p = await open(`/?stress=${mode}&players=${pl}&rule=${rule}&ping=1`)
         await check(p, `table ${mode}/${rule}/${pl}`)

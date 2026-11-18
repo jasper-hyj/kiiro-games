@@ -846,7 +846,7 @@ button.rule .muted { font-size: 12px; line-height: 1.3; }
 
 /* the square table middle */
 .board .center { display: grid; place-items: center; }
-.board .cgrid { --R: var(--rows, 3); --u: clamp(11px, min(calc((var(--H) - 150) / (2.88 * var(--R) + 6.4) * 1px), calc((var(--SW, 1600) - 500) / (2.88 * var(--R) + 6.4) * 1px)), 48px);
+.board .cgrid { --R: var(--rows, 3); --u: clamp(11px, min(calc((var(--H) - 150) / (2.88 * var(--R) + 6.4) * 1px), calc((var(--SW, 1600) - var(--RES, 500)) / (2.88 * var(--R) + 6.4) * 1px)), 48px);
   --W: calc(var(--u) * 6.4 + 7px); --D: calc(var(--u) * 1.44 * var(--R));
   display: block; position: relative; box-sizing: border-box; width: calc(var(--W) + 2 * var(--D)); height: calc(var(--W) + 2 * var(--D)); flex: none;
   border-radius: 22px; border: 1px solid rgba(170,186,214,.3);
@@ -1264,7 +1264,7 @@ html[data-rule] .handrow.mine { box-shadow: none; }
 .chatfeed .quick { display: flex; flex-wrap: wrap; gap: 4px; }
 .chatfeed .quick button { border: 0; border-radius: 999px; padding: 3px 10px; min-height: 28px; background: var(--matte2); color: #eef2fa; font: 600 13px var(--sans); cursor: pointer; }
 .chatfeed input { width: 100%; box-sizing: border-box; border: 0; border-radius: 10px; padding: 9px 12px; background: var(--matte); color: #eef2fa; font: 500 14px var(--sans); outline: 2px solid var(--rc, #aab6d2); }
-@media (hover: none), (max-height: 520px) { .chatfeed:not(.open) { display: none; } .chatfeed.open { width: min(330px, 52vw); } .chatfeed.open ul { background: rgba(8,12,28,.7); padding: 6px 8px; border-radius: 10px; } }
+@media (hover: none), (max-height: 520px) { .chatfeed:not(.open) ul { display: none; } .chatfeed.open { width: min(330px, 52vw); } .chatfeed.open ul { background: rgba(8,12,28,.7); padding: 6px 8px; border-radius: 10px; } }
 .quickauto button.ic { padding: 0 9px; font-size: 15px; }
 
 .quickauto .abbr { display: none; }
@@ -1280,3 +1280,24 @@ html[data-idx='off'] .tile .frm { display: none; }
 
 .chatfeed { z-index: 80; }
 @media (max-width: 700px) { :root:root:root .rulechip { display: none; } }
+
+.chatfeed .chatopen { pointer-events: auto; justify-self: start; border: 0; border-radius: 8px; padding: 6px 12px; min-height: 32px; background: rgba(15,23,49,.78); color: rgba(236,240,250,.75); font: 500 13px var(--sans); text-align: left; cursor: text; text-shadow: none; }
+.chatfeed .chatopen:hover { background: var(--matte2); color: #fff; }
+.chatfeed .chatopen .tp { display: none; }
+@media (hover: none), (max-height: 520px) { .chatfeed .chatopen .kb { display: none; } .chatfeed .chatopen .tp { display: inline; font-weight: 700; } .chatfeed .chatopen { cursor: pointer; } }
+
+/* UPRIGHT PHONE / TABLET: narrow tall stage, thin side columns, the table gets the width */
+.stagewrap[data-narrow='1'] .board { --sidew: 92px; --RES: 250; padding-left: 4px; padding-right: 4px; gap: 4px; }
+
+/* SETTINGS: plain rows, "Name ........ control", no boxes; controls never wider than their row */
+:root:root:root .tablesettings.always .optgrid, :root:root:root .shelf .optgrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 22em), 1fr)); gap: 0 2.4em; }
+:root:root:root .tablesettings.always .opt, :root:root:root .shelf .opt { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 1em; padding: .7em 0; border: 0; border-bottom: 1px solid rgba(170,186,214,.14); border-radius: 0; background: none; text-align: left; min-width: 0; }
+:root:root:root .tablesettings.always .opt > span:first-child, :root:root:root .shelf .opt > span:first-child { flex: none; font-size: .95em; letter-spacing: .02em; text-transform: none; color: rgba(236,240,250,.85); }
+:root:root:root .opt select, :root:root:root .opt .seg { flex: 0 1 auto; min-width: 0; max-width: 62%; }
+:root:root:root .opt select { width: auto; min-width: 7em; box-sizing: border-box; }
+:root:root:root .opt .seg { flex-wrap: nowrap; }
+:root:root:root .opt .seg button { white-space: nowrap; padding: 6px 12px; min-height: 0; }
+@media (max-width: 480px) { :root:root:root .shelf .optgrid { grid-template-columns: 1fr; } :root:root:root .opt .seg button { padding: 6px 10px; } }
+:root:root:root .tablesettings.always .optgrid { padding-left: 1.2em; padding-right: 1.2em; }
+.stagewrap[data-narrow='1'] .dorapanel { margin: 2px 0 0 2px; padding: 4px 6px 6px; }
+.stagewrap[data-narrow='1'] .dorapanel .dorabox { --tw: 17px; } .stagewrap[data-narrow='1'] .dorapanel .dlabel { font-size: 11px; }

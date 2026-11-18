@@ -6,7 +6,7 @@ import { useLang } from '../i18n'
 const SEAT_COLORS = ['#9fc2ff', '#ffb86b', '#7fe0b0', '#e79cff']
 
 /** Valorant-style live chat: the last lines always in view at the bottom left; Enter or / (or the chat button) opens the input. */
-export function ChatFeed({ v, send, open, onClose }: { v: NonNullable<TableView['game']>; send: (m: ClientMsg) => void; open: boolean; onClose: () => void }) {
+export function ChatFeed({ v, send, open, onClose, onOpen }: { v: NonNullable<TableView['game']>; send: (m: ClientMsg) => void; open: boolean; onClose: () => void; onOpen: () => void }) {
   const { t } = useLang()
   const [text, setText] = useState('')
   const input = useRef<HTMLInputElement>(null)
@@ -28,6 +28,7 @@ export function ChatFeed({ v, send, open, onClose }: { v: NonNullable<TableView[
           </li>
         ))}
       </ul>
+      {!open && <button type="button" className="chatopen" onClick={onOpen}><span className="kb">{t('chatOpenKey')}</span><span className="tp">{t('chatTitle')}</span></button>}
       {open && (
         <div className="chatinput">
           <input ref={input} type="text" value={text} maxLength={80} placeholder={t('chatPlaceholder')} aria-label={t('chatTitle')}

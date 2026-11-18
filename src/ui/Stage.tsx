@@ -5,7 +5,9 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 export const STAGE_W = 1600
 /** A squarer window (tablet held upright) gets a narrower, taller design so the table can use the height instead of leaving bands above and below. */
 const fit = (aw: number, ah: number) => {
-  const sw = aw / Math.max(1, ah) < 1.25 ? 1000 : STAGE_W
+  const ratio = aw / Math.max(1, ah)
+  // upright phone / tablet: a narrow, tall design (small side columns) so the table fills the width; squarish window: 1000 wide; landscape: 1600 wide
+  const sw = ratio < 0.8 ? 700 : ratio < 1.25 ? 1000 : STAGE_W
   const dh = Math.min(sw === STAGE_W ? 760 : 1000, Math.max(480, (sw * ah) / Math.max(1, aw)))
   return { dh, sw, s: Math.min(aw / sw, ah / dh) }
 }
@@ -52,7 +54,7 @@ export function Stage({ children, allowRotate = true }: { children: ReactNode; a
     '--s': f.s || 0.01, '--H': f.dh, '--SW': f.sw,
   } as CSSProperties
   return (
-    <div className="stagewrap" ref={ref} data-rotated={rotate ? '1' : '0'}>
+    <div className="stagewrap" ref={ref} data-rotated={rotate ? '1' : '0'} data-narrow={f.sw === 700 ? '1' : '0'}>
       {box.w > 0 && <div className="stage" style={style}>{children}</div>}
     </div>
   )

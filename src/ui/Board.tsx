@@ -6,7 +6,6 @@ import type { ClientMsg } from '../net/protocol'
 import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
 import { ChatFeed } from './ChatFeed'
-import { IconChat, IconCoach, IconHint, IconLog, IconSort } from './Icons'
 import { ResultModal } from './ResultModal'
 import { useLang } from '../i18n'
 import { setSetting, useSettings } from '../settings'
@@ -284,8 +283,15 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <button className="menuitem rulesbtn" onClick={() => { setPanel('rules'); closeDock() }}>{t('rulesRef')}</button>
         <div className={'auditline' + (v.audit.ok ? ' ok' : ' bad')} title={v.audit.problems.join('\n')}>{v.audit.ok ? t('auditOk', { n: v.audit.checks }) : t('auditBad')}</div>
         <div className="dockrule" />
+        <div className="dockgroup">{t('auto')}</div>
+        {([['sort', 'autoSort', auto.sort], ['coach', 'coachSwitch', auto.coach], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
+          <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
+        ))}
+        <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
         <div className="dockrule" />
+        {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
+        <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
         <button className="menuitem" onClick={() => { setPanel('keys'); closeDock() }}>{t('shortcuts')}</button>
         <div className="dockrule" />
         <div className="seg langsw">
@@ -394,17 +400,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           <b>{ruleLabel}</b><span>{ruleDetail}</span><i aria-hidden="true">i</i>
         </button>
         {room && <span className="roomchip" title={t('room')}><span className="rl">{t('room')}</span> <b>{room}</b></span>}
-        <div className="quickauto" role="group" aria-label={t('auto')}>
-          {([['sort', <IconSort />, 'autoSort'], ['coach', <IconCoach />, 'coachSwitch']] as const).map(([k, ic, long]) => (
-            <button key={k} type="button" className={'ic' + (auto[k] ? ' on' : '')} aria-pressed={auto[k]} title={t(long) + ' — ' + t(long + 'Tip')} onClick={() => setAuto(k)}>{ic}</button>
-          ))}
-          {([['win', 'qWin', 'autoWin'], ['discard', 'qDiscard', 'autoDiscard'], ['skip', 'qSkip', 'skipCalls']] as const).map(([k, short, long]) => (
-            <button key={k} type="button" className={auto[k] ? 'on' : ''} aria-pressed={auto[k]} title={t(long) + ' — ' + t(long + 'Tip')} onClick={() => setAuto(k)}><span className="full">{t(short)}</span><span className="abbr" aria-hidden="true">{[...t(short)][0]}</span></button>
-          ))}
-        </div>
-        <button className={'iconbtn' + (hints ? ' on' : '')} aria-pressed={hints} onClick={() => setHints(!hints)} title={t('hints') + ' — ' + t('hintsTip')} aria-label={t('hints')}><IconHint /></button>
-        <button className="iconbtn" onClick={() => setPanel('history')} title={t('history')} aria-label={t('history')}><IconLog /></button>
-        {online && <button className={'iconbtn' + (panel === 'chat' ? ' on' : '')} onClick={() => setPanel(panel === 'chat' ? null : 'chat')} title={t('chatTitle')} aria-label={t('chatTitle')}><IconChat /></button>}
       </div>
       <Stage allowRotate={false}>
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
@@ -498,13 +493,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         )}
         <div className="notes">
           {help && popOpen && <div className="callhelp">{help}</div>}
-        {tutorial && tutOpen && (
-          <div className="tutcard" role="dialog">
-            <b>{t('tut.title')}</b>
-            <p>{t('tut.' + tutOpen)}</p>
-            <button className="btn sm gold" onClick={() => setTutOpen(null)}>{t('tut.ok')}</button>
-          </div>
-        )}
         {auto.coach && v.coach && (
           <div className="coachcard" role="note">
             <span className="cicon" aria-hidden="true">?</span>
@@ -576,8 +564,15 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         </div>
       </div>
       {autoMenu}
+    {tutorial && tutOpen && (
+      <div className="tutcard" role="dialog">
+        <b>{t('tut.title')}</b>
+        <p>{t('tut.' + tutOpen)}</p>
+        <button className="btn sm gold" onClick={() => setTutOpen(null)}>{t('tut.ok')}</button>
+      </div>
+    )}
       {note && <div className="toast" role="status">{note}</div>}
-      {online && <ChatFeed v={v} send={send} open={panel === 'chat'} onClose={() => setPanel(null)} />}
+      {online && <ChatFeed v={v} send={send} open={panel === 'chat'} onClose={() => setPanel(null)} onOpen={() => setPanel('chat')} />}
       {panel === 'rules' && <RulesHelp initial={ruleId} onClose={() => setPanel(null)} />}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}

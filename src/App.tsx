@@ -11,7 +11,6 @@ import { stressView } from './ui/stress'
 import { RulesHelp } from './ui/RulesHelp'
 import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
-import { RotatePrompt } from './ui/RotatePrompt'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
@@ -159,7 +158,7 @@ export default function App() {
         )}
         {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
         {active && shown && !playing && room && <RoomLobby view={shown} room={room} send={send} onLeave={leave} />}
-        {active && shown && playing && <><Board room={room} status={status} view={shown} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /><RotatePrompt /></>}
+        {active && shown && playing && <Board room={room} status={status} view={shown} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} />}
       </div>
     </AkaCtx.Provider>
   )
