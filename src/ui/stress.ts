@@ -51,7 +51,7 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
       reactionKind: 'discard', waiting: [], timeLeft: 22000, result: null, acks: [],
       standings: ps.map((p) => ({ seat: p.seat, name: p.name, points: p.points })),
       hint: full ? { shanten: 0, waits: [1, 4, 7, 10, 13], discardWaits: {}, left: { 1: 2, 4: 0, 7: 3, 10: 1, 13: 2 }, values: { 1: { total: 6 }, 4: { total: 4 }, 7: { total: 8 }, 10: null, 13: { total: 3 } }, furiten: false } : null,
-      history: [], audit: { ok: true, checks: 42, problems: [] }, chat: [{ n: 1, seat: 2, key: 'hello', ago: 100 }, { n: 2, seat: 1, key: 'e1', ago: 100 }, { n: 3, seat: 3, key: 'nice', ago: 100 }],
+      history: [], audit: { ok: true, checks: 42, problems: [] }, notice: null, chat: [{ n: 1, seat: 2, key: 'hello', ago: 100 }, { n: 2, seat: 1, key: 'e1', ago: 100 }, { n: 3, seat: 3, key: 'nice', ago: 100 }],
       log: [], rule: sc ? { id: 'sichuan', name: 'Sichuan', nSets: 4 } : jp ? { id: 'riichi', name: 'Japanese Riichi', nSets: 4 } : { id: 'taiwan', name: 'Taiwanese', nSets: 5 },
     },
   }

@@ -32,7 +32,7 @@ async function newPage(b: Browser, d: Dev, lang: 'en' | 'zh' = 'en'): Promise<Pa
   await p.evaluateOnNewDocument((l) => {
     try {
       localStorage.setItem('kiiro-lang', l)
-      localStorage.setItem('kiiro-auto', JSON.stringify({ win: true, discard: false, skip: false }))
+      localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: true, sort: true }))
     } catch { /* ignore */ }
   }, lang)
   p.on('pageerror', (e) => { fails++; console.log('FAIL pageerror', String(e).slice(0, 200)) })
@@ -113,6 +113,7 @@ async function main() {
         const t2 = await text(p)
         check(`${tag}: rules step shows the three rule cards`, lang === 'en' ? /Taiwanese/.test(t2) && /Hong Kong/.test(t2) && /Riichi/.test(t2) : /台灣麻將/.test(t2))
         await layout(p, `${tag} rules step`)
+        await p.waitForSelector('button.rule', { timeout: 10000 })
         await p.click('button.rule')
         await sleep(450)
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-menu-options.png` })

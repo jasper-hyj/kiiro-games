@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { RuleId } from '../engine/rules'
 import { useLang } from '../i18n'
+import { Tile } from './Tile'
+import { EXAMPLES } from './examples'
 
 // [English name, 中文名, English description, 中文說明]
 type Row = [string, string, string, string]
@@ -296,6 +298,40 @@ const DATA: Record<TabId, Data> = {
   },
 }
 
+const TOKENS = /(\d+)([mpsz])/g
+function groupsOf(notation: string): number[][] {
+  const out: number[][] = []
+  for (const m of notation.matchAll(TOKENS)) {
+    const base = { m: 0, p: 9, s: 18, z: 27 }[m[2] as 'm' | 'p' | 's' | 'z']
+    out.push([...m[1]].map((d) => base + +d - 1))
+  }
+  return out
+}
+
+/** Worked examples: real tiles, the winning tile highlighted, and exactly what the engine scores for them. */
+function ExampleList({ rule, L, unit }: { rule: RuleId; L: number; unit: string }) {
+  const { t } = useLang()
+  const list = EXAMPLES.filter((e) => e.rule === rule)
+  if (!list.length) return null
+  return (
+    <div className="examples">
+      <h2>{t('examples')}</h2>
+      {list.map((e, i) => (
+        <div className="example" key={i}>
+          <div className="exhead"><b>{e.name[L]}</b><span className="extotal">{e.yakuman ? (e.yakuman > 1 ? t('doubleYakuman') : t('yakuman')) : `${e.total} ${unit}`}{e.tsumo ? ` · ${t('selfDraw')}` : ''}</span></div>
+          <div className="exrow">
+            {groupsOf(e.hand).map((g, gi) => <span className="exgroup" key={gi}>{g.map((k, ki) => <Tile key={ki} kind={k} />)}</span>)}
+            <span className="explus">{e.tsumo ? '＋' : '←'}</span>
+            <span className="exgroup"><Tile kind={groupsOf(e.win)[0][0]} hot /></span>
+            {(e.melds ?? []).map((m, mi) => <span className="exgroup meldg" key={'m' + mi}>{groupsOf(m.tiles).flat().map((k, ki) => <Tile key={ki} kind={k} />)}</span>)}
+          </div>
+          <p className="muted small">{e.note[L]}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () => void }) {
   const { lang, t } = useLang()
   const [id, setId] = useState<TabId>(initial)
@@ -315,6 +351,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
         </div>
         <div className="goalbox"><b>{d.goal?.[L]}</b></div>
         {d.intro.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
+        {id !== 'basics' && <ExampleList rule={id} L={L} unit={t(id === 'riichi' ? 'han' : id === 'taiwan' ? 'tai' : 'fan')} />}
         {d.sections.map((s) => (
           <div key={s.title[0]}>
             <h2>{s.title[L]}</h2>

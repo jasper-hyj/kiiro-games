@@ -25,6 +25,7 @@ export interface ReactionOptions { ron: boolean; pon: boolean; minkan: boolean; 
 export interface TurnOptions {
   tsumo: boolean; discard: number[]; riichi: number[]; ankan: number[]; kakan: number[]; nuki: boolean; abort: boolean
 }
+export interface WinNotice { code: 'void' | 'furiten' | 'noYaku' | 'minFan' | 'other'; n?: number; need?: number; suit?: number; tile?: number }
 export type Phase = 'swap' | 'void' | 'turn' | 'reaction' | 'result' | 'over'
 export interface ScWin { winner: number; from: number | null; tsumo: boolean; score: HandScore; points: number; order: number; winTile: number; hand: { hand: number[]; melds: Meld[] } }
 export interface ScNote { label: string; zh: string; deltas: number[] }
@@ -89,6 +90,8 @@ export class Game {
   history: HistoryEntry[] = []
   replays: Replay[] = []
   swapDir = 1
+  /** per seat: why a tile that completes the hand's shape does not let them win (cleared on the next discard / draw) */
+  notices: Record<number, WinNotice> = {}
   sc: { wins: ScWin[]; notes: ScNote[]; deltas: number[] } = { wins: [], notes: [], deltas: [] }
   private steps: ReplayStep[] = []
   handNo = 0
@@ -242,6 +245,8 @@ export class Game {
     }
     p.hand.push(t)
     p.drawn = t
+    this.notices = {}
+    { const w = this.explainNoWin(seat, true); if (w) this.notices[seat] = w }
     this.turn = seat
     this.rinshan = fromKan
     this.afterCall = false
@@ -288,6 +293,25 @@ export class Game {
     const sp = p.melds.length === 0 ? this.rule.specials : {}
     if (!isComplete(ctx.counts, sp)) return null
     return this.rule.evaluate(ctx)
+  }
+
+  /** If the tile completes the hand's shape but the hand still cannot win, say why (otherwise null). */
+  explainNoWin(seat: number, tsumo: boolean, tile?: number): WinNotice | null {
+    const p = this.players[seat]
+    if (p.out) return null
+    const ctx = this.buildContext(seat, tsumo, tile)
+    const sp = p.melds.length === 0 ? this.rule.specials : {}
+    if (!isComplete(ctx.counts, sp)) return null
+    if (this.checkWin(seat, tsumo, tile) !== null && !(!tsumo && this.isFuriten(seat))) return null
+    if (this.sichuan && p.voidSuit !== null && ctx.allKinds.some((v, k) => v > 0 && k < 27 && suitOf(k) === p.voidSuit)) return { code: 'void', suit: p.voidSuit, tile }
+    if (!tsumo && this.isFuriten(seat)) return { code: 'furiten', tile }
+    const min = this.opts.minFan ?? 0
+    const free = this.rule.evaluate({ ...ctx, options: { ...ctx.options, minFan: 0 } })
+    if (free) {
+      const fan = this.rule.id === 'mcr' ? free.total - ctx.flowers.length : free.total
+      if ((this.rule.id === 'hk' || this.rule.id === 'mcr') && fan < min) return { code: 'minFan', n: fan, need: min, tile }
+    } else if (this.isRiichi) return { code: 'noYaku', tile }
+    return { code: 'other', tile }
   }
 
   /** Kinds this player is waiting on with its current 3n+1 tiles. */
@@ -461,9 +485,11 @@ export class Game {
     this.kuikae = []
     this.lastDiscard = { tile, from: p.seat }
     const reactions: Record<number, ReactionOptions> = {}
+    this.notices = {}
     for (let s = 0; s < this.n; s++) {
       if (s === p.seat) continue
       const r = this.reactionOptions(s, tile, p.seat)
+      if (!r.ron && !this.players[s].out) { const w = this.explainNoWin(s, false, tile); if (w) this.notices[s] = w }
       if (r.ron || r.pon || r.minkan || r.chi.length) reactions[s] = r
     }
     if (Object.keys(reactions).length) {

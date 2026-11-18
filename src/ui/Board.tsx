@@ -446,6 +446,13 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
             </div>
           </div>
         )}
+        {v.notice && (
+          <div className="noticebar" role="alert">
+            <span className="nbicon" aria-hidden="true">!</span>
+            {v.notice.tile !== undefined && <span className="nbtile"><Tile id={v.notice.tile} /></span>}
+            <span>{t('notice.' + v.notice.code, { n: v.notice.n ?? 0, need: v.notice.need ?? 0, suit: v.notice.suit !== undefined ? t('suit.' + v.notice.suit) : '' })}</span>
+          </div>
+        )}
         <div className="infoline">
           <div className="infoleft">
           <Chip p={me} v={v} bubble={bub(me.seat)} />

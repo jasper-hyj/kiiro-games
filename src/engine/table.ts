@@ -40,6 +40,7 @@ export interface TableView {
     hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean } | null
     history: HistoryEntry[]
     audit: { ok: boolean; checks: number; problems: string[] }
+    notice: import('./game').WinNotice | null
     replays?: Replay[]
     chat: { n: number; seat: number; key: string; ago: number }[]
     log: string[]
@@ -422,6 +423,7 @@ export class Table {
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g).includes(you) : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
+      notice: you >= 0 ? g.notices[you] ?? null : null,
       audit: { ok: this.auditProblems.length === 0, checks: this.auditRuns, problems: this.auditProblems.slice(0, 3) },
       replays: g.phase === 'over' ? g.replays : undefined,
       chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),
