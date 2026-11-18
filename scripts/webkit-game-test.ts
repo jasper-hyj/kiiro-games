@@ -14,16 +14,25 @@ async function play(engine: string, rule: string) {
   const page = await ctx.newPage()
   const errors: string[] = []
   page.on('pageerror', (e: Error) => errors.push(String(e).slice(0, 160)))
-  await page.addInitScript(() => { try { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: false })) } catch { /* ignore */ } })
+  await page.addInitScript(() => { try { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: true, sort: true, coach: false })) } catch { /* ignore */ } })
   await page.goto(`${BASE}/?solo=1&rule=${rule}&speed=0.02`, { waitUntil: 'networkidle' })
   await page.waitForSelector('.handrow .tile', { timeout: 15000 })
   const t0 = Date.now()
   let hands = 0, turns = 0, over = false, flips = 0, bad = 0
-  const portrait = { width: 390, height: 844 }, land = { width: 844, height: 390 }
+  const portrait = { width: 740, height: 360 }, land = { width: 844, height: 390 } // phones play in landscape; flip between two landscape sizes
   while (Date.now() - t0 < 240000) {
     if (await page.$('.overlay .standings')) { over = true; break }
     const next = await page.$('.overlay .btn.gold:not([disabled])')
     if (next) { hands++; await next.tap(); await sleep(150); continue }
+    if (await page.$('.pickhint')) {   // Sichuan: pass three tiles / give up a suit
+      const btns = await page.$$('.actionpop .cbtn')
+      if (btns.length === 3) { await btns[0].tap(); await sleep(200); continue }
+      const confirm = await page.$('.actionpop .cbtn.call:not([disabled])')
+      if (btns.length === 1 && confirm) { await confirm.tap(); await sleep(200); continue }
+      const hand = await page.$$('.handrow .tile.clickable')
+      for (let i = 0; i < hand.length && !(await page.$('.actionpop .cbtn.call:not([disabled])')); i++) { await hand[i].tap(); await sleep(40) }
+      continue
+    }
     const ron = await page.$('.cbtn.ron'); if (ron) { await ron.tap(); await sleep(80); continue }
     const pass = await page.$('.cbtn.pass'); if (pass) { await pass.tap(); await sleep(60); continue }
     const tiles = await page.$$('.handrow .tile.clickable')

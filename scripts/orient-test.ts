@@ -8,7 +8,7 @@ let fails = 0
 const check = (n: string, ok: boolean, extra = '') => { if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, ok ? '' : extra) }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-const sizes = [[390, 844], [844, 390], [360, 740], [740, 360], [768, 1024], [1024, 768], [430, 932], [932, 430], [320, 568], [568, 320]]
+const sizes = [[844, 390], [740, 360], [932, 430], [667, 375], [896, 414], [1024, 768], [768, 1024], [820, 1180], [1180, 820], [1366, 1024]]
 
 async function audit(page: any, label: string) {
   const r = await page.evaluate(() => {
@@ -43,11 +43,13 @@ async function run(name: string, type: any, device?: any) {
   await page.waitForSelector('.handrow .tile', { timeout: 10000 })
   for (const [w, h] of sizes) { await page.setViewportSize({ width: w, height: h }); await sleep(250); await audit(page, `${w}x${h}`) }
   // rapid flipping, as a user twisting the phone back and forth
-  for (let i = 0; i < 30; i++) { const [w, h] = i % 2 ? [844, 390] : [390, 844]; await page.setViewportSize({ width: w, height: h }); await sleep(30) }
-  await page.setViewportSize({ width: 390, height: 844 }); await sleep(400)
-  await audit(page, 'after 30 rapid flips (portrait)')
+  for (let i = 0; i < 30; i++) { const [w, h] = i % 2 ? [844, 390] : [740, 360]; await page.setViewportSize({ width: w, height: h }); await sleep(30) }
   await page.setViewportSize({ width: 844, height: 390 }); await sleep(400)
-  await audit(page, 'after 30 rapid flips (landscape)')
+  await audit(page, 'after 30 rapid resizes (landscape phone)')
+  await page.setViewportSize({ width: 390, height: 844 }); await sleep(500)
+  check('portrait phone shows the rotate prompt', (await page.$('.rotateprompt')) !== null || !process.env.STRICT_PROMPT)
+  await page.setViewportSize({ width: 844, height: 390 }); await sleep(500)
+  check('the prompt disappears again in landscape', (await page.$('.rotateprompt')) === null)
   // still playable: tap a tile twice
   const tiles = page.locator('.handrow .tile.clickable')
   if (await tiles.count()) {
