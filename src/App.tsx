@@ -48,9 +48,10 @@ export default function App() {
   useEffect(() => save('kiiro-config', config), [config])
   useEffect(() => save('kiiro-hints', hints), [hints])
 
+  const pendingCfg = useRef<RoomConfig | null>(null) // the rules picked in the menu, sent to a room the moment it is created
   const failTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const leave = useCallback(() => {
-    seq.current++; if (failTimer.current) { clearTimeout(failTimer.current); failTimer.current = null }
+    seq.current++; pendingCfg.current = null; if (failTimer.current) { clearTimeout(failTimer.current); failTimer.current = null }
     try { conn.current?.send({ t: 'bye' }) } catch { /* ignore */ } // a deliberate leave: a bot takes the seat straight away
     conn.current?.close(); conn.current = null
     setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
@@ -80,8 +81,17 @@ export default function App() {
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
     history.replaceState(null, '', `?room=${c}${dbg ? '&debug=1' : ''}`)
+    if (!create) pendingCfg.current = null
     const roomHandlers = {
       ...handlers,
+      onView: (v: TableView) => {
+        if (pendingCfg.current && v.host && v.status === 'lobby') { // a freshly created room starts with the default rules: apply what the player chose
+          const { rule, rounds, aka, minFan, players, botLevel, swap } = pendingCfg.current
+          pendingCfg.current = null
+          conn.current?.send({ t: 'config', config: { rule, rounds, aka, minFan, players, botLevel, swap } })
+        }
+        handlers.onView(v)
+      },
       onError: (m: string) => {
         if (create && m === 'code_taken' && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return } // that code is already in use: pick another
         if (m === 'room_not_found' || m === 'room_full' || m === 'code_taken') { // forget the stale room so a refresh does not try it again
@@ -154,7 +164,7 @@ export default function App() {
         )}
         {!active && !urlRoom && (
           <>
-            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => joinRoom(makeCode(), true)} onJoin={joinRoom} />
+            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => { pendingCfg.current = config; joinRoom(makeCode(), true) }} onJoin={joinRoom} />
           </>
         )}
         {active && !view && joinError && (
