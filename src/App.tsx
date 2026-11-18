@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
-import { connectLocal, connectRemote, getClientId, type Conn, type Status } from './net/client'
+import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
 import type { ClientMsg } from './net/protocol'
 import { Menu, RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
@@ -48,7 +48,9 @@ export default function App() {
   useEffect(() => save('kiiro-config', config), [config])
   useEffect(() => save('kiiro-hints', hints), [hints])
 
+  const failTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const leave = useCallback(() => {
+    seq.current++; if (failTimer.current) { clearTimeout(failTimer.current); failTimer.current = null }
     try { conn.current?.send({ t: 'bye' }) } catch { /* ignore */ } // a deliberate leave: a bot takes the seat straight away
     conn.current?.close(); conn.current = null
     setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
@@ -56,20 +58,24 @@ export default function App() {
     history.replaceState(null, '', location.pathname)
   }, [])
 
+  const seq = useRef(0) // every connection gets a number; once the player leaves or starts another one, the old one can no longer touch the UI
+  const guard = <H extends Handlers>(h: H, mine: number): H => ({ ...h, onView: (v: TableView) => { if (seq.current === mine) h.onView(v) }, onStatus: (st: Status) => { if (seq.current === mine) h.onStatus(st) }, onError: (m: string) => { if (seq.current === mine) h.onError(m) }, onLatency: (ms: number) => { if (seq.current === mine) h.onLatency?.(ms) } })
   const handlers = { onView: setView, onStatus: (st: Status) => { setStatus(st); if (st !== 'open') setLatency(null) }, onLatency: setLatency, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
   const solo = () => {
     const q = new URLSearchParams(location.search) // debug overrides: ?rule=riichi&players=3
     const cfg = { ...config, ...(q.get('rule') ? { rule: q.get('rule') as RoomConfig['rule'] } : {}), ...(q.get('players') ? { players: Number(q.get('players')) as 3 | 4 } : {}) }
-    setActive(true); conn.current = connectLocal(id.current, name || 'Player', cfg, handlers)
+    setActive(true); conn.current = connectLocal(id.current, name || 'Player', cfg, guard(handlers, ++seq.current))
   }
   const tutorial = () => {
     // a guided practice game: easy bots, the coach switched on, tips that explain each moment
     history.replaceState(null, '', '?tutorial=1')
     setActive(true)
-    conn.current = connectLocal(id.current, name || 'Player', { ...config, botLevel: 'easy', rounds: 1 }, handlers)
+    conn.current = connectLocal(id.current, name || 'Player', { ...config, botLevel: 'easy', rounds: 1 }, guard(handlers, ++seq.current))
   }
   const joinRoom = useCallback((code: string, create = false, attempt = 0) => {
     const c = code.toUpperCase()
+    conn.current?.close(); conn.current = null // never two connections at once
+    setView(null); setJoinError('')
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
@@ -85,10 +91,12 @@ export default function App() {
         handlers.onError(m)
       },
     }
-    conn.current = connectRemote(c, id.current, name || 'Player', roomHandlers, create)
+    const mine = ++seq.current
+    conn.current = connectRemote(c, id.current, name || 'Player', guard(roomHandlers, mine), create)
     if (dbg) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
-    setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
+    if (failTimer.current) clearTimeout(failTimer.current)
+    failTimer.current = setTimeout(() => { if (seq.current === mine && !viewRef.current) setJoinError('conn_failed') }, 12000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name])
   const send = (m: ClientMsg) => {

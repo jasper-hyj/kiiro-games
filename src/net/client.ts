@@ -62,6 +62,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
   let lastPong = 0
+  let closed = false // set by close(): from then on nothing this connection does may reach the app (no retries, no views)
   let beatTimer: ReturnType<typeof setInterval> | null = null
   let watchdog: ReturnType<typeof setTimeout> | null = null
   const beat = () => {
@@ -70,15 +71,15 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     try { ws.send(JSON.stringify({ t: 'ping', ts: sent } satisfies ClientMsg)) } catch { return }
     if (watchdog) clearTimeout(watchdog)
     // no answer within 5 s: the connection is dead even if the browser still says "open" (phone slept, wifi changed)
-    watchdog = setTimeout(() => { if (lastPong < sent) { h.onStatus('closed'); ws.reconnect(); startRetry() } }, 5000)
+    watchdog = setTimeout(() => { if (!closed && lastPong < sent) { h.onStatus('closed'); ws.reconnect(); startRetry() } }, 5000)
   }
   // automatic recovery: while the connection is down, keep trying every few seconds (the socket also backs off on its own)
   let retryTimer: ReturnType<typeof setInterval> | null = null
   let dropping = false
-  const startRetry = () => { if (retryTimer || dropping) return; retryTimer = setInterval(() => { if (ws.readyState !== 1 && ws.readyState !== 0) ws.reconnect() }, 3500) }
+  const startRetry = () => { if (retryTimer || dropping || closed) return; retryTimer = setInterval(() => { if (closed) { stopRetry(); return } if (ws.readyState !== 1 && ws.readyState !== 0) ws.reconnect() }, 3500) }
   const stopRetry = () => { if (retryTimer) clearInterval(retryTimer); retryTimer = null }
-  const wake = () => { if (document.visibilityState === 'visible') { if (ws.readyState === 1) beat(); else ws.reconnect() } }
-  const online = () => ws.reconnect()
+  const wake = () => { if (closed) return; if (document.visibilityState === 'visible') { if (ws.readyState === 1) beat(); else ws.reconnect() } }
+  const online = () => { if (!closed) ws.reconnect() }
   document.addEventListener('visibilitychange', wake)
   window.addEventListener('online', online)
   ws.addEventListener('open', () => {
@@ -90,8 +91,9 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     if (beatTimer) clearInterval(beatTimer)
     beatTimer = setInterval(beat, 10000)
   })
-  ws.addEventListener('close', () => { h.onStatus('closed'); if (beatTimer) clearInterval(beatTimer); beatTimer = null; startRetry() })
+  ws.addEventListener('close', () => { if (closed) return; h.onStatus('closed'); if (beatTimer) clearInterval(beatTimer); beatTimer = null; startRetry() })
   ws.addEventListener('message', (e) => {
+    if (closed) return
     const m = JSON.parse(e.data as string) as ServerMsg
     if (m.t === 'view') h.onView(m.view)
     else if (m.t === 'pong') { lastPong = Date.now(); if (watchdog) clearTimeout(watchdog); h.onLatency?.(Date.now() - m.ts) }
@@ -100,6 +102,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   return {
     send: (m) => ws.send(JSON.stringify(m)),
     close: () => {
+      closed = true
       if (beatTimer) clearInterval(beatTimer)
       if (watchdog) clearTimeout(watchdog)
       stopRetry()
