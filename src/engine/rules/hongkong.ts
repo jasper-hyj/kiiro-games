@@ -74,11 +74,12 @@ function evaluate(ctx: WinContext): HandScore | null {
   return cands.reduce((a, b) => (b.total > a.total ? b : a))
 }
 
-function settle(score: HandScore, info: { winner: number; from: number | null }): number[] {
-  const d = [0, 0, 0, 0]
+function settle(score: HandScore, info: { winner: number; from: number | null; n?: number }): number[] {
+  const n = info.n ?? 4
+  const d = new Array(n).fill(0)
   const V = score.base
   if (info.from === null) {
-    for (let p = 0; p < 4; p++) if (p !== info.winner) { d[p] -= V; d[info.winner] += V }
+    for (let p = 0; p < n; p++) if (p !== info.winner) { d[p] -= V; d[info.winner] += V }
   } else { d[info.from] -= 2 * V; d[info.winner] += 2 * V }
   return d
 }

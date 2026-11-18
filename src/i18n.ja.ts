@@ -14,7 +14,7 @@ export const JA: Record<string, string> = {
   tagline: '台湾・香港・日本・国標・四川の麻雀。友達とオンライン対戦、空席はCPUが自動で参加します。',
   playFriends: '友達と遊ぶ', playBots: 'CPUと遊ぶ', haveCode: 'ルームコードをお持ちですか？', roomCode: 'ルームコード', join: '参加',
   options: 'オプション', length: '対局の長さ', eastRound: '東風戦', fullGame: '全場（4風）', eastOnly: '東風戦', eastSouth: '東南戦',
-  players: '人数', sanma: '3人（三麻）', redFives: '赤ドラ', on: 'オン', off: 'オフ', minFan: '最低番数', bots: 'CPUの強さ',
+  players: '人数', sanma: '3人（三麻）', redFives: '赤ドラ', on: 'オン', off: 'オフ', minFan: '最低番数', casualFan: '0・カジュアル（どんな手でも和了可）', bots: 'CPUの強さ',
   easy: '簡単', normal: '普通', hard: '強い', rulesRef: 'ルール説明', 'ind.open': 'この対局のルールを開く', 'ind.tiles': '{n}枚', 'ind.minFan': '最低{n}飜', 'ind.aka': '赤ドラ', 'ind.noAka': '赤なし', 'ind.sanma': '三人麻雀', 'ind.sichuan': '換三張・定缺', close: '閉じる',
   nickname: 'ニックネーム', yourName: 'あなたの名前', joinRoomTitle: '部屋に参加', joinRoom: '部屋に参加', backMenu: 'メニューへ戻る',
   invited: '麻雀に招待されました。ニックネームを入力して席に着いてください。空席はCPUが担当します。',

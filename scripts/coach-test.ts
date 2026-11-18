@@ -56,7 +56,7 @@ function play(rule: RuleId, players: 3 | 4) {
   ok(`${rule}/${players}p: a match played only on coach advice finished (${guard} steps)`, !!t.game && t.game.phase === 'over' && guard < 30000)
   ok(`${rule}/${players}p: the integrity audit stayed clean`, t.auditProblems.length === 0, t.auditProblems.join(' | '))
 }
-for (let i = 0; i < 3; i++) for (const [rule, pl] of [['taiwan', 4], ['hk', 4], ['riichi', 4], ['riichi', 3], ['mcr', 4]] as [RuleId, 3 | 4][]) play(rule, pl)
+for (let i = 0; i < 3; i++) for (const [rule, pl] of [['taiwan', 4], ['hk', 4], ['hk', 3], ['riichi', 4], ['riichi', 3], ['mcr', 4]] as [RuleId, 3 | 4][]) play(rule, pl)
 console.log(`${suggestions} suggestions checked, ${followed} followed`)
 console.log(fails ? `\n${fails} FAILED` : '\ncoach suggestions are always legal')
 process.exit(fails ? 1 : 0)

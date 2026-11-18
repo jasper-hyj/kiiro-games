@@ -28,6 +28,7 @@ const D: Record<string, [string, string]> = {
   redFives: ['Red fives', '赤牌'],
   on: ['On', '開'], off: ['Off', '關'],
   minFan: ['Minimum fan', '最低番數'],
+  casualFan: ['0 · casual (any hand wins)', '0 · 休閒（任何牌型都能胡）'],
   bots: ['Bots', '電腦強度'], easy: ['Easy', '簡單'], normal: ['Normal', '普通'], hard: ['Hard', '困難'],
   rulesRef: ['Rules reference', '規則說明'],
   'ind.open': ['Open the rules for this game', '開啟本局規則'],

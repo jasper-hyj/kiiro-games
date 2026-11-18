@@ -78,7 +78,7 @@ export class Table {
     this.fitSlots(); this.renameBots()
   }
 
-  private get wantPlayers(): 3 | 4 { return this.config.rule === 'riichi' && this.config.players === 3 ? 3 : 4 }
+  private get wantPlayers(): 3 | 4 { return (this.config.rule === 'riichi' || this.config.rule === 'hk') && this.config.players === 3 ? 3 : 4 }
   private fitSlots() {
     const n = this.wantPlayers
     while (this.slots.length < n) this.slots.push({ id: null, name: '', connected: false, bot: false })
@@ -179,7 +179,7 @@ export class Table {
     if (clean.rule && clean.rule !== this.config.rule && clean.minFan === undefined) next.minFan = clean.rule === 'mcr' ? 8 : clean.rule === 'hk' ? 3 : next.minFan
     if (next.rule === 'taiwan' && next.rounds === 2) next.rounds = 4
     if (next.rule !== 'taiwan' && next.rounds === 4) next.rounds = 2
-    if (next.rule !== 'riichi') next.players = 4
+    if (next.rule !== 'riichi' && next.rule !== 'hk') next.players = 4
     if (next.players === 3 && this.slots.filter((x) => x.id).length > 3) return
     this.config = next
     this.fitSlots()

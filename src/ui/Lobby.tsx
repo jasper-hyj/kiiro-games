@@ -52,7 +52,7 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
           <Seg disabled={readOnly} value={config.rounds as number} onPick={(n) => onChange({ rounds: n as 1 | 2 | 4 })}
             items={tw ? [[1, t('eastRound')], [4, t('fullGame')]] : [[1, t('eastOnly')], [2, t('eastSouth')]]} />
         </div>
-        {config.rule === 'riichi' && (
+        {(config.rule === 'riichi' || config.rule === 'hk') && (
           <div className="opt"><span>{t('players')}</span>
             <Seg disabled={readOnly} value={config.players ?? 4} onPick={(n) => onChange({ players: n as 3 | 4 })} items={[[4, '4'], [3, t('sanma')]]} />
           </div>
@@ -70,7 +70,7 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
         {(config.rule === 'hk' || config.rule === 'mcr') && (
           <div className="opt"><span>{t('minFan')}</span>
             <select disabled={readOnly} value={config.minFan} onChange={(e) => onChange({ minFan: +e.target.value })}>
-              {(config.rule === 'mcr' ? [0, 4, 6, 8] : [0, 1, 2, 3, 4, 5]).map((n) => <option key={n} value={n}>{n}</option>)}
+              {(config.rule === 'mcr' ? [0, 4, 6, 8] : [0, 1, 2, 3, 4, 5]).map((n) => <option key={n} value={n}>{n === 0 && config.rule === 'hk' ? t('casualFan') : n}</option>)}
             </select>
           </div>
         )}
@@ -188,6 +188,7 @@ function summary(c: RoomConfig, t: (k: string) => string): string {
   const len = c.rule === 'taiwan' ? (c.rounds === 4 ? t('fullGame') : t('eastRound')) : (c.rounds === 2 ? t('eastSouth') : t('eastOnly'))
   const parts = [len]
   if (c.rule === 'riichi') parts.push(c.players === 3 ? t('sanma') : '4P', c.aka ? t('redFives') : '')
+  if (c.rule === 'hk' && c.players === 3) parts.push(t('sanma'))
   if (c.rule === 'hk' || c.rule === 'mcr') parts.push(`${t('minFan')} ${c.minFan}`)
   if (c.rule === 'sichuan') parts.push(c.swap !== false ? t('swapOpt') : '')
   parts.push(`${t('bots')}: ${t(c.botLevel ?? 'normal')}`)

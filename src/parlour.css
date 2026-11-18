@@ -1178,3 +1178,18 @@ button.rule[data-rule] .glyph, button.rule[data-rule].on .glyph { background: no
 /* the table */
 html[data-rule] .board .cgrid { box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.35); }
 html[data-rule] .handrow.mine { box-shadow: none; }
+
+/* MOTION: tile slides into the river, winning tile lifts, podium rises, home fades in */
+@keyframes river-in { from { opacity: 0; transform: translateY(-26px) scale(1.18); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+.pond .pondin > .tile, .pond .pondin > .sw { animation: river-in .32s cubic-bezier(.2,.8,.25,1); }
+@keyframes win-lift { 0% { transform: translateY(0); } 45% { transform: translateY(-14px) scale(1.12); } 100% { transform: translateY(-6px) scale(1.05); } }
+.modal .tile.hot { animation: win-lift .7s .25s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes pd-rise { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: none; } }
+.podium .pd { animation: pd-rise .6s cubic-bezier(.2,.8,.25,1) both; }
+.podium .pd.p3 { animation-delay: .05s; } .podium .pd.p2 { animation-delay: .25s; } .podium .pd.p1 { animation-delay: .5s; }
+.podium .pd.p4 { animation-delay: 0s; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.stepbox .rulestrip > span, .stepbox .playrow, .stepbox .linkrow { animation: fade-up .5s cubic-bezier(.2,.8,.25,1) both; }
+.rulestrip > span:nth-child(1) { animation-delay: .10s; } .rulestrip > span:nth-child(2) { animation-delay: .17s; } .rulestrip > span:nth-child(3) { animation-delay: .24s; }
+.rulestrip > span:nth-child(4) { animation-delay: .31s; } .rulestrip > span:nth-child(5) { animation-delay: .38s; }
+.stepbox .playrow { animation-delay: .45s; } .stepbox .linkrow { animation-delay: .55s; }

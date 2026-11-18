@@ -31,7 +31,7 @@ function checkReaction(g: Game, seat: number, from: number, tile: number) {
   for (const use of r.chi) {
     chiOffered++
     if ((from + 1) % g.n !== seat) fail(`chi offered to seat ${seat} from seat ${from} (not the player on the left)`)
-    if (g.sanma || g.sichuan) fail('chi offered in a ruleset without chi')
+    if ((g.sanma && g.isRiichi) || g.sichuan) fail('chi offered in a ruleset without chi')
     if (k >= 27) fail('chi offered on an honor tile')
     const kinds = [kindOf(use[0]), kindOf(use[1]), k].sort((a, b) => a - b)
     if (!(kinds[1] === kinds[0] + 1 && kinds[2] === kinds[1] + 1)) fail(`chi with a non-sequence ${kinds.join(',')}`)
@@ -41,7 +41,7 @@ function checkReaction(g: Game, seat: number, from: number, tile: number) {
   }
   // every possible run is offered when it exists, and none otherwise
   if (g.reactionKind === 'chankan') { /* robbing a kan: only ron is offered, never a chi or pon */ }
-  else if (!g.sanma && !g.sichuan && (from + 1) % g.n === seat && k < 27 && g.wall.length > 0 && !p.riichi) {
+  else if (!(g.sanma && g.isRiichi) && !g.sichuan && (from + 1) % g.n === seat && k < 27 && g.wall.length > 0 && !p.riichi) {
     const n = numOf(k)
     const has = (kk: number) => kk >= 0 && kk < 27 && suitOf(kk) === suitOf(k) && c[kk] > 0
     let want = 0
@@ -154,7 +154,7 @@ function playGame(rule: RuleId, players: 3 | 4, callBias: number): void {
 }
 
 const N = Number(process.argv[2] ?? 80)
-const rules: [RuleId, 3 | 4][] = [['taiwan', 4], ['hk', 4], ['riichi', 4], ['riichi', 3], ['mcr', 4], ['sichuan', 4]]
+const rules: [RuleId, 3 | 4][] = [['taiwan', 4], ['hk', 4], ['hk', 3], ['riichi', 4], ['riichi', 3], ['mcr', 4], ['sichuan', 4]]
 for (const [rule, pl] of rules) for (let i = 0; i < N; i++) playGame(rule, pl, i % 2 ? 0.9 : 0.3)
 console.log(`checked ${checkedReactions} reactions (${ponOffered} pon, ${chiOffered} chi, ${kanOffered} kan offers), ${checkedTurns} turns, ${rejected} illegal attempts refused`)
 console.log(bad ? `\n${bad} PROBLEMS` : '\nall call checks passed')

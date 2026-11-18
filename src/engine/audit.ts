@@ -13,7 +13,7 @@ export function auditGame(g: Game): string[] {
     for (const m of p.melds) ids.push(...m.tiles)
     for (const d of p.discards) if (!d.called) ids.push(d.tile)
   }
-  const expected = g.sichuan ? 108 : g.rule.flowers ? 144 : g.sanma ? 108 : 136
+  const expected = g.sichuan ? 108 : g.rule.flowers ? (g.sanma ? 116 : 144) : g.sanma ? 108 : 136
   if (g.phase !== 'over') {
     if (new Set(ids).size !== ids.length) e('a tile appears twice')
     if (ids.length !== expected) e(`tile count ${ids.length} (expected ${expected})`)
@@ -43,7 +43,7 @@ export function auditGame(g: Game): string[] {
       if (m.type === 'chi') {
         const s = [...ks].sort((a, b) => a - b)
         if (m.tiles.length !== 3 || s[0] >= 27 || suitOf(s[0]) !== suitOf(s[2]) || s[1] !== s[0] + 1 || s[2] !== s[1] + 1) e(`seat ${p.seat} has an illegal chi`)
-        if (g.sanma || g.sichuan) e('chi in a ruleset without chi')
+        if ((g.sanma && g.isRiichi) || g.sichuan) e('chi in a ruleset without chi')
       } else if (m.type === 'pon') {
         if (m.tiles.length !== 3 || new Set(ks).size !== 1) e(`seat ${p.seat} has an illegal pon`)
       } else if (m.tiles.length !== 4 || new Set(ks).size !== 1) e(`seat ${p.seat} has an illegal kan (${m.type})`)
@@ -55,7 +55,7 @@ export function auditGame(g: Game): string[] {
   }
 
   // 4. points are conserved
-  const start = g.sanma ? 35000 : g.rule.startPoints
+  const start = g.sanma && g.isRiichi ? 35000 : g.rule.startPoints
   const sum = g.players.reduce((a, p) => a + p.points, 0) + g.sticks * 1000
   if (sum !== start * g.n) e(`points not conserved (${sum} vs ${start * g.n})`)
   if (g.players.some((p) => !Number.isInteger(p.points))) e('non-integer points')

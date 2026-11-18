@@ -23,7 +23,7 @@ function inv(t: Table): string[] {
     for (const d of p.discards) if (!d.called) ids.push(d.tile)
   }
   ids.push(...g.wall, ...g.dead, ...g.doraPool, ...g.uraPool)
-  const expected = g.rule.id === 'sichuan' ? 108 : g.rule.flowers ? 144 : g.sanma ? 108 : 136
+  const expected = g.rule.id === 'sichuan' ? 108 : g.rule.flowers ? (g.sanma ? 116 : 144) : g.sanma ? 108 : 136
   if (new Set(ids).size !== ids.length) errs.push('duplicate tile ids on the table')
   if (ids.length !== expected && g.phase !== 'over') errs.push(`tile count ${ids.length} != ${expected}`)
   // 2. hand sizes
@@ -37,7 +37,7 @@ function inv(t: Table): string[] {
     }
   }
   // 3. points conserved
-  const start = g.sanma ? 35000 : g.rule.startPoints
+  const start = g.sanma && g.isRiichi ? 35000 : g.rule.startPoints
   const sum = g.players.reduce((a, p) => a + p.points, 0) + g.sticks * 1000
   if (sum !== start * g.n) errs.push(`points not conserved: ${sum} vs ${start * g.n}`)
   if (g.players.some((p) => !Number.isInteger(p.points))) errs.push('non-integer points')

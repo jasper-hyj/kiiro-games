@@ -109,6 +109,7 @@ const DATA: Record<TabId, Data> = {
       ['13 tiles from a 144-tile set with 8 flowers (flowers are set aside and replaced). Minimum 3 fan to win (adjustable in the options).', '每人 13 張，共 144 張牌含 8 張花牌（摸到花牌補牌）。預設最低 3 番起胡（可在選項調整）。'],
       ['Fan → points: 3 fan = 8, 4 = 16, 5 = 24, 6 = 32, 7 = 48, 8 = 64, 9 = 96, 10+ = 128 (limit). Self-draw: each opponent pays the value. Discard win: the discarder pays double.', '番數換算：3 番 = 8，4 = 16，5 = 24，6 = 32，7 = 48，8 = 64，9 = 96，10 番以上 = 128（滿番）。自摸三家各付；放槍者付雙倍。'],
       ['Collecting all 8 flowers wins immediately (8 fan).', '集齊 8 張花牌直接胡（8 番）。'],
+      ['Three players (option): the characters 2–8 are removed (116 tiles), everything else is the same. Set the minimum to 0 for a casual game where any complete hand wins.', '三人模式（選項）：拿掉 2–8 萬（共 116 張），其餘規則不變。把最低番數設為 0 即為休閒玩法：任何完整牌型都能胡。'],
     ],
     sections: [
       { title: ['Fan', '番數'], rows: [

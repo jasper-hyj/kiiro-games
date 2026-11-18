@@ -102,10 +102,10 @@ export class Game {
     this.rule = RULESETS[ruleId]
     this.opts = opts
     this.n = names.length
-    this.sanma = this.n === 3 && ruleId === 'riichi'
+    this.sanma = this.n === 3 && (ruleId === 'riichi' || ruleId === 'hk') // 3 players: 2m-8m removed
     this.dealer = opts.fixedDealer ? 0 : Math.floor(Math.random() * this.n) // the first East is random
     this.players = names.map((name, seat) => ({
-      seat, name, points: this.sanma ? 35000 : this.rule.startPoints, hand: [], drawn: null, melds: [], discards: [], flowers: [],
+      seat, name, points: this.sanma && ruleId === 'riichi' ? 35000 : this.rule.startPoints, hand: [], drawn: null, melds: [], discards: [], flowers: [],
       riichi: false, doubleRiichi: false, ippatsu: false, riichiPending: false, nuki: [], tempFuriten: false, permFuriten: false, voidSuit: null, out: false, swapTiles: null, swapIn: [],
     }))
     this.startHand()
@@ -346,7 +346,7 @@ export class Game {
       const voidIds = p.hand.filter((i) => suitOf(kindOf(i)) === p.voidSuit)
       if (voidIds.length) o.discard = voidIds // the given-up suit has to go first
     }
-    if (this.sanma && this.wall.length > 0 && p.hand.some((i) => kindOf(i) === 30) && (!p.riichi || (p.drawn !== null && kindOf(p.drawn) === 30))) o.nuki = true
+    if (this.sanma && this.isRiichi && this.wall.length > 0 && p.hand.some((i) => kindOf(i) === 30) && (!p.riichi || (p.drawn !== null && kindOf(p.drawn) === 30))) o.nuki = true
     if (this.afterCall) {
       if (this.kuikae.length) {
         const ok = o.discard.filter((i) => !this.kuikae.includes(kindOf(i)))
@@ -512,7 +512,7 @@ export class Game {
     const cnt = this.handCounts(p)
     if (cnt[k] >= 2) o.pon = true
     if (cnt[k] >= 3 && this.kanCount < 4) o.minkan = true
-    if (!this.sichuan && !this.sanma && seat === (from + 1) % this.n && suitOf(k) < 3) {
+    if (!this.sichuan && !(this.sanma && this.isRiichi) && seat === (from + 1) % this.n && suitOf(k) < 3) {
       const n = numOf(k)
       const pick = (kk: number) => Math.max(...p.hand.filter((i) => kindOf(i) === kk))
       const has = (kk: number) => cnt[kk] > 0

@@ -100,6 +100,7 @@ export const RULES_JA: Record<string, string> = {
   "13 tiles from a 144-tile set with 8 flowers (flowers are set aside and replaced). Minimum 3 fan to win (adjustable in the options).": "13枚、花牌8枚入りの144枚（花は別に置いて補充）。最低3翻でアガリ（オプションで変更可）。",
   "Fan → points: 3 fan = 8, 4 = 16, 5 = 24, 6 = 32, 7 = 48, 8 = 64, 9 = 96, 10+ = 128 (limit). Self-draw: each opponent pays the value. Discard win: the discarder pays double.": "翻→点数：3翻＝8、4＝16、5＝24、6＝32、7＝48、8＝64、9＝96、10以上＝128（上限）。ツモは各家がその点を支払い、ロンは放銃者が2倍を支払います。",
   "Collecting all 8 flowers wins immediately (8 fan).": "花牌8枚をそろえるとその場でアガリ（8翻）。",
+  "Three players (option): the characters 2–8 are removed (116 tiles), everything else is the same. Set the minimum to 0 for a casual game where any complete hand wins.": "3人モード（オプション）：2〜8萬を除いた116枚で、他は同じ。最低翻数を0にすると、どんな完成形でもアガリになるカジュアル戦です。",
   "Fan": "翻",
   "Common Hand": "平胡",
   "1 — all sequences, non-honor pair": "1 — 全て順子で雀頭が数牌",

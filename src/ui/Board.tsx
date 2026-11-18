@@ -240,7 +240,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const ruleLabel = lang === 'zh' ? { taiwan: '台灣麻將', hk: '香港麻雀', riichi: '日本麻雀', mcr: '國標麻將', sichuan: '四川麻將' }[ruleId] : lang === 'ja' ? t(ruleId + '.name') : v.rule.name
   const ruleDetail =
     ruleId === 'taiwan' ? t('ind.tiles', { n: 16 }) :
-    ruleId === 'hk' ? t('ind.minFan', { n: view.config.minFan }) :
+    ruleId === 'hk' ? (sanma ? t('ind.sanma') + ' · ' : '') + t('ind.minFan', { n: view.config.minFan }) :
     ruleId === 'mcr' ? t('ind.minFan', { n: view.config.minFan }) :
     ruleId === 'riichi' ? (sanma ? t('ind.sanma') : view.config.aka ? t('ind.aka') : t('ind.noAka')) : t('ind.sichuan')
   const roundName = t('roundName', { wind: t('wind.' + v.roundWind), n: (v.roundIndex % n) + 1 })
