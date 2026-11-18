@@ -935,7 +935,6 @@ button.rule .muted { font-size: 12px; line-height: 1.3; }
 [data-rule='mcr'] { --rc: #a48bff; --rc-ink: #12082b; }
 [data-rule='sichuan'] { --rc: #46d1f0; --rc-ink: #04202a; }
 button.rule[data-rule] { border-color: color-mix(in srgb, var(--rc) 40%, rgba(170,186,214,.2)); background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 16%, #18213e), rgba(8,11,24,.96)); overflow: hidden; }
-button.rule[data-rule]::before { content: ''; position: absolute; left: 12px; right: 12px; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: var(--rc); }
 button.rule[data-rule] .glyph, button.rule[data-rule].on .glyph { background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 70%, #fff), var(--rc)); -webkit-background-clip: text; background-clip: text; }
 button.rule[data-rule]:hover:not(:disabled) { border-color: var(--rc); }
 button.rule[data-rule].on { border-color: var(--rc); box-shadow: 0 0 0 2px var(--rc), 0 12px 28px -10px var(--rc); }
@@ -953,3 +952,229 @@ html[data-rule] .statusbar.mine { background: linear-gradient(180deg, color-mix(
 html[data-rule] .handrow.mine { border-color: color-mix(in srgb, var(--rc) 70%, transparent); box-shadow: 0 0 34px -10px var(--rc); }
 html[data-rule] .handbar .calltimer { background: var(--rc); color: var(--rc-ink); }
 html[data-rule] .extag { background: var(--rc); color: var(--rc-ink); }
+
+/* =====================================================================
+   SCREEN REDESIGN (home, rules, options, name, lobby) — follows the approved screen studies
+   ===================================================================== */
+button.rule .tags { flex: none; width: 100%; display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 4px; margin-top: 4px; }
+button.rule .tags .tg { font-size: 11.5px; line-height: 1; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.09); color: rgba(236,240,250,.75); }
+button.rule .tags .tg.rec { font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--rc-ink); background: var(--rc); }
+.rulehelp { text-align: center; max-width: 52ch; margin: 14px auto 0; font-size: 14px; }
+.rulestrip { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 2px; }
+.rulestrip span { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px 0 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--rc) 55%, transparent); background: color-mix(in srgb, var(--rc) 14%, #0b1230); }
+.rulestrip b { font: 400 20px/1 var(--glyph); color: var(--rc); }
+.rulestrip .rn { font-size: 13.5px; font-weight: 600; color: #eef2fa; }
+.summarycard { display: grid; gap: 2px; padding: 12px 16px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--rc) 50%, transparent); background: color-mix(in srgb, var(--rc) 12%, #0b1230); text-align: left; margin: 12px 0; }
+.summarycard b { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--rc); }
+.summarycard span { color: rgba(236,240,250,.85); font-size: 15px; }
+.seatpreview { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 6px; }
+.seatpreview span { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px 0 6px; border-radius: 999px; border: 1px solid rgba(170,186,214,.3); background: rgba(8,12,28,.7); font-size: 14px; font-weight: 600; color: rgba(236,240,250,.85); }
+.seatpreview span b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 400 14px var(--glyph); background: #eef2fa; color: #0a0f1f; }
+.seatpreview span.me { border-color: color-mix(in srgb, var(--rc) 70%, transparent); background: color-mix(in srgb, var(--rc) 16%, #0b1230); }
+
+/* lobby */
+.lobby .roomhead { text-align: center; }
+.lobby .bigroom { font-size: clamp(54px, 13vw, 92px); letter-spacing: .2em; padding-left: .2em; text-shadow: 0 0 36px color-mix(in srgb, var(--rc) 35%, transparent); }
+.seatcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 760px; }
+.seatcard { border-radius: 16px; border: 1px solid rgba(170,186,214,.25); background: rgba(8,12,30,.7); padding: 14px; display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.seatcard .wind { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 400 17px var(--glyph); background: #eef2fa; color: #0a0f1f; }
+.seatcard b { font-size: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seatcard.you { border-color: color-mix(in srgb, var(--rc) 65%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 16%, transparent), rgba(8,12,30,.7)); }
+.seatcard.open { border-style: dashed; color: rgba(236,240,250,.6); }
+.seatcard .badge { font-size: 11px; font-weight: 800; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.1); color: rgba(236,240,250,.75); text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seatcard .badge.ac { background: var(--rc); color: var(--rc-ink); }
+@media (max-width: 640px) { .seatcards { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 760px) and (min-height: 560px) {
+  .shelf.narrow:has(.options.flat) { max-width: 760px; width: 100%; }
+  .shelf .optgrid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .shelf .opt { flex-direction: column; align-items: flex-start; padding: 14px 16px; border: 1px solid rgba(170,186,214,.25); border-radius: 14px; background: rgba(8,12,30,.55); gap: 10px; text-align: left; }
+  .shelf .opt > span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: rgba(236,240,250,.6); }
+}
+.rulebanner .glyph { color: var(--rc); background: none; -webkit-text-fill-color: var(--rc); }
+button.rule[data-rule] .muted { flex: none; }
+button.rule[data-rule] { align-content: flex-start; justify-content: flex-start; }
+
+/* =====================================================================
+   RESULT, GAME OVER, REVIEW — from the approved screen studies
+   ===================================================================== */
+.modal .winbanner { background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 22%, transparent), transparent); border: 1px solid color-mix(in srgb, var(--rc) 55%, transparent); box-shadow: none; }
+.modal .winbanner.mine { background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 34%, transparent), color-mix(in srgb, var(--rc) 6%, transparent)); border-color: var(--rc); box-shadow: 0 0 36px -12px var(--rc); }
+.modal .winbanner.draw { background: rgba(255,255,255,.05); border-color: rgba(170,186,214,.3); }
+.modal .winbanner .wbicon, .modal .winbanner.mine .wbicon { background: var(--rc); color: var(--rc-ink); }
+.modal .winbanner.draw .wbicon { background: rgba(255,255,255,.15); color: #eef2fa; }
+.modal .limit { color: var(--rc); font-size: clamp(28px, 6vw, 40px); letter-spacing: .04em; }
+.modal .howscored { background: rgba(8,12,30,.55); border-color: color-mix(in srgb, var(--rc) 35%, rgba(170,186,214,.22)); border-radius: 16px; }
+.modal .yaku > div:nth-child(odd) { font-weight: 600; }
+.modal .yaku > div:nth-child(even) { color: var(--rc); font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+.modal .hstotal b { color: var(--rc); font-family: var(--serif); font-size: 26px; font-weight: 400; }
+.modal .deltas { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.modal .deltas > div { border-radius: 14px; border: 1px solid rgba(170,186,214,.22); background: rgba(8,12,30,.55); padding: 10px 12px; font-variant-numeric: tabular-nums; }
+.modal .deltas .pos { color: #7fe0a8; font-weight: 700; } .modal .deltas .neg { color: #ff8a9b; font-weight: 700; }
+/* game over */
+.overhead { text-align: center; display: grid; gap: 4px; margin-bottom: 12px; }
+.overhead h2 { font-size: clamp(26px, 5.5vw, 40px); }
+.podium { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: end; margin: 6px 0 16px; }
+.podium .pd { border-radius: 16px 16px 6px 6px; border: 1px solid rgba(170,186,214,.25); padding: 14px 8px; display: grid; gap: 4px; justify-items: center; text-align: center; background: linear-gradient(180deg, rgba(24,35,77,.9), rgba(10,15,38,.9)); min-width: 0; }
+.podium .pd b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; }
+.podium .rk { font: 400 34px/1 var(--serif); color: rgba(236,240,250,.8); }
+.podium .pp { font-variant-numeric: tabular-nums; font-weight: 700; color: rgba(236,240,250,.85); }
+.podium .pyou { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.podium .p1 { min-height: 168px; border-color: var(--rc); background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 22%, transparent), rgba(10,15,38,.9)); box-shadow: 0 0 34px -14px var(--rc); }
+.podium .p1 .rk, .podium .p1 .pp { color: var(--rc); }
+.podium .p2 { min-height: 138px; } .podium .p3 { min-height: 112px; } .podium .p4 { min-height: 90px; }
+.podium .pd.me { outline: 2px solid rgba(255,255,255,.35); outline-offset: 2px; }
+@media (max-width: 560px), (max-height: 520px) { .podium { grid-template-columns: 1fr 1fr; } .podium .pd { min-height: 0 !important; } }
+
+.rp-ctl input[type=range] { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 8px; background: rgba(255,255,255,.14); accent-color: var(--rc); }
+.rp-ctl input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 4px solid var(--rc); box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.rp-ctl input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 4px solid var(--rc); }
+.rp-row { border-radius: 16px; background: rgba(8,12,30,.55); border-color: rgba(170,186,214,.22); }
+.rp-row.on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 10%, rgba(8,12,30,.6)); }
+
+/* short content sits in the middle of the screen; long content still scrolls from the top */
+.page.lobby, .page.joinpage { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
+.page.lobby > :first-child, .page.joinpage > :first-child { margin-top: auto; }
+.page.lobby > :last-child, .page.joinpage > :last-child { margin-bottom: auto; }
+.page.lobby > * { max-width: 820px; width: 100%; }
+.modal > .row, .modal .lobbyactions { justify-content: center; }
+.handbar:not(.acting):not(:has(.hint)) .statusbar { grid-column: 2; justify-self: center; }
+@media (max-height: 800px) { .page.lobby { gap: 12px; padding-top: 60px; padding-bottom: 20px; } .lobby .bigroom { font-size: clamp(44px, 9vw, 64px); } .lobby .rulebanner { padding: 10px 18px; } .lobby .rulebanner .glyph { font-size: 44px; width: 56px; } .lobby .rbname { font-size: 28px; } .lobby .seatsnote { margin: 0; } }
+
+/* =====================================================================
+   RULE CARDS: one relative scale. Everything inside is in em, and the grid's font-size follows the viewport width,
+   so the cards look the same on a phone, a tablet and a desktop. Content stacks from the top: no stretched gaps.
+   ===================================================================== */
+.grid3 { font-size: clamp(11px, 1.5vw, 18px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5em), 1fr)); grid-auto-rows: 1fr; gap: .75em; width: 100%; max-width: 78em; margin-inline: auto; align-items: stretch; }
+.grid3 button.rule[data-rule] { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; flex-wrap: nowrap; gap: .35em; min-height: 0; height: 100%; padding: 1.1em 1em 1em; border-radius: 1.1em; text-align: left; }
+.grid3 button.rule[data-rule] .glyph { font-size: 2.7em; line-height: 1; width: auto; text-align: left; flex: none; }
+.grid3 button.rule[data-rule] .zh { font-size: 1.3em; line-height: 1.15; flex: none; }
+.grid3 button.rule[data-rule] .muted { font-size: .82em; line-height: 1.35; flex: none; }
+.grid3 button.rule[data-rule] .tags { margin-top: auto; padding-top: .4em; gap: .3em; }
+.grid3 button.rule[data-rule] .tags .tg { font-size: .76em; padding: .35em .7em; }
+@media (max-width: 700px) { .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: clamp(11px, 3.4vw, 15px); } }
+@media (max-width: 700px) and (orientation: landscape) { .grid3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5em), 1fr)); font-size: clamp(10px, 1.45vw, 14px); } }
+.rulehelp { font-size: clamp(12px, 1.3vw, 15px); }
+/* seat cards and the podium use the same relative scale */
+.seatcards { font-size: clamp(11px, 1.4vw, 16px); gap: .8em; }
+.seatcard { padding: .9em; border-radius: 1em; gap: .4em; }
+.seatcard .wind { width: 2.1em; height: 2.1em; font-size: 1.05em; }
+.seatcard b { font-size: 1em; }
+.seatcard .badge { font-size: .7em; }
+.podium { font-size: clamp(11px, 1.5vw, 16px); }
+.podium .pd b { font-size: 1.05em; } .podium .rk { font-size: 2.1em; }
+
+/* step dots sit in the page flow under the content (they used to float over it) */
+.stepdots { position: static; margin: 22px auto 0; pointer-events: none; }
+.page.menu { padding-bottom: 28px; }
+@media (max-width: 900px) { .stepdots { margin-top: 12px; } }
+/* five equal cards in one row from tablet width up; two columns (last one full width) on narrow screens */
+.page.menu { max-width: 1280px; }
+.shelf:has(.grid3) { width: min(96vw, 1180px); max-width: none; }
+@media (min-width: 701px) { .grid3 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 700px) and (orientation: landscape) { .grid3 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 700px) and (orientation: portrait) { .grid3 > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
+
+/* no overlaps: icon-only top buttons on narrow screens, and room for the floating bar above tall pages */
+.page.menu { padding-top: 72px; }
+@media (max-width: 560px) { .rulesfab .fablabel { display: none; } .rulesfab { min-width: 40px; padding-inline: 10px; } .floatbar { gap: 6px; } }
+button.rule[data-rule] .glyph { line-height: 1.12; }
+.grid3 button.rule[data-rule] { gap: .4em; }
+
+/* lobby: rules and options are always in view (no drop-down) */
+.tablesettings.always { width: 100%; display: grid; gap: 14px; padding: 16px 0 0; border: 0; background: none; }
+.tablesettings.always .eyebrow { text-align: center; margin: 0; }
+.tablesettings.always .grid3 { font-size: clamp(10px, 1.2vw, 14px); }
+.tablesettings.always .optgrid { grid-template-columns: repeat(auto-fit, minmax(14em, 1fr)); font-size: clamp(12px, 1.3vw, 15px); }
+.tablesettings.always .opt { flex-direction: column; align-items: flex-start; padding: .9em 1em; border: 1px solid rgba(170,186,214,.25); border-radius: 1em; background: rgba(8,12,30,.55); gap: .6em; }
+.tablesettings.always .opt > span { font-size: .8em; letter-spacing: .1em; text-transform: uppercase; color: rgba(236,240,250,.6); }
+.page.lobby > .tablesettings.always { max-width: 1100px; }
+
+/* corner buttons (rule chip top left, menu button top right) never sit on the player chips */
+.board .seat.right, .board .seat.left { padding-top: calc(58px / var(--s)); box-sizing: border-box; }
+.board .seat.right .chip, .board .seat.left .chip { position: relative; }
+.app:has(.connbadge.down) .page { padding-top: 120px; }
+.connbadge { top: 60px !important; max-width: min(92vw, 520px); }
+
+.rulechip span { min-width: 0; flex: 0 1 auto; }
+.rulechip b { flex: none; }
+.rulechip { overflow: hidden; }
+
+/* in-game menu: always inside the screen, above the hand strip, scrolls by itself when the screen is short */
+.gamecol > .dock { z-index: 60; }
+.gamecol > .dock .dockpanel { max-height: calc(100dvh - 76px - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+
+/* guide: header and footer stay put, only the lesson scrolls, so nothing is ever hidden under the buttons */
+.modal.guide { display: flex; flex-direction: column; overflow: hidden; max-height: min(92dvh, 760px); }
+.modal.guide .gbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.modal.guide .gnav { position: static; flex: none; margin: 10px -4px -2px; }
+body:has(.connbadge.down) .page.lobby { padding-top: 150px; }
+
+@media (max-width: 480px) { body:has(.connbadge.down) .page.lobby { padding-top: 200px; } }
+button.rule[data-rule] .glyph { margin-bottom: .12em; }
+
+
+/* =====================================================================
+   MATTE AND QUIET
+   Flat, slightly translucent surfaces with hairline borders. No gloss gradients, no glow, no thick coloured banners.
+   (Last block on purpose: it overrides the earlier, shinier treatments.)
+   ===================================================================== */
+:root { --hair: rgba(170,186,214,.22); --hair2: rgba(170,186,214,.38); --matte: #0f1731; --matte2: #141d3d; }
+
+/* connection notice: a slim bar with a small status dot */
+.connbadge.down, .connbadge.up { background: var(--matte); border: 1px solid var(--hair2); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.4); padding: 8px 14px; gap: 10px; font-size: 14px; color: #eef2fa; }
+.connbadge.down b { font-weight: 600; letter-spacing: 0; }
+.connbadge.down .muted { color: rgba(236,240,250,.6); }
+.connbadge.down .spin { width: 10px; height: 10px; border: 0; background: #f0b33e; animation: connpulse 1.4s ease-in-out infinite; }
+.connbadge.up { display: flex; align-items: center; }
+.connbadge .cdot { box-shadow: none; }
+.connbadge.slow .cdot { box-shadow: none; }
+@keyframes connpulse { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .connbadge.down .spin { animation: none; } }
+.toast { background: var(--matte); border: 1px solid var(--hair2); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.4); padding: 10px 18px; }
+
+/* buttons */
+.btn { background: var(--matte2); border: 1px solid var(--hair2); box-shadow: none; text-shadow: none; }
+.btn:hover:not(:disabled) { background: #1b2650; border-color: rgba(226,234,248,.5); }
+.btn.alt { background: transparent; }
+.btn.felt { background: #243a82; border-color: rgba(140,170,240,.4); box-shadow: none; }
+.btn.felt:hover:not(:disabled) { background: #2b4596; }
+.btn.gold, html[data-rule] .btn.gold { background: var(--rc); color: var(--rc-ink); border-color: transparent; box-shadow: none; }
+.btn.gold:hover:not(:disabled), html[data-rule] .btn.gold:hover:not(:disabled) { background: color-mix(in srgb, var(--rc) 86%, #fff); border-color: transparent; }
+.cbtn { box-shadow: none; border: 1px solid var(--hair2); }
+.cbtn.call { background: #1f3270; } .cbtn.call:hover { background: #28418c; }
+.cbtn.ron { background: #b3283f; border-color: transparent; } .cbtn.ron:hover { background: #c4304a; }
+.cbtn.pass { background: #1a2038; } .cbtn.pass:hover { background: #232b4a; }
+.sw, .dockpanel .knob { box-shadow: none; }
+.dockpanel input:checked + .knob, .switch input:checked + .knob { background: var(--rc, #4f8cff); box-shadow: none; }
+.dock summary { box-shadow: none; background: var(--matte2); border: 1px solid var(--hair2); }
+.dock[open] summary { background: var(--rc, #3a63d6); border-color: transparent; }
+.dockpanel { background: var(--matte); border: 1px solid var(--hair2); box-shadow: 0 12px 32px rgba(0,0,0,.45); }
+
+/* chips, pills, tags, cards */
+.chip, .rulechip, .seatpreview span, .rulestrip span { box-shadow: none; }
+.rulechip { background: var(--matte); }
+.statusbar.mine, html[data-rule] .statusbar.mine { background: var(--rc, #aab6d2); color: var(--rc-ink, #0a0f1f); box-shadow: none; }
+.handbar .calltimer, html[data-rule] .handbar .calltimer { background: transparent; color: var(--rc); border: 1px solid var(--rc); box-shadow: none; }
+button.rule[data-rule] { background: color-mix(in srgb, var(--rc) 8%, var(--matte)); border-color: color-mix(in srgb, var(--rc) 34%, transparent); box-shadow: none; }
+button.rule[data-rule].on { border-color: var(--rc); box-shadow: inset 0 0 0 1px var(--rc); background: color-mix(in srgb, var(--rc) 13%, var(--matte)); }
+button.rule[data-rule]:hover:not(:disabled) { transform: none; background: color-mix(in srgb, var(--rc) 12%, var(--matte)); }
+button.rule[data-rule] .glyph, button.rule[data-rule].on .glyph { background: none; -webkit-text-fill-color: var(--rc); color: var(--rc); }
+.seatcard, .summarycard, .modal .deltas > div, .modal .howscored, .podium .pd, .exa, .gpic, .rp-row { box-shadow: none; background: rgba(10,15,36,.6); }
+.seatcard.you, .podium .p1, .rp-row.on { background: color-mix(in srgb, var(--rc) 10%, var(--matte)); box-shadow: none; }
+.podium .p1 { border-color: var(--rc); }
+.rulebanner { background: var(--matte2); border: 1px solid var(--hair2); box-shadow: none; }
+.rulebanner .glyph { background: none; -webkit-text-fill-color: var(--rc); color: var(--rc); }
+.lobby .bigroom, .roomcode { text-shadow: none; }
+.stepdots i.on { background: var(--rc, #aab6d2); }
+
+/* modals */
+.overlay { background: rgba(4,6,16,.72); }
+.modal { background: var(--matte); border: 1px solid var(--hair2); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
+.modal .winbanner, .modal .winbanner.mine { background: color-mix(in srgb, var(--rc) 10%, transparent); border: 1px solid color-mix(in srgb, var(--rc) 50%, transparent); box-shadow: none; }
+.modal .winbanner .wbicon, .modal .winbanner.mine .wbicon { background: transparent; color: var(--rc); border: 1.5px solid var(--rc); }
+.gnav { background: var(--matte); }
+.gstep.on { background: var(--rc, #aab6d2); color: var(--rc-ink, #0a0f1f); }
+
+/* the table */
+html[data-rule] .board .cgrid { box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.35); }
+html[data-rule] .handrow.mine { box-shadow: none; }

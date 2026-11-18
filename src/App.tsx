@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Status } from './net/client'
 import type { ClientMsg } from './net/protocol'
@@ -15,7 +15,7 @@ import { RotatePrompt } from './ui/RotatePrompt'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
-const makeCode = () => String(Math.floor(Math.random() * 900000) + 100000) // six digits, never starts with 0
+const makeCode = () => String(Math.floor(Math.random() * 9000) + 1000) // four digits, never starts with 0
 
 export default function App() {
   const { lang, setLang, t } = useLang()
@@ -26,9 +26,15 @@ export default function App() {
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
+  // bots are named "Bot 1…" by the engine; show them in the player's language
+  const shown = useMemo(() => {
+    if (!view) return view
+    const loc = (n: string) => { const m = /^Bot (\d+)$/.exec(n); return m ? t('botName', { n: m[1] }) : n }
+    return { ...view, seats: view.seats.map((x) => ({ ...x, name: loc(x.name) })), game: view.game ? { ...view.game, players: view.game.players.map((p) => ({ ...p, name: loc(p.name) })), standings: view.game.standings?.map((x) => ({ ...x, name: loc(x.name) })) } : view.game } as typeof view
+  }, [view, t])
   // the page takes the accent colour of the game being set up or played (see the [data-rule] block in parlour.css)
   useEffect(() => { document.documentElement.dataset.rule = (view?.config.rule ?? config.rule) as string }, [view?.config.rule, config.rule])
-  const [room, setRoom] = useState<string | null>(null)
+  const [room, setRoom] = useState<string | null>(() => (new URLSearchParams(location.search).get('stress') === 'lobby' ? '482913' : null))
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
   const [joinError, setJoinError] = useState('')
@@ -102,8 +108,8 @@ export default function App() {
         {!playing && (
           <div className="floatbar">
             {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}
-            <button className="rulesfab" onClick={() => setGuideOpen(true)}><span aria-hidden="true">🎓</span> {t('guideBtn')}</button>
-            <button className="rulesfab" onClick={() => setRulesOpen(true)}><span aria-hidden="true">📖</span> {t('rulesRef')}</button>
+            <button className="rulesfab" onClick={() => setGuideOpen(true)}><span aria-hidden="true">🎓</span><span className="fablabel"> {t('guideBtn')}</span></button>
+            <button className="rulesfab" onClick={() => setRulesOpen(true)}><span aria-hidden="true">📖</span><span className="fablabel"> {t('rulesRef')}</span></button>
             <div className="seg langsw">
               <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
@@ -140,8 +146,8 @@ export default function App() {
           </div>
         )}
         {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
-        {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <><Board room={room} status={status} view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /><RotatePrompt /></>}
+        {active && shown && !playing && room && <RoomLobby view={shown} room={room} send={send} onLeave={leave} />}
+        {active && shown && playing && <><Board room={room} status={status} view={shown} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /><RotatePrompt /></>}
       </div>
     </AkaCtx.Provider>
   )

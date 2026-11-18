@@ -60,8 +60,15 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
   if (over) {
     return (
       createPortal(<div className="overlay"><div className="modal">
-        <h2>{t('gameOver')}</h2>
-        <ol className="standings">{v.standings.map((s) => <li key={s.seat}><b>{s.name}</b> — {s.points} {t('pts')} {s.seat === you && `(${t('you')})`}</li>)}</ol>
+        <div className="overhead"><span className="eyebrow">{t('finalStandings')}</span><h2>{t('tableWinner', { name: v.standings[0]?.name ?? '' })}</h2></div>
+        <div className="podium">{v.standings.map((s, i) => (
+          <div key={s.seat} className={'pd p' + (i + 1) + (s.seat === you ? ' me' : '')}>
+            <span className="rk">{i + 1}</span>
+            <b>{s.name}</b>
+            <span className="pp">{s.points.toLocaleString()} {t('pts')}</span>
+            {s.seat === you && <span className="pyou">{t('you')}</span>}
+          </div>
+        ))}</div>
         <div className="row">
           {view.host && <button className="btn gold" onClick={() => send({ t: 'lobby' })}>{t('backLobby')}</button>}
           <button className="btn" onClick={() => setReview(true)}>{t('reviewHands')}</button>

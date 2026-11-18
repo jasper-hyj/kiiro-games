@@ -43,11 +43,13 @@ export function Guide({ onClose, onPractice }: { onClose: () => void; onPractice
             <button key={k} role="tab" aria-selected={k === i} className={'gstep' + (k === i ? ' on' : k < i ? ' done' : '')} onClick={() => setI(k)} title={l.title[L]}>{k + 1}</button>
           ))}
         </div>
+        <div className="gbody">
         <div className="muted small">{t('guideLesson', { n: i + 1, total: LESSONS.length })}</div>
         <h3 className="gtitle">{lesson.title[L]}</h3>
         {lesson.text.map((p, k) => <p key={k} className="gtext">{p[L]}</p>)}
         {lesson.pics?.map((pic, k) => <Picture key={k} pic={pic} L={L} />)}
         {lesson.tip && <div className="gtip"><b>{t('guideTip')}</b> {lesson.tip[L]}</div>}
+        </div>
         <div className="gnav">
           <button className="btn alt" disabled={i === 0} onClick={() => setI(i - 1)}>{t('guidePrev')}</button>
           {last

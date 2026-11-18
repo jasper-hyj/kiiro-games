@@ -3,6 +3,11 @@ import type { Meld } from '../engine/game'
 
 /** Fabricated worst-case table for layout testing: ?stress=full (max tiles) | min (empty ponds) | call (full + every action button). */
 export function stressView(mode: string, players = 4, rule = 'taiwan'): TableView {
+  if (mode === 'lobby') {
+    // the waiting room, for screenshots: ?stress=lobby&rule=hk
+    return { status: 'lobby', config: { rule: rule as TableView['config']['rule'], aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }, game: null, you: 0, host: true,
+      seats: [{ name: 'Jun', human: true, connected: true, bot: false }, { name: 'Mei', human: true, connected: true, bot: false }, { name: 'Bot 1', human: false, connected: true, bot: true }, { name: 'Bot 2', human: false, connected: true, bot: true }] } as unknown as TableView
+  }
   const jp = rule === 'riichi'
   const sc = rule === 'sichuan' || mode === 'swap' || mode === 'void'
   const pickPhase = mode === 'swap' || mode === 'void' ? mode : null

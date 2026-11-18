@@ -1,6 +1,11 @@
 /** Japanese UI strings. Any key missing here falls back to English. */
 export const JA: Record<string, string> = {
   brand: 'Kiiro 麻雀',
+  'tg.t16': '16枚', 'tg.t13': '13枚', 'tg.t108': '108枚', 'tg.flowers': '花牌', 'tg.tai': '台数計算', 'tg.min3': '最低3翻', 'tg.min8': '最低8点', 'tg.yaku': '役', 'tg.dora': 'ドラ', 'tg.riichi': 'リーチ', 'tg.fan81': '81種の番', 'tg.swap': '三枚交換', 'tg.blood': '血戦到底',
+  beginnerPick: '初心者におすすめ', ruleHelp: 'どれにするか迷ったら？ルール説明には全てのルールに例があり、「遊び方」で基本が学べます。',
+  botName: 'CPU {n}',
+  tableWinner: '{name}が卓を制しました', finalStandings: '最終順位',
+  seatYouHost: 'あなた・ホスト', seatYou: 'あなた', seatJoined: '参加済み', seatOpen: '空席', seatBotFills: '誰も来なければCPUが座ります', seatBot: 'CPU', summaryTitle: 'まとめ', seatPreview: '座席', tableHeadline: '席につきましょう。卓の準備はできています。',
   guideBtn: '遊び方', guidePrev: '前のレッスン', guideNext: '次のレッスン', guidePractice: '練習対局をはじめる', guideLesson: 'レッスン {n} / {total}', guideTip: 'ポイント',
   leave: '退出', details: '詳細', 
   replay: '対局の振り返り', reviewHands: '振り返る', replayStart: '最初へ', replayPrev: '前へ', replayNext: '次へ',

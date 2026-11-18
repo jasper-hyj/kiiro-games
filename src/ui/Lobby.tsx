@@ -6,6 +6,8 @@ import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
 import { Tile } from './Tile'
 
+const TAGS: Record<RuleId, string[]> = { taiwan: ['tg.t16', 'tg.flowers', 'tg.tai'], hk: ['tg.t13', 'tg.min3', 'tg.flowers'], riichi: ['tg.yaku', 'tg.dora', 'tg.riichi'], mcr: ['tg.fan81', 'tg.min8'], sichuan: ['tg.t108', 'tg.swap', 'tg.blood'] } as Record<RuleId, string[]>
+const WINDS = ['東', '南', '西', '北']
 const IDS: RuleId[] = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
 const GLYPH: Record<RuleId, string> = { taiwan: '台', hk: '港', riichi: '日', mcr: '國', sichuan: '川' } as Record<RuleId, string>
 type Change = (c: Partial<RoomConfig>) => void
@@ -22,6 +24,7 @@ export function RuleCards({ config, onChange, readOnly }: { config: RoomConfig; 
             <span className="glyph" aria-hidden="true">{GLYPH[id]}</span>
             <span className="zh">{lang === 'zh' ? r.zh : t(id + '.name')}</span>
             <span className="muted small">{t(id + '.blurb')}</span>
+            <span className="tags">{TAGS[id].map((k) => <span className="tg" key={k}>{t(k)}</span>)}</span>
           </button>
         )
       })}
@@ -116,6 +119,9 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
               <h1 className="title"><span className="cjk">麻雀</span><span className="latin">{t('brand')}</span></h1>
               <p className="tagline">{t('tagline')}</p>
             </header>
+            <div className="rulestrip" aria-hidden="true">
+              {IDS.map((id) => <span key={id} data-rule={id}><b>{GLYPH[id]}</b><span className="rn">{ruleName(id, t)}</span></span>)}
+            </div>
             <div className="playrow">
               <button className="btn gold big" onClick={() => go('friends')} disabled={!onlineConfigured}>{t('playFriends')}</button>
               <button className="btn felt big" onClick={() => go('bots')}>{t('playBots')}</button>
@@ -132,33 +138,41 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
             <h2 className="eyebrow">{t('chooseRules')}</h2>
             <div className="grid3">
               {IDS.map((id) => (
-                <button key={id} type="button" className={'rule' + (config.rule === id ? ' on' : '')} onClick={() => pickRule(id)}>
+                <button key={id} type="button" data-rule={id} className={'rule' + (config.rule === id ? ' on' : '')} onClick={() => pickRule(id)}>
                   <span className="glyph" aria-hidden="true">{GLYPH[id]}</span>
                   <span className="zh">{RULESETS[id] ? ruleName(id, t) : id}</span>
                   <span className="muted small">{t(id + '.blurb')}</span>
+                  <span className="tags">{TAGS[id].map((k) => <span className="tg" key={k}>{t(k)}</span>)}</span>
                 </button>
               ))}
             </div>
+            <p className="rulehelp muted">{t('ruleHelp')}</p>
           </section>
         )}
         {step === 'options' && (
           <section className="shelf narrow">
             <h2 className="eyebrow">{t('options')}</h2>
             <Options config={config} onChange={change} flat />
+            <div className="summarycard" data-rule={config.rule}><b>{t('summaryTitle')}</b><span>{ruleName(config.rule, t)} · {summary(config, t)}</span></div>
             <button className="btn gold big" onClick={next}>{t('continue')}</button>
           </section>
         )}
         {step === 'code' && (
           <section className="shelf narrow">
             <h2 className="eyebrow">{t('roomCode')}</h2>
-            <input className="bigcode" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoFocus placeholder="000000" value={code} maxLength={6} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6) next() }} aria-label={t('roomCode')} />
-            <button className="btn gold big" disabled={code.length !== 6} onClick={next}>{t('continue')}</button>
+            <input className="bigcode" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoFocus placeholder="0000" value={code} maxLength={4} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6) next() }} aria-label={t('roomCode')} />
+            <button className="btn gold big" disabled={code.length !== 4} onClick={next}>{t('continue')}</button>
           </section>
         )}
         {step === 'name' && (
           <section className="shelf narrow">
             <h2 className="eyebrow">{t('nickname')}</h2>
             <input className="bigname" type="text" autoFocus value={name === 'Player' ? '' : name} placeholder={t('yourName')} maxLength={16} onChange={(e) => setName(e.target.value || 'Player')} onKeyDown={(e) => { if (e.key === 'Enter') finish() }} aria-label={t('nickname')} />
+            {mode === 'bots' && (
+              <div className="seatpreview" aria-label={t('seatPreview')}>
+                {[name === 'Player' ? t('you') : name, t('botName', { n: 1 }), t('botName', { n: 2 }), t('botName', { n: 3 })].map((n, i) => <span key={i} className={i === 0 ? 'me' : ''}><b>{WINDS[i]}</b>{n}</span>)}
+              </div>
+            )}
             <button className="btn gold big" onClick={finish}>{mode === 'friends' ? t('createRoom') : mode === 'bots' ? t('startGame') : t('joinRoom')}</button>
           </section>
         )}
@@ -196,11 +210,12 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
           <button className="btn" onClick={copy}>{copied ? t('copied') : t('inviteLink')}</button>
         </div>
       </div>
-      <div className="seatlist">
+      <div className="seatcards">
         {view.seats.map((s, i) => (
-          <div className={'seatbox' + (s.human ? ' here' : '')} key={i}>
-            <span className={'status-dot' + (s.human ? ' open' : '')} />{s.name}{i === view.you ? ` (${t('you')})` : ''}
-            <div className="muted" style={{ fontSize: 12 }}>{s.human ? t('human') : t('botSeat')}</div>
+          <div className={'seatcard' + (i === view.you ? ' you' : '') + (s.human ? '' : ' open')} key={i}>
+            <span className="wind">{WINDS[i] ?? ''}</span>
+            <b>{s.human ? s.name : t('seatOpen')}</b>
+            <span className={'badge' + (i === view.you ? ' ac' : '')}>{i === view.you ? (view.host ? t('seatYouHost') : t('seatYou')) : s.human ? t('seatJoined') : `${t('seatBot')} · ${s.name}`}</span>
           </div>
         ))}
       </div>
@@ -213,15 +228,15 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
           <span className="muted small">{summary(view.config, t)}</span>
         </div>
       </div>
-      <details className="tablesettings">
-        <summary>{view.host ? t('changeRules') : t('hostDecides')}</summary>
-        <RuleCards config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
-        <Options flat config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
-      </details>
       <div className="row lobbyactions">
         {view.host ? <button className="btn gold big" onClick={() => send({ t: 'start' })}>{t('startGame')}</button> : <span className="muted">{t('waitHost')}</span>}
         <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
       </div>
+      <section className="tablesettings always">
+        <h2 className="eyebrow">{view.host ? t('changeRules') : t('hostDecides')}</h2>
+        <RuleCards config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
+        <Options flat config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
+      </section>
     </div>
   )
 }
