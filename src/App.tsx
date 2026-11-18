@@ -101,6 +101,7 @@ export default function App() {
             <div className="seg langsw">
               <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+              <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
             </div>
           </div>
         )}

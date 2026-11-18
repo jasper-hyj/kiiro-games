@@ -1,6 +1,7 @@
 import { Game, type Replay, type HistoryEntry, type Decision, type HandResult, type Meld, type ReactionOptions, type TurnAction, type TurnOptions } from './game'
 import type { GameOptions } from './rules/types'
 import type { RuleId } from './rules'
+import { auditGame } from './audit'
 import { botReact, botSwap, botTurn, botVoid } from './bot'
 import { kindOf } from './tiles'
 
@@ -38,6 +39,7 @@ export interface TableView {
     standings: { seat: number; name: string; points: number }[]
     hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean } | null
     history: HistoryEntry[]
+    audit: { ok: boolean; checks: number; problems: string[] }
     replays?: Replay[]
     chat: { n: number; seat: number; key: string; ago: number }[]
     log: string[]
@@ -110,7 +112,21 @@ export class Table {
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   /** Seats nobody holds are always played by bots, named Bot 1, Bot 2, ... in seat order. */
   private renameBots() { let n = 0; for (const s of this.slots) { if (!s.id) { n++; s.name = `Bot ${n}` } } }
-  private emit() { this.renameBots(); this.listeners.forEach((f) => f()) }
+  /** problems found by the integrity audit after the latest move (empty = every rule check passed) */
+  auditProblems: string[] = []
+  auditRuns = 0
+  private lastAuditKey = ''
+  private runAudit() {
+    const g = this.game
+    if (!g || this.status !== 'playing') { this.auditProblems = []; return }
+    const key = `${g.handNo}:${g.phase}:${g.turn}:${g.wall.length}:${g.players.reduce((a, p) => a + p.hand.length + p.melds.length * 7 + p.discards.length * 13, 0)}`
+    if (key === this.lastAuditKey) return
+    this.lastAuditKey = key
+    this.auditRuns++
+    this.auditProblems = auditGame(g)
+    if (this.auditProblems.length) console.error('[audit] rule check failed:', this.auditProblems.join(' | '))
+  }
+  private emit() { this.renameBots(); this.runAudit(); this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
   /** A dropped player keeps their seat for `graceMs` (short network blips don't hand the game to a bot). */
   graceMs = 8000
@@ -406,6 +422,7 @@ export class Table {
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g).includes(you) : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
+      audit: { ok: this.auditProblems.length === 0, checks: this.auditRuns, problems: this.auditProblems.slice(0, 3) },
       replays: g.phase === 'over' ? g.replays : undefined,
       chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),
       rule: { id: g.rule.id, name: g.rule.name, nSets: g.rule.nSets },

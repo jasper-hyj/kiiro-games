@@ -14,7 +14,7 @@ async function play(engine: string, rule: string) {
   const page = await ctx.newPage()
   const errors: string[] = []
   page.on('pageerror', (e: Error) => errors.push(String(e).slice(0, 160)))
-  await page.addInitScript(() => { try { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-auto', JSON.stringify({ win: true, discard: false, skip: false })) } catch { /* ignore */ } })
+  await page.addInitScript(() => { try { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: false })) } catch { /* ignore */ } })
   await page.goto(`${BASE}/?solo=1&rule=${rule}&speed=0.02`, { waitUntil: 'networkidle' })
   await page.waitForSelector('.handrow .tile', { timeout: 15000 })
   const t0 = Date.now()

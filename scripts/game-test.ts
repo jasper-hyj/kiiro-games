@@ -33,7 +33,7 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
   await p.evaluateOnNewDocument((l) => {
     try {
       localStorage.setItem('kiiro-lang', l)
-      localStorage.setItem('kiiro-auto', JSON.stringify({ win: true, discard: false, skip: false }))
+      localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: false }))
     } catch { /* ignore */ }
   }, lang)
   const errors: string[] = []

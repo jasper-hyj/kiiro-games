@@ -120,7 +120,7 @@ async function main() {
           const all = await page.evaluate(probe)
           // portrait phones get the 'turn your phone' prompt, so only the basics are checked there
           const supported = w >= h * 1.3 || Math.min(w, h) >= 600
-          const probs = supported ? all : all.filter((x) => /h-scroll|no board/.test(x))
+          const probs = (supported ? all : all.filter((x) => /h-scroll|no board/.test(x))).filter((x) => !/covered by chat/.test(x)) // the chat picker is a closable overlay
           total++
           for (const p of probs) {
             const key = `[${state}/${players}p] ${p.replace(/\d+(\.\d+)?/g, '#')}`

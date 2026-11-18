@@ -13,6 +13,7 @@ import { Stage } from './Stage'
 import { ChatPicker, EMOJI, HistoryModal, ShortcutsModal } from './Panels'
 
 const WINDS: Record<'en' | 'zh', string[]> = { en: ['E', 'S', 'W', 'N'], zh: ['東', '南', '西', '北'] }
+const wk = (l: string): 'en' | 'zh' => (l === 'en' ? 'en' : 'zh')
 
 function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number }) {
   if (m.type === 'ankan') {
@@ -50,11 +51,11 @@ function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game'
   return (
     <div className={'chip' + (turn ? ' turn' : '') + (p.human && !p.connected ? ' away' : '') + (isWinner ? ' winner' : '')}>
       {bubble && <span className="bubble">{bubble}</span>}
-      <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[lang][p.seatWind]}</span>
+      <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[wk(lang)][p.seatWind]}</span>
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
       {p.riichi && <span className="riichi-stick" title={t('riichi')} />}
-      {p.voidSuit !== null && p.voidSuit !== undefined && <span className="voidtag" title={t('voidTip')}>{lang === 'zh' ? '缺' : '✕'}{'萬筒索'[p.voidSuit]}</span>}
+      {p.voidSuit !== null && p.voidSuit !== undefined && <span className="voidtag" title={t('voidTip')}>{lang === 'zh' ? '缺' : lang === 'ja' ? '欠' : '✕'}{'萬筒索'[p.voidSuit]}</span>}
       {p.out && <span className="wintag">{t('won')} {p.winOrder}</span>}
     </div>
   )
@@ -64,7 +65,7 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
   const { lang } = useLang()
   return (
     <div className={`pond p${rel}`}>
-      <span className={'pondtag' + (p.seat === v.dealer ? ' dealer' : '') + (v.phase === 'turn' ? (v.turn === p.seat ? ' on' : '') : v.phase === 'reaction' && v.waiting.includes(p.seat) ? ' on' : '')}>{WINDS[lang][p.seatWind]} {p.name}</span>
+      <span className={'pondtag' + (p.seat === v.dealer ? ' dealer' : '') + (v.phase === 'turn' ? (v.turn === p.seat ? ' on' : '') : v.phase === 'reaction' && v.waiting.includes(p.seat) ? ' on' : '')}>{WINDS[wk(lang)][p.seatWind]} {p.name}</span>
       <div className="pondin">
         {p.discards.map((d, i) => {
           const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
@@ -261,8 +262,9 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       <summary aria-label={t('auto')}><span className="burger" aria-hidden="true"><i /><i /><i /></span></summary>
       <div className="dockpanel">
         {room && <div className="dockroom"><span className={'status-dot ' + (conn ?? '')} />{t('room')} <b>{room}</b></div>}
-        <div className="dockrulename">{lang === 'zh' ? { taiwan: '台灣麻將', hk: '香港麻雀', riichi: '日本麻雀', mcr: '國標麻將', sichuan: '四川麻將' }[ruleId] : v.rule.name}</div>
+        <div className="dockrulename">{lang === 'zh' ? { taiwan: '台灣麻將', hk: '香港麻雀', riichi: '日本麻雀', mcr: '國標麻將', sichuan: '四川麻將' }[ruleId] : lang === 'ja' ? t(ruleId + '.name') : v.rule.name}</div>
         <button className="menuitem rulesbtn" onClick={() => { setPanel('rules'); closeDock() }}>{t('rulesRef')}</button>
+        <div className={'auditline' + (v.audit.ok ? ' ok' : ' bad')} title={v.audit.problems.join('\n')}>{v.audit.ok ? t('auditOk', { n: v.audit.checks }) : t('auditBad')}</div>
         <div className="dockrule" />
         <div className="dockgroup">{t('auto')}</div>
         {([['sort', 'autoSort', auto.sort], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
@@ -279,6 +281,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <div className="seg langsw">
           <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+              <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
         </div>
         <button className="btn alt leavebtn" onClick={onLeave}>{t('leave')}</button>
       </div>
@@ -321,6 +324,13 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     rest.splice(idx, 0, id)
     if (rest.join() !== ids.join()) { orderRef.current.ids = rest; setOrderTick((n) => n + 1) }
   }
+  // selecting a tile lights up every tile of that kind on the table (hand, rivers, melds)
+  const hlKind = sel !== null ? kindOf(sel) : swapSel.length ? kindOf(swapSel[swapSel.length - 1]) : null
+  useEffect(() => {
+    document.querySelectorAll('.tile.hl').forEach((e) => e.classList.remove('hl'))
+    if (hlKind === null) return
+    document.querySelectorAll<HTMLElement>(`.gamecol .tile[data-kind="${hlKind}"]`).forEach((e) => e.classList.add('hl'))
+  })
   const barRef = useRef<HTMLDivElement>(null)
   const [barW, setBarW] = useState(0)
   useEffect(() => {
@@ -368,14 +378,14 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         )}
         <div className="info">
-          {dirs.map(([name, r]) => <span key={name} className={`cw cw-${name}` + (dirOn(r) ? ' on' : '')}>{WINDS[lang][rel(r).seatWind]}</span>)}
+          {dirs.map(([name, r]) => <span key={name} className={`cw cw-${name}` + (dirOn(r) ? ' on' : '') + (rel(r).seat === v.dealer ? ' east' : '')}><b>{WINDS[lang === 'en' ? 'en' : 'zh'][rel(r).seatWind]}</b></span>)}
           <div className="rnd">{roundName}</div>
-          <div className="muted">{[
+          <div className="infolines">{[
             `${t('wall')} ${v.wallLeft}`,
-            ruleId === 'riichi' && v.honba > 0 ? `${t('honba')} ${v.honba}` : '',
-            ruleId === 'riichi' && v.sticks > 0 ? `${t('sticks')} ${v.sticks}` : '',
-            ruleId !== 'riichi' && v.lian > 0 ? `${t('streak')} ×${v.lian}` : '',
-          ].filter(Boolean).join(' · ')}</div>
+            ruleId === 'riichi' && v.honba > 0 ? t('honbaShort', { n: v.honba }) : '',
+            ruleId === 'riichi' && v.sticks > 0 ? t('sticksShort', { n: v.sticks }) : '',
+            ruleId !== 'riichi' && v.lian > 0 ? t('streakShort', { n: v.lian }) : '',
+          ].filter(Boolean).map((x) => <div key={x} className="muted">{x}</div>)}</div>
         </div>
         <Pond p={rel(1)} v={v} rel={1} />
         <Pond p={me} v={v} rel={0} />

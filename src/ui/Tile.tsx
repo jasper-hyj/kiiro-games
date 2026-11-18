@@ -163,7 +163,7 @@ export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected,
     onPointerCancel: () => { start.current = null },
   } : {}
   return (
-    <div className={cls} onClick={(e) => { if (flicked.current) { flicked.current = false; e.stopPropagation(); return } onClick?.() }} title={title} {...flick}>
+    <div className={cls} data-kind={back ? undefined : k} onClick={(e) => { if (flicked.current) { flicked.current = false; e.stopPropagation(); return } onClick?.() }} title={title} {...flick}>
       {!back && <Face kind={k} red={red} />}
       {red && <span className="aka-dot" />}
       {!back && dora ? <span className="dora-badge" aria-hidden="true">★{dora > 1 ? dora : ''}</span> : null}

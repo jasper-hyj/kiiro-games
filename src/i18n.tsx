@@ -1,12 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { JA } from './i18n.ja'
 
-export type Lang = 'en' | 'zh'
+export type Lang = 'en' | 'zh' | 'ja'
 
 // key: [English, 繁體中文]
 const D: Record<string, [string, string]> = {
   brand: ['Kiiro Mahjong', 'Kiiro 麻將'],
   leave: ['Leave', '離開'],
-  details: ['Details', '詳細內容'], settings: ['Settings', '設定'], reduceMotion: ['Reduce motion', '減少動態'], flatPonds: ['Upright discards', '棄牌不旋轉'], largeText: ['Larger text', '放大文字'], replay: ['Hand review', '牌局回顧'], reviewHands: ['Review hands', '回顧牌局'], replayStart: ['First step', '第一步'], replayPrev: ['Previous', '上一步'], replayNext: ['Next', '下一步'], back: ['Back', '返回'], continue: ['Continue', '繼續'], chooseRules: ['Choose your rules', '選擇規則'], createRoom: ['Create room', '建立房間'],
+  details: ['Details', '詳細內容'], settings: ['Settings', '設定'], reduceMotion: ['Reduce motion', '減少動態'], flatPonds: ['Upright rivers (easier to read)', '棄牌河正向（較好閱讀）'], largeText: ['Larger text', '放大文字'], replay: ['Hand review', '牌局回顧'], reviewHands: ['Review hands', '回顧牌局'], replayStart: ['First step', '第一步'], replayPrev: ['Previous', '上一步'], replayNext: ['Next', '下一步'], back: ['Back', '返回'], continue: ['Continue', '繼續'], chooseRules: ['Choose your rules', '選擇規則'], createRoom: ['Create room', '建立房間'],
   room: ['Room', '房間'],
   connecting: ['Connecting…', '連線中…'],
   connLost: ['Connection lost. Trying to reconnect…', '連線中斷，重新連線中…'],
@@ -61,6 +62,8 @@ const D: Record<string, [string, string]> = {
   rotateTitle: ['Turn your phone sideways', '請把手機橫放'], rotateBody: ['Mahjong is played in landscape so the tiles are big enough to read and tap.', '麻將需要橫向遊玩，牌才夠大、看得清楚也好點。'], rotateAnyway: ['Play in portrait anyway', '仍要直向遊玩'],
   connBack: ['Reconnected — you are back in the game', '已重新連線，你回到牌局了'], playerDropped: ['{name} disconnected — a bot covers the seat', '{name} 斷線了，由電腦暫代'], playerBack: ['{name} is back', '{name} 回來了'],
   autoSort: ['Organise my hand', '自動整理手牌'], autoSortTip: ['Keep the hand sorted. Off: new tiles stay at the end', '保持手牌排序；關閉後新牌留在最右邊'],
+  streakShort: ['Streak {n}', '連莊 {n}'], sticksShort: ['Sticks {n}', '供託 {n}'], honbaShort: ['Honba {n}', '本場 {n}'],
+  auditOk: ['✓ Rules check passed ({n} moves verified)', '✓ 規則檢查通過（已驗證 {n} 步）'], auditBad: ['⚠ Rules check found a problem — please report it', '⚠ 規則檢查發現問題，請回報'],
   swapOpt: ['Swap three tiles', '換三張'],
   scWins: ['Winners', '胡牌'], scFirst: ['1st', '第 1 位'], scNone: ['Nobody won — the wall ran out', '流局，沒有人胡牌'],
   'taiwan.blurb': ['16 tiles · 8 flowers · tai scoring · dealer streaks', '16 張 · 8 張花牌 · 台數計分 · 連莊拉莊'],
@@ -172,22 +175,23 @@ const C = createContext<Ctx>({ lang: 'en', setLang: () => {}, t: (k) => k })
 const detect = (): Lang => {
   try {
     const q = new URLSearchParams(location.search).get('lang')
-    if (q === 'en' || q === 'zh') return q
+    if (q === 'en' || q === 'zh' || q === 'ja') return q
     const saved = localStorage.getItem('kiiro-lang')
-    if (saved === 'en' || saved === 'zh') return saved
+    if (saved === 'en' || saved === 'zh' || saved === 'ja') return saved
   } catch { /* ignore */ }
-  return typeof navigator !== 'undefined' && /^zh/i.test(navigator.language) ? 'zh' : 'en'
+  const nl = typeof navigator !== 'undefined' ? navigator.language : ''
+  return /^zh/i.test(nl) ? 'zh' : /^ja/i.test(nl) ? 'ja' : 'en'
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detect)
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('kiiro-lang', l) } catch { /* ignore */ } }
-  useEffect(() => { document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en'; document.title = lang === 'zh' ? 'Kiiro 麻將' : 'Kiiro Mahjong' }, [lang])
+  useEffect(() => { document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : lang === 'ja' ? 'ja' : 'en'; document.title = lang === 'zh' ? 'Kiiro 麻將' : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang])
   const value = useMemo<Ctx>(() => ({
     lang, setLang,
     t: (k, vars) => {
       const e = D[k]
-      let s = e ? e[lang === 'zh' ? 1 : 0] : k
+      let s = lang === 'ja' ? JA[k] ?? (e ? e[0] : k) : e ? e[lang === 'zh' ? 1 : 0] : k
       if (vars) for (const [a, b] of Object.entries(vars)) s = s.replace(`{${a}}`, String(b))
       return s
     },
@@ -197,4 +201,4 @@ export function LangProvider({ children }: { children: ReactNode }) {
 export const useLang = () => useContext(C)
 
 /** Pick the display name of a scoring item for the current language. */
-export const yakuName = (y: { name: string; zh?: string }, lang: Lang) => (lang === 'zh' ? y.zh ?? y.name : y.name)
+export const yakuName = (y: { name: string; zh?: string }, lang: Lang) => (lang !== 'en' ? y.zh ?? y.name : y.name)

@@ -293,7 +293,7 @@ kbd { background: rgba(255,255,255,.08); color: var(--ivory); border-color: rgba
 
 
 /* ---------- type: Italiana (thin high-contrast display), Zen Antique (antique mincho glyphs), LXGW WenKai TC (calligraphic Chinese), Instrument Sans (UI) ---------- */
-:root { --serif: 'Italiana', 'LXGW WenKai TC', 'Zen Antique', 'Songti TC', Georgia, serif; --glyph: 'Zen Antique', 'LXGW WenKai TC', 'Noto Serif TC', serif; --sans: 'Instrument Sans', 'LXGW WenKai TC', system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif; }
+:root { --serif: 'Italiana', 'LXGW WenKai TC', 'Zen Antique', 'Songti TC', Georgia, serif; --glyph: 'Zen Antique', 'LXGW WenKai TC', 'Noto Serif TC', serif; --sans: 'Instrument Sans', 'Hiragino Sans', 'Noto Sans JP', 'LXGW WenKai TC', system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif; }
 body { font-family: var(--sans); font-synthesis: none; }
 .hero .cjk, button.rule .glyph { font-family: var(--glyph); font-weight: 400; }
 .hero .cjk { letter-spacing: .18em; padding-left: .18em; }
@@ -640,3 +640,86 @@ body { font-size: 16px; }
 .actionpop .apbtns { max-width: calc(100vw - 48px); }
 .actionpop .callhead { display: flex; justify-content: center; }
 .chatfloat { z-index: 20; }
+
+/* =====================================================================
+   MAHJONG SOUL STYLE CENTRE: a square plate (each side shows that player's wind + score and lights up on their turn),
+   two-row rivers for the top and bottom players (12 per row) so river tiles can be large, three-row rivers beside.
+   ===================================================================== */
+.board { --fp: clamp(1, calc(.85 / var(--s)), 1.3); grid-template-rows: 88px minmax(0, 1fr); }
+.cgrid { --infoh: calc(116 * var(--fp));
+  --pt: clamp(12px, min(calc((var(--H) - 122 - var(--infoh)) / 6 * 1px), calc((var(--H) - 114) / 8.4 * 1px)), 42px); }
+.board .info { zoom: var(--fp); width: 116px; height: 116px; min-height: 0; padding: 0; border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 0; }
+.board .info .rnd { font-size: 17px; letter-spacing: .06em; }
+.board .info .muted { font-size: 11px; white-space: nowrap; }
+.board .info .cw { display: flex; align-items: baseline; gap: 4px; font-family: var(--sans); color: rgba(236,240,250,.5); }
+.board .info .cw b { font-family: var(--glyph); font-size: 14px; font-weight: 400; }
+.board .info .cw i { font-style: normal; font-size: 11px; font-variant-numeric: tabular-nums; }
+.board .info .cw.on { color: #fff; }
+.board .info .cw.east b { color: #ff9aa5; }
+.cgrid .pond.p0, .cgrid .pond.p2 { width: calc(var(--tw) * 12.4 + 12px); height: calc(var(--tw) * 3); }
+.cgrid .pond.p0 .pondin, .cgrid .pond.p2 .pondin { width: calc(var(--tw) * 12.4 + 12px); height: calc(var(--tw) * 3); }
+html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
+/* the top opponent: plate and tiles on one line */
+.board .seat.top { height: 88px; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; }
+.board .seat.top .backs { flex-wrap: nowrap; max-width: none; flex: 0 1 auto; }
+.board .seat.top .extras { flex-wrap: nowrap; --tw: 22px; }
+.board .info .infolines { display: flex; flex-direction: column; align-items: center; line-height: 1.25; }
+.board .info .rnd { margin-top: -6px; }
+/* upright rivers (the default): every river reads left to right; only the riichi tile is turned sideways */
+html[data-ponds='flat'] .cgrid { --pt: clamp(12px, calc((var(--H) - 122 - var(--infoh)) / 6 * 1px), 42px); }
+html[data-ponds='flat'] .cgrid .pond.p2 .pondin { transform: translate(-50%, -50%) !important; }
+
+/* =====================================================================
+   VISIBILITY PASS — the small corner numbers on tiles, names, plates and labels are larger and higher-contrast
+   (the tile layout itself is unchanged)
+   ===================================================================== */
+.tile { --idx: max(11px, calc(var(--tw) * .27)); }
+.tile .idx { font-weight: 900; color: #c4161c; text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 3px rgba(255,255,255,.9); }
+.tile.aka .idx { color: #b00; }
+.board .chip { font-size: 15px; font-weight: 700; border-color: rgba(226,234,248,.55); background: linear-gradient(180deg, rgba(34,46,88,.97), rgba(10,15,34,.97)); }
+.board .chip .nm { font-weight: 700; color: #fff; letter-spacing: .01em; max-width: 9em; }
+.board .chip .pts { font-weight: 800; color: #ffe9a6; font-size: 1.05em; }
+.board .chip .wind { width: 26px; height: 26px; font-size: 13px; font-weight: 800; }
+.board .chip.turn .nm, .board .chip.turn .pts { color: #1a1204; }
+.infoleft .chip { font-size: 17px; }
+.board .info .rnd { font-size: 19px; color: #fff; }
+.board .info .muted { font-size: 12.5px; color: rgba(236,240,250,.8); }
+.board .info .cw { color: rgba(236,240,250,.7); }
+.board .info .cw b { font-size: 16px; }
+.board .info .cw i { font-size: 12.5px; color: #fff; font-weight: 600; }
+.infoline .statusbar { font-weight: 600; }
+.muted { color: rgba(236,240,250,.75); }
+.handbar .hint { color: rgba(236,240,250,.9); }
+/* plate labels stay upright and readable */
+.board .info { width: 128px; height: 128px; --infoh: 128; }
+.cgrid { --infoh: calc(128 * var(--fp)); }
+.board .info .cw-top, .board .info .cw-bottom { transform: translateX(-50%); }
+.board .info .cw-left, .board .info .cw-right { flex-direction: column; align-items: center; gap: 0; line-height: 1.1; transform: translateY(-50%); }
+.board .info .cw-left { left: 6px; } .board .info .cw-right { right: 6px; }
+
+/* sideways tiles (called tile in a meld, riichi tile in a river): leave room for the thickness that turns to their left */
+.sw { margin-left: calc(var(--tw) * .26); margin-right: calc(var(--tw) * .08); }
+.sw.dbl { margin-left: calc(var(--tw) * .26); }
+
+/* simpler plate: round, wall, streak in the middle; four small winds at the edges */
+.board .info .cw i { display: none; }
+.board .info .cw-left, .board .info .cw-right { flex-direction: row; }
+.board .info .cw b { font-size: 17px; }
+.board .info .rnd { font-size: 20px; margin-top: 0; }
+.board .info .infolines .muted { font-size: 13px; }
+
+/* a little smaller rivers */
+.cgrid { --pt: clamp(11px, min(calc((var(--H) - 122 - var(--infoh)) / 6.8 * 1px), calc((var(--H) - 114) / 9.2 * 1px)), 36px); }
+html[data-ponds='flat'] .cgrid { --pt: clamp(11px, calc((var(--H) - 122 - var(--infoh)) / 6.8 * 1px), 36px); }
+
+/* same-tile highlight */
+.tile.hl { box-shadow: var(--cap), 0 0 0 3px #ffd75e, 0 0 16px 2px rgba(255,215,94,.85), var(--edge); z-index: 2; }
+.tile.hl.back, .tile.hl.dim { opacity: 1; }
+
+.cgrid .pond.p0, .cgrid .pond.p2, .cgrid .pond.p0 .pondin, .cgrid .pond.p2 .pondin { width: calc(var(--tw) * 12.8 + 12px); }
+.cgrid .pond.p1 .pondin, .cgrid .pond.p3 .pondin { width: calc(var(--tw) * 8.8 + 8px); }
+.cgrid .pond.p1, .cgrid .pond.p3 { height: calc(var(--tw) * 8.8 + 8px); }
+html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.8 + 8px); height: calc(var(--tw) * 4.5); }
+.auditline { grid-column: 1 / -1; font-size: .8em; padding: 6px 10px; border-radius: 10px; }
+.auditline.ok { color: #9be8c0; background: rgba(95,224,164,.1); border: 1px solid rgba(95,224,164,.3); }
+.auditline.bad { color: #ffd6d6; background: rgba(255,107,107,.18); border: 1px solid rgba(255,107,107,.55); }

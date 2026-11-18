@@ -2,6 +2,7 @@ import { Game, type Decision, type TurnAction } from '../src/engine/game'
 import { botTurn } from '../src/engine/bot'
 import { kindOf, numOf, suitOf } from '../src/engine/tiles'
 import type { RuleId } from '../src/engine/rules'
+import { auditGame } from '../src/engine/audit'
 
 /** Independent check of every chi / pon / kan / ron option the engine offers (and rejects) over thousands of random turns. */
 let bad = 0
@@ -99,6 +100,7 @@ function playGame(rule: RuleId, players: 3 | 4, callBias: number): void {
   let guard = 0
   while ((g.phase as string) !== 'over' && guard++ < 30000) {
     const ph = g.phase as string
+    if (ph !== 'swap' && ph !== 'void') { const a = auditGame(g); if (a.length) { fail(`${rule}: audit — ${a.slice(0, 3).join(' | ')}`); break } }
     if (ph === 'swap') { for (const p of g.players) { const suit = [0, 1, 2].find((s) => g.players[p.seat].hand.filter((i) => suitOf(kindOf(i)) === s).length >= 3) ?? 0; g.submitSwap(p.seat, g.players[p.seat].hand.filter((i) => suitOf(kindOf(i)) === suit).slice(0, 3)) } }
     else if (ph === 'void') { for (const p of g.players) g.submitVoid(p.seat, Math.floor(Math.random() * 3)) }
     else if (ph === 'turn') {

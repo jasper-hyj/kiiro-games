@@ -137,7 +137,7 @@ async function main() {
         await layout(p, `${tag} game`)
 
         if (!d.touch) {
-          await p.waitForSelector('.handrow .tile.clickable', { timeout: 30000 }) // the dealer is random now: wait for our turn
+          await p.waitForSelector('.handrow .tile.clickable', { timeout: 90000 }) // the dealer is random now: wait for our turn
           const before = await p.$$eval('.pond.p0 .tile', (e) => e.length)
           await p.keyboard.press('ArrowLeft')
           await sleep(150)
