@@ -56,6 +56,7 @@ function Chip({ p, v, bubble }: { p: PlayerView; v: NonNullable<TableView['game'
       <span className="pts">{p.points}</span>
       {p.riichi && <span className="riichi-stick" title={t('riichi')} />}
       {p.voidSuit !== null && p.voidSuit !== undefined && <span className="voidtag" title={t('voidTip')}>{lang === 'zh' ? '缺' : lang === 'ja' ? '欠' : '✕'}{'萬筒索'[p.voidSuit]}</span>}
+      {p.human && p.connected && p.idle && <span className={'idletag ' + p.idle} title={t(p.idle === 'auto' ? 'tagAutoTip' : 'tagSlowTip')}>{t(p.idle === 'auto' ? 'tagAuto' : 'tagSlow')}</span>}
       {p.out && <span className="wintag">{t('won')} {p.winOrder}</span>}
     </div>
   )
@@ -93,7 +94,7 @@ function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['g
       {(p.melds.length > 0 || p.flowers.length > 0 || p.nuki.length > 0) && (
         <div className="extras">
           {p.melds.length > 0 && <div className="melds">{p.melds.map((m, i) => <MeldView key={i} m={m} owner={p.seat} n={v.players.length} />)}</div>}
-          {(p.flowers.length > 0 || p.nuki.length > 0) && <div className="flowers">{[...p.flowers, ...p.nuki].map((f) => <Tile key={f} id={f} />)}</div>}
+          {(p.flowers.length > 0 || p.nuki.length > 0) && <div className="flowers">{[...p.flowers, ...p.nuki].map((f) => pos === 'top' ? <Tile key={f} id={f} /> : <Side key={f} ccw={pos === 'right'}><Tile id={f} /></Side>)}</div>}
         </div>
       )}
     </div>
@@ -391,6 +392,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
 
   return (
     <div className="gamecol">
+      {me.human && me.idle && v.phase !== 'over' && (
+        <div className={'idlebar ' + me.idle} role="alert">
+          <span>{t(me.idle === 'auto' ? 'idleAuto' : 'idleSlow')}</span>
+          <button className="btn gold" onClick={() => send({ t: 'here' })}>{t('imBack')}</button>
+        </div>
+      )}
       <button className="rulechip" onClick={() => setPanel('rules')} title={t('ind.open')} aria-label={t('ind.open')}>
         <b>{ruleLabel}</b><span>{ruleDetail}</span><i aria-hidden="true">i</i>
       </button>
@@ -481,7 +488,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
             {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" title={t('tip.addKan')} onMouseEnter={() => setHelp(t('tip.addKan'))} onFocus={() => setHelp(t('tip.addKan'))} onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b><span className="mini"><Tile id={id} /></span></button>)}
             {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
             </div>
-            {secs !== null && mine && <span className="calltimer">{secs}s</span>}
+            {secs !== null && mine && <span className={'calltimer' + (secs <= 8 ? ' low' : '')}>{secs}s</span>}
           </div>
         )}
         <div className="notes">

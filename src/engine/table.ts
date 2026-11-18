@@ -17,6 +17,8 @@ export interface PlayerView {
   melds: Meld[]; discards: { tile: number; riichi: boolean; called: boolean }[]; flowers: number[]
   riichi: boolean; seatWind: number; nuki: number[]
   voidSuit: number | null; out: boolean; winOrder: number; swapIn: number[]
+  /** 'slow' = a turn timed out and was played for them, 'auto' = a bot has taken over their seat for now */
+  idle?: 'slow' | 'auto'
 }
 export interface TableView {
   status: 'lobby' | 'playing'
@@ -226,6 +228,13 @@ export class Table {
     if (seat < 0 || !this.game) return
     if (this.game.submitDecision(seat, d)) { this.slots[seat].afk = 0; this.emit(); this.drive() }
   }
+  /** "I'm here": clears the idle count so the seat is played by its human again */
+  here(id: string) {
+    const seat = this.seatOf(id)
+    if (seat < 0 || !(this.slots[seat].afk ?? 0)) return
+    this.slots[seat].afk = 0
+    this.emit(); this.drive()
+  }
   chat(id: string, key: string) {
     const seat = this.seatOf(id)
     if (seat < 0 || !CHAT_KEYS.includes(key)) return
@@ -404,6 +413,7 @@ export class Table {
     const players: PlayerView[] = g.players.map((p) => ({
       seat: p.seat, name: p.name, points: p.points, human: this.slots[p.seat].id !== null,
       connected: this.slots[p.seat].connected,
+      idle: this.slots[p.seat].id === null ? undefined : (this.slots[p.seat].afk ?? 0) >= 2 ? 'auto' : (this.slots[p.seat].afk ?? 0) === 1 ? 'slow' : undefined,
       handCount: p.hand.length - (p.drawn !== null ? 1 : 0), hand: p.seat === you || over || p.out ? p.hand.filter((i) => i !== p.drawn) : null,
       drawn: p.seat === you || over ? p.drawn : null,
       melds: p.melds, discards: p.discards, flowers: p.flowers, riichi: p.riichi, seatWind: g.seatWind(p.seat), nuki: p.nuki,

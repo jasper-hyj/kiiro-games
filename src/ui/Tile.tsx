@@ -138,8 +138,8 @@ interface Props {
   className?: string
 }
 /** Rotated tile (called tile in a meld, riichi discard). `double` stacks two tiles (added kan). */
-export function Side({ children, double }: { children: ReactNode; double?: boolean }) {
-  return <span className={'sw' + (double ? ' dbl' : '')}>{children}</span>
+export function Side({ children, double, ccw }: { children: ReactNode; double?: boolean; ccw?: boolean }) {
+  return <span className={'sw' + (double ? ' dbl' : '') + (ccw ? ' ccw' : '')}>{children}</span>
 }
 
 export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected, dim, mark, riichi, hot, title, className }: Props) {

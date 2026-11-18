@@ -1193,3 +1193,46 @@ html[data-rule] .handrow.mine { box-shadow: none; }
 .rulestrip > span:nth-child(1) { animation-delay: .10s; } .rulestrip > span:nth-child(2) { animation-delay: .17s; } .rulestrip > span:nth-child(3) { animation-delay: .24s; }
 .rulestrip > span:nth-child(4) { animation-delay: .31s; } .rulestrip > span:nth-child(5) { animation-delay: .38s; }
 .stepbox .playrow { animation-delay: .45s; } .stepbox .linkrow { animation-delay: .55s; }
+
+/* NO FRAMES: a border is used only where it separates or marks the selected / focused item; everything else is fill and space */
+:root:root:root .board .cgrid, :root:root:root .board .cgrid .info, :root:root:root .dorapanel, :root:root:root .handrow.mine,
+:root:root:root .handrow, :root:root:root .board .cgrid .center { border: 0; background: none; box-shadow: none; }
+:root:root:root .handrow { border-color: transparent; }
+:root:root:root .chip:not(.turn):not(.winner), :root:root:root .board .chip:not(.turn):not(.winner), :root:root:root .infoleft .chip:not(.turn):not(.winner) { border: 0; background: rgba(255,255,255,.06); box-shadow: none; }
+:root:root:root .chip.turn, :root:root:root .chip.winner, :root:root:root .chip.away { border: 0; }
+:root:root:root .chip.away { background: rgba(255,255,255,.04); }
+:root:root:root .btn, :root:root:root .cbtn, :root:root:root .rulechip, :root:root:root .dock summary { border: 0; }
+:root:root:root .btn.alt { background: rgba(255,255,255,.07); }
+:root:root:root .btn.alt:hover:not(:disabled) { background: rgba(255,255,255,.13); }
+:root:root:root .rulestrip > span, :root:root:root .seatpreview span, :root:root:root .summarycard, :root:root:root .options, :root:root:root .seatbox,
+:root:root:root .modal, :root:root:root .winbanner, :root:root:root .dockpanel, :root:root:root .dockpanel .rulesbtn, :root:root:root .toast, :root:root:root .connbadge.down, :root:root:root .connbadge.up,
+:root:root:root .handbar .notes .callhelp, :root:root:root .podium .pd, :root:root:root button.rule { border-color: transparent; }
+:root:root:root .modal, :root:root:root .dockpanel { box-shadow: 0 24px 64px rgba(0,0,0,.6); }
+:root:root:root button.rule { background: var(--matte2); }
+:root:root:root button.rule:hover:not(:disabled) { background: #1a2550; }
+:root:root:root button.rule.on { border-color: var(--rc, rgba(226,234,248,.7)); }
+:root:root:root .seatbox.here, :root:root:root .seatpreview span.me { border-color: var(--rc, rgba(226,234,248,.5)); }
+:root:root:root .rulestrip > span, :root:root:root .seatpreview span, :root:root:root .summarycard { background: color-mix(in srgb, var(--rc, #aab6d2) 14%, #0b1230); }
+:root:root:root .options { background: rgba(255,255,255,.04); }
+
+/* TOP RIGHT: menu button, then the ruleset chip to its left, and the ping under the menu button */
+:root:root:root .rulechip { left: auto; right: calc(70px + env(safe-area-inset-right)); top: 12px; max-width: calc(100vw - 150px); }
+:root:root:root .connbadge.ok { left: auto !important; right: calc(14px + env(safe-area-inset-right)); top: calc(12px + env(safe-area-inset-top)) !important; }
+:root:root:root body:has(.dock) .connbadge.ok { top: calc(66px + env(safe-area-inset-top)) !important; }
+@media (max-height: 520px) { :root:root:root .rulechip { top: 8px; } :root:root:root body:has(.dock) .connbadge.ok { top: calc(62px + env(safe-area-inset-top)) !important; } }
+:root:root:root .meld { background: none; }
+
+/* IDLE / AFK: tags on player chips and the "are you there?" bar */
+.idletag { font-size: .78em; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: #f0b33e; color: #1a1204; }
+.idletag.auto { background: #ff7a7a; color: #2a0a0a; }
+.idlebar { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 14px; max-width: min(92vw, 640px); padding: 10px 14px 10px 18px; border-radius: 14px; background: #3a2a0a; color: #ffeccb; font: 600 15px/1.3 var(--sans); box-shadow: 0 14px 36px rgba(0,0,0,.55); animation: rise-in-x .25s ease-out; }
+.idlebar.auto { background: #4a1620; color: #ffe3e3; }
+.idlebar .btn { flex: none; min-height: 38px; padding: 4px 16px; font-size: 14px; text-transform: none; letter-spacing: 0; }
+@media (max-width: 560px), (max-height: 520px) { .idlebar { top: 58px; font-size: 13px; padding: 8px 10px 8px 12px; gap: 10px; } }
+:root:root:root .handbar .calltimer.low { color: #ff8a8a; border-color: #ff8a8a; animation: breathe 1s ease-in-out infinite; }
+
+/* flowers face their owner, like the rivers: top seat upside down, side seats on their side */
+.seat.top .flowers .tile { transform: rotate(180deg); }
+.sw.ccw .tile { transform: rotate(-90deg); }
+.seat.left .flowers, .seat.right .flowers { align-items: flex-end; }
+.seat.top .bubble { top: 50%; bottom: auto; left: calc(100% + 8px); transform: translateY(-50%); }

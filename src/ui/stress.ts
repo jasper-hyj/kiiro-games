@@ -40,6 +40,8 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
     }
   }
   const ps = Array.from({ length: players }, (_, s) => mk(s))
+  const idleQ = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('idle') : null
+  if (idleQ === 'slow' || idleQ === 'auto') { ps[0].idle = idleQ; if (ps[1]) { ps[1].human = true; ps[1].idle = idleQ === 'slow' ? 'auto' : 'slow' } }
   const lp = ps[ps.length - 1]
   const last = lp.discards.length ? { tile: lp.discards[lp.discards.length - 1].tile, from: lp.seat } : null
   return {
