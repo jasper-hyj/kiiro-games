@@ -177,6 +177,7 @@ const D: Record<string, [string, string]> = {
   tagSlow: ['slow', '太慢'], tagAuto: ['auto', '代打'],
   idleSlow: ['Still there? You ran out of time, so a tile was played for you.', '還在嗎？你超時了，系統已替你打出一張牌。'],
   idleAuto: ['You seem to be away. A bot is playing for you until you come back.', '你似乎離開了，目前由電腦代打，直到你回來。'],
+  idleTitle: ['Are you there?', '你還在嗎？'],
   imBack: ["I'm back", '我回來了'],
   tagSlowTip: ['Ran out of time; a tile was played for them', '超時，已代為出牌'], tagAutoTip: ['Away: a bot is playing for them', '離開中，由電腦代打'],
   complete: ['Complete!', '胡牌！'],

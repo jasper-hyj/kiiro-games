@@ -393,9 +393,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   return (
     <div className="gamecol">
       {me.human && me.idle && v.phase !== 'over' && (
-        <div className={'idlebar ' + me.idle} role="alert">
-          <span>{t(me.idle === 'auto' ? 'idleAuto' : 'idleSlow')}</span>
-          <button className="btn gold" onClick={() => send({ t: 'here' })}>{t('imBack')}</button>
+        <div className="overlay idleover" role="alertdialog">
+          <div className={'modal idlemodal ' + me.idle}>
+            <h2>{t('idleTitle')}</h2>
+            <p>{t(me.idle === 'auto' ? 'idleAuto' : 'idleSlow')}</p>
+            <button className="btn gold big" onClick={() => send({ t: 'here' })}>{t('imBack')}</button>
+          </div>
         </div>
       )}
       <button className="rulechip" onClick={() => setPanel('rules')} title={t('ind.open')} aria-label={t('ind.open')}>
