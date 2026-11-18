@@ -160,6 +160,8 @@ const D: Record<string, [string, string]> = {
   doraRow: ['Dora', '寶牌'],
   uraRow: ['Ura dora', '裏寶牌'],
   cantJoin: ["Can't join this room", '無法加入此房間'],
+  room_not_found: ['No room with that code. Check the four digits, or ask your friend for the code again.', '找不到這個房間。請確認四位數代碼，或請朋友再給你一次。'],
+  code_taken: ['That code is already in use. Please try again.', '這個代碼已被使用，請再試一次。'],
   room_full: ['This room is full — all four seats are taken by players.', '此房間已滿，四個座位都有玩家。'],
   bad_id: ['Your browser sent an invalid player id. Reload the page and try again.', '玩家識別碼無效，請重新整理頁面後再試。'],
   onlineOff: ['Online rooms are not set up on this site yet (the game server address is missing). Play vs bots instead.', '此網站尚未設定線上房間（缺少遊戲伺服器位址），請先選擇「對戰電腦」。'],

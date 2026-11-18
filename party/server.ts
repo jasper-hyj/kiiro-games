@@ -52,6 +52,8 @@ export class Main extends Server<Env> {
     if (m.t === 'join') {
       if (typeof m.id !== 'string' || !m.id || m.id.length > 64) return this.send(sender, { t: 'error', message: 'bad_id' })
       const id = m.id
+      const verdict = this.table.admit(id, m.create === true)
+      if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
       const seat = this.table.join(id, typeof m.name === 'string' ? m.name : 'Player')
       if (seat < 0) return this.send(sender, { t: 'error', message: 'room_full' })
       sender.setState({ id })
@@ -72,6 +74,7 @@ export class Main extends Server<Env> {
       case 'toggleBot': this.table.toggleBot(id, m.seat); break
       case 'chat': this.table.chat(id, String(m.key)); break
       case 'say': this.table.say(id, m.text); break
+      case 'bye': this.table.leave(id, true); break
       case 'here': this.table.here(id); break
     }
   }

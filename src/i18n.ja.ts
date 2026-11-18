@@ -68,6 +68,7 @@ export const JA: Record<string, string> = {
   chatTitle: 'クイックチャット', 'chat.hello': 'よろしく！', 'chat.nice': 'ナイス！', 'chat.thanks': 'ありがとう！', 'chat.hurry': '急いで！', 'chat.oops': 'おっと！', 'chat.gg': 'お疲れさま！',
   leftTiles: '残り{n}枚', noValue: '和了不可（役／最低番数が必要）', furiten: 'フリテン', 
   doraInd: 'ドラ表示牌', doraInHand: '手牌のドラ（ドラ＋赤＋北）', doraRow: 'ドラ', uraRow: '裏ドラ',
+  room_not_found: 'その番号の部屋は見つかりません。4桁の番号をもう一度確認してください。', code_taken: 'その番号はすでに使われています。もう一度お試しください。',
   room_full: 'この部屋は満席です。4席すべてプレイヤーで埋まっています。', bad_id: 'プレイヤーIDが不正です。再読み込みしてください。',
   onlineOff: 'このサイトではオンライン部屋はまだ設定されていません。', conn_failed: 'ゲームサーバーに接続できませんでした。接続を確認してください。',
   withRiichi: '（リーチ時）', discard: '打牌', discarded: '{name} が打牌', choose: '操作を選んでください', auto: '自動',

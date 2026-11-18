@@ -58,7 +58,7 @@ export const PARTY_HOST = envHost || `${location.hostname || 'localhost'}:8787`
 /** false on a deployed site that has no VITE_PARTYKIT_HOST (online rooms cannot work there) */
 export const onlineConfigured = !!envHost || import.meta.env.DEV || ['localhost', '127.0.0.1', ''].includes(location.hostname)
 
-export function connectRemote(room: string, id: string, name: string, h: Handlers): Conn {
+export function connectRemote(room: string, id: string, name: string, h: Handlers, create = false): Conn {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
   let lastPong = 0
@@ -84,7 +84,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   ws.addEventListener('open', () => {
     stopRetry()
     h.onStatus('open')
-    ws.send(JSON.stringify({ t: 'join', id, name } satisfies ClientMsg))
+    ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}) } satisfies ClientMsg))
     lastPong = Date.now()
     beat()
     if (beatTimer) clearInterval(beatTimer)

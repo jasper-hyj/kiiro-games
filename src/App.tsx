@@ -50,6 +50,7 @@ export default function App() {
   useEffect(() => save('kiiro-hints', hints), [hints])
 
   const leave = useCallback(() => {
+    try { conn.current?.send({ t: 'bye' }) } catch { /* ignore */ } // a deliberate leave: a bot takes the seat straight away
     conn.current?.close(); conn.current = null
     setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
     try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
@@ -68,13 +69,24 @@ export default function App() {
     setActive(true)
     conn.current = connectLocal(id.current, name || 'Player', { ...config, botLevel: 'easy', rounds: 1 }, handlers)
   }
-  const joinRoom = useCallback((code: string) => {
+  const joinRoom = useCallback((code: string, create = false, attempt = 0) => {
     const c = code.toUpperCase()
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
     history.replaceState(null, '', `?room=${c}${dbg ? '&debug=1' : ''}`)
-    conn.current = connectRemote(c, id.current, name || 'Player', handlers)
+    const roomHandlers = {
+      ...handlers,
+      onError: (m: string) => {
+        if (create && m === 'code_taken' && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return } // that code is already in use: pick another
+        if (m === 'room_not_found' || m === 'room_full' || m === 'code_taken') { // forget the stale room so a refresh does not try it again
+          try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
+          history.replaceState(null, '', location.pathname)
+        }
+        handlers.onError(m)
+      },
+    }
+    conn.current = connectRemote(c, id.current, name || 'Player', roomHandlers, create)
     if (dbg) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
     setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
@@ -135,7 +147,7 @@ export default function App() {
         )}
         {!active && !urlRoom && (
           <>
-            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => joinRoom(makeCode())} onJoin={joinRoom} />
+            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => joinRoom(makeCode(), true)} onJoin={joinRoom} />
           </>
         )}
         {active && !view && joinError && (

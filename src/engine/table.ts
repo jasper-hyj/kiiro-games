@@ -114,6 +114,7 @@ export class Table {
     this.slots = (d.slots as { id: string | null; name: string; bot: boolean; afk: number }[]).map((s) => ({ id: s.id, name: s.name, bot: s.bot, afk: s.afk, connected: false, dcAt: s.id ? Date.now() : undefined }))
     this.game = d.game ? Game.restore(d.game) : null
     if (resume) { this.emit(); this.drive() }
+    if (this.hasPlayers()) this.closeIfEmpty() // after a restart nobody is connected yet: if nobody returns, the room is closed
   }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
   /** Seats nobody holds are always played by bots, named Bot 1, Bot 2, ... in seat order. */
@@ -147,12 +148,41 @@ export class Table {
     if (seat < 0) return -1
     const s = this.slots[seat]
     s.id = id; s.name = name.slice(0, 16) || 'Player'; s.connected = true; s.afk = 0
+    if (this.emptyTimer) { clearTimeout(this.emptyTimer); this.emptyTimer = null }
     if (this.game) this.game.players[seat].name = s.name
     if (!this.hostId || !this.slots.some((x) => x.id === this.hostId)) this.hostId = id
     this.emit(); this.drive()
     return seat
   }
-  leave(id: string) {
+  /** Does anyone hold a seat in this room? (A room nobody ever created, or everybody left, has no players.) */
+  hasPlayers() { return this.slots.some((s) => s.id) }
+  /** Decides whether a connection may enter: creating a room with a code that is already in use, or joining a code nobody created, is refused. */
+  admit(id: string, create: boolean): 'ok' | 'code_taken' | 'room_not_found' {
+    if (this.seatOf(id) >= 0) return 'ok' // coming back to your own seat (refresh, reconnect)
+    if (create) return this.hasPlayers() ? 'code_taken' : 'ok'
+    return this.hasPlayers() ? 'ok' : 'room_not_found'
+  }
+  /** How long a started game with nobody connected is kept before the room is closed. */
+  emptyMs = 180000
+  private emptyTimer: ReturnType<typeof setTimeout> | null = null
+  private closeIfEmpty() {
+    if (this.emptyTimer) { clearTimeout(this.emptyTimer); this.emptyTimer = null }
+    if (this.slots.some((s) => s.id && s.connected)) return
+    this.emptyTimer = setTimeout(() => {
+      this.emptyTimer = null
+      if (!this.slots.some((s) => s.id && s.connected)) this.reset()
+    }, this.emptyMs)
+  }
+  /** Back to a brand-new empty room. */
+  reset() {
+    this.cancelTimers()
+    this.game = null; this.status = 'lobby'; this.hostId = null; this.acks.clear()
+    this.slots = [0, 1, 2, 3].map(() => ({ id: null, name: '', connected: false, bot: false }))
+    this.fitSlots(); this.renameBots()
+    this.emit()
+  }
+  /** `deliberate`: the player pressed Leave (a bot takes the seat at once instead of after the reconnect grace period). */
+  leave(id: string, deliberate = false) {
     const seat = this.slots.findIndex((s) => s.id === id)
     if (seat < 0) return
     if (this.status === 'lobby') {
@@ -160,7 +190,10 @@ export class Table {
       if (this.hostId === id) this.hostId = this.slots.find((s) => s.id)?.id ?? null
     } else {
       this.slots[seat].connected = false
-      this.slots[seat].dcAt = Date.now()
+      this.slots[seat].dcAt = deliberate ? 0 : Date.now()
+      // the host seat must not stay with someone who is gone: hand it to a player who is still here
+      if (this.hostId === id) { const next = this.slots.find((s) => s.id && s.connected); if (next) this.hostId = next.id }
+      this.closeIfEmpty()
       // when the grace period ends, a bot may need to take over this seat
       setTimeout(() => { if (this.game && !this.slots[seat].connected) { this.emit(); this.drive() } }, this.graceMs + 20)
     }

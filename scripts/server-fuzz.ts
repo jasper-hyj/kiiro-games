@@ -32,7 +32,7 @@ async function main() {
   send(a, 'x'.repeat(2_000_000)) // oversized payload
   await sleep(500)
   check('connection survives garbage', !a.closed)
-  send(a, { t: 'join', id: 'good1', name: 'Alice <script>' })
+  send(a, { t: 'join', id: 'good1', name: 'Alice <script>', create: true })
   await sleep(400)
   const v = lastView(a)
   check('valid join still works after garbage', !!v && v.you === 0 && v.host === true)
@@ -69,12 +69,13 @@ async function main() {
   send(fresh, { t: 'start' })
   await sleep(600)
   check('game starts', lastView(fresh)?.status === 'playing')
+  const mySeat = lastView(fresh)?.you // seats are shuffled when the game starts
   for (const c of [a, fresh, ...extra]) c.ws.close()
   await sleep(500)
   const again = await connect(room)
   send(again, { t: 'join', id: 'good1', name: 'Alice' })
   await sleep(500)
-  check('room still usable after everyone disconnected (rejoin to a running game)', lastView(again)?.status === 'playing' && lastView(again)?.you === 0)
+  check('room still usable after everyone disconnected (rejoin to a running game)', lastView(again)?.status === 'playing' && lastView(again)?.you === mySeat)
   again.ws.close()
 
   console.log(fails ? `\n${fails} FAILED` : '\nserver survived every hostile input')

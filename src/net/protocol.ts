@@ -2,7 +2,8 @@ import type { Decision, TurnAction } from '../engine/game'
 import type { RoomConfig, TableView } from '../engine/table'
 
 export type ClientMsg =
-  | { t: 'join'; id: string; name: string }
+  | { t: 'join'; id: string; name: string; create?: boolean }
+  | { t: 'bye' }
   | { t: 'config'; config: Partial<RoomConfig> }
   | { t: 'start' }
   | { t: 'act'; a: TurnAction }
