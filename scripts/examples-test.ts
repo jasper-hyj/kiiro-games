@@ -16,11 +16,11 @@ const ids = (ks: number[]) => ks.map((k) => { const n = used.get(k) ?? 0; used.s
 let fails = 0
 for (const ex of EXAMPLES) {
   used.clear()
-  const g = new Game(ex.rule, { rule: ex.rule, aka: false, rounds: 1, minFan: ex.rule === 'mcr' ? 8 : ex.rule === 'hk' ? 3 : 0, swap: false, fixedDealer: true } as never, ['a', 'b', 'c', 'd'])
+  const g = new Game(ex.rule, { rule: ex.rule, aka: false, rounds: 1, minFan: ex.minFan ?? (ex.rule === 'mcr' ? 8 : ex.rule === 'hk' ? 3 : 0), swap: false, fixedDealer: true } as never, ['a', 'b', 'c', 'd'])
   g.dealer = 0; g.roundIndex = 0; g.doraPool = [64, 64, 64, 64, 64]; g.uraPool = [64, 64, 64, 64, 64]; g.doraCount = 1
   const seat = ex.seat ?? 1
   const p = g.players[seat]
-  p.flowers = ex.flowers ?? []
+  p.flowers = (ex.flowers ?? []).map((k) => 136 + k - 34) // example flowers are given as kinds (34 plum … 41 winter)
   p.discards = [{ tile: 0, riichi: false, called: false }]
   p.melds = (ex.melds ?? []).map((m) => ({ type: m.type, tiles: ids(parse(m.tiles)), from: 0 }))
   p.hand = sortIds(ids(parse(ex.hand)))

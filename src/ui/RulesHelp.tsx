@@ -4,6 +4,10 @@ import type { RuleId } from '../engine/rules'
 import { useLang } from '../i18n'
 import { Tile } from './Tile'
 import { EXAMPLES } from './examples'
+import { RULES_JA } from './rulesHelp.ja'
+
+/** pick the text for language index L (0 English, 1 中文, 2 日本語); Japanese falls back to English when a string has no translation yet */
+const tx = (p: readonly string[], L: number): string => (L === 2 ? RULES_JA[p[0]] ?? p[0] : p[L])
 
 // [English name, 中文名, English description, 中文說明]
 type Row = [string, string, string, string]
@@ -324,6 +328,8 @@ function ExampleList({ rule, L, unit }: { rule: RuleId; L: number; unit: string 
             <span className="explus">{e.tsumo ? '＋' : '←'}</span>
             <span className="exgroup"><Tile kind={groupsOf(e.win)[0][0]} hot /></span>
             {(e.melds ?? []).map((m, mi) => <span className="exgroup meldg" key={'m' + mi}>{groupsOf(m.tiles).flat().map((k, ki) => <Tile key={ki} kind={k} />)}</span>)}
+            {(e.flowers ?? []).length > 0 && <span className="exgroup meldg">{(e.flowers ?? []).map((k) => <Tile key={k} kind={k} />)}</span>}
+            {e.riichi && <span className="extag">{t('riichi')}</span>}
           </div>
           <p className="muted small">{e.note[L]}</p>
         </div>
@@ -335,7 +341,7 @@ function ExampleList({ rule, L, unit }: { rule: RuleId; L: number; unit: string 
 export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () => void }) {
   const { lang, t } = useLang()
   const [id, setId] = useState<TabId>(initial)
-  const L = lang === 'zh' ? 1 : 0
+  const L = lang === 'zh' ? 1 : lang === 'ja' ? 2 : 0
   const d = DATA[id]
   return createPortal(
     <div className="overlay" onClick={onClose}>
@@ -346,21 +352,21 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
         </div>
         <div className="tabs">
           {(['basics', 'taiwan', 'hk', 'riichi', 'mcr', 'sichuan'] as const).map((k) => (
-            <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : 'Basics') : t(k + '.name')}</button>
+            <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : L === 2 ? '基本' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>
-        <div className="goalbox"><b>{d.goal?.[L]}</b></div>
-        {d.intro.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
+        <div className="goalbox"><b>{d.goal && tx(d.goal, L)}</b></div>
+        {d.intro.map((p, i) => <p key={i} className="muted">{tx(p, L)}</p>)}
         {id !== 'basics' && <ExampleList rule={id} L={L} unit={t(id === 'riichi' ? 'han' : id === 'taiwan' ? 'tai' : 'fan')} />}
         {d.sections.map((s) => (
           <div key={s.title[0]}>
-            <h2>{s.title[L]}</h2>
-            {s.text?.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
+            <h2>{tx(s.title, L)}</h2>
+            {s.text?.map((p, i) => <p key={i} className="muted">{tx(p, L)}</p>)}
             {s.rows && <table className="ref"><tbody>
               {s.rows.map((r, i) => (
                 <tr key={i}>
-                  <td>{L === 1 ? r[1] : r[0]}{L === 0 && <span className="muted"> {r[1]}</span>}</td>
-                  <td>{r[2 + L]}</td>
+                  <td>{L === 1 ? r[1] : L === 2 ? (RULES_JA[r[0]] ?? r[1]) : r[0]}{L === 0 && <span className="muted"> {r[1]}</span>}</td>
+                  <td>{L === 2 ? (RULES_JA[r[2]] ?? r[2]) : r[2 + L]}</td>
                 </tr>
               ))}
             </tbody></table>}

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#27356b"/>
+      <stop offset="1" stop-color="#0a1026"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfaf2"/>
+      <stop offset="1" stop-color="#dcd6bf"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7f93c9"/>
+      <stop offset="1" stop-color="#3a4c86"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="3" y="3" width="506" height="506" rx="110" fill="none" stroke="#aabad6" stroke-opacity=".45" stroke-width="6"/>
+  <!-- tile: thick silver-blue edge below, ivory face on top -->
+  <rect x="136" y="82" width="240" height="348" rx="36" fill="url(#edge)"/>
+  <rect x="136" y="70" width="240" height="340" rx="36" fill="url(#tile)"/>
+  <!-- three circle pips, like the 3-dots tile -->
+  <g>
+    <circle cx="204" cy="150" r="30" fill="#2a55c2"/><circle cx="204" cy="150" r="19" fill="#fbfaf2"/><circle cx="204" cy="150" r="9" fill="#2a55c2"/>
+    <circle cx="256" cy="240" r="30" fill="#c22f45"/><circle cx="256" cy="240" r="19" fill="#fbfaf2"/><circle cx="256" cy="240" r="9" fill="#c22f45"/>
+    <circle cx="308" cy="330" r="30" fill="#2a55c2"/><circle cx="308" cy="330" r="19" fill="#fbfaf2"/><circle cx="308" cy="330" r="9" fill="#2a55c2"/>
+  </g>
+</svg>

@@ -237,6 +237,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const tenpaiKinds = v.hint?.discardWaits ?? {}
   const selWaits = sel !== null ? tenpaiKinds[kindOf(sel)] : undefined
   const ruleId = v.rule.id
+  const ruleLabel = lang === 'zh' ? { taiwan: '台灣麻將', hk: '香港麻雀', riichi: '日本麻雀', mcr: '國標麻將', sichuan: '四川麻將' }[ruleId] : lang === 'ja' ? t(ruleId + '.name') : v.rule.name
+  const ruleDetail =
+    ruleId === 'taiwan' ? t('ind.tiles', { n: 16 }) :
+    ruleId === 'hk' ? t('ind.minFan', { n: view.config.minFan }) :
+    ruleId === 'mcr' ? t('ind.minFan', { n: view.config.minFan }) :
+    ruleId === 'riichi' ? (sanma ? t('ind.sanma') : view.config.aka ? t('ind.aka') : t('ind.noAka')) : t('ind.sichuan')
   const roundName = t('roundName', { wind: t('wind.' + v.roundWind), n: (v.roundIndex % n) + 1 })
   // with "organise my hand" off, tiles stay where they were: new tiles join the end instead of being sorted in
   const orderRef = useRef<{ hand: number; ids: number[] }>({ hand: -1, ids: [] })
@@ -386,11 +392,14 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
 
   return (
     <div className="gamecol">
+      <button className="rulechip" onClick={() => setPanel('rules')} title={t('ind.open')} aria-label={t('ind.open')}>
+        <b>{ruleLabel}</b><span>{ruleDetail}</span><i aria-hidden="true">i</i>
+      </button>
       <Stage allowRotate={false}>
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
       {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
       <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
-      <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')} style={{ ['--rows' as string]: Math.min(5, Math.max(3, Math.ceil(Math.max(0, ...v.players.map((q) => q.discards.length)) / 7))) }}>
+      <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')} style={{ ['--rows' as string]: Math.min(5, Math.max(3, Math.ceil(Math.max(0, ...v.players.map((q) => q.discards.length)) / 6))) }}>
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
         {ruleId === 'riichi' && (
@@ -422,10 +431,9 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       <Opp p={rel(1)} v={v} pos="right" bubble={bub(rel(1).seat)} />
       </div>
       </Stage>
-      <div className="handbar" ref={barRef} style={{ ['--hw' as string]: tw + 'px' }}>
+      <div className={'handbar' + (popOpen ? ' acting' : '')} ref={barRef} style={{ ['--hw' as string]: tw + 'px' }}>
         {popOpen && (
           <div className="actionpop">
-            {help && <div className="callhelp">{help}</div>}
             {v.phase === 'swap' && !v.pick.swap[you] && (
               <div className="apbtns">
                 <span className="pickhint">{t('swapHint', { n: swapSel.length })}</span>
@@ -474,8 +482,11 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
             {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" title={t('tip.addKan')} onMouseEnter={() => setHelp(t('tip.addKan'))} onFocus={() => setHelp(t('tip.addKan'))} onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b><span className="mini"><Tile id={id} /></span></button>)}
             {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
             </div>
+            {secs !== null && mine && <span className="calltimer">{secs}s</span>}
           </div>
         )}
+        <div className="notes">
+          {help && popOpen && <div className="callhelp">{help}</div>}
         {tutorial && tutOpen && (
           <div className="tutcard" role="dialog">
             <b>{t('tut.title')}</b>
@@ -497,6 +508,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
             <span>{t('notice.' + v.notice.code, { n: v.notice.n ?? 0, need: v.notice.need ?? 0, suit: v.notice.suit !== undefined ? t('suit.' + v.notice.suit) : '' })}</span>
           </div>
         )}
+        </div>
         <div className="infoline">
           <div className="infoleft">
           <Chip p={me} v={v} bubble={bub(me.seat)} />
@@ -509,7 +521,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         
         </div>
-        {hints && v.hint && (
+        {!popOpen && hints && v.hint && (
           <div className="hint">
             <span className="hstat">{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
             {v.hint.furiten && <span className="tag warn">{t('furiten')}</span>}

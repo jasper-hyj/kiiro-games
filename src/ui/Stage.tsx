@@ -3,9 +3,11 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 /** The table is designed once at 1600 x (720..900) and scaled to fit any window.
  *  Wider windows get a shorter stage; on a portrait phone the stage rotates sideways if that gives larger tiles. */
 export const STAGE_W = 1600
+/** A squarer window (tablet held upright) gets a narrower, taller design so the table can use the height instead of leaving bands above and below. */
 const fit = (aw: number, ah: number) => {
-  const dh = Math.min(720, Math.max(480, (STAGE_W * ah) / Math.max(1, aw)))
-  return { dh, s: Math.min(aw / STAGE_W, ah / dh) }
+  const sw = aw / Math.max(1, ah) < 1.25 ? 1000 : STAGE_W
+  const dh = Math.min(sw === STAGE_W ? 760 : 1000, Math.max(480, (sw * ah) / Math.max(1, aw)))
+  return { dh, sw, s: Math.min(aw / sw, ah / dh) }
 }
 
 export function Stage({ children, allowRotate = true }: { children: ReactNode; allowRotate?: boolean }) {
@@ -45,9 +47,9 @@ export function Stage({ children, allowRotate = true }: { children: ReactNode; a
   const rotate = allowRotate && box.w > 0 && port.s > land.s * 1.05
   const f = rotate ? port : land
   const style = {
-    width: STAGE_W, height: f.dh,
+    width: f.sw, height: f.dh,
     transform: `translate(-50%, -50%) ${rotate ? 'rotate(90deg) ' : ''}scale(${f.s || 0.01})`,
-    '--s': f.s || 0.01, '--H': f.dh,
+    '--s': f.s || 0.01, '--H': f.dh, '--SW': f.sw,
   } as CSSProperties
   return (
     <div className="stagewrap" ref={ref} data-rotated={rotate ? '1' : '0'}>

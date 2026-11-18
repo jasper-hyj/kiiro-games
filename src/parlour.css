@@ -953,3 +953,90 @@ button.rule .zh { font-size: 19px; flex: 1 1 80px; }
 button.rule .muted { font-size: 12px; line-height: 1.3; }
 .shelf .grid3 { width: min(1000px, 100%); }
 .tablesettings .grid3 { margin: 4px 0 8px; }
+
+/* =====================================================================
+   ONE TABLE
+   - the whole play area shares one surface (no separate bars / panels)
+   - the middle is a square whose four edges hold the four rivers (6 tiles per row, first row next to the middle badge)
+   - score, status, hints and the call buttons share one slim strip right above the hand
+   ===================================================================== */
+.gamecol { position: relative; background: radial-gradient(ellipse at 50% 34%, #27356b 0%, #162044 46%, #0a1026 100%); }
+.gamecol .board { background: none; }
+.handbar { background: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(52px, auto) auto; column-gap: 12px; row-gap: 2px; align-items: center; padding: 2px 12px calc(8px + env(safe-area-inset-bottom)); }
+.handbar::before { display: none; }
+.handbar .infoline { display: contents; }
+.handbar .infoleft { grid-column: 1; grid-row: 1; }
+.handbar .statusbar { grid-column: 3; grid-row: 1; justify-self: end; }
+.handbar .actionpop, .handbar .hint { grid-column: 2; grid-row: 1; justify-self: center; min-width: 0; max-width: 100%; }
+.handbar .handrow { grid-column: 1 / -1; grid-row: 2; }
+.handbar .actionpop { position: static; transform: none; width: auto; max-width: 100%; max-height: none; overflow: visible; background: none; border: 0; box-shadow: none; padding: 0; animation: none; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px 10px; }
+.handbar .actionpop .apbtns { max-width: none; flex-wrap: wrap; justify-content: center; }
+.handbar .actionpop .callhead { --tw: 30px; }
+.handbar .hint { height: auto; overflow: visible; flex-wrap: wrap; justify-content: center; }
+/* notes (coach, why-not, tutorial, button help) float over the lower edge of the table instead of adding rows */
+.handbar .notes { position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; width: max-content; max-width: min(94vw, 760px); pointer-events: none; }
+.handbar .notes:empty { display: none; }
+.handbar .notes > * { pointer-events: auto; margin: 0; max-width: 100%; }
+.handbar .notes .callhelp { padding: 6px 14px; border-radius: 12px; background: rgba(8,12,28,.92); border: 1px solid rgba(170,186,214,.35); font-size: 14px; }
+
+/* the square table middle */
+.board .center { display: grid; place-items: center; }
+.board .cgrid { --R: var(--rows, 3); --u: clamp(11px, min(calc((var(--H) - 150) / (2.88 * var(--R) + 6.4) * 1px), calc((var(--SW, 1600) - 500) / (2.88 * var(--R) + 6.4) * 1px)), 48px);
+  --W: calc(var(--u) * 6.4 + 7px); --D: calc(var(--u) * 1.44 * var(--R));
+  display: block; position: relative; box-sizing: border-box; width: calc(var(--W) + 2 * var(--D)); height: calc(var(--W) + 2 * var(--D)); flex: none;
+  border-radius: 22px; border: 1px solid rgba(170,186,214,.3);
+  background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.05), rgba(0,0,0,.28) 78%), rgba(6,10,26,.55);
+  box-shadow: inset 0 0 0 5px rgba(0,0,0,.18), inset 0 0 38px rgba(0,0,0,.5), 0 16px 44px rgba(0,0,0,.4); }
+.board .cgrid .pond { --tw: var(--u); position: absolute; display: block; margin: 0; }
+.board .cgrid .pond.p0 { left: 50%; bottom: 0; top: auto; width: var(--W); height: var(--D); margin-left: calc(var(--W) / -2); }
+.board .cgrid .pond.p2 { left: 50%; top: 0; bottom: auto; width: var(--W); height: var(--D); margin-left: calc(var(--W) / -2); }
+.board .cgrid .pond.p3 { left: 0; top: 50%; width: var(--D); height: var(--W); margin-top: calc(var(--W) / -2); }
+.board .cgrid .pond.p1 { right: 0; left: auto; top: 50%; width: var(--D); height: var(--W); margin-top: calc(var(--W) / -2); }
+.board .cgrid .pond .pondin { position: absolute; left: 50%; top: 50%; width: var(--W); height: var(--D); display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-end; gap: calc(var(--u) * .08) 1px; transform: translate(-50%, -50%); }
+.board .cgrid .pond.p2 .pondin { transform: translate(-50%, -50%) rotate(180deg); }
+.board .cgrid .pond.p1 .pondin { transform: translate(-50%, -50%) rotate(-90deg); }
+.board .cgrid .pond.p3 .pondin { transform: translate(-50%, -50%) rotate(90deg); }
+.board .cgrid .pond .sw { margin: 0; }
+.board .cgrid .info { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); zoom: 1; box-sizing: border-box; width: var(--W); height: var(--W); min-width: 0; min-height: 0; padding: 0; margin: 0; border-radius: 16px; display: grid; place-items: center; align-content: center; gap: 0;
+  background: linear-gradient(180deg, rgba(10,16,38,.92), rgba(5,8,22,.94)); border: 1px solid rgba(170,186,214,.34); }
+.board .cgrid .info .rnd { font-size: clamp(15px, calc(var(--u) * .78), 30px); margin: 0; }
+.board .cgrid .info .infolines .muted { font-size: clamp(11px, calc(var(--u) * .5), 18px); }
+.board .cgrid .info .cw b { font-size: clamp(13px, calc(var(--u) * .62), 24px); }
+.board .cgrid .dorapanel { position: absolute; right: calc(100% + 14px); left: auto; top: 0; margin: 0; zoom: 1; }
+
+/* ruleset chip, top left: shows which game is being played, opens that game's rules */
+.rulechip { position: absolute; left: 10px; top: 8px; z-index: 22; display: inline-flex; align-items: center; gap: 8px; min-height: 34px; max-width: 52vw; padding: 4px 8px 4px 14px; border-radius: 999px; border: 1px solid rgba(170,186,214,.4); background: rgba(8,12,28,.82); color: #eef2fa; font: 600 14px/1.1 var(--sans); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.rulechip b { font-weight: 700; white-space: nowrap; }
+.rulechip span { color: rgba(236,240,250,.68); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rulechip i { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(226,234,248,.16); font: italic 700 13px/1 Georgia, serif; }
+.rulechip:hover { background: rgba(24,34,70,.95); border-color: rgba(226,234,248,.7); }
+.rulechip:focus-visible { outline: 2px solid #8fb4ff; outline-offset: 2px; }
+@media (max-height: 520px) { .handbar { grid-template-rows: minmax(40px, auto) auto; } .rulechip { min-height: 28px; padding: 2px 6px 2px 10px; font-size: 12px; } .rulechip span { display: none; } .rulechip i { width: 16px; height: 16px; font-size: 11px; } }
+.gamecol .stagewrap { background: none; }
+.gamecol .board::before { box-shadow: none; background: none; }
+/* one row: the discarded tile, then the choices */
+.handbar .actionpop { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; }
+.handbar .actionpop .apbtns { flex-wrap: nowrap; gap: 8px; max-width: none; flex: 0 1 auto; min-width: 0; }
+.handbar .actionpop .cbtn { min-height: 50px; min-width: 0; padding: 4px 12px; font-size: 18px; gap: 8px; }
+.handbar .actionpop .cbtn .mini { --tw: 21px; }
+.handbar .actionpop .callhead { flex: none; --tw: 32px; }
+@media (max-width: 1100px) { .handbar .actionpop, .handbar .actionpop .apbtns { flex-wrap: wrap; } .handbar .actionpop .cbtn { font-size: 16px; padding: 4px 9px; min-height: 46px; } .handbar .actionpop .cbtn .mini { --tw: 18px; } }
+/* while choosing, the buttons take the whole strip (status text and flowers step aside; the timer moves next to the buttons) */
+.handbar.acting .statusbar, .handbar.acting .infoleft .flowers, .handbar.acting .infoleft .dorapill { display: none; }
+.handbar.acting .actionpop { grid-column: 2 / -1; }
+.handbar .calltimer { flex: none; font: 700 15px var(--sans); font-variant-numeric: tabular-nums; color: #0a0f1f; background: linear-gradient(180deg, #e6ecf8, #a9b6d2); border-radius: 999px; padding: 4px 10px; }
+.handbar .actionpop { flex-wrap: nowrap; }
+.handbar .actionpop .apbtns { flex-wrap: wrap; justify-content: center; }
+@media (max-width: 1100px) { .handbar .actionpop { flex-wrap: nowrap; } }
+/* small screens: while choosing, the whole strip is the call row, and the buttons shrink so even 7 choices stay on one line */
+@media (max-height: 520px), (max-width: 900px) {
+  .handbar.acting .infoleft { display: none; }
+  .handbar.acting .actionpop { grid-column: 1 / -1; }
+  .handbar .actionpop { gap: 6px; }
+  .handbar .actionpop .apbtns { gap: 5px; }
+  .handbar .actionpop .cbtn { min-height: 40px; padding: 2px 7px; font-size: 14px; gap: 5px; border-radius: 10px; }
+  .handbar .actionpop .cbtn .mini { --tw: 15px; gap: 0; }
+  .handbar .actionpop .callhead { --tw: 24px; }
+  .handbar .calltimer { font-size: 12px; padding: 2px 7px; }
+}
+.extag { align-self: center; margin-left: 8px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #0a0f1f; background: linear-gradient(180deg, #e6ecf8, #a9b6d2); }
