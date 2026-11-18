@@ -286,6 +286,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         ))}
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
         <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
+        <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
         <label className="switch"><input type="checkbox" checked={settings.flatPonds} onChange={() => setSetting('flatPonds', !settings.flatPonds)} /><span className="knob" />{t('flatPonds')}</label>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
@@ -389,7 +390,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     <div className="board" style={{ ['--hand' as string]: v.rule.nSets === 5 ? 17 : 14 }}>
       {sanma ? <div className="seat top" /> : <Opp p={rel(2)} v={v} pos="top" bubble={bub(rel(2).seat)} />}
       <Opp p={sanma ? rel(2) : rel(3)} v={v} pos="left" bubble={bub((sanma ? rel(2) : rel(3)).seat)} />
-      <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')}>
+      <div className="center"><div className={'cgrid' + (v.rule.id === 'riichi' ? ' jp' : '')} style={{ ['--rows' as string]: Math.min(5, Math.max(3, Math.ceil(Math.max(0, ...v.players.map((q) => q.discards.length)) / 7))) }}>
         {!sanma && <Pond p={rel(2)} v={v} rel={2} />}
         <Pond p={sanma ? rel(2) : rel(3)} v={v} rel={3} />
         {ruleId === 'riichi' && (

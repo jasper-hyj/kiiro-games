@@ -864,3 +864,28 @@ html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .
   button.rule { flex-wrap: nowrap; justify-content: flex-start; }
   button.rule .zh { flex: none; line-height: 1.15; } button.rule .muted { flex: none; }
 }
+
+/* =====================================================================
+   TILE FACE: the artwork is centred in the face, exactly as a real tile. It is narrow (62% of the width), so the small
+   corner number lives in the empty white space beside it and never touches it. The number can be switched off.
+   ===================================================================== */
+.tile { --idx: max(9px, calc(var(--tw) * .22)); --pt: calc(var(--tw) * .2); }
+.tile .idx { top: calc(var(--tw) * .06); right: calc(var(--tw) * .06); font-size: var(--idx); font-weight: 900; line-height: 1; text-shadow: none; }
+.tile .pips, .tile .pips[class] { top: 50%; left: 50%; transform: translate(-50%, -50%); height: calc(var(--tw) * .96); width: auto; }
+@container (max-width: 34px) { .tile .pips { top: 50%; height: calc(var(--tw) * .96); } }
+.tile:has(> .idx) .big.man { margin-top: 0; }
+html[data-idx='off'] .tile .idx { display: none; }
+/* tighter rows of tiles */
+.handbar .handrow { gap: 1px; }
+.handbar .hand-extra { width: calc(var(--tw) * .3); }
+.handbar .mymelds { gap: calc(var(--hw) * .08); margin-left: calc(var(--hw) * .3); }
+.meld { gap: 0; padding: 1px; }
+.melds { gap: 4px; }
+
+/* a river that needs a fourth row grows the block (and everything shrinks a little) instead of spilling over the neighbours */
+.board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / (var(--rows, 3) * 2.94 + 6) * 1px), 34px); }
+html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / (var(--rows, 3) * 2.94 + 6) * 1px), 34px); }
+.board .cgrid .pond.p0, .board .cgrid .pond.p2 { height: calc(var(--tw) * var(--rows, 3) * 1.47); }
+.board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * var(--rows, 3) * 1.47); }
+.board .cgrid .pond .pondin { height: calc(var(--tw) * var(--rows, 3) * 1.47); }
+html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * var(--rows, 3) * 1.47); }

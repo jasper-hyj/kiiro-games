@@ -1,18 +1,19 @@
 import { useSyncExternalStore } from 'react'
 
 /** Accessibility preferences, remembered per device and applied as attributes on <html>. */
-export interface Settings { reduceMotion: boolean; flatPonds: boolean }
-const KEY = 'kiiro-settings3'
+export interface Settings { reduceMotion: boolean; flatPonds: boolean; showIndex: boolean }
+const KEY = 'kiiro-settings4'
 const prefersReduced = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 let state: Settings = (() => {
-  try { const v = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (v && typeof v === 'object') return { reduceMotion: !!v.reduceMotion, flatPonds: !!v.flatPonds } } catch { /* ignore */ }
-  return { reduceMotion: prefersReduced(), flatPonds: false }
+  try { const v = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (v && typeof v === 'object') return { reduceMotion: !!v.reduceMotion, flatPonds: !!v.flatPonds, showIndex: v.showIndex !== false } } catch { /* ignore */ }
+  return { reduceMotion: prefersReduced(), flatPonds: false, showIndex: true }
 })()
 const subs = new Set<() => void>()
 const apply = () => {
   const el = document.documentElement
   el.dataset.motion = state.reduceMotion ? 'reduce' : 'full'
   el.dataset.ponds = state.flatPonds ? 'flat' : 'turned'
+  el.dataset.idx = state.showIndex ? 'on' : 'off'
 }
 apply()
 export function setSetting<K extends keyof Settings>(k: K, v: Settings[K]) {

@@ -108,6 +108,7 @@ const D: Record<string, [string, string]> = {
   'tut.others': ['Now the others play. Watch the rivers in the middle: tiles that have already been thrown cannot come again.', '現在換其他人打牌。看看中間的牌河：已經打出的牌不會再出現。'],
   'tut.tenpai': ['Almost there! One more tile completes your hand (tenpai). Turn on Hints in the menu to see which tiles you are waiting for and how many are left.', '快胡了！再來一張牌就完成牌型（聽牌）。在選單開啟「提示」可以看到你在等哪些牌、還剩幾張。'],
   'tut.ok': ['Got it', '知道了'],
+  showIndex: ['Small corner numbers on tiles', '牌角小數字'],
   swapOpt: ['Swap three tiles', '換三張'],
   scWins: ['Winners', '胡牌'], scFirst: ['1st', '第 1 位'], scNone: ['Nobody won — the wall ran out', '流局，沒有人胡牌'],
   'taiwan.blurb': ['16 tiles · 8 flowers · tai scoring · dealer streaks', '16 張 · 8 張花牌 · 台數計分 · 連莊拉莊'],

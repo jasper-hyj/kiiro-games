@@ -48,6 +48,7 @@ export const JA: Record<string, string> = {
   'tip.ankan': '暗槓：手牌の同じ牌4枚でカンします。その後に追加で1枚引きます。', 'tip.addKan': '加槓：ポン済みの刻子に4枚目を加えます。', 'tip.ron': 'ロン：他家が捨てた牌で和了します。', 'tip.tsumo': 'ツモ：引いた牌で和了します。',
   'tip.riichi': 'リーチ：門前でテンパイ。1000点を払って宣言し、以後手牌は変えられません。', 'tip.pass': 'パス：何もせず続行します。',
   learnPlay: '遊び方を学ぶ', 'tut.title': '練習対局', 'tut.ok': 'わかった',
+  showIndex: '牌の隅の小さな数字',
   streakShort: '連荘 {n}', sticksShort: '供託 {n}', honbaShort: '{n}本場', swapOpt: '牌の交換（換三張）',
   scWins: '和了者', scFirst: '1位', scNone: '誰も和了せず、牌山が尽きました',
   inviteLink: '招待リンクをコピー', copied: 'コピーしました', seats: '席', seatsNote: '人 · 空席はCPUが自動で参加します',

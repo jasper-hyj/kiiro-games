@@ -68,6 +68,31 @@ const probe = () => {
     dock.open = false
   }
 
+  // 5b. tiles in the same row/block never intersect or cover each other (rivers, hands, melds, flowers, backs)
+  {
+    const parents = new Set<HTMLElement>()
+    q('.tile, .sw').forEach((e) => { if (e.parentElement && !e.closest('.modal') && !e.closest('.actionpop') && !e.closest('.dorapanel')) parents.add(e.parentElement) })
+    let reported = 0
+    for (const par of parents) {
+      const kids = [...par.children].filter((c) => (c.classList.contains('tile') || c.classList.contains('sw')) && vis(c as HTMLElement)) as HTMLElement[]
+      for (let i = 0; i < kids.length && reported < 3; i++) for (let j = i + 1; j < kids.length && reported < 3; j++) {
+        const a = R(kids[i]), b = R(kids[j])
+        const w = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+        const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+        if (w > 1.5 && h > 1.5) { reported++; problems.push(`tiles overlap in ${par.className.toString().slice(0, 24)} (${Math.round(w)}x${Math.round(h)} px)`) }
+      }
+    }
+  }
+
+  // 5c. a river never spills out of its own block
+  for (const pond of q('.pond')) {
+    const pr = R(pond)
+    for (const t of [...pond.querySelectorAll<HTMLElement>('.tile, .sw')].filter(vis)) {
+      const r = R(t)
+      if (r.left < pr.left - 2 || r.right > pr.right + 2 || r.top < pr.top - 2 || r.bottom > pr.bottom + 2) { problems.push(`river tiles spill out of their block (${pond.className.toString().slice(0, 20)})`); break }
+    }
+  }
+
   // 6. tile sizes stay readable
   const handTile = q('.handrow .tile')[0]
   void handTile
