@@ -46,7 +46,7 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
   let over = false
   let turns = 0
   while (Date.now() - t0 < 240000) {
-    if (await p.$('.overlay .standings')) { over = true; break }
+    if (await p.$('.overlay .podium')) { over = true; break }
     const nextBtn = await p.$('.overlay .btn.gold:not([disabled])')
     if (nextBtn) {
       hands++
@@ -80,8 +80,8 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
   check(`${tag}: played ${hands} hands (${turns} discards) to the game-over screen`, over, `timed out after ${hands} hands`)
   if (over) {
     await p.screenshot({ path: `${SHOTS}/game-${rule}-${dev.name}-${lang}-over.png` })
-    const rows = await p.$$eval('.overlay .standings li', (e) => e.map((x) => (x as HTMLElement).innerText))
-    const pts = rows.map((r) => Number((r.match(/—\s*(-?\d+)/) ?? [])[1]))
+    const rows = await p.$$eval('.overlay .podium .pd', (e) => e.map((x) => (x as HTMLElement).innerText))
+    const pts = rows.map((r) => Number(((r.match(/(-?\d[\d,]*)[^\d]*$/) ?? [])[1] ?? '').replace(/,/g, '')))
     const start = rule === 'riichi' ? 25000 : rule === 'mcr' || rule === 'sichuan' ? 0 : 1000
     check(`${tag}: final standings list 4 players and points add up (${pts.join(', ')})`, rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4, rows.join(' | '))
     // hand review: open it, step to the end of the first hand and see the final hands

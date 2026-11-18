@@ -21,7 +21,7 @@ async function play(engine: string, rule: string) {
   let hands = 0, turns = 0, over = false, flips = 0, bad = 0
   const portrait = { width: 740, height: 360 }, land = { width: 844, height: 390 } // phones play in landscape; flip between two landscape sizes
   while (Date.now() - t0 < 240000) {
-    if (await page.$('.overlay .standings')) { over = true; break }
+    if (await page.$('.overlay .podium')) { over = true; break }
     const next = await page.$('.overlay .btn.gold:not([disabled])')
     if (next) { hands++; await next.tap(); await sleep(150); continue }
     if (await page.$('.pickhint')) {   // Sichuan: pass three tiles / give up a suit
