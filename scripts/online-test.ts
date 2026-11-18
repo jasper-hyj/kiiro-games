@@ -3,8 +3,8 @@ import type { TableView } from '../src/engine/table'
 
 const host = 'localhost:8787'
 const room = 'test' + Math.floor(Math.random() * 1e6)
-const mk = (id: string, name: string, create = false) => {
-  const c = { view: null as TableView | null, errors: [] as string[], ws: new PartySocket({ host, room, WebSocket: WebSocket as any }) }
+const mk = (id: string, name: string, create = false, r = room) => {
+  const c = { view: null as TableView | null, errors: [] as string[], ws: new PartySocket({ host, room: r, WebSocket: WebSocket as any }) }
   c.ws.addEventListener('open', () => c.ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}) })))
   c.ws.addEventListener('message', (e: any) => { const m = JSON.parse(e.data); if (m.t === 'view') c.view = m.view; else c.errors.push(m.message) })
   return c
@@ -51,7 +51,7 @@ check('rejoin reclaims same seat', b2.view?.you === sb && b2.view?.status === 'p
 const c3 = mk('idC', 'Carol'); await wait(1000)
 check('late joiner takes over a bot seat mid-game', c3.view?.you !== undefined && c3.view.you !== sa && c3.view.you !== sb)
 // room codes: nobody can land in a random empty room by typing a wrong code, and codes in use cannot be created again
-const ghost = mk('idG', 'Ghost'); await wait(800)
+const ghost = mk('idG', 'Ghost', false, 'nobody' + Math.floor(Math.random() * 1e6)); await wait(800)
 check('joining a code nobody created is refused (room_not_found)', ghost.errors.includes('room_not_found') && !ghost.view)
 const room2 = new PartySocket({ host, room, WebSocket: WebSocket as any }); const e2: string[] = []
 room2.addEventListener('open', () => room2.send(JSON.stringify({ t: 'join', id: 'idH', name: 'H', create: true })))

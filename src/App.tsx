@@ -129,7 +129,7 @@ export default function App() {
             </div>
           </div>
         )}
-        {room && !stress && active && view && <ConnBadge status={status} latency={latency} />}
+        {room && active && view && (stress ? new URLSearchParams(location.search).has('ping') : true) && <ConnBadge status={stress ? 'open' : status} latency={stress ? 42 : latency} />}
         {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
         {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={tutorial} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}

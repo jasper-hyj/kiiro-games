@@ -79,6 +79,7 @@ const probe = () => {
     const x = Math.min(innerWidth - 1, Math.max(0, it.r.left + it.r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, it.r.top + it.r.height / 2))
     const top = document.elementFromPoint(x, y)
     if (!top || top === it.el || it.el.contains(top) || top.contains(it.el)) continue
+    if (getComputedStyle(it.el).pointerEvents === 'none') continue // elementFromPoint cannot see click-through overlays (ping badge, chat feed)
     if (top.closest('.overlay') && !it.el.closest('.overlay')) continue
     if (top === document.documentElement || top === document.body) continue
     push('TEXT COVERED', it, null, ` by <${describe(top)}>`)
@@ -137,7 +138,7 @@ for (const [w, h, touch] of VIEWPORTS) {
     await run('table', async () => {
       if (w <= 480 && h > w) return // portrait phones show the 'turn your phone' screen instead of the table
       for (const [mode, rule, pl] of [['full', 'riichi', 4], ['full', 'taiwan', 4], ['call', 'taiwan', 4], ['call', 'riichi', 3], ['swap', 'sichuan', 4], ['void', 'sichuan', 4], ['min', 'hk', 4], ['full&idle=slow', 'taiwan', 4], ['call&idle=auto', 'riichi', 4]] as const) {
-        const p = await open(`/?stress=${mode}&players=${pl}&rule=${rule}`)
+        const p = await open(`/?stress=${mode}&players=${pl}&rule=${rule}&ping=1`)
         await check(p, `table ${mode}/${rule}/${pl}`)
         if (mode === 'full' && rule === 'riichi') {
           await click(p, '.dock summary'); await sleep(300); await check(p, 'table dock open')
