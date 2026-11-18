@@ -43,7 +43,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
       {items.map((y, i) => (
         <div key={i} style={{ display: 'contents' }}>
           <div>{yakuName(y, lang)}</div>
-          <div>{y.yakuman ? t('yakuman') : `${y.value} ${unit}`}</div>
+          <div>{y.yakuman ? (y.value >= 26 ? t('doubleYakuman') : t('yakuman')) : `${y.value} ${unit}`}</div>
         </div>
       ))}
     </div>

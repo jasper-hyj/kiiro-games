@@ -26,7 +26,7 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
   const mk = (seat: number): PlayerView => {
     const me = seat === 0
     const ms = full ? meldSet().slice(0, me ? 4 : 5) : []
-    const handCount = (full ? 16 - ms.length * 3 : 16) - (jp || sc ? 3 : 0)
+    const handCount = Math.max(1, (full ? 16 - ms.length * 3 : 16) - (jp || sc ? 3 : 0))
     return {
       seat, name: ['Player', 'Bot 1', 'Bot 2', 'Bot 3'][seat], points: 1000 + seat * 137, human: me, connected: true,
       handCount, hand: me ? Array.from({ length: handCount }, id).sort((a, b) => (a >> 2) - (b >> 2)) : null, drawn: me ? id() : null,

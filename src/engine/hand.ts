@@ -75,16 +75,19 @@ export function canComplete(counts: Counts): boolean {
 
 export const KOKUSHI = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33]
 export const isChiitoi = (c: Counts) => c.reduce((a, v) => a + (v === 2 ? 1 : 0), 0) === 7 && c.every((v) => v === 0 || v === 2)
+/** seven pairs where a set of four identical tiles may count as two pairs (Sichuan's dragon seven pairs) */
+export const isChiitoiDup = (c: Counts) => c.every((v) => v === 0 || v === 2 || v === 4) && c.reduce((a: number, v: number) => a + v, 0) === 14
 export function isKokushi(c: Counts) {
   let pair = false
   for (const k of KOKUSHI) { if (c[k] === 0) return false; if (c[k] === 2) pair = true }
   return pair && c.reduce((a, v) => a + v, 0) === 14
 }
 
-export interface Special { chiitoi?: boolean; kokushi?: boolean }
+export interface Special { chiitoi?: boolean; kokushi?: boolean; chiitoiDup?: boolean }
 export function isComplete(c: Counts, special: Special = {}): boolean {
   if (canComplete(c)) return true
   if (special.chiitoi && isChiitoi(c)) return true
+  if (special.chiitoiDup && isChiitoiDup(c)) return true
   if (special.kokushi && isKokushi(c)) return true
   return false
 }

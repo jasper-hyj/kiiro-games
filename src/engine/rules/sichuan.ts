@@ -1,6 +1,6 @@
 import type { HandScore, RuleSet, WinContext, YakuItem } from './types'
 import { closedHand, interpretations } from './common'
-import { isChiitoi } from '../hand'
+import { isChiitoiDup } from '../hand'
 import { isTerminal, numOf, suitOf } from '../tiles'
 
 /** Sichuan Mahjong ("Blood Battle"): 108 tiles (no honors, no flowers), no chi, every player gives up one suit and
@@ -37,7 +37,7 @@ function evaluate(ctx: WinContext): HandScore | null {
     cands.push({ yaku, total, base: 2 ** shown, label: total >= cap ? 'Limit' : undefined })
   }
 
-  if (ctx.melds.length === 0 && isChiitoi(ctx.counts)) {
+  if (ctx.melds.length === 0 && isChiitoiDup(ctx.counts)) {
     done([Y('Seven Pairs', '七對', 2), ...(flush ? [Y('Pure Suit', '清一色', 2)] : [])])
   }
   for (const it of interpretations(ctx, 4)) {
@@ -74,6 +74,6 @@ export const sichuan: RuleSet = {
   id: 'sichuan', name: 'Sichuan', zh: '四川麻將',
   blurb: '108 tiles · pick a missing suit · no chi · play on after wins (Blood Battle)',
   handSize: 13, nSets: 4, flowers: false, deadWall: 0, startPoints: 0, unit: 'pts',
-  specials: { chiitoi: true },
+  specials: { chiitoi: true, chiitoiDup: true },
   evaluate, settle,
 }

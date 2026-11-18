@@ -30,7 +30,12 @@ function tileYaku(ctx: WinContext, closed: boolean, out: YakuItem[], yakuman: Ya
     const s = [0, 1, 2].find((x) => sc[x] > 0)!
     const b = s * 9
     const ok = c[b] >= 3 && c[b + 8] >= 3 && [1, 2, 3, 4, 5, 6, 7].every((i) => c[b + i] >= 1)
-    if (ok) yakuman.push({ name: 'Chuuren Poutou (Nine Gates)', zh: '九蓮寶燈', value: 13, yakuman: true })
+    if (ok) {
+      // the pure form (1112345678999 before the winning tile: the nine-sided wait) counts double
+      const pre = c.slice(b, b + 9); if (ctx.winKind >= b && ctx.winKind < b + 9) pre[ctx.winKind - b]--
+      const junsei = [3, 1, 1, 1, 1, 1, 1, 1, 3].every((n, i) => pre[i] === n)
+      yakuman.push(junsei ? { name: 'Junsei Chuuren Poutou (Pure Nine Gates)', zh: '純正九蓮寶燈', value: 26, yakuman: true } : { name: 'Chuuren Poutou (Nine Gates)', zh: '九蓮寶燈', value: 13, yakuman: true })
+    }
   }
   if (suitsUsed === 1 && !honors) out.push({ name: 'Chinitsu (Full Flush)', zh: '清一色', value: closed ? 6 : 5 })
   else if (suitsUsed === 1 && honors) out.push({ name: 'Honitsu (Half Flush)', zh: '混一色', value: closed ? 3 : 2 })
@@ -81,7 +86,7 @@ function setYaku(ctx: WinContext, it: Interp, closed: boolean, out: YakuItem[], 
   if (tris.length === 4) out.push({ name: 'Toitoi', zh: '對對和', value: 2 })
   const conc = tris.filter((t) => !t.open).length
   if (conc === 3) out.push({ name: 'Sanankou', zh: '三暗刻', value: 2 })
-  if (conc === 4) yakuman.push({ name: 'Suuankou (Four Concealed Triplets)', zh: '四暗刻', value: 13, yakuman: true })
+  if (conc === 4) yakuman.push(it.waitKind === 'tanki' ? { name: 'Suuankou Tanki (Four Concealed Triplets, single wait)', zh: '四暗刻單騎', value: 26, yakuman: true } : { name: 'Suuankou (Four Concealed Triplets)', zh: '四暗刻', value: 13, yakuman: true })
   const kans = tris.filter((t) => t.kan).length
   if (kans === 3) out.push({ name: 'Sankantsu', zh: '三槓子', value: 2 })
   if (kans === 4) yakuman.push({ name: 'Suukantsu (Four Kans)', zh: '四槓子', value: 13, yakuman: true })
@@ -97,7 +102,7 @@ function setYaku(ctx: WinContext, it: Interp, closed: boolean, out: YakuItem[], 
   if (dtri === 3) yakuman.push({ name: 'Daisangen (Big Three Dragons)', zh: '大三元', value: 13, yakuman: true })
   else if (dtri === 2 && isDragon(pair)) out.push({ name: 'Shousangen (Little Three Dragons)', zh: '小三元', value: 2 })
   const wtri = tris.filter((t) => t.kind >= 27 && t.kind < 31).length
-  if (wtri === 4) yakuman.push({ name: 'Daisuushii (Big Four Winds)', zh: '大四喜', value: 13, yakuman: true })
+  if (wtri === 4) yakuman.push({ name: 'Daisuushii (Big Four Winds)', zh: '大四喜', value: 26, yakuman: true })
   else if (wtri === 3 && pair >= 27 && pair < 31) yakuman.push({ name: 'Shousuushii (Little Four Winds)', zh: '小四喜', value: 13, yakuman: true })
 }
 
@@ -125,7 +130,8 @@ function calcFu(ctx: WinContext, it: Interp, closed: boolean, pinfu: boolean): n
 function finish(ctx: WinContext, yaku: YakuItem[], yakuman: YakuItem[], fu: number): HandScore | null {
   if (ctx.firstTurn && ctx.tsumo) yakuman.push(ctx.dealer ? { name: 'Tenhou', zh: '天和', value: 13, yakuman: true } : { name: 'Chiihou', zh: '地和', value: 13, yakuman: true })
   if (yakuman.length) {
-    return { yaku: yakuman, total: 13 * yakuman.length, fu, yakuman: yakuman.length, ...limitOf(0, 0, yakuman.length) }
+    const mult = yakuman.reduce((a, y) => a + y.value / 13, 0) // a double yakuman counts twice
+    return { yaku: yakuman, total: 13 * mult, fu, yakuman: mult, ...limitOf(0, 0, mult) }
   }
   const han = yaku.reduce((a, y) => a + y.value, 0)
   if (han === 0) return null
@@ -144,7 +150,8 @@ function evaluate(ctx: WinContext): HandScore | null {
   const cands: HandScore[] = []
 
   if (noMelds && isKokushi(ctx.counts)) {
-    const s = finish(ctx, [], [{ name: 'Kokushi Musou (Thirteen Orphans)', zh: '國士無雙', value: 13, yakuman: true }], 0)
+    const thirteenWait = ctx.counts[ctx.winKind] === 2 // the 13 orphans were all there before the winning tile
+    const s = finish(ctx, [], [thirteenWait ? { name: 'Kokushi Musou (13-sided wait)', zh: '國士無雙十三面', value: 26, yakuman: true } : { name: 'Kokushi Musou (Thirteen Orphans)', zh: '國士無雙', value: 13, yakuman: true }], 0)
     if (s) cands.push(s)
   }
   if (noMelds && isChiitoi(ctx.counts)) {

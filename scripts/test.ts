@@ -64,8 +64,34 @@ const pay = (t: ReturnType<typeof setup>) => {
 {
   const t = setup('riichi', '19m19p19s1234567z', '1z', { tsumo: false })
   const sc = run(t)!
-  eq('kokushi yakuman', [sc.yakuman, sc.base], [1, 8000])
+  eq('kokushi 13-sided wait is a double yakuman', [sc.yakuman, sc.base], [2, 16000])
+  eq('kokushi 13-sided ron non-dealer 64000', pay(t)[0], -64000)
+}
+{
+  // a normal (single-wait) kokushi: the hand is missing one orphan and has a pair elsewhere
+  const t = setup('riichi', '19m19p19s123456z9m', '7z', { tsumo: false })
+  const sc = run(t)!
+  eq('kokushi single wait is one yakuman', [sc.yakuman, sc.base], [1, 8000])
   eq('kokushi ron non-dealer 32000', pay(t)[0], -32000)
+}
+{
+  const t = setup('riichi', '111m222p333s444z5z', '5z', { tsumo: false })
+  const sc = run(t)!
+  eq('suuankou tanki is a double yakuman', sc.yakuman, 2)
+}
+{
+  const t = setup('riichi', '1112345678999m', '5m', { tsumo: false })
+  const sc = run(t)!
+  eq('pure nine gates is a double yakuman', sc.yakuman, 2)
+}
+{
+  const t = setup('riichi', '111222333z44z12m', '3m', { tsumo: false })
+  const sc = run(t)!
+  eq('little four winds stays a single yakuman', sc.yakuman, 1)
+}
+{
+  const t = setup('riichi', '111222333z4z12m5p', '4z', { tsumo: false })
+  void t
 }
 {
   const t = setup('riichi', '234m234p234s55m66p', '6p', { tsumo: false })

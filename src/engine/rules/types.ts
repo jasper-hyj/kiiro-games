@@ -54,7 +54,7 @@ export interface RuleSet {
   deadWall: number
   startPoints: number
   unit: string
-  specials: { chiitoi?: boolean; kokushi?: boolean }
+  specials: { chiitoi?: boolean; kokushi?: boolean; chiitoiDup?: boolean }
   evaluate(ctx: WinContext): HandScore | null
   settle(score: HandScore, info: SettleInfo): number[]
   sanma?: boolean

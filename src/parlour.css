@@ -723,3 +723,11 @@ html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3
 .auditline { grid-column: 1 / -1; font-size: .8em; padding: 6px 10px; border-radius: 10px; }
 .auditline.ok { color: #9be8c0; background: rgba(95,224,164,.1); border: 1px solid rgba(95,224,164,.3); }
 .auditline.bad { color: #ffd6d6; background: rgba(255,107,107,.18); border: 1px solid rgba(255,107,107,.55); }
+.wbicon { font-size: 22px; }
+.winbanner .wbicon:lang(zh), .winbanner .wbicon:lang(ja) { font-size: 30px; }
+
+/* the dock panel never clips its switches */
+.dockpanel { grid-template-columns: repeat(2, minmax(0, 1fr)); overflow-x: hidden; }
+.dockpanel .switch { white-space: normal; gap: 10px; min-width: 0; line-height: 1.2; }
+.dockpanel .knob { flex: none; }
+@media (max-height: 520px) { .dockpanel { width: min(460px, calc(100vw - 24px)); padding: 10px 12px; } .dockpanel .switch { min-height: 34px; font-size: 14px; } }
