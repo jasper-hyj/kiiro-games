@@ -23,7 +23,7 @@ function MeldView({ m, owner, n }: { m: Meld; owner: number; n: number }) {
   const rest = m.tiles.filter((t) => t !== called)
   // where the sideways tile sits: from the player on your left -> leftmost, across -> middle, right -> rightmost
   const rel = (m.from - owner + n) % n
-  const pos = m.type === 'chi' ? 0 : rel === n - 1 ? 0 : rel === 1 ? (m.type === 'pon' ? 2 : 3) : 1
+  const pos = m.type === 'chi' ? 0 : rel === n - 1 ? 0 : rel === 1 ? (m.type === 'pon' || m.type === 'kakan' ? 2 : 3) : 1
   const kakanExtra = m.type === 'kakan' ? rest.pop() : undefined
   const body = m.type === 'kakan' ? rest : rest
   const items: ReactNode[] = []

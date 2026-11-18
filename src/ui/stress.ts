@@ -12,20 +12,20 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
   const id = () => { const v = (k * 7 + 3) % 136; k++; return v } // spread of valid tile ids
   const flowers = (n: number) => Array.from({ length: n }, (_, i) => 136 + i)
   const discards = (n: number) => Array.from({ length: n }, (_, i) => ({ tile: id(), riichi: i === 6, called: i % 9 === 4 }))
-  const meldSet = (): Meld[] => {
+  const meldSet = (seat: number): Meld[] => {
     const t = (n: number) => Array.from({ length: n }, id)
     const c = t(3)
     return [
       { type: 'chi', tiles: c, from: 3, called: c[0] },
-      { type: 'pon', tiles: t(3), from: 2, called: 0 },
+      { type: 'pon', tiles: t(3), from: (seat + 1) % 4, called: 0 },
       { type: 'minkan', tiles: t(4), from: 1, called: 0 },
       { type: 'ankan', tiles: t(4), from: 0 },
-      { type: 'kakan', tiles: t(4), from: 2, called: 0 },
+      { type: 'kakan', tiles: t(4), from: (seat + 1) % 4, called: 0 }, // from the player on the right: the sideways pair sits at the far right
     ].map((m) => ({ ...m, called: m.called === 0 ? m.tiles[0] : m.called })) as Meld[]
   }
   const mk = (seat: number): PlayerView => {
     const me = seat === 0
-    const ms = full ? meldSet().slice(0, me ? 4 : 5) : []
+    const ms = full ? meldSet(seat).slice(0, me ? 4 : 5) : []
     const handCount = Math.max(1, (full ? 16 - ms.length * 3 : 16) - (jp || sc ? 3 : 0))
     return {
       seat, name: ['Player', 'Bot 1', 'Bot 2', 'Bot 3'][seat], points: 1000 + seat * 137, human: me, connected: true,
