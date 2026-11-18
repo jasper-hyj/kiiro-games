@@ -171,8 +171,18 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
 
 function ruleName(id: RuleId, t: (k: string) => string) { return t(id + '.name') }
 
+function summary(c: RoomConfig, t: (k: string) => string): string {
+  const len = c.rule === 'taiwan' ? (c.rounds === 4 ? t('fullGame') : t('eastRound')) : (c.rounds === 2 ? t('eastSouth') : t('eastOnly'))
+  const parts = [len]
+  if (c.rule === 'riichi') parts.push(c.players === 3 ? t('sanma') : '4P', c.aka ? t('redFives') : '')
+  if (c.rule === 'hk' || c.rule === 'mcr') parts.push(`${t('minFan')} ${c.minFan}`)
+  if (c.rule === 'sichuan') parts.push(c.swap !== false ? t('swapOpt') : '')
+  parts.push(`${t('bots')}: ${t(c.botLevel ?? 'normal')}`)
+  return parts.filter(Boolean).join(' · ')
+}
+
 export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room: string; send: (m: ClientMsg) => void; onLeave: () => void }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const link = `${location.origin}${location.pathname}?room=${room}`
   const [copied, setCopied] = useState(false)
   const humans = view.seats.filter((s) => s.human).length
@@ -196,8 +206,16 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
         ))}
       </div>
       <p className="muted small seatsnote">{humans}/{view.seats.length} · {t('seatsNote')}</p>
+      <div className="rulebanner">
+        <span className="glyph" aria-hidden="true">{GLYPH[view.config.rule]}</span>
+        <div className="rbtext">
+          <span className="eyebrow">{t('playingNow')}</span>
+          <b className="rbname">{lang === 'zh' ? RULESETS[view.config.rule].zh : t(view.config.rule + '.name')}</b>
+          <span className="muted small">{summary(view.config, t)}</span>
+        </div>
+      </div>
       <details className="tablesettings">
-        <summary>{t('gameSettings')} {view.host ? '' : t('hostDecides')}</summary>
+        <summary>{view.host ? t('changeRules') : t('hostDecides')}</summary>
         <RuleCards config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
         <Options flat config={view.config} readOnly={!view.host} onChange={(c) => send({ t: 'config', config: c })} />
       </details>

@@ -6,11 +6,12 @@ import { useLang } from '../i18n'
 // [English name, 中文名, English description, 中文說明]
 type Row = [string, string, string, string]
 interface Section { title: [string, string]; text?: [string, string][]; rows?: Row[] }
-interface Data { intro: [string, string][]; sections: Section[] }
+interface Data { goal?: [string, string]; intro: [string, string][]; sections: Section[] }
 type TabId = RuleId | 'basics'
 
 const DATA: Record<TabId, Data> = {
   basics: {
+    goal: ['Goal: build 4 sets and a pair (5 sets in Taiwanese) before anyone else — by drawing the last tile yourself or by taking someone\'s discard.', '目標：搶先湊成 4 組面子加一對眼（台灣麻將為 5 組）——自己摸到最後一張，或胡別人打出的牌。'],
     intro: [
       ['Mahjong is a draw-and-discard game for four players (three in Riichi sanma). Everyone builds a hand of complete sets plus a pair; the first to complete a legal hand wins. These basics are shared by every ruleset here — the other tabs list what differs.', '麻將是四人（日麻三人制為三人）輪流摸牌、打牌的遊戲。每人把手牌湊成數組面子加一對眼，最先湊成合法牌型者獲勝。這裡是所有規則共通的基礎，其他分頁說明各規則的差異。'],
     ],
@@ -48,6 +49,7 @@ const DATA: Record<TabId, Data> = {
     ],
   },
   taiwan: {
+    goal: ['Goal: complete 5 sets + a pair (17 tiles). Every winning hand scores tai: payment = 30 + 10 per tai. Flowers, the dealer and big patterns add tai.', '目標：湊成 5 組面子加一對眼（17 張）。每個牌型都有台數：台數越多贏越多，付款 = 30 + 每台 10。花牌、莊家與大牌型都會加台。'],
     intro: [
       ['16 tiles (5 sets + a pair) from a 144-tile set with 8 flowers. There is no minimum — any complete hand wins.', '每人 16 張（5 組面子 + 一對眼），共 144 張牌含 8 張花牌。沒有最低台數，只要胡牌就算贏。'],
       ['Payment = base 30 + 10 per tai. Self-draw: every opponent pays. Discard win: only the discarder pays (several players can win off the same discard).', '輸贏 = 底 30 + 每台 10。自摸三家都付；放槍只由放槍者付（一炮可多家同時胡）。'],
@@ -96,6 +98,7 @@ const DATA: Record<TabId, Data> = {
     ],
   },
   hk: {
+    goal: ['Goal: complete 4 sets + a pair with at least 3 fan (the minimum can be changed). Fan are worth more and more points, doubling as they go up.', '目標：湊成 4 組面子加一對眼，且至少 3 番（可調整）。番數越高分數成倍增加。'],
     intro: [
       ['13 tiles from a 144-tile set with 8 flowers (flowers are set aside and replaced). Minimum 3 fan to win (adjustable in the options).', '每人 13 張，共 144 張牌含 8 張花牌（摸到花牌補牌）。預設最低 3 番起胡（可在選項調整）。'],
       ['Fan → points: 3 fan = 8, 4 = 16, 5 = 24, 6 = 32, 7 = 48, 8 = 64, 9 = 96, 10+ = 128 (limit). Self-draw: each opponent pays the value. Discard win: the discarder pays double.', '番數換算：3 番 = 8，4 = 16，5 = 24，6 = 32，7 = 48，8 = 64，9 = 96，10 番以上 = 128（滿番）。自摸三家各付；放槍者付雙倍。'],
@@ -139,6 +142,7 @@ const DATA: Record<TabId, Data> = {
     ],
   },
   sichuan: {
+    goal: ['Goal: win before the wall runs out — but only with two suits: you give up one suit at the start and must discard it first. Play continues after a win until three players have won.', '目標：在牌牆摸完前胡牌，但只能用兩門：開局先定缺一門，並且要先打掉那一門。有人胡牌後牌局繼續，直到三家胡牌。'],
     intro: [
       ['Sichuan mahjong ("Blood Battle", 血戰到底) uses only the 108 number tiles — no winds, dragons or flowers — and no chi. Each hand starts with an optional swap of three tiles, then every player gives up one suit. You cannot win while you still hold a tile of the suit you gave up, so you discard those tiles first.', '四川麻將（血戰到底）只用 108 張數牌，沒有風牌、三元牌與花牌，也不能吃。每局開始可先換三張，再由每位玩家定缺一門；手上還有缺的那一門就不能胡牌，所以要先打掉那一門的牌。'],
       ['Play does not stop when someone wins. The winner leaves the hand (their tiles are shown) and the others keep playing until three players have won or the wall runs out. Several players can win off the same discard. Seats rotate after every hand.', '有人胡牌後牌局不會結束：胡牌者離場（亮出手牌），其他人繼續打，直到三家都胡牌或牌牆摸完。同一張牌可以多家同時胡。每局結束後座位輪轉。'],
@@ -180,6 +184,7 @@ const DATA: Record<TabId, Data> = {
     ],
   },
   mcr: {
+    goal: ['Goal: complete a hand worth at least 8 fan (flowers do not count). The winner always earns 8 + the fan value, so even small hands are worth a lot.', '目標：湊成至少 8 番的牌型（花牌不計）。胡牌者一定得 8 + 番數，所以小牌也很有價值。'],
     intro: [
       ['Chinese Official (Guobiao / MCR) is the international tournament standard. 13 tiles, 144 tiles with 8 flowers, and a hand needs at least 8 fan (flowers do not count toward the 8). Seats rotate after every hand and there is no dealer bonus or streak.', '國標麻將（國際比賽標準）。每人 13 張，144 張含 8 張花牌；胡牌至少要 8 番（花牌不計入這 8 番）。每一局結束後座位輪轉，沒有莊家加成或連莊。'],
       ['Payment: the winner scores 8 + fan. Self-draw: every opponent pays 8 + fan. Win by discard: the discarder pays 8 + fan and the other two pay 8 each. Everyone starts at 0 and can go negative.', '計分：胡牌者得 8 + 番數。自摸：三家各付 8 + 番數。放槍：放槍者付 8 + 番數，另外兩家各付 8。起始 0 點，可以是負數。'],
@@ -221,6 +226,7 @@ const DATA: Record<TabId, Data> = {
     ],
   },
   riichi: {
+    goal: ['Goal: complete 4 sets + a pair that contains at least one yaku (scoring pattern). Declare riichi on a closed tenpai hand for extra value; dora add han.', '目標：湊成 4 組面子加一對眼，且至少有一個役。門清聽牌時可宣告立直增加價值；寶牌會增加翻數。'],
     intro: [
       ['13 tiles, 136-tile set (no flowers); red fives optional. You need at least one yaku to win — dora alone never counts. 3-player (sanma) removes 2m–8m and sets North tiles aside as bonus dora.', '每人 13 張，共 136 張（無花牌），可選赤牌。胡牌必須至少有一個役，寶牌不算役。三人麻將去除二～八萬，北風可拔出當寶牌。'],
       ['Chi only from the player to your left. Riichi: closed tenpai hand, bet 1000, the hand is then locked. Furiten (a winning tile is in your own discards, or you passed a ron) blocks ron but not tsumo.', '吃只能吃上家的牌。立直：門清聽牌，押 1000 點，之後不能改牌。振聽（自己捨牌中有胡牌，或放過一次榮和）不能榮和但可以自摸。'],
@@ -307,6 +313,7 @@ export function RulesHelp({ initial, onClose }: { initial: RuleId; onClose: () =
             <button key={k} className={'btn sm ' + (id === k ? 'gold' : 'alt')} onClick={() => setId(k)}>{k === 'basics' ? (L === 1 ? '基本玩法' : 'Basics') : t(k + '.name')}</button>
           ))}
         </div>
+        <div className="goalbox"><b>{d.goal?.[L]}</b></div>
         {d.intro.map((p, i) => <p key={i} className="muted">{p[L]}</p>)}
         {d.sections.map((s) => (
           <div key={s.title[0]}>

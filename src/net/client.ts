@@ -7,9 +7,11 @@ export interface Conn {
   close(): void
   /** debug/testing: drop the connection and reconnect after `ms` */
   drop?(ms: number): void
+  /** try to reconnect right now (the socket also retries on its own with back-off) */
+  reconnect?(): void
 }
 export type Status = 'connecting' | 'open' | 'closed'
-export interface Handlers { onView(v: TableView): void; onStatus(s: Status): void; onError(m: string): void }
+export interface Handlers { onView(v: TableView): void; onStatus(s: Status): void; onError(m: string): void; onLatency?(ms: number): void }
 
 export function getClientId(): string {
   try {
@@ -57,19 +59,53 @@ export const onlineConfigured = !!envHost || import.meta.env.DEV || ['localhost'
 export function connectRemote(room: string, id: string, name: string, h: Handlers): Conn {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
+  let lastPong = 0
+  let beatTimer: ReturnType<typeof setInterval> | null = null
+  let watchdog: ReturnType<typeof setTimeout> | null = null
+  const beat = () => {
+    if (ws.readyState !== 1) return
+    const sent = Date.now()
+    try { ws.send(JSON.stringify({ t: 'ping', ts: sent } satisfies ClientMsg)) } catch { return }
+    if (watchdog) clearTimeout(watchdog)
+    // no answer within 5 s: the connection is dead even if the browser still says "open" (phone slept, wifi changed)
+    watchdog = setTimeout(() => { if (lastPong < sent) { h.onStatus('closed'); ws.reconnect(); startRetry() } }, 5000)
+  }
+  // automatic recovery: while the connection is down, keep trying every few seconds (the socket also backs off on its own)
+  let retryTimer: ReturnType<typeof setInterval> | null = null
+  let dropping = false
+  const startRetry = () => { if (retryTimer || dropping) return; retryTimer = setInterval(() => { if (ws.readyState !== 1 && ws.readyState !== 0) ws.reconnect() }, 3500) }
+  const stopRetry = () => { if (retryTimer) clearInterval(retryTimer); retryTimer = null }
+  const wake = () => { if (document.visibilityState === 'visible') { if (ws.readyState === 1) beat(); else ws.reconnect() } }
+  const online = () => ws.reconnect()
+  document.addEventListener('visibilitychange', wake)
+  window.addEventListener('online', online)
   ws.addEventListener('open', () => {
+    stopRetry()
     h.onStatus('open')
     ws.send(JSON.stringify({ t: 'join', id, name } satisfies ClientMsg))
+    lastPong = Date.now()
+    beat()
+    if (beatTimer) clearInterval(beatTimer)
+    beatTimer = setInterval(beat, 10000)
   })
-  ws.addEventListener('close', () => h.onStatus('closed'))
+  ws.addEventListener('close', () => { h.onStatus('closed'); if (beatTimer) clearInterval(beatTimer); beatTimer = null; startRetry() })
   ws.addEventListener('message', (e) => {
     const m = JSON.parse(e.data as string) as ServerMsg
     if (m.t === 'view') h.onView(m.view)
+    else if (m.t === 'pong') { lastPong = Date.now(); if (watchdog) clearTimeout(watchdog); h.onLatency?.(Date.now() - m.ts) }
     else h.onError(m.message)
   })
   return {
     send: (m) => ws.send(JSON.stringify(m)),
-    close: () => ws.close(),
-    drop: (ms) => { ws.close(); setTimeout(() => ws.reconnect(), ms) },
+    close: () => {
+      if (beatTimer) clearInterval(beatTimer)
+      if (watchdog) clearTimeout(watchdog)
+      stopRetry()
+      document.removeEventListener('visibilitychange', wake)
+      window.removeEventListener('online', online)
+      ws.close()
+    },
+    drop: (ms) => { dropping = true; stopRetry(); ws.close(); setTimeout(() => { dropping = false; ws.reconnect() }, ms) },
+    reconnect: () => { h.onStatus('connecting'); ws.reconnect() },
   }
 }

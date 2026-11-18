@@ -421,7 +421,6 @@ select option { background: #101830; color: #ece6d6; }
 
 /* ---------- accessibility: reduce motion, larger text ---------- */
 html[data-motion='reduce'] *, html[data-motion='reduce'] *::before, html[data-motion='reduce'] *::after { animation: none !important; transition: none !important; }
-html[data-text='large'] .page, html[data-text='large'] .modal { zoom: 1.18; }
 .gear { position: relative; }
 .gear summary { list-style: none; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; color: var(--ivory); background: rgba(255,255,255,.05); border: 1px solid rgba(170,186,214,.3); }
 .gear summary::-webkit-details-marker { display: none; }
@@ -493,3 +492,151 @@ html[data-ponds='flat'] .pond .pondin { transform: translate(-50%, -50%) !import
 .scwhead { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
 .scpts { margin-left: auto; font-size: 20px; font-weight: 700; }
 .scnote { padding: 6px 0; border-top: 1px dashed rgba(170,186,214,.18); }
+
+/* ---------- connection badge ---------- */
+.connbadge { position: fixed; z-index: var(--z-toast); font-family: var(--sans); pointer-events: none; }
+.connbadge.ok { top: calc(8px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); display: flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: .04em; color: rgba(236,240,250,.6); background: rgba(0,0,0,.3); border: 1px solid rgba(170,186,214,.2); border-radius: 999px; padding: 3px 10px 3px 8px; }
+.connbadge .cdot { width: 8px; height: 8px; border-radius: 50%; background: #5fe0a4; box-shadow: 0 0 8px rgba(95,224,164,.8); }
+.connbadge.slow .cdot { background: #f0b33e; box-shadow: 0 0 8px rgba(240,179,62,.8); }
+.connbadge.down { top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); padding: 10px 18px; border-radius: 14px; background: linear-gradient(180deg, rgba(150,34,48,.96), rgba(90,18,30,.96)); border: 1px solid rgba(255,160,170,.5); color: #fff4ee; font-size: 14px; box-shadow: 0 14px 34px rgba(0,0,0,.6); animation: rise-in .2s ease-out; }
+.connbadge.down .muted { color: rgba(255,240,236,.75); }
+.connbadge .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: spin 0.9s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- the rule being played, front and centre in the waiting room ---------- */
+.rulebanner { display: flex; align-items: center; gap: 22px; width: min(820px, 100%); padding: 18px 26px; border-radius: 18px; text-align: left;
+  background: linear-gradient(180deg, rgba(40,56,108,.9), rgba(12,18,40,.95)); border: 1px solid rgba(226,234,248,.55); box-shadow: 0 0 0 1px rgba(0,0,0,.5), 0 0 40px rgba(110,150,240,.18), 0 16px 34px rgba(0,0,0,.55); }
+.rulebanner .glyph { font-family: var(--glyph); font-size: 72px; line-height: 1; background: linear-gradient(180deg, #fff, #a9b6d2 70%, #7e8aa8); -webkit-background-clip: text; background-clip: text; color: transparent; flex: none; width: 92px; text-align: center; }
+.rbtext { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rbtext .eyebrow { margin: 0; font-size: 12px; }
+.rbname { font-family: var(--serif); font-size: clamp(26px, 5vw, 38px); font-weight: 400; letter-spacing: .06em; color: #fff; }
+.tablesettings > summary { color: var(--brass-hi); }
+.goalbox { margin: 4px 0 14px; padding: 14px 16px; border-radius: 12px; background: rgba(110,150,240,.12); border: 1px solid rgba(170,186,214,.35); font-size: 15px; line-height: 1.5; }
+.goalbox b { font-weight: 600; color: var(--ivory); }
+.dockrulename { font-family: var(--serif); font-size: 1.25em; letter-spacing: .06em; color: #fff; grid-column: 1 / -1; }
+.dockpanel .rulesbtn { grid-column: 1 / -1; text-align: left; border: 1px solid rgba(170,186,214,.3); border-radius: 10px; padding: 0 12px; background: rgba(255,255,255,.05); }
+.modal .goalbox { color: var(--ivory); }
+
+/* =====================================================================
+   BIGGER TILES — the hand tile goes from 54px to 78px of stage width (still fits 17 tiles + the drawn one in 1600),
+   and discards sit eight per row over three rows, which frees vertical room for larger ponds.
+   ===================================================================== */
+.board { --u: 78px; }
+.seat.me:has(.hint) { --u: 64px; }
+.handrow { height: 134px; }
+.seat.me:has(.hint) .handrow { height: 113px; }
+.seat.me:has(.hint) .hint { height: 34px; }
+.cgrid { --pt: clamp(12px, calc((var(--H) - 474 - var(--infoh)) / 8.9 * 1px), 36px); }
+.cgrid .pond { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
+.cgrid .pond.p1, .cgrid .pond.p3 { width: calc(var(--tw) * 4.5); height: calc(var(--tw) * 8.4 + 8px); }
+.pond .pondin { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
+html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3 { width: calc(var(--tw) * 8.4 + 8px); height: calc(var(--tw) * 4.5); }
+
+/* =====================================================================
+   LANDSCAPE-FIRST GAME LAYOUT (like Mahjong Soul on a phone)
+   .gamecol = [ scaled table ] over [ real-size hand bar ].
+   The hand, my info line and the action pop-up are NOT scaled with the table, so they stay big and sharp.
+   ===================================================================== */
+.gamecol { height: 100%; min-height: 0; display: flex; flex-direction: column; --s: 1; --k: 1; --ink: #f4f2ea; --muted: #bcd6c8; --surface: rgba(8,36,25,.82); --surface2: rgba(255,255,255,.14); --line: rgba(255,255,255,.16); --good: #5fe0a4; --danger: #ff6b6b; color: var(--ink); }
+.gamecol .stagewrap { flex: 1; min-height: 0; }
+.board { --f: clamp(1, calc(.85 / var(--s)), 2); --fc: clamp(1, calc(.85 / var(--s)), 1.5);
+  grid-template-rows: 130px minmax(0, 1fr); }
+.board .stage-bg { display: none; }
+.cgrid { --infoh: calc(90 * var(--f)); --pt: clamp(12px, calc((var(--H) - 160 - var(--infoh)) / 9 * 1px), 40px); }
+.board .chip { zoom: var(--fc); }
+.board .info { zoom: var(--f); }
+.board .dorapanel { zoom: var(--f); }
+.board .cw { font-size: 15px; }
+
+.handbar { flex: none; position: relative; z-index: 4; padding: 6px 12px calc(8px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 4px;
+  background: linear-gradient(180deg, rgba(6,10,24,.0), rgba(4,6,16,.92) 30%); }
+.handbar::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(170,186,214,.35), transparent); }
+.infoline { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; }
+.infoleft { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-width: 0; --tw: max(20px, calc(var(--hw) * .5)); }
+.infoleft .chip { font-size: 15px; padding: 4px 14px 4px 5px; zoom: 1; }
+.infoleft .chip .wind { width: 26px; height: 26px; font-size: 13px; }
+.infoleft .melds, .infoleft .flowers { --tw: max(20px, calc(var(--hw) * .5)); display: flex; gap: 6px; align-items: flex-end; }
+.infoline .statusbar { height: auto; min-height: 0; padding: 4px 14px; font-size: 16px; margin: 0; text-align: right; white-space: nowrap; flex: none; }
+.handbar .hint { height: auto; min-height: 0; flex-wrap: wrap; font-size: 14px; padding: 0; }
+.handbar .handrow { height: auto; flex: none; align-self: center; width: 100%; justify-content: center; padding: 14px 4px 2px; gap: 3px; }
+.handbar .handrow .tile { flex: none; }
+.handbar .hand-extra { width: calc(var(--tw) * .45); }
+
+/* pop-up action bar floating just above the hand */
+.actionpop { position: absolute; left: 50%; bottom: calc(100% - 6px); transform: translateX(-50%); z-index: 30; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 12px;
+  max-width: calc(100vw - 16px); padding: 10px 14px; border-radius: 18px; background: linear-gradient(180deg, rgba(22,32,64,.97), rgba(8,12,28,.98)); border: 1px solid rgba(170,186,214,.5);
+  box-shadow: 0 18px 44px rgba(0,0,0,.65), 0 0 40px rgba(110,150,240,.18); animation: rise-in .18s ease-out; --tw: 24px; }
+.actionpop .callhead { --tw: 34px; flex: none; }
+.actionpop .apbtns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.actionpop .cbtn { min-height: 54px; min-width: 84px; padding: 6px 18px; font-size: 19px; flex-direction: row; gap: 10px; width: auto; }
+.actionpop .cbtn .mini { --tw: 24px; display: inline-flex; gap: 1px; flex-direction: row; }
+.actionpop .pickhint { font-size: 16px; max-width: 46ch; white-space: normal; text-align: center; }
+
+/* menu + chat live outside the scaled table, at real size */
+.dock { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); font-size: 16px; --k: 1; z-index: var(--z-menu); }
+.dock summary { width: 46px; height: 46px; }
+.dockpanel { width: min(400px, calc(100vw - 24px)); max-height: calc(100dvh - 84px); }
+.chatfloat { position: fixed; top: 66px; right: 12px; --k: 1; z-index: var(--z-menu); }
+.chatbtn { min-height: 44px; font-size: 16px; }
+.handbar .mymelds { --tw: calc(var(--hw) * .8); margin-left: calc(var(--hw) * .5); display: flex; gap: calc(var(--hw) * .12); align-items: flex-end; flex: none; }
+.infoleft .flowers { --tw: 20px; flex-wrap: nowrap; }
+.infoleft .dorapill { flex: none; }
+@media (max-height: 520px) {
+  .actionpop { padding: 6px 10px; gap: 6px 8px; }
+  .actionpop .cbtn { min-height: 44px; min-width: 70px; padding: 4px 12px; font-size: 16px; }
+  .actionpop .cbtn .mini { --tw: 18px; }
+  .actionpop .callhead { --tw: 26px; }
+  .actionpop .pickhint { font-size: 14px; }
+  .infoline { min-height: 30px; }
+  .infoline .statusbar { font-size: 14px; padding: 3px 10px; }
+  .infoleft .chip { font-size: 13px; }
+}
+.chip.away { opacity: .6; border-style: dashed; }
+.chip.away .nm::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; margin-right: 6px; box-shadow: 0 0 8px rgba(255,107,107,.8); }
+.connbadge.down { pointer-events: auto; }
+.connbadge.down .btn { min-height: 36px; padding: 4px 14px; font-size: 14px; color: #fff4ee; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.4); }
+
+/* readable type on phones */
+/* one large, readable size on every device */
+body { font-size: 16px; }
+@media all {
+  .small, .muted.small { font-size: 14px; }
+  .eyebrow, .page h2 { font-size: 15px; }
+  table.ref { font-size: 15px; }
+  .modal { font-size: 16px; }
+  .yaku { font-size: 16px; }
+  .btn.sm { font-size: 14px; min-height: 40px; }
+  .seg button { font-size: 15px; }
+  .opt, .options summary { font-size: 16px; }
+  .seatbox { font-size: 17px; }
+  button.rule .muted { font-size: 14px; }
+  .kbd, kbd { font-size: 14px; }
+}
+.handbar .handrow.two { flex-wrap: wrap; row-gap: 4px; }
+.board .seat.left .chip, .board .seat.right .chip { zoom: calc(var(--fc) * .8); }
+.actionpop { max-height: 58dvh; overflow-y: auto; }
+.chatfloat { left: 12px; right: auto; top: 44px; align-items: flex-start; }
+.actionpop .apbtns, .actionpop .callhead, .actionpop .cbtn { flex-shrink: 0; }
+
+/* ---------- who won: a big banner in the result popup and a glowing plate on the table ---------- */
+.winbanner { display: flex; align-items: center; gap: 18px; padding: 14px 20px; margin: 0 0 12px; border-radius: 16px; background: linear-gradient(180deg, rgba(60,80,140,.55), rgba(20,28,60,.6)); border: 1px solid rgba(226,234,248,.5); }
+.winbanner.mine { background: linear-gradient(180deg, rgba(235,205,120,.38), rgba(120,90,20,.35)); border-color: rgba(255,225,150,.8); box-shadow: 0 0 30px rgba(255,215,120,.25); }
+.winbanner.draw { background: rgba(255,255,255,.06); border-color: rgba(170,186,214,.3); }
+.wbicon { flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-family: var(--glyph); font-size: 30px; color: #0a0f1f; background: linear-gradient(180deg, #fff, #a9b6d2); }
+.winbanner.mine .wbicon { background: linear-gradient(180deg, #fff3c4, #e0b640); }
+.winbanner.draw .wbicon { background: rgba(255,255,255,.15); color: var(--ivory); }
+.wbname { font-family: var(--serif); font-size: clamp(26px, 5vw, 36px); line-height: 1.1; color: #fff; word-break: break-word; }
+.wbtype { font-size: 17px; margin-top: 2px; color: rgba(236,240,250,.85); }
+.chip.winner { box-shadow: 0 0 0 3px rgba(255,225,150,.9), 0 0 28px rgba(255,215,120,.7), 0 6px 14px rgba(0,0,0,.5); background: linear-gradient(180deg, #fff3c4, #e0b640); color: #2a1c05; }
+.chip.winner .pts, .chip.winner .nm { color: #2a1c05; }
+.connbadge.up { top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 14px; background: linear-gradient(180deg, rgba(20,110,70,.96), rgba(8,60,40,.96)); border: 1px solid rgba(150,255,200,.5); color: #eafff4; font-size: 15px; box-shadow: 0 14px 34px rgba(0,0,0,.6); animation: rise-in .2s ease-out; }
+/* a constant-height hand bar: nothing in it may change the space left for the table while playing */
+.handbar .hint { height: 40px; overflow: hidden; flex-wrap: nowrap; }
+.infoline { height: 40px; min-height: 40px; }
+@media (max-height: 520px) { .infoline { height: 34px; min-height: 34px; } .handbar .hint { height: 34px; } }
+.actionpop { width: max-content; }
+.actionpop .apbtns { flex-shrink: 1; min-width: 0; }
+.actionpop { flex-direction: column; flex-wrap: nowrap; }
+.actionpop .apbtns { max-width: calc(100vw - 48px); }
+.actionpop .callhead { display: flex; justify-content: center; }
+.chatfloat { z-index: 20; }

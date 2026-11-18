@@ -26,7 +26,7 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
   const mk = (seat: number): PlayerView => {
     const me = seat === 0
     const ms = full ? meldSet().slice(0, me ? 4 : 5) : []
-    const handCount = full ? 16 - ms.length * 3 : 16
+    const handCount = (full ? 16 - ms.length * 3 : 16) - (jp || sc ? 3 : 0)
     return {
       seat, name: ['Player', 'Bot 1', 'Bot 2', 'Bot 3'][seat], points: 1000 + seat * 137, human: me, connected: true,
       handCount, hand: me ? Array.from({ length: handCount }, id).sort((a, b) => (a >> 2) - (b >> 2)) : null, drawn: me ? id() : null,
@@ -45,7 +45,7 @@ export function stressView(mode: string, players = 4, rule = 'taiwan'): TableVie
     game: {
       phase: pickPhase ?? (call ? 'reaction' : 'turn'), turn: 0, dealer: 0, roundIndex: 0, roundWind: 0, honba: jp ? 2 : 0, sticks: jp ? 3 : 0, lian: 3,
       wallLeft: full ? 14 : 62, dora: jp ? [8 * 4, 14 * 4 + 1, 30 * 4 + 2, 22 * 4, 3 * 4].slice(0, full ? 5 : 1) : [], handNo: 9, players: ps, lastDiscard: last,
-      turnOptions: call ? null : { tsumo: true, discard: ps[0].hand!.concat(ps[0].drawn!), riichi: [], ankan: [4, 5], kakan: [1], nuki: false, abort: false },
+      turnOptions: call || pickPhase ? null : { tsumo: true, discard: ps[0].hand!.concat(ps[0].drawn!), riichi: [], ankan: [4, 5], kakan: [1], nuki: false, abort: false },
       reaction: call ? { ron: true, pon: true, minkan: true, chi: [[0, 4], [4, 12], [12, 16]] } : null,
       pick: { swap: [false, true, true, true], void: [false, true, false, true], mine: null, dir: 2 },
       reactionKind: 'discard', waiting: [], timeLeft: 22000, result: null, acks: [],

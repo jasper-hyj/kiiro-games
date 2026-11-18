@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
  *  Wider windows get a shorter stage; on a portrait phone the stage rotates sideways if that gives larger tiles. */
 export const STAGE_W = 1600
 const fit = (aw: number, ah: number) => {
-  const dh = Math.min(900, Math.max(720, (STAGE_W * ah) / Math.max(1, aw)))
+  const dh = Math.min(720, Math.max(480, (STAGE_W * ah) / Math.max(1, aw)))
   return { dh, s: Math.min(aw / STAGE_W, ah / dh) }
 }
 

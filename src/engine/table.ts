@@ -57,6 +57,8 @@ export class Table {
   private timer: ReturnType<typeof setTimeout> | null = null
   private ackTimer: ReturnType<typeof setTimeout> | null = null
   speed = 1 // 0 = instant (tests)
+  /** shuffle seats and pick a random first dealer at the start of every game (tests switch this off) */
+  randomize = true
   /** Per-decision time limit in ms for human players (0 = off). Expired turns auto-play; two in a row hands the seat to a bot. */
   turnTimerMs = 0
   chatLog: { n: number; seat: number; key: string; at: number }[] = []
@@ -167,8 +169,11 @@ export class Table {
   start(id?: string) {
     if (id !== undefined && id !== this.hostId) return
     if (this.status !== 'lobby') return
-    this.fitSlots(); this.renameBots()
-    this.game = new Game(this.config.rule, this.config, this.slots.map((s) => s.name))
+    this.fitSlots()
+    // random seats: players (and bots) are shuffled into seats at the start of every game, so nobody is always East
+    if (this.randomize) for (let i = this.slots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [this.slots[i], this.slots[j]] = [this.slots[j], this.slots[i]] }
+    this.renameBots()
+    this.game = new Game(this.config.rule, { ...this.config, fixedDealer: !this.randomize }, this.slots.map((s) => s.name))
     this.status = 'playing'
     this.acks.clear()
     this.emit(); this.drive()

@@ -104,8 +104,8 @@ async function main() {
     await sleep(200)
     check('empty seats are automatically bots (Bot 1, Bot 2)', /Bot 1/.test(await text(A)) && /Bot 2/.test(await text(A)))
     await clickText(A, '.btn.gold', /Start game/i)
-    await A.waitForSelector('.board .handrow .tile', { timeout: 8000 })
-    await B.waitForSelector('.board .handrow .tile', { timeout: 8000 })
+    await A.waitForSelector('.handrow .tile', { timeout: 8000 })
+    await B.waitForSelector('.handrow .tile', { timeout: 8000 })
     check('game started for both', true)
     await sleep(800)
     await A.screenshot({ path: `${SHOTS}/online-host-game.png` })
@@ -140,8 +140,8 @@ async function main() {
     // 6. guest refreshes the page -> rejoins the same seat automatically
     const before = (await text(B)).includes('Bob')
     await B.reload({ waitUntil: 'networkidle0' })
-    await B.waitForSelector('.board .handrow .tile', { timeout: 10000 }).catch(() => undefined)
-    check('guest page refresh rejoins the running game', (await B.$('.board .handrow .tile')) !== null)
+    await B.waitForSelector('.handrow .tile', { timeout: 10000 }).catch(() => undefined)
+    check('guest page refresh rejoins the running game', (await B.$('.handrow .tile')) !== null)
     check('guest keeps their seat/name after refresh', before && /Bob/.test(await text(B)))
     await B.screenshot({ path: `${SHOTS}/online-after-refresh.png` })
 

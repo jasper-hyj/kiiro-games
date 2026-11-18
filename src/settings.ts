@@ -1,18 +1,17 @@
 import { useSyncExternalStore } from 'react'
 
 /** Accessibility preferences, remembered per device and applied as attributes on <html>. */
-export interface Settings { reduceMotion: boolean; largeText: boolean; flatPonds: boolean }
+export interface Settings { reduceMotion: boolean; flatPonds: boolean }
 const KEY = 'kiiro-settings'
 const prefersReduced = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 let state: Settings = (() => {
-  try { const v = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (v && typeof v === 'object') return { reduceMotion: !!v.reduceMotion, largeText: !!v.largeText, flatPonds: !!v.flatPonds } } catch { /* ignore */ }
-  return { reduceMotion: prefersReduced(), largeText: false, flatPonds: false }
+  try { const v = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (v && typeof v === 'object') return { reduceMotion: !!v.reduceMotion, flatPonds: !!v.flatPonds } } catch { /* ignore */ }
+  return { reduceMotion: prefersReduced(), flatPonds: false }
 })()
 const subs = new Set<() => void>()
 const apply = () => {
   const el = document.documentElement
   el.dataset.motion = state.reduceMotion ? 'reduce' : 'full'
-  el.dataset.text = state.largeText ? 'large' : 'normal'
   el.dataset.ponds = state.flatPonds ? 'flat' : 'turned'
 }
 apply()

@@ -18,8 +18,8 @@ const ALL: Dev[] = [
   { name: 'desktop', w: 1440, h: 900, touch: false, scale: 1 },
   { name: 'laptop', w: 1024, h: 700, touch: false, scale: 1 },
   { name: 'tablet', w: 768, h: 1024, touch: true, scale: 2 },
-  { name: 'phone', w: 390, h: 844, touch: true, scale: 2 },
-  { name: 'phone-small', w: 360, h: 640, touch: true, scale: 2 },
+  { name: 'phone', w: 844, h: 390, touch: true, scale: 2 },
+  { name: 'phone-small', w: 667, h: 375, touch: true, scale: 2 },
   { name: 'landscape', w: 844, h: 390, touch: true, scale: 2 },
 ]
 const only = process.env.DEVICES?.split(',')
@@ -129,7 +129,7 @@ async function main() {
         await clickText(p, '.btn.big', lang === 'en' ? /Continue/i : /繼續/)
         await sleep(450)
         await clickText(p, '.btn.big', lang === 'en' ? /Start game/i : /開始遊戲/)
-        await p.waitForSelector('.board .handrow .tile', { timeout: 8000 })
+        await p.waitForSelector('.handrow .tile', { timeout: 8000 })
         const nHand = await p.$$eval('.handrow .tile', (e) => e.length)
         check(`${tag}: game starts, hand drawn (${nHand} tiles)`, nHand >= 16)
         await sleep(600)
@@ -137,6 +137,7 @@ async function main() {
         await layout(p, `${tag} game`)
 
         if (!d.touch) {
+          await p.waitForSelector('.handrow .tile.clickable', { timeout: 30000 }) // the dealer is random now: wait for our turn
           const before = await p.$$eval('.pond.p0 .tile', (e) => e.length)
           await p.keyboard.press('ArrowLeft')
           await sleep(150)
@@ -146,18 +147,8 @@ async function main() {
           const after = await p.$$eval('.pond.p0 .tile', (e) => e.length)
           check(`${tag}: Enter discards the selected tile`, after === before + 1, `${before} -> ${after}`)
         } else if (d.name === 'phone') {
-          const rot = () => p.$eval('.stagewrap', (e) => (e as HTMLElement).dataset.rotated)
-          const r0 = await rot()
-          await p.click('.dock summary')
-          await sleep(100)
-          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.dockpanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
-          await sleep(300)
-          const r1 = await rot()
-          check(`${tag}: rotate option toggles the stage (${r0} -> ${r1})`, r0 === '1' && r1 === '0')
-          await p.evaluate(() => { const l = [...document.querySelectorAll<HTMLElement>('.dockpanel label')].find((x) => /otate|旋轉/.test(x.innerText)); (l?.querySelector('input') as HTMLInputElement | null)?.click() })
-          await sleep(300)
-          check(`${tag}: rotate back on`, (await rot()) === '1')
-          await p.evaluate(() => (document.querySelector('.dock') as HTMLDetailsElement | null)?.removeAttribute('open'))
+          // phones play in landscape; the table is never rotated by the app any more
+          check(`${tag}: the table is not rotated`, (await p.$eval('.stagewrap', (e) => (e as HTMLElement).dataset.rotated)) !== '1')
         }
         let discards = 0
         for (let i = 0; i < 60 && discards < 4; i++) {

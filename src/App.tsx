@@ -4,12 +4,13 @@ import { connectLocal, connectRemote, getClientId, type Conn, type Status } from
 import type { ClientMsg } from './net/protocol'
 import { Menu, RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
-import { Stage } from './ui/Stage'
 import { AkaCtx } from './ui/Tile'
 import { useLang } from './i18n'
 import { TileGallery } from './ui/TileGallery'
 import { stressView } from './ui/stress'
 import { setSetting, useSettings } from './settings'
+import { ConnBadge } from './ui/ConnBadge'
+import { RotatePrompt } from './ui/RotatePrompt'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
@@ -21,14 +22,13 @@ export default function App() {
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
-  const [rotate, setRotate] = useState(() => load('kiiro-rotate', true))
-  useEffect(() => save('kiiro-rotate', rotate), [rotate])
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
   const [room, setRoom] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
   const [joinError, setJoinError] = useState('')
+  const [latency, setLatency] = useState<number | null>(null)
   const [active, setActive] = useState(!!stress)
   const conn = useRef<Conn | null>(null)
   const viewRef = useRef<TableView | null>(null)
@@ -46,7 +46,7 @@ export default function App() {
     history.replaceState(null, '', location.pathname)
   }, [])
 
-  const handlers = { onView: setView, onStatus: setStatus, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
+  const handlers = { onView: setView, onStatus: (st: Status) => { setStatus(st); if (st !== 'open') setLatency(null) }, onLatency: setLatency, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
   const solo = () => {
     const q = new URLSearchParams(location.search) // debug overrides: ?rule=riichi&players=3
     const cfg = { ...config, ...(q.get('rule') ? { rule: q.get('rule') as RoomConfig['rule'] } : {}), ...(q.get('players') ? { players: Number(q.get('players')) as 3 | 4 } : {}) }
@@ -64,7 +64,10 @@ export default function App() {
     setTimeout(() => { if (!viewRef.current) setJoinError('conn_failed') }, 12000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name])
-  const send = (m: ClientMsg) => conn.current?.send(m)
+  const send = (m: ClientMsg) => {
+    if (room && status !== 'open') { setError('notSent'); setTimeout(() => setError(''), 2500); return }
+    conn.current?.send(m)
+  }
 
   useEffect(() => {
     const r = new URLSearchParams(location.search).get('room')
@@ -93,7 +96,6 @@ export default function App() {
               <summary aria-label={t('settings')}>⚙</summary>
               <div className="gearpanel">
                 <label className="switch"><input type="checkbox" checked={settings.reduceMotion} onChange={() => setSetting('reduceMotion', !settings.reduceMotion)} /><span className="knob" />{t('reduceMotion')}</label>
-                <label className="switch"><input type="checkbox" checked={settings.largeText} onChange={() => setSetting('largeText', !settings.largeText)} /><span className="knob" />{t('largeText')}</label>
               </div>
             </details>
             <div className="seg langsw">
@@ -102,6 +104,7 @@ export default function App() {
             </div>
           </div>
         )}
+        {room && active && view && <ConnBadge status={status} latency={latency} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
         {!active && urlRoom && (
           <div className="page joinpage">
@@ -128,9 +131,8 @@ export default function App() {
           </div>
         )}
         {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
-        {active && view && room && status !== 'open' && <div className="toast" style={{ background: 'var(--surface2)' }}>{t('reconnecting')}</div>}
         {active && view && !playing && room && <RoomLobby view={view} room={room} send={send} onLeave={leave} />}
-        {active && view && playing && <Stage allowRotate={rotate}><Board room={room} status={status} view={view} send={send} hints={hints} setHints={setHints} rotate={rotate} setRotate={setRotate} onLeave={leave} online={!!room || !!stress} /></Stage>}
+        {active && view && playing && <><Board room={room} status={status} view={view} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} /><RotatePrompt /></>}
       </div>
     </AkaCtx.Provider>
   )

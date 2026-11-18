@@ -20,12 +20,27 @@ const probe = () => {
   // 1. page overflow
   if (document.documentElement.scrollWidth > innerWidth + 1) problems.push(`h-scroll ${document.documentElement.scrollWidth}>${innerWidth}`)
 
+  // the real-size hand bar sits under the table: inside the screen, hand tiles never clipped sideways, pop-up inside the screen
+  {
+    const hb = document.querySelector<HTMLElement>('.handbar')
+    if (hb) {
+      const r = R(hb)
+      if (r.left < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1) problems.push(`hand bar outside the screen (${Math.round(r.left)}..${Math.round(r.right)}, bottom ${Math.round(r.bottom)} vs ${innerWidth}x${innerHeight})`)
+      const sw = document.querySelector<HTMLElement>('.stagewrap')
+      if (sw && R(sw).bottom > r.top + 1) problems.push('table overlaps the hand bar')
+      for (const t of q('.handrow .tile')) { const tr = R(t); if (tr.left < -1 || tr.right > innerWidth + 1) { problems.push('a hand tile is clipped sideways'); break } }
+      const tiles = q('.handrow .tile')
+      if (tiles.length && R(tiles[0]).width < 22) problems.push(`hand tile too small (${R(tiles[0]).width.toFixed(1)}px)`)
+      const pop = document.querySelector<HTMLElement>('.actionpop')
+      if (pop) { const pr = R(pop); if (pr.left < -1 || pr.right > innerWidth + 1 || pr.top < -1) problems.push(`action pop-up outside the screen (${Math.round(pr.left)}..${Math.round(pr.right)}, top ${Math.round(pr.top)})`) }
+    }
+  }
+
   // 2/3/4. layout blocks: no overlap, inside the board, inside the viewport horizontally
   const blocks: [string, HTMLElement][] = []
   const add = (name: string, sel: string) => q(sel).forEach((e, i) => { if (vis(e)) blocks.push([`${name}${i}`, e]) })
   add('pond', '.pond'); add('info', '.info'); add('dorapanel', '.dorapanel')
   for (const side of ['top', 'left', 'right']) { add(`${side}.chip`, `.seat.${side} > .chip`); add(`${side}.backs`, `.seat.${side} > .backs`); add(`${side}.extras`, `.seat.${side} > .extras`) }
-  add('mebar', '.mebar'); add('status', '.statusbar'); add('actions', '.actions'); add('callbar', '.callbar'); add('hint', '.hint'); add('hand', '.handrow')
   for (const [n, e] of blocks) {
     const r = R(e)
     if (r.left < bb.left - 1 || r.right > bb.right + 1) problems.push(`${n} outside board horizontally (${Math.round(r.left)}..${Math.round(r.right)} vs ${Math.round(bb.left)}..${Math.round(bb.right)})`)
@@ -55,14 +70,14 @@ const probe = () => {
 
   // 6. tile sizes stay readable
   const handTile = q('.handrow .tile')[0]
-  if (handTile && R(handTile).width < 16) problems.push(`hand tile too small (${R(handTile).width.toFixed(1)}px)`)
+  void handTile
   const pondTile = q('.pond .tile:not(.called)')[0]
   if (pondTile) { const r = R(pondTile), side = Math.min(r.width, r.height); if (side < 5.5) problems.push(`pond tile too small (${side.toFixed(1)}px short side)`) } // ponds are rotated toward each seat, so measure the short side
   const meTile = q('.mebar .tile')[0]
   if (meTile && R(meTile).width < 9) problems.push(`own meld tile too small (${R(meTile).width.toFixed(1)}px)`)
 
   // 7. every button / clickable tile is reachable (not covered) and buttons do not overlap each other
-  const clickables = q('.board button, .dock summary, .handrow .tile.clickable').filter((e) => vis(e) && !e.closest('details:not([open]) > :not(summary)'))
+  const clickables = q('.board button, .dock summary, .actionpop button, .handrow .tile.clickable').filter((e) => vis(e) && !e.closest('details:not([open]) > :not(summary)'))
   const rects: [string, DOMRect][] = []
   for (const e of clickables) {
     e.scrollIntoView({ block: 'center', inline: 'center' })
@@ -101,8 +116,11 @@ async function main() {
         for (const h of HEIGHTS) {
           const touch = w < 900
           await page.setViewport({ width: w, height: h, deviceScaleFactor: 1, hasTouch: touch, isMobile: false })
-          await new Promise((r) => setTimeout(r, 40))
-          const probs = await page.evaluate(probe)
+          await new Promise((r) => setTimeout(r, 120))
+          const all = await page.evaluate(probe)
+          // portrait phones get the 'turn your phone' prompt, so only the basics are checked there
+          const supported = w >= h * 1.3 || Math.min(w, h) >= 600
+          const probs = supported ? all : all.filter((x) => /h-scroll|no board/.test(x))
           total++
           for (const p of probs) {
             const key = `[${state}/${players}p] ${p.replace(/\d+(\.\d+)?/g, '#')}`

@@ -134,7 +134,7 @@ export function Face({ kind, red }: { kind: number; red?: boolean }) {
 
 interface Props {
   id?: number; kind?: number; back?: boolean; dora?: number
-  onClick?: () => void; onFlick?: () => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; title?: string
+  onClick?: () => void; onFlick?: () => void; onDrag?: (clientX: number) => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; title?: string
   className?: string
 }
 /** Rotated tile (called tile in a meld, riichi discard). `double` stacks two tiles (added kan). */
@@ -142,7 +142,7 @@ export function Side({ children, double }: { children: ReactNode; double?: boole
   return <span className={'sw' + (double ? ' dbl' : '')}>{children}</span>
 }
 
-export function Tile({ id, kind, back, dora, onClick, onFlick, selected, dim, mark, riichi, hot, title, className }: Props) {
+export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected, dim, mark, riichi, hot, title, className }: Props) {
   const aka = useContext(AkaCtx)
   const k = kind ?? (id !== undefined ? kindOf(id) : 0)
   const red = aka && id !== undefined && isRedFive(id)
@@ -150,11 +150,15 @@ export function Tile({ id, kind, back, dora, onClick, onFlick, selected, dim, ma
   const start = useRef<{ y: number; x: number } | null>(null)
   const flicked = useRef(false)
   // drag a tile upward onto the table to discard it (the double-tap still works)
-  const flick = onFlick ? {
+  const flick = onFlick || onDrag ? {
     onPointerDown: (e: React.PointerEvent) => { start.current = { x: e.clientX, y: e.clientY }; flicked.current = false; try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ } },
     onPointerUp: (e: React.PointerEvent) => {
       const s0 = start.current; start.current = null
-      if (s0 && s0.y - e.clientY > 40 && Math.abs(e.clientX - s0.x) < (s0.y - e.clientY)) { flicked.current = true; onFlick() }
+      if (s0 && onFlick && s0.y - e.clientY > 40 && Math.abs(e.clientX - s0.x) < (s0.y - e.clientY)) { flicked.current = true; onFlick() }
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const s0 = start.current
+      if (s0 && onDrag && Math.abs(e.clientX - s0.x) > 12 && Math.abs(e.clientX - s0.x) > Math.abs(e.clientY - s0.y)) { flicked.current = true; onDrag(e.clientX) }
     },
     onPointerCancel: () => { start.current = null },
   } : {}

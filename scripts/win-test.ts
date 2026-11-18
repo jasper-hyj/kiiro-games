@@ -179,7 +179,7 @@ const JUNK2 = '147m258p369s2z3z4z567z1z'.slice(0, 0) + '1479m2589p369s123z'  // 
 
 // 9. through Table (what the UI sees): view shows Ron, decide, ack, next hand
 async function viaTable() {
-  const tb = new Table({ rule: 'taiwan', aka: false, rounds: 1, minFan: 0, players: 4, botLevel: 'normal' })
+  const tb = new Table({ rule: 'taiwan', aka: false, rounds: 1, minFan: 0, players: 4, botLevel: 'normal' }); tb.randomize = false
   tb.join('me', 'Me')
   tb.start('me')
   const g = tb.game!
@@ -204,7 +204,7 @@ await viaTable()
 
 // 10. hand-value preview: a closed tenpai hand with no yaku shows what riichi would make it worth
 async function previewTest() {
-  const tb = new Table({ rule: 'riichi', aka: false, rounds: 1, minFan: 0, players: 4, botLevel: 'normal' })
+  const tb = new Table({ rule: 'riichi', aka: false, rounds: 1, minFan: 0, players: 4, botLevel: 'normal' }); tb.randomize = false
   tb.join('me', 'Me')
   tb.start('me')
   const g = tb.game!

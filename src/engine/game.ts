@@ -100,6 +100,7 @@ export class Game {
     this.opts = opts
     this.n = names.length
     this.sanma = this.n === 3 && ruleId === 'riichi'
+    this.dealer = opts.fixedDealer ? 0 : Math.floor(Math.random() * this.n) // the first East is random
     this.players = names.map((name, seat) => ({
       seat, name, points: this.sanma ? 35000 : this.rule.startPoints, hand: [], drawn: null, melds: [], discards: [], flowers: [],
       riichi: false, doubleRiichi: false, ippatsu: false, riichiPending: false, nuki: [], tempFuriten: false, permFuriten: false, voidSuit: null, out: false, swapTiles: null, swapIn: [],
@@ -502,7 +503,7 @@ export class Game {
     const r = this.reactions[seat]
     const ok =
       d.type === 'pass' || (d.type === 'ron' && r.ron) || (d.type === 'pon' && r.pon) || (d.type === 'minkan' && r.minkan) ||
-      (d.type === 'chi' && r.chi.some((c) => c[0] === d.use[0] && c[1] === d.use[1]))
+      (d.type === 'chi' && Array.isArray(d.use) && d.use.length === 2 && r.chi.some((c) => c[0] === d.use[0] && c[1] === d.use[1]))
     if (!ok) return false
     this.decisions[seat] = d
     if (Object.keys(this.reactions).every((s) => this.decisions[+s])) this.resolveReactions()

@@ -48,6 +48,7 @@ export class Main extends Server<Env> {
   }
 
   private handle(m: ClientMsg, sender: Connection<{ id?: string }>) {
+    if (m.t === 'ping') return this.send(sender, { t: 'pong', ts: Number(m.ts) || 0 })
     if (m.t === 'join') {
       if (typeof m.id !== 'string' || !m.id || m.id.length > 64) return this.send(sender, { t: 'error', message: 'bad_id' })
       const id = m.id

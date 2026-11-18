@@ -39,7 +39,7 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
   const errors: string[] = []
   p.on('pageerror', (e) => errors.push(String(e).slice(0, 160)))
   await p.goto(`${BASE}/?solo=1&rule=${rule}&speed=0.02`, { waitUntil: 'networkidle0' })
-  await p.waitForSelector('.board .handrow .tile', { timeout: 10000 })
+  await p.waitForSelector('.handrow .tile', { timeout: 10000 })
   const t0 = Date.now()
   let hands = 0
   let shotResult = false
@@ -106,7 +106,7 @@ async function main() {
   try {
     const devs: Dev[] = [
       { name: 'desktop', w: 1440, h: 900, touch: false },
-      { name: 'phone', w: 390, h: 844, touch: true },
+      { name: 'phone', w: 844, h: 390, touch: true },
     ]
     const rules = process.env.RULES?.split(',') ?? ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
     for (const rule of rules) for (const d of devs) await playGame(browser, rule, d, d.name === 'phone' ? 'zh' : 'en')

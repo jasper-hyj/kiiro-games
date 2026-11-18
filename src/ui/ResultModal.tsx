@@ -76,7 +76,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
     const wins = r.sc?.wins ?? []
     return createPortal(
       <div className="overlay"><div className="modal">
-        <h2>{wins.length ? t('scWins') : t('scNone')}</h2>
+        <div className={'winbanner' + (wins.some((x) => x.winner === you) ? ' mine' : '') + (wins.length ? '' : ' draw')} role="status"><span className="wbicon" aria-hidden="true">{wins.length ? (lang === 'zh' ? '胡' : 'WIN') : (lang === 'zh' ? '流' : '—')}</span><div className="wbtext"><div className="wbname">{wins.length ? wins.map((x) => v.players[x.winner].name).join(' · ') : t('scNone')}</div></div></div>
         {wins.map((w) => (
           <div key={w.winner} className="scwin">
             <div className="scwhead">
@@ -109,7 +109,13 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
     <div className="overlay"><div className="modal">
       {win && w && r.score ? (
         <>
-          <h2>{r.tsumo ? t('winsTsumo', { name: w.name }) : t('winsRon', { name: w.name, from: v.players[r.from!].name })}</h2>
+          <div className={'winbanner' + (r.winner === you ? ' mine' : '')} role="status">
+            <span className="wbicon" aria-hidden="true">{lang === 'zh' ? '胡' : 'WIN'}</span>
+            <div className="wbtext">
+              <div className="wbname">{w.name}{r.winner === you ? ` (${t('you')})` : ''}</div>
+              <div className="wbtype">{r.tsumo ? t('selfDraw') : t('winsFrom', { from: v.players[r.from!].name })}</div>
+            </div>
+          </div>
           <Hand h={r.hands[r.winner!]} win={r.tsumo ? undefined : r.winTile} />
           <div className="limit">{label(r.score.label)} {r.score.yakuman ? '' : `${r.score.total} ${unit}`}{r.score.fu ? ` · ${r.score.fu} ${t('fu')}` : ''}</div>
           <details className="detail">
@@ -132,7 +138,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         </>
       ) : (
         <>
-          <h2>{r.label ? (t('draw.' + r.label) !== 'draw.' + r.label ? t('draw.' + r.label) : r.label) : t('drawTitle')}</h2>
+          <div className="winbanner draw" role="status"><span className="wbicon" aria-hidden="true">{lang === 'zh' ? '流' : '—'}</span><div className="wbtext"><div className="wbname">{r.label ? (t('draw.' + r.label) !== 'draw.' + r.label ? t('draw.' + r.label) : r.label) : t('drawTitle')}</div></div></div>
           {v.rule.id === 'riichi' && <p className="muted">{t('tenpaiPlayers', { names: v.players.filter((_, i) => r.tenpai?.[i]).map((p) => p.name).join(', ') || t('nobody') })}</p>}
         </>
       )}
