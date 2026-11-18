@@ -106,28 +106,33 @@ function setYaku(ctx: WinContext, it: Interp, closed: boolean, out: YakuItem[], 
   else if (wtri === 3 && pair >= 27 && pair < 31) yakuman.push({ name: 'Shousuushii (Little Four Winds)', zh: '小四喜', value: 13, yakuman: true })
 }
 
-function calcFu(ctx: WinContext, it: Interp, closed: boolean, pinfu: boolean): number {
+type FuLine = { label: [string, string]; value: number }
+function calcFu(ctx: WinContext, it: Interp, closed: boolean, pinfu: boolean): { fu: number; detail: FuLine[] } {
+  const detail: FuLine[] = [{ label: ['Base', '底符'], value: 20 }]
   let fu = 20
-  if (closed && !ctx.tsumo) fu += 10
-  if (ctx.tsumo && !pinfu) fu += 2
-  if (pinfu) return ctx.tsumo ? 20 : 30
+  const add = (en: string, zh: string, v: number) => { fu += v; detail.push({ label: [en, zh], value: v }) }
+  if (closed && !ctx.tsumo) add('Closed hand won by ron', '門清榮和', 10)
+  if (ctx.tsumo && !pinfu) add('Self-draw', '自摸', 2)
+  if (pinfu) return { fu: ctx.tsumo ? 20 : 30, detail: [{ label: [ctx.tsumo ? 'Pinfu self-draw: fixed 20 fu' : 'Pinfu ron: fixed 30 fu', ctx.tsumo ? '平和自摸固定 20 符' : '平和榮和固定 30 符'], value: ctx.tsumo ? 20 : 30 }] }
   for (const s of it.sets) {
     if (s.type !== 'tri') continue
     let f = isTermOrHonor(s.kind) ? 4 : 2
     if (!s.open) f *= 2
     if (s.kan) f *= 4
-    fu += f
+    add(`${s.open ? 'Open' : 'Concealed'} ${s.kan ? 'kan' : 'triplet'} of ${isTermOrHonor(s.kind) ? 'terminals/honors' : 'simples'}`, `${s.open ? '明' : '暗'}${s.kan ? '槓' : '刻'}（${isTermOrHonor(s.kind) ? '幺九字牌' : '中張牌'}）`, f)
   }
   const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
-  if (isDragon(it.pair)) fu += 2
-  if (it.pair === sw) fu += 2
-  if (it.pair === rw) fu += 2
-  if (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki') fu += 2
-  if (!closed && fu === 20) fu = 30
-  return Math.ceil(fu / 10) * 10
+  if (isDragon(it.pair)) add('Dragon pair', '三元牌將', 2)
+  if (it.pair === sw) add('Seat-wind pair', '自風將', 2)
+  if (it.pair === rw) add('Round-wind pair', '場風將', 2)
+  if (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki') add('Single-tile wait (closed / edge / pair)', '單張聽（嵌張／邊張／單騎）', 2)
+  if (!closed && fu === 20) { detail.push({ label: ['Open hand minimum', '副露最低 30 符'], value: 10 }); fu = 30 }
+  const rounded = Math.ceil(fu / 10) * 10
+  if (rounded !== fu) detail.push({ label: ['Rounded up to the next 10', '進位到 10 的倍數'], value: rounded - fu })
+  return { fu: rounded, detail }
 }
 
-function finish(ctx: WinContext, yaku: YakuItem[], yakuman: YakuItem[], fu: number): HandScore | null {
+function finish(ctx: WinContext, yaku: YakuItem[], yakuman: YakuItem[], fu: number, fuDetail?: FuLine[]): HandScore | null {
   if (ctx.firstTurn && ctx.tsumo) yakuman.push(ctx.dealer ? { name: 'Tenhou', zh: '天和', value: 13, yakuman: true } : { name: 'Chiihou', zh: '地和', value: 13, yakuman: true })
   if (yakuman.length) {
     const mult = yakuman.reduce((a, y) => a + y.value / 13, 0) // a double yakuman counts twice
@@ -141,7 +146,7 @@ function finish(ctx: WinContext, yaku: YakuItem[], yakuman: YakuItem[], fu: numb
   if (ctx.aka) all.push({ name: `Red Five`, zh: '赤牌', value: ctx.aka })
   if (ctx.nuki) all.push({ name: `Nuki Dora (North)`, zh: '拔北', value: ctx.nuki })
   const total = han + ctx.dora + ctx.ura + ctx.aka + ctx.nuki
-  return { yaku: all, total, fu, ...limitOf(total, fu, 0) }
+  return { yaku: all, total, fu, fuDetail, ...limitOf(total, fu, 0) }
 }
 
 function evaluate(ctx: WinContext): HandScore | null {
@@ -159,7 +164,7 @@ function evaluate(ctx: WinContext): HandScore | null {
     const ym: YakuItem[] = []
     situational(ctx, true, y)
     tileYaku(ctx, true, y, ym)
-    const s = finish(ctx, y, ym, 25)
+    const s = finish(ctx, y, ym, 25, [{ label: ['Seven pairs: fixed 25 fu', '七對子固定 25 符'], value: 25 }])
     if (s) cands.push(s)
   }
   for (const it of interpretations(ctx, 4)) {
@@ -169,7 +174,8 @@ function evaluate(ctx: WinContext): HandScore | null {
     tileYaku(ctx, closed, y, ym)
     setYaku(ctx, it, closed, y, ym)
     const pinfu = y.some((q) => q.name === 'Pinfu')
-    const s = finish(ctx, y, ym, calcFu(ctx, it, closed, pinfu))
+    const f = calcFu(ctx, it, closed, pinfu)
+    const s = finish(ctx, y, ym, f.fu, f.detail)
     if (s) cands.push(s)
   }
   if (!cands.length) return null

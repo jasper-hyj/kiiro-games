@@ -5,6 +5,7 @@ import { auditGame } from './audit'
 import { botReact, botSwap, botTurn, botVoid } from './bot'
 import { kindOf } from './tiles'
 
+export interface Coach { kind: 'tsumo' | 'ron' | 'riichi' | 'discard' | 'call' | 'pass' | 'nuki' | 'kan'; tile?: number; n?: number; call?: string; threat?: boolean }
 export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
 export interface RoomConfig extends GameOptions { rule: RuleId }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
@@ -37,7 +38,8 @@ export interface TableView {
     result: HandResult | null
     acks: number[]
     standings: { seat: number; name: string; points: number }[]
-    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean } | null
+    hint: { shanten: number; waits: number[]; discardWaits: Record<number, number[]>; left: Record<number, number>; values: Record<number, { total: number; label?: string; riichi?: boolean } | null>; furiten: boolean; why?: Record<number, { code: string; n?: number; need?: number; suit?: number }> } | null
+    coach?: Coach | null
     history: HistoryEntry[]
     audit: { ok: boolean; checks: number; problems: string[] }
     notice: import('./game').WinNotice | null
@@ -360,6 +362,34 @@ export class Table {
     if (g.phase !== 'result' && this.ackTimer) { clearTimeout(this.ackTimer); this.ackTimer = null }
   }
 
+  /** What the Hard bot would do in the viewer's seat, and why (for beginners). */
+  private coachFor(g: Game, you: number): Coach | null {
+    const p = g.players[you]
+    if (!p || p.out) return null
+    try {
+      const threat = g.players.some((q) => q.seat !== you && q.riichi)
+      if (g.phase === 'turn' && g.turn === you) {
+        const a = botTurn(g, you, 'hard')
+        if (a.type === 'tsumo') return { kind: 'tsumo' }
+        if (a.type === 'discard') {
+          const rest = p.hand.filter((i) => i !== a.tile)
+          return { kind: a.riichi ? 'riichi' : 'discard', tile: a.tile, n: g.shanten(you, rest), threat }
+        }
+        if (a.type === 'nuki') return { kind: 'nuki' }
+        if (a.type === 'ankan') return { kind: 'kan', call: 'ankan', tile: p.hand.find((i) => kindOf(i) === a.kind) }
+        if (a.type === 'kakan') return { kind: 'kan', call: 'kakan', tile: a.tile }
+        return null
+      }
+      if (g.phase === 'reaction' && g.reactions[you] && !g.decisions[you]) {
+        const d = botReact(g, you, 'hard')
+        if (d.type === 'ron') return { kind: 'ron' }
+        if (d.type === 'pass') return { kind: 'pass', n: g.shanten(you) }
+        return { kind: 'call', call: d.type, n: g.shanten(you), tile: g.lastDiscard?.tile }
+      }
+    } catch { /* the coach never breaks the game */ }
+    return null
+  }
+
   // ----- views -----
   view(id: string): TableView {
     const you = this.seatOf(id)
@@ -409,7 +439,9 @@ export class Table {
           }
           values[k] = sc ? { total: sc.total, label: sc.label, riichi: viaRiichi || undefined } : null
         }
-        hint = { shanten: g.shanten(you), waits: w, discardWaits: {}, left: leftOf(w), values, furiten: g.isFuriten(you) }
+        const why: Record<number, { code: string; n?: number; need?: number; suit?: number }> = {}
+        for (const k of w) if (!values[k]) { const x = g.explainNoWin(you, false, k * 4 + 3); if (x) why[k] = { code: x.code, n: x.n, need: x.need, suit: x.suit } }
+        hint = { shanten: g.shanten(you), waits: w, discardWaits: {}, left: leftOf(w), values, furiten: g.isFuriten(you), why }
       }
     }
     base.game = {
@@ -424,6 +456,7 @@ export class Table {
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
       notice: you >= 0 ? g.notices[you] ?? null : null,
+      coach: you >= 0 ? this.coachFor(g, you) : null,
       audit: { ok: this.auditProblems.length === 0, checks: this.auditRuns, problems: this.auditProblems.slice(0, 3) },
       replays: g.phase === 'over' ? g.replays : undefined,
       chat: this.chatLog.filter((c) => Date.now() - c.at < 8000).map((c) => ({ n: c.n, seat: c.seat, key: c.key, ago: Date.now() - c.at })),

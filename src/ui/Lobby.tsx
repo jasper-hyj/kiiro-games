@@ -87,9 +87,9 @@ type Step = 'start' | 'rules' | 'options' | 'code' | 'name'
 type Mode = 'friends' | 'bots' | 'join'
 const FLOW: Record<Mode, Step[]> = { friends: ['rules', 'name'], bots: ['rules', 'options', 'name'], join: ['code', 'name'] }
 
-export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoin }: {
+export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onCreate, onJoin }: {
   name: string; setName: (s: string) => void; config: RoomConfig; setConfig: (c: RoomConfig) => void
-  onSolo: () => void; onCreate: () => void; onJoin: (code: string) => void
+  onSolo: () => void; onTutorial: () => void; onCreate: () => void; onJoin: (code: string) => void
 }) {
   const { t } = useLang()
   const [step, setStep] = useState<Step>('start')
@@ -124,7 +124,10 @@ export function Menu({ name, setName, config, setConfig, onSolo, onCreate, onJoi
               <button className="btn gold big" onClick={() => go('friends')} disabled={!onlineConfigured}>{t('playFriends')}</button>
               <button className="btn felt big" onClick={() => go('bots')}>{t('playBots')}</button>
             </div>
-            <button className="linkbtn" onClick={() => go('join')} disabled={!onlineConfigured}>{t('haveCode')}</button>
+            <div className="linkrow">
+              <button className="linkbtn" onClick={() => go('join')} disabled={!onlineConfigured}>{t('haveCode')}</button>
+              <button className="linkbtn" onClick={onTutorial}>{t('learnPlay')}</button>
+            </div>
             {!onlineConfigured && <p className="muted small onlineoff">{t('onlineOff')}</p>}
           </>
         )}

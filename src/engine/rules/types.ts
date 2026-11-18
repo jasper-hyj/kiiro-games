@@ -36,6 +36,7 @@ export interface HandScore {
   yaku: YakuItem[]
   total: number            // han (riichi) / fan (hk) / tai (taiwan)
   fu?: number
+  fuDetail?: { label: [string, string]; value: number }[]   // how the fu were built up (Riichi)
   base: number             // base points used by settle
   label?: string           // mangan etc.
   yakuman?: number

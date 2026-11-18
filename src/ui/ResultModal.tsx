@@ -85,7 +85,12 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
               <span className="scpts pos">+{w.points}</span>
             </div>
             <Hand h={{ hand: w.hand.hand, melds: w.hand.melds, flowers: [] }} win={w.winTile} />
-            <div className="muted small">{w.score.yaku.map((y) => yakuName(y, lang)).join(' · ')} — {w.score.total} {t('fan')}</div>
+            <div className="howscored">
+              <Yaku items={w.score.yaku} />
+              <div className="hstotal"><span>{t('hsTotal')}</span><b>{w.score.total} {t('fan')}</b></div>
+              <div className="hsline">{t('hsSichuan', { fan: Math.min(w.score.total, 4), pts: w.points, raw: w.score.total })}</div>
+              <div className="hsline muted">{w.tsumo ? t('hsSichuanTsumo', { pts: w.points }) : t('hsSichuanRon', { pts: w.points })}</div>
+            </div>
           </div>
         ))}
         {(r.sc?.notes ?? []).map((nt, i) => (
@@ -118,23 +123,38 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
           </div>
           <Hand h={r.hands[r.winner!]} win={r.tsumo ? undefined : r.winTile} />
           <div className="limit">{label(r.score.label)} {r.score.yakuman ? '' : `${r.score.total} ${unit}`}{r.score.fu ? ` · ${r.score.fu} ${t('fu')}` : ''}</div>
-          <details className="detail">
-            <summary>{t('details')}</summary>
+          <div className="howscored">
+            <h3>{t('howScored')}</h3>
             {r.dora && r.dora.length > 0 && <DoraRows label={t('doraRow')} ids={r.dora} sanma={v.players.length === 3} />}
             {r.ura && r.ura.length > 0 && <DoraRows label={t('uraRow')} ids={r.ura} sanma={v.players.length === 3} ura />}
             <Yaku items={r.score.yaku} />
-            {v.rule.id === 'taiwan' && <div className="muted small">{t('calcTw', { n: r.score.total, base: r.score.base })}</div>}
-            {v.rule.id === 'hk' && <div className="muted small">{t('calcHk', { n: r.score.total, base: r.score.base })}</div>}
-            {v.rule.id === 'mcr' && <div className="muted small">{t('calcMcr', { n: r.score.total })}</div>}
+            <div className="hstotal"><span>{t('hsTotal')}</span><b>{r.score.yakuman ? (r.score.yakuman > 1 ? t('doubleYakuman') : t('yakuman')) : `${r.score.total} ${unit}`}</b></div>
+            {v.rule.id === 'riichi' && !r.score.yakuman && r.score.fuDetail && (
+              <div className="hsblock">
+                <div className="hshead">{t('hsFu')}</div>
+                {r.score.fuDetail.map((f, i) => <div className="hsrow" key={i}><span>{lang === 'zh' ? f.label[1] : f.label[0]}</span><span>{f.value > 0 && i > 0 && r.score!.fuDetail!.length > 1 ? '+' : ''}{r.score!.fuDetail!.length > 1 || i > 0 ? f.value : ''}</span></div>)}
+                <div className="hsrow strong"><span>{t('hsFuTotal')}</span><span>{r.score.fu}</span></div>
+                <div className="hsline">{t('hsBase', { fu: r.score.fu ?? 0, han: Math.min(r.score.total, 13), pow: 2 ** (2 + Math.min(r.score.total, 13)), raw: (r.score.fu ?? 0) * 2 ** (2 + Math.min(r.score.total, 13)) })}</div>
+                {r.score.label && <div className="hsline">{t('hsLimit', { label: label(r.score.label), base: r.score.base })}</div>}
+                {!r.score.label && <div className="hsline">{t('hsBaseFinal', { base: r.score.base })}</div>}
+              </div>
+            )}
+            {v.rule.id === 'riichi' && r.score.yakuman && <div className="hsline">{t('hsYakuman', { n: r.score.yakuman, base: r.score.base })}</div>}
+            {v.rule.id === 'taiwan' && <div className="hsline">{t('calcTw', { n: r.score.total, base: r.score.base })}</div>}
+            {v.rule.id === 'hk' && <div className="hsline">{t('calcHk', { n: r.score.total, base: r.score.base })}</div>}
+            {v.rule.id === 'mcr' && <div className="hsline">{t('calcMcr', { n: r.score.total })}</div>}
+            <div className="hshead">{t('hsPay')}</div>
+            {v.rule.id === 'riichi' && <div className="hsline muted">{r.tsumo ? t(r.winner === r.dealerBefore ? 'hsRiichiTsumoDealer' : 'hsRiichiTsumo') : t(r.winner === r.dealerBefore ? 'hsRiichiRonDealer' : 'hsRiichiRon')}</div>}
+            {v.players.map((p, i) => r.deltas[i] !== 0 ? <div className="hsrow" key={i}><span>{p.name}</span><span className={r.deltas[i] > 0 ? 'pos' : 'neg'}>{r.deltas[i] > 0 ? '+' : ''}{r.deltas[i]}</span></div> : null)}
             {r.others?.map((o, k) => (
-              <div key={k} style={{ marginTop: 10, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
+              <div key={k} className="hsother">
                 <b>{t('alsoWins', { name: v.players[o.winner].name })}</b>
                 <Hand h={o.hand} />
                 <Yaku items={o.score.yaku} />
                 <b>{o.score.total} {unit}</b>
               </div>
             ))}
-          </details>
+          </div>
         </>
       ) : (
         <>

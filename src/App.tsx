@@ -52,6 +52,12 @@ export default function App() {
     const cfg = { ...config, ...(q.get('rule') ? { rule: q.get('rule') as RoomConfig['rule'] } : {}), ...(q.get('players') ? { players: Number(q.get('players')) as 3 | 4 } : {}) }
     setActive(true); conn.current = connectLocal(id.current, name || 'Player', cfg, handlers)
   }
+  const tutorial = () => {
+    // a guided practice game: easy bots, the coach switched on, tips that explain each moment
+    history.replaceState(null, '', '?tutorial=1')
+    setActive(true)
+    conn.current = connectLocal(id.current, name || 'Player', { ...config, botLevel: 'easy', rounds: 1 }, handlers)
+  }
   const joinRoom = useCallback((code: string) => {
     const c = code.toUpperCase()
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
@@ -121,7 +127,7 @@ export default function App() {
         )}
         {!active && !urlRoom && (
           <>
-            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onCreate={() => joinRoom(makeCode())} onJoin={joinRoom} />
+            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => joinRoom(makeCode())} onJoin={joinRoom} />
           </>
         )}
         {active && !view && joinError && (

@@ -98,6 +98,20 @@ function Opp({ p, v, pos, bubble }: { p: PlayerView; v: NonNullable<TableView['g
   )
 }
 
+function coachText(c: NonNullable<TableView['game']>['coach'] & object, t: (k: string, v?: Record<string, string | number>) => string): string {
+  switch (c.kind) {
+    case 'tsumo': return t('coach.tsumo')
+    case 'ron': return t('coach.ron')
+    case 'riichi': return t('coach.riichi')
+    case 'discard': return (c.threat ? t('coach.threat') + ' ' : '') + ((c.n ?? 1) <= 0 ? t('coach.discard0') : t('coach.discardN', { n: (c.n ?? 1) + 0 }))
+    case 'call': return t('coach.call', { call: t(c.call === 'minkan' ? 'kan' : c.call ?? 'pass'), n: c.n ?? 0 })
+    case 'pass': return t('coach.pass')
+    case 'nuki': return t('coach.nuki')
+    case 'kan': return t('coach.kan')
+  }
+  return ''
+}
+
 export function Board({ view, send, hints, setHints, onLeave, online, room, status: conn }: {
   room?: string | null; status?: string;
   view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean
@@ -147,9 +161,9 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
 
   // ----- Mahjong Soul style automation -----
   // automation: everything starts OFF except organising the hand
-  type Auto = { win: boolean; discard: boolean; skip: boolean; sort: boolean }
+  type Auto = { win: boolean; discard: boolean; skip: boolean; sort: boolean; coach: boolean }
   const [auto, setAutoState] = useState<Auto>(() => {
-    const dflt: Auto = { win: false, discard: new URLSearchParams(location.search).has('auto'), skip: false, sort: true }
+    const dflt: Auto = { win: false, discard: new URLSearchParams(location.search).has('auto'), skip: false, sort: true, coach: new URLSearchParams(location.search).has('tutorial') }
     try { if (new URLSearchParams(location.search).has('auto')) return dflt; return { ...dflt, ...JSON.parse(localStorage.getItem('kiiro-auto2') ?? '{}') } } catch { return dflt }
   })
   const setAuto = (k: keyof Auto) => {
@@ -267,7 +281,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <div className={'auditline' + (v.audit.ok ? ' ok' : ' bad')} title={v.audit.problems.join('\n')}>{v.audit.ok ? t('auditOk', { n: v.audit.checks }) : t('auditBad')}</div>
         <div className="dockrule" />
         <div className="dockgroup">{t('auto')}</div>
-        {([['sort', 'autoSort', auto.sort], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
+        {([['sort', 'autoSort', auto.sort], ['coach', 'coachSwitch', auto.coach], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
           <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
         ))}
         <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
@@ -331,6 +345,19 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     if (hlKind === null) return
     document.querySelectorAll<HTMLElement>(`.gamecol .tile[data-kind="${hlKind}"]`).forEach((e) => e.classList.add('hl'))
   })
+  // guided practice game: one short tip the first time each situation comes up
+  const tutorial = typeof location !== 'undefined' && new URLSearchParams(location.search).has('tutorial')
+  const [tutSeen, setTutSeen] = useState<string[]>([])
+  const [tutOpen, setTutOpen] = useState<string | null>(null)
+  const tutKey = !tutorial || v.phase === 'result' || v.phase === 'over' ? null
+    : reaction ? 'reaction'
+      : v.phase === 'turn' && v.turn === you && o?.discard.length ? (me.discards.length === 0 ? 'first' : v.coach?.n === 0 ? 'tenpai' : 'turn')
+        : v.phase === 'turn' ? 'others' : null
+  useEffect(() => {
+    if (tutKey && !tutSeen.includes(tutKey)) { setTutOpen(tutKey); setTutSeen((x) => [...x, tutKey]) }
+  }, [tutKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [help, setHelp] = useState('')
+  useEffect(() => { setHelp('') }, [v.phase, v.turn])
   const barRef = useRef<HTMLDivElement>(null)
   const [barW, setBarW] = useState(0)
   useEffect(() => {
@@ -397,6 +424,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       <div className="handbar" ref={barRef} style={{ ['--hw' as string]: tw + 'px' }}>
         {popOpen && (
           <div className="actionpop">
+            {help && <div className="callhelp">{help}</div>}
             {v.phase === 'swap' && !v.pick.swap[you] && (
               <div className="apbtns">
                 <span className="pickhint">{t('swapHint', { n: swapSel.length })}</span>
@@ -417,34 +445,48 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
             )}
             <div className="apbtns">
               {reaction && v.lastDiscard && (<>
-                {reaction.ron && <button className="cbtn ron" onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
+                {reaction.ron && <button className={'cbtn ron' + (auto.coach && v.coach?.kind === 'ron' ? ' coachpick' : '')} title={t('tip.ron')} onMouseEnter={() => setHelp(t('tip.ron'))} onFocus={() => setHelp(t('tip.ron'))} onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
                 {reaction.pon && (
-                  <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
+                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'pon' ? ' coachpick' : '')} title={t('tip.pon')} onMouseEnter={() => setHelp(t('tip.pon'))} onFocus={() => setHelp(t('tip.pon'))} onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
                     <b>{t('pon')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
                   </button>
                 )}
                 {reaction.minkan && (
-                  <button className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
+                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'minkan' ? ' coachpick' : '')} title={t('tip.kan')} onMouseEnter={() => setHelp(t('tip.kan'))} onFocus={() => setHelp(t('tip.kan'))} onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
                     <b>{t('kan')}</b><span className="mini"><Tile id={v.lastDiscard.tile} hot /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /><Tile kind={kindOf(v.lastDiscard.tile)} /></span>
                   </button>
                 )}
                 {reaction.chi.map((c, i) => (
-                  <button key={i} className="cbtn call" onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
+                  <button key={i} className={'cbtn call' + (auto.coach && v.coach?.call === 'chi' ? ' coachpick' : '')} title={t('tip.chi')} onMouseEnter={() => setHelp(t('tip.chi'))} onFocus={() => setHelp(t('tip.chi'))} onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
                     <b>{t('chi')}</b>
                     <span className="mini">{[...c, v.lastDiscard!.tile].sort((x, y) => kindOf(x) - kindOf(y)).map((id) => <Tile key={id} id={id} hot={id === v.lastDiscard!.tile} />)}</span>
                   </button>
                 ))}
               </>)}
-              {reaction && <button className="cbtn pass" onClick={() => send({ t: 'decide', d: { type: 'pass' } })}><b>{t('pass')}</b></button>}
-            {o?.tsumo && <button className="cbtn ron" onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
+              {reaction && <button className={'cbtn pass' + (auto.coach && v.coach?.kind === 'pass' ? ' coachpick' : '')} title={t('tip.pass')} onMouseEnter={() => setHelp(t('tip.pass'))} onFocus={() => setHelp(t('tip.pass'))} onClick={() => send({ t: 'decide', d: { type: 'pass' } })}><b>{t('pass')}</b></button>}
+            {o?.tsumo && <button className={'cbtn ron' + (auto.coach && v.coach?.kind === 'tsumo' ? ' coachpick' : '')} title={t('tip.tsumo')} onMouseEnter={() => setHelp(t('tip.tsumo'))} onFocus={() => setHelp(t('tip.tsumo'))} onClick={() => send({ t: 'act', a: { type: 'tsumo' } })}>{t('tsumo')}</button>}
             {o && o.riichi.length > 0 && (
-              <button className={'cbtn ' + (riichiMode ? 'ron' : 'call')} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
+              <button className={'cbtn ' + (riichiMode ? 'ron' : 'call') + (auto.coach && v.coach?.kind === 'riichi' ? ' coachpick' : '')} title={t('tip.riichi')} onMouseEnter={() => setHelp(t('tip.riichi'))} onFocus={() => setHelp(t('tip.riichi'))} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
             )}
             {o?.nuki && <button className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}><b>{t('nuki')}</b></button>}
-            {o?.ankan.map((k) => <button key={'a' + k} className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}><b>{t('kan')}</b><span className="mini"><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /></span></button>)}
-            {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b><span className="mini"><Tile id={id} /></span></button>)}
+            {o?.ankan.map((k) => <button key={'a' + k} className="cbtn call" title={t('tip.ankan')} onMouseEnter={() => setHelp(t('tip.ankan'))} onFocus={() => setHelp(t('tip.ankan'))} onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}><b>{t('kan')}</b><span className="mini"><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /><Tile kind={k} /></span></button>)}
+            {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" title={t('tip.addKan')} onMouseEnter={() => setHelp(t('tip.addKan'))} onFocus={() => setHelp(t('tip.addKan'))} onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b><span className="mini"><Tile id={id} /></span></button>)}
             {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
             </div>
+          </div>
+        )}
+        {tutorial && tutOpen && (
+          <div className="tutcard" role="dialog">
+            <b>{t('tut.title')}</b>
+            <p>{t('tut.' + tutOpen)}</p>
+            <button className="btn sm gold" onClick={() => setTutOpen(null)}>{t('tut.ok')}</button>
+          </div>
+        )}
+        {auto.coach && v.coach && (
+          <div className="coachcard" role="note">
+            <span className="cicon" aria-hidden="true">?</span>
+            {v.coach.tile !== undefined && <span className="nbtile"><Tile id={v.coach.tile} /></span>}
+            <span>{coachText(v.coach, t)}</span>
           </div>
         )}
         {v.notice && (
@@ -478,7 +520,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
                   return (
                     <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
                       <Tile kind={k} />
-                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' || ruleId === 'mcr' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : '—'}</span></span>
+                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')} className={val ? '' : 'nowin'}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' || ruleId === 'mcr' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : (v.hint!.why?.[k] ? t('why.' + v.hint!.why[k].code, { n: v.hint!.why[k].n ?? 0, need: v.hint!.why[k].need ?? 0 }) : '—')}</span></span>
                     </span>
                   )
                 })}
@@ -498,12 +540,12 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         )}
         <div className={'handrow' + (mine ? ' mine' : '') + (twoRows ? ' two' : '')} style={{ ['--tw' as string]: tw + 'px' }}>
           {handTiles.map((id) => (
-            <Tile key={id} id={id} dora={doraOf(id) || undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} onDrag={!auto.sort ? (x) => dragTile(id, x) : undefined} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+            <Tile key={id} id={id} className={auto.coach && v.coach?.tile === id && (v.coach.kind === 'discard' || v.coach.kind === 'riichi') ? 'coachpick' : ''} dora={doraOf(id) || undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} onDrag={!auto.sort ? (x) => dragTile(id, x) : undefined} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}
           {me.drawn !== null && (
             <>
               <span className="hand-extra" />
-              <Tile id={me.drawn} className="drawn" dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} onFlick={tileFlick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
+              <Tile id={me.drawn} className={'drawn ' + (auto.coach && v.coach?.tile === me.drawn && (v.coach.kind === 'discard' || v.coach.kind === 'riichi') ? 'coachpick' : '')} dora={doraOf(me.drawn) || undefined} selected={sel === me.drawn} onClick={tileClick(me.drawn)} onFlick={tileFlick(me.drawn)} dim={tileDim(me.drawn)} mark={hints && !!o && !!tenpaiKinds[kindOf(me.drawn)]} />
             </>
           )}
           {me.melds.length > 0 && <div className="melds mymelds">{me.melds.map((m, i) => <MeldView key={i} m={m} owner={me.seat} n={n} />)}</div>}

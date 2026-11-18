@@ -796,3 +796,34 @@ html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) 
 .board .cgrid .pond .pondin { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
 html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
 .board .info { width: calc(var(--pt) * 5.8); height: calc(var(--pt) * 5.8); min-width: 118px; min-height: 118px; }
+
+.actionpop { max-height: none; overflow: visible; }
+
+/* elements centred with translateX(-50%) need keyframes that keep that transform, or they jump sideways while appearing */
+@keyframes rise-in-x { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%); } }
+.toast, .connbadge.down, .connbadge.up, .actionpop { animation-name: rise-in-x; }
+
+/* how a win was scored: always visible */
+.howscored { margin: 10px 0; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(170,186,214,.22); }
+.howscored h3 { margin: 0 0 8px; font-family: var(--serif); font-weight: 400; font-size: 20px; letter-spacing: .04em; color: #fff; }
+.hshead { margin: 10px 0 4px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: rgba(236,240,250,.75); }
+.hsrow { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px dashed rgba(170,186,214,.15); }
+.hsrow.strong { font-weight: 700; border-bottom: 0; border-top: 1px solid rgba(170,186,214,.35); margin-top: 2px; }
+.hsline { margin: 6px 0; font-size: 14px; line-height: 1.5; }
+.hstotal { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(170,186,214,.35); font-size: 17px; }
+.hsother { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(170,186,214,.2); }
+
+/* coach */
+.coachcard { display: flex; align-items: center; gap: 12px; align-self: center; max-width: min(900px, 100%); padding: 8px 14px; border-radius: 12px; background: rgba(95,160,255,.16); border: 1px solid rgba(130,180,255,.65); color: #dcebff; font-size: 15px; line-height: 1.35; --tw: 24px; }
+.coachcard .cicon { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #06204a; background: #8fc0ff; }
+.tile.coachpick { box-shadow: var(--cap), 0 0 0 3px #7fb8ff, 0 0 18px 3px rgba(127,184,255,.9), var(--edge); }
+.cbtn.coachpick { outline: 3px solid #7fb8ff; outline-offset: 2px; box-shadow: 0 0 18px rgba(127,184,255,.85); }
+.callhelp { flex-basis: 100%; max-width: 46ch; text-align: center; font-size: 14px; line-height: 1.4; color: rgba(236,240,250,.9); padding: 0 6px; }
+@media (max-height: 520px) { .coachcard { font-size: 13px; padding: 5px 10px; } .callhelp { font-size: 12px; } }
+
+.nowin { color: #ffb4a8; font-weight: 600; }
+
+.linkrow { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.tutcard { position: fixed; top: calc(64px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 45; width: min(560px, calc(100vw - 24px)); padding: 14px 16px; border-radius: 14px; background: linear-gradient(180deg, rgba(30,60,120,.97), rgba(10,20,50,.97)); border: 1px solid rgba(130,180,255,.7); color: #eaf2ff; box-shadow: 0 16px 40px rgba(0,0,0,.6); animation: rise-in-x .2s ease-out; display: grid; gap: 6px; }
+.tutcard p { margin: 0; font-size: 15px; line-height: 1.45; } .tutcard .btn { justify-self: end; }
+@media (max-height: 520px) { .tutcard { top: 8px; padding: 8px 12px; } .tutcard p { font-size: 13px; } }

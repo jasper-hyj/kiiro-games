@@ -92,7 +92,7 @@ const probe = () => {
   const nonTile = rects.filter(([n]) => !/tile/.test(n))
   for (let i = 0; i < nonTile.length; i++) for (let j = i + 1; j < nonTile.length; j++) {
     const a = nonTile[i][1], b = nonTile[j][1]
-    if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2) problems.push(`buttons overlap: ${nonTile[i][0]} x ${nonTile[j][0]}`)
+    if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2) problems.push(`buttons overlap: ${nonTile[i][0]} x ${nonTile[j][0]} A=${Math.round(a.left)},${Math.round(a.top)},${Math.round(a.right)},${Math.round(a.bottom)} B=${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.right)},${Math.round(b.bottom)}`)
   }
   return problems
 }
@@ -123,7 +123,7 @@ async function main() {
           const probs = (supported ? all : all.filter((x) => /h-scroll|no board/.test(x))).filter((x) => !/covered by chat/.test(x)) // the chat picker is a closable overlay
           total++
           for (const p of probs) {
-            const key = `[${state}/${players}p] ${p.replace(/\d+(\.\d+)?/g, '#')}`
+            const key = `[${state}/${players}p] ${process.env.RAW ? p : p.replace(/\d+(\.\d+)?/g, '#')}`
             const arr = failures.get(key) ?? []
             arr.push(`${w}x${h}`)
             failures.set(key, arr)
