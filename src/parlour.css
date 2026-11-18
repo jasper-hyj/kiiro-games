@@ -750,3 +750,49 @@ html[data-ponds='flat'] .cgrid .pond.p1, html[data-ponds='flat'] .cgrid .pond.p3
 
 /* the grain overlay is a plain translucent layer (blend modes are slow on software renderers) */
 body::before { mix-blend-mode: normal !important; opacity: .07 !important; }
+
+/* the small red number gets its own band at the top of the face: artwork starts below it, nothing overlaps */
+.tile { --idx: max(11px, calc(var(--tw) * .27)); --pt: calc(var(--idx) + var(--tw) * .09); }
+.tile .idx { top: calc(var(--tw) * .06); right: calc(var(--tw) * .08); }
+.tile .pips { top: var(--pt); height: calc(var(--tw) * 1.36 - var(--pt) - var(--tw) * .06); }
+@container (max-width: 34px) { .tile .pips { top: var(--pt); height: calc(var(--tw) * 1.36 - var(--pt) - var(--tw) * .06); } }
+.tile:has(> .idx) .big.man { margin-top: calc(var(--tw) * .12); }
+.tile:has(> .idx) .big.man + .big.man { margin-top: 0; }
+
+/* the player whose turn it is: bright plate with dark text (must come after the generic chip rules) */
+.board .chip.turn, .infoleft .chip.turn { background: linear-gradient(180deg, #f1f5fd, #b9c6e0); border-color: rgba(255,255,255,.85); box-shadow: 0 0 0 3px rgba(226,234,248,.35), 0 0 24px rgba(226,234,248,.55), 0 6px 14px rgba(0,0,0,.5); }
+.board .chip.turn .nm, .board .chip.turn .pts, .infoleft .chip.turn .nm, .infoleft .chip.turn .pts { color: #0b1226; }
+.board .chip.turn .wind, .infoleft .chip.turn .wind { background: #0b1226; color: #f1f5fd; }
+.board .chip.turn .voidtag, .infoleft .chip.turn .voidtag { background: rgba(11,18,38,.16); color: #0b1226; }
+.board .chip.winner, .infoleft .chip.winner { background: linear-gradient(180deg, #fff3c4, #e0b640); }
+.board .chip.winner .nm, .board .chip.winner .pts { color: #2a1c05; }
+.board .chip.winner .wind { background: #2a1c05; color: #ffe9a6; }
+
+/* =====================================================================
+   MAHJONG SOUL RIVERS: four tight 6-wide x 3-row blocks hugging a square centre plate, each turned toward its owner.
+   (Upright rivers remain a setting.) The plate is as wide as a side block is long, so everything lines up.
+   ===================================================================== */
+.board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 15.4 * 1px), 34px); --infoh: calc(var(--pt) * 6.4); column-gap: 6px; row-gap: 4px; }
+html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 15.4 * 1px), 34px); }
+.board .cgrid .pond.p0, .board .cgrid .pond.p2 { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); }
+.board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * 4.4); height: calc(var(--tw) * 6.4 + 6px); }
+.board .cgrid .pond .pondin { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); gap: calc(var(--tw) * .06) 0; }
+html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 6.4 + 6px); height: calc(var(--tw) * 4.4); }
+.board .info { zoom: 1; width: calc(var(--pt) * 6.4); height: calc(var(--pt) * 6.4); min-width: 118px; min-height: 118px; }
+.board .info .rnd { font-size: clamp(18px, calc(var(--pt) * 1.05), 34px); margin: 0; }
+.board .info .infolines .muted { font-size: clamp(12px, calc(var(--pt) * .62), 22px); }
+.board .info .cw b { font-size: clamp(15px, calc(var(--pt) * .85), 30px); }
+.board .info .cw-top { top: 6%; } .board .info .cw-bottom { bottom: 6%; } .board .info .cw-left { left: 6%; } .board .info .cw-right { right: 6%; }
+.dirbar { position: absolute; background: linear-gradient(90deg, #ffd75e, #ffb62e); border-radius: 3px; box-shadow: 0 0 10px rgba(255,215,94,.8); }
+.dirbar.db-top, .dirbar.db-bottom { left: 22%; right: 22%; height: 5px; } .dirbar.db-top { top: 3px; } .dirbar.db-bottom { bottom: 3px; }
+.dirbar.db-left, .dirbar.db-right { top: 22%; bottom: 22%; width: 5px; } .dirbar.db-left { left: 3px; } .dirbar.db-right { right: 3px; }
+.board .info .cw.on { color: #ffd75e; }
+
+/* seven per row x three rows = 21 discards, enough for a whole hand without a clipped fourth row */
+.board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 14.8 * 1px), 34px); --infoh: calc(var(--pt) * 5.8); }
+html[data-ponds='flat'] .board .cgrid { --pt: clamp(11px, calc((var(--H) - 118) / 14.8 * 1px), 34px); }
+.board .cgrid .pond.p0, .board .cgrid .pond.p2 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
+.board .cgrid .pond.p1, .board .cgrid .pond.p3 { width: calc(var(--tw) * 4.4); height: calc(var(--tw) * 7.4 + 7px); }
+.board .cgrid .pond .pondin { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
+html[data-ponds='flat'] .board .cgrid .pond.p1, html[data-ponds='flat'] .board .cgrid .pond.p3 { width: calc(var(--tw) * 7.4 + 7px); height: calc(var(--tw) * 4.4); }
+.board .info { width: calc(var(--pt) * 5.8); height: calc(var(--pt) * 5.8); min-width: 118px; min-height: 118px; }

@@ -378,6 +378,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         )}
         <div className="info">
+          {dirs.map(([name, r]) => dirOn(r) ? <span key={'b' + name} className={`dirbar db-${name}`} /> : null)}
           {dirs.map(([name, r]) => <span key={name} className={`cw cw-${name}` + (dirOn(r) ? ' on' : '') + (rel(r).seat === v.dealer ? ' east' : '')}><b>{WINDS[lang === 'en' ? 'en' : 'zh'][rel(r).seatWind]}</b></span>)}
           <div className="rnd">{roundName}</div>
           <div className="infolines">{[
