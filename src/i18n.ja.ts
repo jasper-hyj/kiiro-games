@@ -77,7 +77,7 @@ export const JA: Record<string, string> = {
   'wind.0': '東', 'wind.1': '南', 'wind.2': '西', 'wind.3': '北', roundName: '{wind}{n}局',
   winsTsumo: '{name} のツモ和了', winsRon: '{name} のロン和了（{from} の放銃）', alsoWins: '{name} もロン（ダブロン）',
   drawTitle: '流局（牌山なし）', tenpaiPlayers: 'テンパイ：{names}', nobody: 'なし', riichiSticksWon: 'リーチ棒 +{n}',
-  winTitle: '{name} の和了', winningTile: '和了牌', paysRon: '{from} が {winner} に {pts} 支払い', paysTsumo: '全員が {winner} に支払い（合計 {pts}）', ackHint: '全員の準備ができると次の局が始まります。', ackIn: '{s}秒後に自動で始まります。', ackReady: '準備OK', ackReading: '確認中', nextHand: '次の局へ', waitingAck: '待機中…（{n}）', gameOver: '対局終了', backLobby: '待機室へ戻る', pts: '点', han: '翻', fan: '番', tai: '台', fu: '符', yakuman: '役満',
+  coachOpt: 'コーチとヒント', allowed: '許可', coachOffShort: 'コーチなし', coachOffRoom: 'このルームではホストがコーチとヒントをオフにしています。', tapAgain: 'もう一度タップで確定（光っている牌を使います）', winTitle: '{name} の和了', winningTile: '和了牌', paysRon: '{from} が {winner} に {pts} 支払い', paysTsumo: '全員が {winner} に支払い（合計 {pts}）', ackHint: '全員の準備ができると次の局が始まります。', ackIn: '{s}秒後に自動で始まります。', ackReady: '準備OK', ackReading: '確認中', nextHand: '次の局へ', waitingAck: '待機中…（{n}）', gameOver: '対局終了', backLobby: '待機室へ戻る', pts: '点', han: '翻', fan: '番', tai: '台', fu: '符', yakuman: '役満',
   'label.Mangan': '満貫', 'label.Haneman': '跳満', 'label.Baiman': '倍満', 'label.Sanbaiman': '三倍満', 'label.Yakuman': '役満', 'label.Kazoe Yakuman': '数え役満', 'label.Limit': '満番',
   'draw.Exhaustive draw': '流局（牌山なし）', 'draw.Abortive draw (nine terminals/honors)': '途中流局（九種九牌）', 'draw.Abortive draw (four winds)': '途中流局（四風連打）',
   'draw.Abortive draw (four riichi)': '途中流局（四家立直）', 'draw.Abortive draw (four kans)': '途中流局（四槓散了）', 'draw.Abortive draw (triple ron)': '途中流局（三家和）',

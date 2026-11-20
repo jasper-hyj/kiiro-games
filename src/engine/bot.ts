@@ -33,7 +33,7 @@ function keepValue(g: Game, seat: number, k: number, counts: Counts, dora?: Set<
   if (isHonor(k)) {
     const yaku = isDragon(k) || k === sw || k === rw
     if (counts[k] >= 2) return yaku ? 60 : 25
-    return yaku ? 8 : 0
+    return yaku ? 0.6 : 0 // a lone honor goes before a terminal (1) and before any number tile, even a dragon: it can only become a pair or a triplet
   }
   if (isTermOrHonor(k)) return 1
   const n = numOf(k)

@@ -74,6 +74,9 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
             </select>
           </div>
         )}
+        <div className="opt"><span>{t('coachOpt')}</span>
+          <Seg disabled={readOnly} value={config.coach !== false} onPick={(v) => onChange({ coach: v })} items={[[true, t('allowed')], [false, t('off')]]} />
+        </div>
         <div className="opt"><span>{t('bots')}</span>
           <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]]} />
         </div>
@@ -190,6 +193,7 @@ function summary(c: RoomConfig, t: (k: string) => string): string {
   if (c.rule === 'hk' && c.players === 3) parts.push(t('sanma'))
   if (c.rule === 'hk' || c.rule === 'mcr') parts.push(`${t('minFan')} ${c.minFan}`)
   if (c.rule === 'sichuan') parts.push(c.swap !== false ? t('swapOpt') : '')
+  if (c.coach === false) parts.push(t('coachOffShort'))
   parts.push(`${t('bots')}: ${t(c.botLevel ?? 'normal')}`)
   return parts.filter(Boolean).join(' · ')
 }

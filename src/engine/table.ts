@@ -8,7 +8,7 @@ import { kindOf } from './tiles'
 export interface Coach { kind: 'tsumo' | 'ron' | 'riichi' | 'discard' | 'call' | 'pass' | 'nuki' | 'kan'; tile?: number; n?: number; call?: string; threat?: boolean }
 export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
 export interface RoomConfig extends GameOptions { rule: RuleId }
-export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal' }
+export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal', coach: true }
 
 export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean; afk?: number; dcAt?: number }
 export interface PlayerView {
@@ -211,6 +211,7 @@ export class Table {
     if (typeof c.swap === 'boolean') clean.swap = c.swap
     if (c.rounds === 1 || c.rounds === 2 || c.rounds === 4) clean.rounds = c.rounds
     if (typeof c.aka === 'boolean') clean.aka = c.aka
+    if (typeof c.coach === 'boolean') clean.coach = c.coach
     if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
     if (c.players === 3 || c.players === 4) clean.players = c.players
     if (c.botLevel === 'easy' || c.botLevel === 'normal' || c.botLevel === 'hard') clean.botLevel = c.botLevel
@@ -426,7 +427,7 @@ export class Table {
   /** What the Hard bot would do in the viewer's seat, and why (for beginners). */
   private coachFor(g: Game, you: number): Coach | null {
     const p = g.players[you]
-    if (!p || p.out) return null
+    if (!p || p.out || this.config.coach === false) return null
     try {
       const threat = g.players.some((q) => q.seat !== you && q.riichi)
       if (g.phase === 'turn' && g.turn === you) {
@@ -473,7 +474,7 @@ export class Table {
       out: p.out, winOrder: g.sc.wins.find((w) => w.winner === p.seat)?.order ?? 0, swapIn: p.seat === you ? p.swapIn : [],
     }))
     let hint: NonNullable<TableView['game']>['hint'] = null
-    if (you >= 0 && (g.phase === 'turn' || g.phase === 'reaction')) {
+    if (you >= 0 && this.config.coach !== false && (g.phase === 'turn' || g.phase === 'reaction')) {
       const me = g.players[you]
       const vis = g.visibleCounts(you)
       const leftOf = (ks: number[]) => Object.fromEntries(ks.map((k) => [k, Math.max(0, 4 - vis[k])]))

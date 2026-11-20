@@ -1371,3 +1371,5 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 :root:root:root .shelf .options.flat { padding: .7em 1.8em; border-radius: 16px; box-sizing: border-box; }
 :root:root:root .board .info .cw-top { top: max(6%, 7px); } :root:root:root .board .info .cw-bottom { bottom: max(6%, 7px); }
 :root:root:root .board .info .cw-left { left: max(6%, 7px); } :root:root:root .board .info .cw-right { right: max(6%, 7px); }
+
+.cbtn[data-armed='1'] { outline: 3px solid #ffd75e; outline-offset: 2px; box-shadow: 0 0 18px rgba(255,215,94,.55); }

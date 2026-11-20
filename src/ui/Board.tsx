@@ -128,6 +128,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const rel = (r: number) => v.players[(you + r) % n]
   const sanma = n === 3
   const me = rel(0)
+  const coachOk = view.config.coach !== false // the host can turn the coach and hints off for the whole room
   const recv = useRef(Date.now())
   useMemo(() => { recv.current = Date.now() }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
   const [now, setNow] = useState(Date.now())
@@ -299,10 +300,11 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <div className={'auditline' + (v.audit.ok ? ' ok' : ' bad')} title={v.audit.problems.join('\n')}>{v.audit.ok ? t('auditOk', { n: v.audit.checks }) : t('auditBad')}</div>
         <div className="dockrule" />
         <div className="dockgroup">{t('auto')}</div>
-        {([['sort', 'autoSort', auto.sort], ['coach', 'coachSwitch', auto.coach], ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
+        {([['sort', 'autoSort', auto.sort], ...(coachOk ? [['coach', 'coachSwitch', auto.coach] as const] : []), ['win', 'autoWin', auto.win], ['discard', 'autoDiscard', auto.discard], ['skip', 'skipCalls', auto.skip]] as const).map(([k, label, on]) => (
           <label key={k} className="switch" title={t(label + 'Tip')}><input type="checkbox" checked={on} onChange={() => setAuto(k)} /><span className="knob" />{t(label)}</label>
         ))}
-        <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>
+        {!coachOk && <p className="muted small">{t('coachOffRoom')}</p>}
+        {coachOk && <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>}
         <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
@@ -397,11 +399,25 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   // very narrow screens (portrait phones): two rows of tiles instead of tiny ones
   const twoRows = fitTw < 32
   const perRow = Math.ceil(slots / 2)
-  const tw = twoRows ? Math.max(24, Math.min(60, Math.floor((usable - 3 * perRow) / (perRow + 0.2)))) : Math.max(20, Math.min(76, Math.floor(fitTw)))
+  // a phone held sideways is only ~390 px tall: smaller hand tiles leave room for the rivers and the other players' hands
+  const shortScreen = typeof window !== 'undefined' && window.innerHeight <= 520 && window.innerWidth > window.innerHeight
+  const tw = twoRows ? Math.max(24, Math.min(60, Math.floor((usable - 3 * perRow) / (perRow + 0.2)))) : Math.max(20, Math.min(shortScreen ? 40 : 76, Math.floor(fitTw)))
   // Pon / Kan / Chi buttons show no tiles: pointing at (or focusing / touching) a button lights up the tiles it would use in your hand, and the discard it takes
   const [callHl, setCallHl] = useState<{ ids: number[]; discard: boolean } | null>(null)
   const handIdsOfKind = (k: number, n: number) => [...(me.hand ?? []), ...(me.drawn !== null ? [me.drawn] : [])].filter((i) => kindOf(i) === k).slice(0, n)
-  const hlProps = (ids: number[], discard: boolean, tip: string) => ({ onMouseEnter: () => { setCallHl({ ids, discard }); setHelp(t(tip)) }, onMouseLeave: () => setCallHl(null), onFocus: () => { setCallHl({ ids, discard }); setHelp(t(tip)) }, onBlur: () => setCallHl(null), onTouchStart: () => setCallHl({ ids, discard }) })
+  // on a touch screen there is no hover: the first tap on a call button arms it (its tiles light up, like selecting a tile), the second tap confirms
+  const [callArm, setCallArm] = useState<string | null>(null)
+  const hlProps = (key: string, ids: number[], discard: boolean, tip: string, go: () => void) => ({
+    onMouseEnter: () => { setCallHl({ ids, discard }); setHelp(t(tip)) },
+    onMouseLeave: () => { if (!callArm) setCallHl(null) },
+    onFocus: () => { setCallHl({ ids, discard }); setHelp(t(tip)) },
+    onBlur: () => { if (!callArm) setCallHl(null) },
+    onClick: () => {
+      const touch = typeof matchMedia !== 'undefined' && matchMedia('(hover: none)').matches
+      if (!touch || callArm === key) { setCallArm(null); setCallHl(null); go() } else { setCallArm(key); setCallHl({ ids, discard }); setHelp(t('tapAgain')) }
+    },
+    'data-armed': callArm === key ? '1' : undefined,
+  })
   const shortKind = (k: number) => (suitOf(k) < 3 ? `${numOf(k)}${lang === 'en' ? 'mps'[suitOf(k)] : '萬筒索'[suitOf(k)]}` : '')
   useEffect(() => {
     document.querySelectorAll('.tile.callhl').forEach((e) => e.classList.remove('callhl'))
@@ -409,13 +425,14 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     for (const id of callHl.ids) document.querySelectorAll(`.gamecol .handrow .tile[data-id="${id}"]`).forEach((e) => e.classList.add('callhl'))
     if (callHl.discard) document.querySelectorAll('.gamecol .pond .tile.last').forEach((e) => e.classList.add('callhl'))
   })
-  useEffect(() => { if (!reaction && !o) setCallHl(null) }, [reaction, o])
+  useEffect(() => { setCallArm(null); if (!reaction && !o) setCallHl(null) }, [reaction, o, v.turn, v.phase])
   const popOpen = (v.phase === 'swap' && !v.pick.swap[you]) || (v.phase === 'void' && !v.pick.void[you]) || !!reaction || (!!o && (o.tsumo || o.riichi.length > 0 || o.ankan.length > 0 || o.kakan.length > 0 || o.nuki || o.abort))
 
   return (
     <div className={'gamecol' + (winning ? ' winning' + (iWon ? ' iwon' : '') : '')}
       onMouseOver={(e) => { const el = (e.target as HTMLElement).closest?.('.tile[data-kind]') as HTMLElement | null; const k = el && !el.classList.contains('back') && matchMedia('(hover: hover)').matches ? Number(el.dataset.kind) : null; setHoverKind((cur) => (cur === k ? cur : k)) }}
-      onMouseLeave={() => setHoverKind(null)}>
+      onMouseLeave={() => setHoverKind(null)}
+      onPointerDownCapture={(e) => { if (callArm && !(e.target as HTMLElement).closest?.('.actionpop .cbtn')) { setCallArm(null); setCallHl(null) } }}>
       {me.human && me.idle && v.phase !== 'over' && (
         <div className="overlay idleover" role="alertdialog">
           <div className={'modal idlemodal ' + me.idle}>
@@ -490,17 +507,17 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
               {reaction && v.lastDiscard && (<>
                 {reaction.ron && <button className={'cbtn ron' + (auto.coach && v.coach?.kind === 'ron' ? ' coachpick' : '')} title={t('tip.ron')} onMouseEnter={() => setHelp(t('tip.ron'))} onFocus={() => setHelp(t('tip.ron'))} onClick={() => send({ t: 'decide', d: { type: 'ron' } })}><b>{t('ron')}</b></button>}
                 {reaction.pon && (
-                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'pon' ? ' coachpick' : '')} title={t('tip.pon')} {...hlProps(handIdsOfKind(kindOf(v.lastDiscard!.tile), 2), true, 'tip.pon')} onClick={() => send({ t: 'decide', d: { type: 'pon' } })}>
+                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'pon' ? ' coachpick' : '')} title={t('tip.pon')} {...hlProps('b1-' + (handIdsOfKind(kindOf(v.lastDiscard!.tile), 2)).join(','), handIdsOfKind(kindOf(v.lastDiscard!.tile), 2), true, 'tip.pon', () => send({ t: 'decide', d: { type: 'pon' } }))} >
                     <b>{t('pon')}</b>
                   </button>
                 )}
                 {reaction.minkan && (
-                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'minkan' ? ' coachpick' : '')} title={t('tip.kan')} {...hlProps(handIdsOfKind(kindOf(v.lastDiscard!.tile), 3), true, 'tip.kan')} onClick={() => send({ t: 'decide', d: { type: 'minkan' } })}>
+                  <button className={'cbtn call' + (auto.coach && v.coach?.call === 'minkan' ? ' coachpick' : '')} title={t('tip.kan')} {...hlProps('b2-' + (handIdsOfKind(kindOf(v.lastDiscard!.tile), 3)).join(','), handIdsOfKind(kindOf(v.lastDiscard!.tile), 3), true, 'tip.kan', () => send({ t: 'decide', d: { type: 'minkan' } }))} >
                     <b>{t('kan')}</b>
                   </button>
                 )}
                 {reaction.chi.map((c, i) => (
-                  <button key={i} className={'cbtn call' + (auto.coach && v.coach?.call === 'chi' ? ' coachpick' : '')} title={t('tip.chi')} {...hlProps(c, true, 'tip.chi')} onClick={() => send({ t: 'decide', d: { type: 'chi', use: c } })}>
+                  <button key={i} className={'cbtn call' + (auto.coach && v.coach?.call === 'chi' ? ' coachpick' : '')} title={t('tip.chi')} {...hlProps('b3-' + (c).join(','), c, true, 'tip.chi', () => send({ t: 'decide', d: { type: 'chi', use: c } }))} >
                     <b>{t('chi')}</b>{reaction.chi.length > 1 && <span className="sfx">{c.map((id) => numOf(kindOf(id))).sort((x, y) => x - y).join('·')}</span>}
                   </button>
                 ))}
@@ -511,8 +528,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
               <button className={'cbtn ' + (riichiMode ? 'ron' : 'call') + (auto.coach && v.coach?.kind === 'riichi' ? ' coachpick' : '')} title={t('tip.riichi')} onMouseEnter={() => setHelp(t('tip.riichi'))} onFocus={() => setHelp(t('tip.riichi'))} onClick={() => { setRiichiMode(!riichiMode); setSel(null) }}>{riichiMode ? t('cancelRiichi') : t('riichi')}</button>
             )}
             {o?.nuki && <button className="cbtn call" onClick={() => send({ t: 'act', a: { type: 'nuki' } })}><b>{t('nuki')}</b></button>}
-            {o?.ankan.map((k) => <button key={'a' + k} className="cbtn call" title={t('tip.ankan')} {...hlProps(handIdsOfKind(k, 4), false, 'tip.ankan')} onClick={() => send({ t: 'act', a: { type: 'ankan', kind: k } })}><b>{t('kan')}</b>{o.ankan.length > 1 && <span className="sfx">{shortKind(k)}</span>}</button>)}
-            {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" title={t('tip.addKan')} {...hlProps([id], false, 'tip.addKan')} onClick={() => send({ t: 'act', a: { type: 'kakan', tile: id } })}><b>{t('addKan')}</b>{o.kakan.length > 1 && <span className="sfx">{shortKind(kindOf(id))}</span>}</button>)}
+            {o?.ankan.map((k) => <button key={'a' + k} className="cbtn call" title={t('tip.ankan')} {...hlProps('b4-' + (handIdsOfKind(k, 4)).join(','), handIdsOfKind(k, 4), false, 'tip.ankan', () => send({ t: 'act', a: { type: 'ankan', kind: k } }))} ><b>{t('kan')}</b>{o.ankan.length > 1 && <span className="sfx">{shortKind(k)}</span>}</button>)}
+            {o?.kakan.map((id) => <button key={'k' + id} className="cbtn call" title={t('tip.addKan')} {...hlProps('b5-' + ([id]).join(','), [id], false, 'tip.addKan', () => send({ t: 'act', a: { type: 'kakan', tile: id } }))} ><b>{t('addKan')}</b>{o.kakan.length > 1 && <span className="sfx">{shortKind(kindOf(id))}</span>}</button>)}
             {o?.abort && <button className="cbtn pass" onClick={() => send({ t: 'act', a: { type: 'abort' } })}><b>{t('abortDraw')}</b></button>}
             </div>
             {secs !== null && mine && <span className={'calltimer' + (secs <= 8 ? ' low' : '')}>{secs}s</span>}

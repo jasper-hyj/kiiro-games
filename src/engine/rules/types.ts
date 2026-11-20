@@ -29,7 +29,7 @@ export interface WinContext {
   options: GameOptions
 }
 
-export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' | 'hard'; swap?: boolean; cap?: number; fixedDealer?: boolean }
+export interface GameOptions { aka: boolean; rounds: 1 | 2 | 4; minFan: number; players?: 3 | 4; botLevel?: 'easy' | 'normal' | 'hard'; swap?: boolean; cap?: number; fixedDealer?: boolean; /** false: the room has no coach suggestions and no wait hints for anybody (set by the host) */ coach?: boolean }
 
 export interface YakuItem { name: string; zh?: string; value: number; yakuman?: boolean }
 export interface HandScore {

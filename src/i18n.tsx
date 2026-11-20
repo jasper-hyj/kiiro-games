@@ -199,6 +199,8 @@ const D: Record<string, [string, string]> = {
   nobody: ['nobody', '無人'],
   riichiSticksWon: ['+{n} from riichi sticks', '+{n} 立直棒'],
   nextHand: ['Next hand', '下一局'],
+  coachOpt: ['Coach & hints', '教練與提示'], allowed: ['Allowed', '允許'], coachOffShort: ['No coach', '無教練'], coachOffRoom: ['The host turned the coach and hints off for this room.', '房主已關閉此房間的教練與提示。'],
+  tapAgain: ['Tap again to confirm — the lit tiles will be used', '再點一次確認，亮起的牌會被使用'],
   winTitle: ['{name} wins', '{name} 胡牌'], winningTile: ['Winning tile', '胡的牌'],
   paysRon: ['{from} pays {winner} {pts}', '{from} 付 {pts} 給 {winner}'], paysTsumo: ['Everyone pays {winner} — {pts} in total', '其他人付給 {winner}，共 {pts}'],
   ackHint: ['The next hand starts when everyone is ready.', '所有人準備好後開始下一局。'], ackIn: ['It starts by itself in {s}s.', '{s} 秒後自動開始。'],

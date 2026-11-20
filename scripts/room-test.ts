@@ -71,5 +71,17 @@ const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.
   check('back to lobby: disconnected player is removed, connected one stays', t.status === 'lobby' && t.seatOf('b') < 0 && t.seatOf('a') >= 0)
   t.leave('a')
 }
+{ // the host can turn the coach and hints off for the whole room
+  const t = fresh()
+  t.join('a', 'Ann'); t.join('b', 'Bob')
+  t.setConfig('b', { coach: false })
+  check('only the host can change the coach option', t.config.coach !== false)
+  t.setConfig('a', { coach: false })
+  check('host turns the coach off', t.config.coach === false)
+  t.start('a')
+  const v = t.view('a').game!
+  check('with the coach off nobody gets suggestions or wait hints', v.coach === null && v.hint === null && t.view('b').game!.coach === null)
+  t.leave('a'); t.leave('b')
+}
 console.log(fails ? `${fails} FAILED` : 'room checks passed')
 process.exit(fails ? 1 : 0)
