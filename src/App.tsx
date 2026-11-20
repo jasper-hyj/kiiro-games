@@ -17,7 +17,7 @@ const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.str
 const makeCode = () => String(Math.floor(Math.random() * 9000) + 1000) // four digits, never starts with 0
 
 export default function App() {
-  const { lang, setLang, t } = useLang()
+  const { lang, setLang, simplified, setSimplified, t } = useLang()
   const [rulesOpen, setRulesOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
@@ -140,8 +140,9 @@ export default function App() {
             <button className="rulesfab" onClick={() => setGuideOpen(true)}><span aria-hidden="true">🎓</span><span className="fablabel"> {t('guideBtn')}</span></button>
             <button className="rulesfab" onClick={() => setRulesOpen(true)}><span aria-hidden="true">📖</span><span className="fablabel"> {t('rulesRef')}</span></button>
             <div className="seg langsw">
-              <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
-              <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+              <button className={lang === 'en' ? 'on' : ''} onClick={() => { setLang('en') }}>EN</button>
+              <button className={lang === 'zh' && !simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(false) }}>繁中</button>
+              <button className={lang === 'zh' && simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(true) }}>简中</button>
               <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
             </div>
           </div>

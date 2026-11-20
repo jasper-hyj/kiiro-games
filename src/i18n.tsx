@@ -1,3 +1,4 @@
+import { startSimplify, stopSimplify } from './simplify'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { JA } from './i18n.ja'
 
@@ -241,8 +242,8 @@ const D: Record<string, [string, string]> = {
   'draw.Abortive draw (triple ron)': ['Abortive draw (triple ron)', '三家和流局'],
 }
 
-interface Ctx { lang: Lang; setLang: (l: Lang) => void; t: (k: string, vars?: Record<string, string | number>) => string }
-const C = createContext<Ctx>({ lang: 'en', setLang: () => {}, t: (k) => k })
+interface Ctx { lang: Lang; setLang: (l: Lang) => void; /** Simplified Chinese (only with lang 'zh'): the Traditional text is converted on screen */ simplified: boolean; setSimplified: (b: boolean) => void; t: (k: string, vars?: Record<string, string | number>) => string }
+const C = createContext<Ctx>({ lang: 'en', setLang: () => {}, simplified: false, setSimplified: () => {}, t: (k) => k })
 
 const detect = (): Lang => {
   try {
@@ -258,16 +259,19 @@ const detect = (): Lang => {
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detect)
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('kiiro-lang', l) } catch { /* ignore */ } }
-  useEffect(() => { document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : lang === 'ja' ? 'ja' : 'en'; document.title = lang === 'zh' ? 'Kiiro 麻將' : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang])
+  const [simplified, setSimp] = useState(() => { try { return new URLSearchParams(location.search).get('lang') === 'zhs' || localStorage.getItem('kiiro-zhs') === '1' } catch { return false } })
+  const setSimplified = (b: boolean) => { setSimp(b); try { localStorage.setItem('kiiro-zhs', b ? '1' : '0') } catch { /* ignore */ } }
+  useEffect(() => { if (lang === 'zh' && simplified) startSimplify(); else stopSimplify() }, [lang, simplified])
+  useEffect(() => { document.documentElement.lang = lang === 'zh' ? (simplified ? 'zh-Hans' : 'zh-Hant') : lang === 'ja' ? 'ja' : 'en'; document.title = lang === 'zh' ? (simplified ? 'Kiiro 麻将' : 'Kiiro 麻將') : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang, simplified])
   const value = useMemo<Ctx>(() => ({
-    lang, setLang,
+    lang, setLang, simplified, setSimplified,
     t: (k, vars) => {
       const e = D[k]
       let s = lang === 'ja' ? JA[k] ?? (e ? e[0] : k) : e ? e[lang === 'zh' ? 1 : 0] : k
       if (vars) for (const [a, b] of Object.entries(vars)) s = s.replace(`{${a}}`, String(b))
       return s
     },
-  }), [lang])
+  }), [lang, simplified])
   return <C.Provider value={value}>{children}</C.Provider>
 }
 export const useLang = () => useContext(C)

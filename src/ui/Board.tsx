@@ -121,7 +121,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   room?: string | null; status?: string;
   view: TableView; send: (m: ClientMsg) => void; hints: boolean; setHints: (b: boolean) => void; onLeave: () => void; online?: boolean
 }) {
-  const { t, lang, setLang } = useLang()
+  const { t, lang, setLang, simplified, setSimplified } = useLang()
   const settings = useSettings()
   const v = view.game!
   const you = Math.max(0, view.you)
@@ -315,7 +315,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         <div className="dockrule" />
         <div className="seg langsw">
           <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
-          <button className={lang === 'zh' ? 'on' : ''} onClick={() => setLang('zh')}>繁中</button>
+          <button className={lang === 'zh' && !simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(false) }}>繁中</button>
+          <button className={lang === 'zh' && simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(true) }}>简中</button>
               <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
         </div>
         <button className="btn alt leavebtn" onClick={onLeave}>{t('leave')}</button>
