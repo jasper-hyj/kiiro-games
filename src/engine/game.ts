@@ -321,6 +321,20 @@ export class Game {
     return waitsOf(toCounts(ids.map(kindOf)), p.melds.length === 0 ? this.rule.specials : {})
   }
 
+  /** Would the hand be furiten (cannot win off a discard) if this tile were discarded now? Only Riichi has furiten. */
+  furitenIfDiscard(seat: number, tile: number): boolean {
+    if (!this.isRiichi) return false
+    const p = this.players[seat]
+    const saved = p.hand.slice(), savedDrawn = p.drawn
+    try {
+      if (p.tempFuriten || p.permFuriten) return true
+      const at = p.hand.indexOf(tile)
+      if (at < 0) return false
+      p.hand.splice(at, 1); p.drawn = null
+      const mine = new Set(p.discards.map((d) => kindOf(d.tile))); mine.add(kindOf(tile))
+      return this.waitsFor(seat).some((k) => mine.has(k))
+    } finally { p.hand = saved; p.drawn = savedDrawn }
+  }
   isFuriten(seat: number): boolean {
     if (!this.isRiichi) return false
     const p = this.players[seat]

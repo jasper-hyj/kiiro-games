@@ -103,12 +103,13 @@ function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; 
 }
 
 function coachText(c: NonNullable<TableView['game']>['coach'] & object, t: (k: string, v?: Record<string, string | number>) => string): string {
+  const extra = (...keys: (string | undefined)[]) => keys.filter(Boolean).map((k) => t(k!)).join(' ')
   switch (c.kind) {
     case 'tsumo': return t('coach.tsumo')
     case 'ron': return t('coach.ron')
-    case 'riichi': return t('coach.riichi')
-    case 'discard': return (c.threat ? t('coach.threat') + ' ' : '') + ((c.n ?? 1) <= 0 ? t('coach.discard0') : t('coach.discardN', { n: (c.n ?? 1) + 0 }))
-    case 'call': return t('coach.call', { call: t(c.call === 'minkan' ? 'kan' : c.call ?? 'pass'), n: c.n ?? 0 })
+    case 'riichi': return [t('coach.riichi'), extra(c.why && 'coachwhy.' + c.why, c.plan && 'coachplan.' + c.plan, c.furi ? 'coachstate.furi' : 'coachstate.tenpai')].filter(Boolean).join(' ')
+    case 'discard': return [(c.threat ? t('coach.threat') + ' ' : '') + ((c.n ?? 1) <= 0 ? t('coach.discard0') : t('coach.discardN', { n: (c.n ?? 1) + 0 })), extra(c.why && 'coachwhy.' + c.why, c.plan && 'coachplan.' + c.plan, (c.n ?? 1) <= 0 ? (c.furi ? 'coachstate.furi' : 'coachstate.tenpai') : undefined)].filter(Boolean).join(' ')
+    case 'call': return [t('coach.call', { call: t(c.call === 'minkan' ? 'kan' : c.call ?? 'pass'), n: c.n ?? 0 }), extra(c.why && 'coachwhy.' + c.why)].filter(Boolean).join(' ')
     case 'pass': return t('coach.pass')
     case 'nuki': return t('coach.nuki')
     case 'kan': return t('coach.kan')
@@ -128,6 +129,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const rel = (r: number) => v.players[(you + r) % n]
   const sanma = n === 3
   const me = rel(0)
+  const furiSet = new Set(v.riichiFuriten ?? []) // riichi candidates that would leave a furiten hand
   const coachOk = view.config.coach !== false // the host can turn the coach and hints off for the whole room
   const recv = useRef(Date.now())
   useMemo(() => { recv.current = Date.now() }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -537,6 +539,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         )}
         <div className="notes">
           {help && popOpen && <div className="callhelp">{help}</div>}
+          {riichiMode && furiSet.size > 0 && <div className={'callhelp furiwarn' + (sel !== null && furiSet.has(sel) ? ' on' : '')} role="alert">{t('furiWarn')}</div>}
         {auto.coach && v.coach && (
           <div className="coachcard" role="note">
             <span className="cicon" aria-hidden="true">?</span>
@@ -596,7 +599,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         )}
         <div className={'handrow' + (mine ? ' mine' : '') + (twoRows ? ' two' : '')} style={{ ['--tw' as string]: tw + 'px' }}>
           {handTiles.map((id) => (
-            <Tile key={id} id={id} className={auto.coach && v.coach?.tile === id && (v.coach.kind === 'discard' || v.coach.kind === 'riichi') ? 'coachpick' : ''} dora={doraOf(id) || undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} onDrag={!auto.sort ? (x) => dragTile(id, x) : undefined} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
+            <Tile key={id} id={id} className={auto.coach && v.coach?.tile === id && (v.coach.kind === 'discard' || v.coach.kind === 'riichi') ? 'coachpick' : ''} dora={doraOf(id) || undefined} badge={riichiMode && furiSet.has(id) ? t('furiBadge') : undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} onDrag={!auto.sort ? (x) => dragTile(id, x) : undefined} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
           ))}
           {me.drawn !== null && (
             <>

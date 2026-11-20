@@ -226,3 +226,45 @@ export function botReact(g: Game, seat: number, level: BotLevel = 'normal'): Dec
   for (const c of r.chi) consider({ type: 'chi', use: c }, [...c])
   return best ? (best as { d: Decision }).d : { type: 'pass' }
 }
+
+/** The rule behind a discard suggestion, in codes the screen turns into sentences. */
+export function explainDiscard(g: Game, seat: number, tile: number): { why: string; plan?: string } {
+  const p = g.players[seat]
+  const k = kindOf(tile)
+  const counts = toCounts(p.hand.map(kindOf))
+  const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
+  const threats = g.players.filter((q) => q.seat !== seat && q.riichi)
+  const near = (kk: number) => !isHonor(kk) && [-2, -1, 1, 2].some((d) => { const j = kk + d; return j >= 0 && j < 27 && suitOf(j) === suitOf(kk) && counts[j] > 0 })
+  let why = 'eff'
+  if (threats.length && threats.every((q) => q.discards.some((d) => kindOf(d.tile) === k))) why = 'safe'
+  else if (isHonor(k) && counts[k] <= 1) why = (isDragon(k) || k === sw || k === rw) && g.rule.id !== 'sichuan' ? 'lonelyYakuhai' : 'lonelyHonor'
+  else if (!isHonor(k) && isTermOrHonor(k) && counts[k] <= 1 && !near(k)) why = 'lonelyTerminal'
+  else if (!isHonor(k) && counts[k] <= 1 && !near(k)) why = 'isolated'
+  // what the rest of the hand is heading for
+  const rest = counts.slice(); rest[k]--
+  for (const m of p.melds) for (const t of m.tiles) rest[kindOf(t)]++
+  const total = rest.reduce((a, b) => a + b, 0)
+  let plan: string | undefined
+  if (g.rule.id !== 'sichuan') {
+    if (rest.some((v, kk) => v >= 2 && (isDragon(kk) || kk === sw || kk === rw))) plan = rest.some((v, kk) => v >= 2 && isDragon(kk)) ? 'yakuhaiDragon' : 'yakuhaiWind'
+  }
+  const suits = [0, 0, 0, 0]
+  rest.forEach((v, kk) => (suits[suitOf(kk)] += v))
+  const main = Math.max(suits[0], suits[1], suits[2])
+  if (!plan && g.rule.id !== 'sichuan' && main + suits[3] >= total - 1 && total >= 9) plan = suits[3] === 0 ? 'chinitsu' : 'honitsu'
+  if (!plan && g.rule.id === 'sichuan' && main >= total - 2 && total >= 9) plan = 'flush'
+  if (!plan && (g.rule.id === 'riichi' || g.rule.id === 'hk') && suits[3] === 0 && !rest.some((v, kk) => v > 0 && isTermOrHonor(kk)) && total >= 8) plan = 'tanyao'
+  return { why, plan }
+}
+
+/** A player who is gone (disconnected for good, or idle) is not replaced by a thinking bot: the seat only throws the tile it just drew and passes on every call. It still takes a win. */
+export function autopilotTurn(g: Game, seat: number): TurnAction {
+  const p = g.players[seat]
+  const o = g.turnOptions(seat)
+  if (o.tsumo) return { type: 'tsumo' }
+  if (p.drawn !== null && o.discard.includes(p.drawn)) return { type: 'discard', tile: p.drawn }
+  return { type: 'discard', tile: o.discard[o.discard.length - 1] }
+}
+export function autopilotReact(g: Game, seat: number): Decision {
+  return g.reactions[seat]?.ron ? { type: 'ron' } : { type: 'pass' }
+}

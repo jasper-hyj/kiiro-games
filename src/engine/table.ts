@@ -2,10 +2,10 @@ import { Game, type Replay, type HistoryEntry, type Decision, type HandResult, t
 import type { GameOptions } from './rules/types'
 import type { RuleId } from './rules'
 import { auditGame } from './audit'
-import { botReact, botSwap, botTurn, botVoid } from './bot'
+import { autopilotReact, autopilotTurn, botReact, botSwap, botTurn, botVoid, explainDiscard } from './bot'
 import { kindOf } from './tiles'
 
-export interface Coach { kind: 'tsumo' | 'ron' | 'riichi' | 'discard' | 'call' | 'pass' | 'nuki' | 'kan'; tile?: number; n?: number; call?: string; threat?: boolean }
+export interface Coach { kind: 'tsumo' | 'ron' | 'riichi' | 'discard' | 'call' | 'pass' | 'nuki' | 'kan'; tile?: number; n?: number; call?: string; threat?: boolean; /** the rule behind the advice */ why?: string; /** what the hand is heading for */ plan?: string; /** the discard leaves a tenpai hand that is furiten */ furi?: boolean }
 export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
 export interface RoomConfig extends GameOptions { rule: RuleId }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal', coach: true }
@@ -37,6 +37,8 @@ export interface TableView {
     reactionKind: string
     waiting: number[]
     timeLeft?: number | null
+    /** tiles from the riichi candidates whose discard would leave a tenpai hand that is furiten */
+    riichiFuriten?: number[]
     /** ms until the next hand starts by itself while the result is open (null when not counting down) */
     ackLeft?: number | null
     result: HandResult | null
@@ -140,6 +142,8 @@ export class Table {
   isHuman(seat: number) { return this.slots[seat].id !== null }
   /** A dropped player keeps their seat for `graceMs` (short network blips don't hand the game to a bot). */
   graceMs = 8000
+  /** a human seat that nobody is playing right now (gone or idle): it only throws what it drew and passes */
+  isAutopilot(seat: number) { return this.slots[seat].id !== null && this.isBotControlled(seat) }
   isBotControlled(seat: number) { const s = this.slots[seat]; return !s.id || (s.afk ?? 0) >= 2 || (!s.connected && Date.now() - (s.dcAt ?? 0) >= this.graceMs) }
 
   // ----- lobby -----
@@ -377,7 +381,7 @@ export class Table {
       if (this.isBotControlled(s)) {
         this.later(() => {
           if (this.game !== g || g.phase !== 'turn' || g.turn !== s || !this.isBotControlled(s)) return this.drive()
-          const a = botTurn(g, s, this.config.botLevel)
+          const a = this.isAutopilot(s) ? autopilotTurn(g, s) : botTurn(g, s, this.config.botLevel)
           if (!g.act(s, a)) { const o = g.turnOptions(s); if (o.discard.length) g.act(s, { type: 'discard', tile: o.discard[o.discard.length - 1] }) }
           this.emit(); this.drive()
         }, 750)
@@ -405,7 +409,7 @@ export class Table {
       if (g.pendingSeats().some((s) => this.isBotControlled(s))) {
         this.later(() => {
           if (this.game !== g || g.phase !== 'reaction') return this.drive()
-          for (const s of g.pendingSeats().filter((x) => this.isBotControlled(x))) if (g.phase === 'reaction') g.submitDecision(s, botReact(g, s, this.config.botLevel))
+          for (const s of g.pendingSeats().filter((x) => this.isBotControlled(x))) if (g.phase === 'reaction') g.submitDecision(s, this.isAutopilot(s) ? autopilotReact(g, s) : botReact(g, s, this.config.botLevel))
           this.emit(); this.drive()
         }, 450)
       }
@@ -435,7 +439,9 @@ export class Table {
         if (a.type === 'tsumo') return { kind: 'tsumo' }
         if (a.type === 'discard') {
           const rest = p.hand.filter((i) => i !== a.tile)
-          return { kind: a.riichi ? 'riichi' : 'discard', tile: a.tile, n: g.shanten(you, rest), threat }
+          const n = g.shanten(you, rest)
+          const ex = explainDiscard(g, you, a.tile)
+          return { kind: a.riichi ? 'riichi' : 'discard', tile: a.tile, n, threat, why: ex.why, plan: ex.plan, furi: n === 0 && g.furitenIfDiscard(you, a.tile) }
         }
         if (a.type === 'nuki') return { kind: 'nuki' }
         if (a.type === 'ankan') return { kind: 'kan', call: 'ankan', tile: p.hand.find((i) => kindOf(i) === a.kind) }
@@ -446,7 +452,10 @@ export class Table {
         const d = botReact(g, you, 'hard')
         if (d.type === 'ron') return { kind: 'ron' }
         if (d.type === 'pass') return { kind: 'pass', n: g.shanten(you) }
-        return { kind: 'call', call: d.type, n: g.shanten(you), tile: g.lastDiscard?.tile }
+        const lk = g.lastDiscard ? kindOf(g.lastDiscard.tile) : -1
+        const sw = 27 + g.seatWind(you), rw = 27 + g.roundWind
+        const why = d.type === 'chi' ? 'chi' : (lk >= 27 && (lk >= 31 || lk === sw || lk === rw)) ? 'yakuhaiPon' : d.type === 'pon' ? 'pon' : 'kan'
+        return { kind: 'call', call: d.type, n: g.shanten(you), tile: g.lastDiscard?.tile, why }
       }
     } catch { /* the coach never breaks the game */ }
     return null
@@ -516,6 +525,7 @@ export class Table {
       pick: { swap: g.players.map((p) => !!p.swapTiles), void: g.players.map((p) => p.voidSuit !== null), mine: you >= 0 ? g.players[you].swapTiles : null, dir: g.swapDir },
       reactionKind: g.reactionKind, waiting: g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g) : g.pendingSeats(),
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g).includes(you) : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
+      riichiFuriten: you >= 0 && g.phase === 'turn' && g.turn === you ? g.turnOptions(you).riichi.filter((tl) => g.furitenIfDiscard(you, tl)) : [],
       ackLeft: g.phase === 'result' && this.ackDeadline ? Math.max(0, this.ackDeadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,

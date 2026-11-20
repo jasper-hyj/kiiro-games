@@ -134,7 +134,7 @@ export function Face({ kind, red }: { kind: number; red?: boolean }) {
 
 interface Props {
   id?: number; kind?: number; back?: boolean; dora?: number
-  onClick?: () => void; onFlick?: () => void; onDrag?: (clientX: number) => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; from?: string; title?: string
+  onClick?: () => void; onFlick?: () => void; onDrag?: (clientX: number) => void; selected?: boolean; dim?: boolean; mark?: boolean; riichi?: boolean; hot?: boolean; from?: string; badge?: string; title?: string
   className?: string
 }
 /** Rotated tile (called tile in a meld, riichi discard). `double` stacks two tiles (added kan). */
@@ -142,7 +142,7 @@ export function Side({ children, double, ccw }: { children: ReactNode; double?: 
   return <span className={'sw' + (double ? ' dbl' : '') + (ccw ? ' ccw' : '')}>{children}</span>
 }
 
-export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected, dim, mark, riichi, hot, title, className, from }: Props) {
+export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected, dim, mark, riichi, hot, title, className, from, badge }: Props) {
   const aka = useContext(AkaCtx)
   const k = kind ?? (id !== undefined ? kindOf(id) : 0)
   const red = aka && id !== undefined && isRedFive(id)
@@ -168,6 +168,7 @@ export function Tile({ id, kind, back, dora, onClick, onFlick, onDrag, selected,
       {red && <span className="aka-dot" />}
       {!back && dora ? <span className="dora-bar" aria-hidden="true">{dora > 1 ? <i>×{dora}</i> : null}</span> : null}
       {mark && <span className="mark" />}
+      {badge && !back && <span className="tbadge">{badge}</span>}
       {from && !back && <span className="frm" aria-hidden="true">{from}</span>}
     </div>
   )

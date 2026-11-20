@@ -1373,3 +1373,14 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 :root:root:root .board .info .cw-left { left: max(6%, 7px); } :root:root:root .board .info .cw-right { right: max(6%, 7px); }
 
 .cbtn[data-armed='1'] { outline: 3px solid #ffd75e; outline-offset: 2px; box-shadow: 0 0 18px rgba(255,215,94,.55); }
+
+/* furiten warning on riichi candidates */
+.tile .tbadge { position: absolute; left: 50%; top: calc(var(--tw) * -.34); transform: translateX(-50%); padding: 1px 6px; border-radius: 999px; background: #e0334a; color: #fff; font: 800 max(9px, calc(var(--tw) * .2))/1.2 var(--sans); white-space: nowrap; z-index: 4; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.callhelp.furiwarn { border-left: 3px solid #e0334a; }
+.callhelp.furiwarn.on { background: rgba(224,51,74,.25); }
+
+/* chat: half transparent so it never hides tiles; solid when used */
+.chatfeed { opacity: .55; transition: opacity .2s; }
+.chatfeed:hover, .chatfeed:focus-within, .chatfeed.open { opacity: 1; }
+.chatfeed .chatopen { background: rgba(15,23,49,.45); }
+.chatfeed li { background: linear-gradient(90deg, rgba(8,12,28,.45), rgba(8,12,28,0)); }
