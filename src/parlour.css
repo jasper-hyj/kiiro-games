@@ -1310,3 +1310,27 @@ html[data-idx='off'] .tile .frm { display: none; }
 :root:root:root .dockpanel .switch { overflow-wrap: anywhere; word-break: normal; }
 .stagewrap[data-narrow='1'] .seat.left .chip, .stagewrap[data-narrow='1'] .seat.right .chip { padding: 2px 6px 2px 3px; max-width: 100%; box-sizing: border-box; }
 .stagewrap[data-narrow='1'] .seat.left .chip .nm, .stagewrap[data-narrow='1'] .seat.right .chip .nm { display: none; }
+
+/* WIN: announcement on the table, winner highlighted, others dimmed; result card shows the winning tile apart and who paid whom */
+.winannounce { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 90; display: grid; justify-items: center; gap: 10px; padding: 22px 36px; border-radius: 20px; background: rgba(8,12,28,.9); color: #fff; text-align: center; pointer-events: none; animation: win-pop .45s cubic-bezier(.2,.9,.25,1.1) both; box-shadow: 0 24px 70px rgba(0,0,0,.6); }
+.winannounce .wa-title { font: 700 clamp(26px, 5vw, 46px)/1.1 var(--serif); color: var(--rc, #f5d27a); }
+.winannounce .wa-sub { font: 500 clamp(15px, 2.4vw, 22px) var(--sans); color: rgba(236,240,250,.85); }
+.winannounce .wa-tile { --tw: clamp(40px, 7vw, 64px); animation: win-lift .7s .35s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes win-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.gamecol.winning .seat:not(.winseat) .backs, .gamecol.winning .seat:not(.winseat) .extras, .gamecol.winning .pond { opacity: .5; transition: opacity .3s; }
+.gamecol.winning:not(.iwon) .handbar .handrow { opacity: .55; transition: opacity .3s; }
+.gamecol.winning .pond .tile.last { box-shadow: 0 0 0 3px var(--rc, #f5d27a), 0 0 18px var(--rc, #f5d27a); position: relative; z-index: 2; }
+.gamecol.winning .pond:has(.tile.last) { opacity: 1; }
+.tilesrow .wintile { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; margin-left: 14px; }
+.tilesrow .wintile em { font: 600 11px var(--sans); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--rc, #f5d27a); }
+.paysum { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; padding: 8px 2px 2px; }
+.paysum .bigpts { font: 800 clamp(26px, 4vw, 36px)/1 var(--sans); color: #7fe0b0; font-variant-numeric: tabular-nums; }
+.paysum span { font: 500 15px var(--sans); color: rgba(236,240,250,.85); }
+.ackbar { display: grid; gap: 6px; justify-items: center; margin-top: 10px; }
+.ackrow { display: flex; flex-wrap: wrap; gap: 6px 10px; justify-content: center; }
+.ackrow .ack { font: 600 13px var(--sans); padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.07); color: rgba(236,240,250,.7); }
+.ackrow .ack.ok { background: rgba(127,224,176,.18); color: #9fe9c3; }
+
+.modal .tilesrow { padding-top: 18px; }
+.winannounce { min-width: min(86vw, 380px); box-sizing: border-box; }
+.winannounce .wa-sub { text-wrap: balance; }

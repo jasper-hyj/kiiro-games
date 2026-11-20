@@ -82,8 +82,10 @@ function Opp({ p, v, pos }: { p: PlayerView; v: NonNullable<TableView['game']>; 
   // a freshly drawn tile sits apart from the hand. After a chi / pon nothing was drawn (the player already holds the tile to discard),
   // so the extra tile only shows when the concealed count is one more than a multiple of three (13 or 16 tiles before a draw)
   const extra = v.phase === 'turn' && v.turn === p.seat && p.hand === null && p.handCount % 3 === 1 ? 1 : 0
+  const rr = v.phase === 'result' ? v.result : null
+  const wonHere = !!rr && rr.kind === 'win' && (rr.winner === p.seat || !!rr.others?.some((x) => x.winner === p.seat) || !!rr.sc?.wins.some((x) => x.winner === p.seat))
   return (
-    <div className={`seat ${pos}`}>
+    <div className={`seat ${pos}${wonHere ? ' winseat' : ''}`}>
       <Chip p={p} v={v} />
       <div className="backs">
         {p.hand
@@ -150,6 +152,20 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     const ro = new ResizeObserver(set); ro.observe(hb)
     return () => ro.disconnect()
   }, [])
+  // a win is announced on the table for a moment before the result card opens
+  const [announce, setAnnounce] = useState(false)
+  const announced = useRef(-1)
+  useEffect(() => {
+    if (v.phase === 'result' && v.result?.kind === 'win' && announced.current !== v.handNo) {
+      announced.current = v.handNo
+      setAnnounce(true)
+      const id = setTimeout(() => setAnnounce(false), 2400)
+      return () => clearTimeout(id)
+    }
+    if (v.phase !== 'result') setAnnounce(false)
+  }, [v.phase, v.handNo]) // eslint-disable-line react-hooks/exhaustive-deps
+  const winning = v.phase === 'result' && v.result?.kind === 'win'
+  const iWon = winning && (v.result!.winner === you || !!v.result!.others?.some((x) => x.winner === you) || !!v.result!.sc?.wins.some((x) => x.winner === you))
   const [panel, setPanel] = useState<null | 'history' | 'keys' | 'chat' | 'rules'>(null)
   const o = v.turnOptions
   useEffect(() => { setSel(null); setRiichiMode(false) }, [v.handNo, v.turn, v.phase, me.drawn, me.hand?.length])
@@ -198,7 +214,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     if (e.metaKey || e.ctrlKey || e.altKey) return
     const k = e.key.toLowerCase()
     const act = (m: ClientMsg) => { e.preventDefault(); send(m) }
-    if (v.phase === 'result') { if (k === 'enter' || k === ' ') act({ t: 'ack' }); return }
+    if (v.phase === 'result') { if (!announce && (k === 'enter' || k === ' ')) act({ t: 'ack' }); return }
     if (panel) { if (k === 'escape') setPanel(null); return }
     if (online && (k === '/' || (k === 'enter' && !(o && sel !== null) && !reaction))) { e.preventDefault(); setPanel('chat'); return }
     if (reaction) {
@@ -385,7 +401,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const popOpen = (v.phase === 'swap' && !v.pick.swap[you]) || (v.phase === 'void' && !v.pick.void[you]) || !!reaction || (!!o && (o.tsumo || o.riichi.length > 0 || o.ankan.length > 0 || o.kakan.length > 0 || o.nuki || o.abort))
 
   return (
-    <div className="gamecol">
+    <div className={'gamecol' + (winning ? ' winning' + (iWon ? ' iwon' : '') : '')}>
       {me.human && me.idle && v.phase !== 'over' && (
         <div className="overlay idleover" role="alertdialog">
           <div className={'modal idlemodal ' + me.idle}>
@@ -564,6 +580,13 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         </div>
       </div>
       {autoMenu}
+      {announce && v.result && (
+        <div className="winannounce" role="status" aria-live="assertive">
+          <div className="wa-title">{t('winTitle', { name: v.players[v.result.winner!].name })}</div>
+          <div className="wa-sub">{v.result.tsumo ? t('selfDraw') : t('winsFrom', { from: v.players[v.result.from!].name })}</div>
+          {v.result.winTile !== undefined && <div className="wa-tile"><Tile id={v.result.winTile} /></div>}
+        </div>
+      )}
     {tutorial && tutOpen && (
       <div className="tutcard" role="dialog">
         <b>{t('tut.title')}</b>
@@ -576,7 +599,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       {panel === 'rules' && <RulesHelp initial={ruleId} onClose={() => setPanel(null)} />}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}
-      {(v.phase === 'result' || v.phase === 'over') && <ResultModal view={view} send={send} onLeave={onLeave} />}
+      {(v.phase === 'over' || (v.phase === 'result' && !announce)) && <ResultModal view={view} send={send} onLeave={onLeave} />}
     </div>
   )
 }

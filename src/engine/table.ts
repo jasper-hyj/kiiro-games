@@ -37,6 +37,8 @@ export interface TableView {
     reactionKind: string
     waiting: number[]
     timeLeft?: number | null
+    /** ms until the next hand starts by itself while the result is open (null when not counting down) */
+    ackLeft?: number | null
     result: HandResult | null
     acks: number[]
     standings: { seat: number; name: string; points: number }[]
@@ -64,6 +66,7 @@ export class Table {
   listeners = new Set<() => void>()
   private timer: ReturnType<typeof setTimeout> | null = null
   private ackTimer: ReturnType<typeof setTimeout> | null = null
+  private ackDeadline: number | null = null
   speed = 1 // 0 = instant (tests)
   /** shuffle seats and pick a random first dealer at the start of every game (tests switch this off) */
   randomize = true
@@ -413,10 +416,11 @@ export class Table {
           g.next(); this.acks.clear(); this.emit(); this.drive()
         }, 300)
       } else if (!this.ackTimer && this.speed !== 0) {
-        this.ackTimer = setTimeout(() => { this.ackTimer = null; if (this.game === g && g.phase === 'result') { g.next(); this.acks.clear(); this.emit(); this.drive() } }, 45000 * Math.max(this.speed, 0.001))
+        this.ackDeadline = Date.now() + 45000 * Math.max(this.speed, 0.001)
+        this.ackTimer = setTimeout(() => { this.ackTimer = null; this.ackDeadline = null; if (this.game === g && g.phase === 'result') { g.next(); this.acks.clear(); this.emit(); this.drive() } }, 45000 * Math.max(this.speed, 0.001))
       }
     }
-    if (g.phase !== 'result' && this.ackTimer) { clearTimeout(this.ackTimer); this.ackTimer = null }
+    if (g.phase !== 'result' && this.ackTimer) { clearTimeout(this.ackTimer); this.ackTimer = null; this.ackDeadline = null }
   }
 
   /** What the Hard bot would do in the viewer's seat, and why (for beginners). */
@@ -511,6 +515,7 @@ export class Table {
       pick: { swap: g.players.map((p) => !!p.swapTiles), void: g.players.map((p) => p.voidSuit !== null), mine: you >= 0 ? g.players[you].swapTiles : null, dir: g.swapDir },
       reactionKind: g.reactionKind, waiting: g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g) : g.pendingSeats(),
       timeLeft: this.deadline && you >= 0 && (g.phase === 'turn' ? g.turn === you : g.phase === 'swap' || g.phase === 'void' ? this.pickPending(g).includes(you) : g.pendingSeats().includes(you)) ? Math.max(0, this.deadline - Date.now()) : null,
+      ackLeft: g.phase === 'result' && this.ackDeadline ? Math.max(0, this.ackDeadline - Date.now()) : null,
       result: g.result, acks: [...this.acks], standings: g.standings(), hint, log: g.log.slice(-8),
       history: g.history,
       notice: you >= 0 ? g.notices[you] ?? null : null,
