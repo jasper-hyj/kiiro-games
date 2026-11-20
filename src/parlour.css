@@ -1369,3 +1369,5 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 :root:root:root .grid3 button.rule[data-rule] .tags .tg, :root:root:root button.rule .tags .tg { padding: .5em .85em; line-height: 1.15; }
 :root:root:root .grid3 button.rule[data-rule] .tags .tg, :root:root:root button.rule .tags .tg { padding: .62em .9em .58em; }
 :root:root:root .shelf .options.flat { padding: .7em 1.8em; border-radius: 16px; box-sizing: border-box; }
+:root:root:root .board .info .cw-top { top: max(6%, 7px); } :root:root:root .board .info .cw-bottom { bottom: max(6%, 7px); }
+:root:root:root .board .info .cw-left { left: max(6%, 7px); } :root:root:root .board .info .cw-right { right: max(6%, 7px); }

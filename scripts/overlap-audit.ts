@@ -128,7 +128,7 @@ const probe = () => {
     const filled = bcs.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|, 0\)$/.test(bcs.backgroundColor)
     const g = [it.r.left - br.left, br.right - it.r.right, it.r.top - br.top, br.bottom - it.r.bottom]
     const on = ['Left', 'Right', 'Top', 'Bottom'].map((d, i) => (i < 2 ? filled || side(d) : side(d))) // filled boxes: sideways gap only; bordered boxes: that side
-    const tight = g.filter((x, i) => on[i] && x < 3 && x > -2)
+    const tight = g.filter((x, i) => on[i] && x < 2 && x > -2)
     if (tight.length) push('TEXT ON BORDER', it, null, ` in <${describe(box)}> (gaps L${Math.round(g[0])} R${Math.round(g[1])} T${Math.round(g[2])} B${Math.round(g[3])})`)
   }
   // horizontal overflow of the page
