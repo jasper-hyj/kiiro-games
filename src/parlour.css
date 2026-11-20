@@ -1334,3 +1334,17 @@ html[data-idx='off'] .tile .frm { display: none; }
 .modal .tilesrow { padding-top: 18px; }
 .winannounce { min-width: min(86vw, 380px); box-sizing: border-box; }
 .winannounce .wa-sub { text-wrap: balance; }
+
+/* dora: a thin gold bar along the bottom edge instead of a star */
+.tile .dora-badge { display: none; }
+.tile .dora-bar { position: absolute; left: calc(var(--tw) * .1); right: calc(var(--tw) * .1); bottom: calc(var(--tw) * .045); height: max(3px, calc(var(--tw) * .07)); border-radius: 999px; background: linear-gradient(90deg, #ffe27a, #e0a010); box-shadow: 0 0 calc(var(--tw) * .08) rgba(224,160,16,.7); }
+.tile .dora-bar i { position: absolute; right: 0; bottom: calc(var(--tw) * .05); font: 800 max(8px, calc(var(--tw) * .2))/1 var(--sans); font-style: normal; color: #8a5a00; }
+
+/* riichi stick: on that player's side of the centre square (instead of on their name chip) */
+.board .info .rstick { position: absolute; background: #f4f6fb; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.5); pointer-events: auto; }
+.board .info .rstick::after { content: ''; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; transform: translate(-50%, -50%); border-radius: 50%; background: #e0334a; }
+.board .info .rs-bottom, .board .info .rs-top { left: 50%; width: 34%; height: 6px; transform: translateX(-50%); }
+.board .info .rs-bottom { bottom: 17%; } .board .info .rs-top { top: 17%; }
+.board .info .rs-left, .board .info .rs-right { top: 50%; height: 34%; width: 6px; transform: translateY(-50%); }
+.board .info .rs-left { left: 15%; } .board .info .rs-right { right: 15%; }
+.dorabox.result.ura .dlabel, .dorabox.ura .dlabel { color: #b9a6ff; }

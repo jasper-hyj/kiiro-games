@@ -54,7 +54,6 @@ function Chip({ p, v }: { p: PlayerView; v: NonNullable<TableView['game']> }) {
       <span className={'wind' + (p.seat === v.dealer ? ' dealer' : '')}>{WINDS[wk(lang)][p.seatWind]}</span>
       <span className="nm">{p.name}{!p.connected && p.human ? ` (${t('away')})` : ''}</span>
       <span className="pts">{p.points}</span>
-      {p.riichi && <span className="riichi-stick" title={t('riichi')} />}
       {p.voidSuit !== null && p.voidSuit !== undefined && <span className="voidtag" title={t('voidTip')}>{lang === 'zh' ? '缺' : lang === 'ja' ? '欠' : '✕'}{'萬筒索'[p.voidSuit]}</span>}
       {p.human && p.connected && p.idle && <span className={'idletag ' + p.idle} title={t(p.idle === 'auto' ? 'tagAutoTip' : 'tagSlowTip')}>{t(p.idle === 'auto' ? 'tagAuto' : 'tagSlow')}</span>}
       {p.out && <span className="wintag">{t('won')} {p.winOrder}</span>}
@@ -357,7 +356,8 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     if (rest.join() !== ids.join()) { orderRef.current.ids = rest; setOrderTick((n) => n + 1) }
   }
   // selecting a tile lights up every tile of that kind on the table (hand, rivers, melds)
-  const hlKind = sel !== null ? kindOf(sel) : swapSel.length ? kindOf(swapSel[swapSel.length - 1]) : null
+  const [hoverKind, setHoverKind] = useState<number | null>(null) // pointing at a tile (mouse only) lights up the same tile everywhere, like a selection
+  const hlKind = sel !== null ? kindOf(sel) : swapSel.length ? kindOf(swapSel[swapSel.length - 1]) : hoverKind
   useEffect(() => {
     document.querySelectorAll('.tile.hl').forEach((e) => e.classList.remove('hl'))
     if (hlKind === null) return
@@ -401,7 +401,9 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
   const popOpen = (v.phase === 'swap' && !v.pick.swap[you]) || (v.phase === 'void' && !v.pick.void[you]) || !!reaction || (!!o && (o.tsumo || o.riichi.length > 0 || o.ankan.length > 0 || o.kakan.length > 0 || o.nuki || o.abort))
 
   return (
-    <div className={'gamecol' + (winning ? ' winning' + (iWon ? ' iwon' : '') : '')}>
+    <div className={'gamecol' + (winning ? ' winning' + (iWon ? ' iwon' : '') : '')}
+      onMouseOver={(e) => { const el = (e.target as HTMLElement).closest?.('.tile[data-kind]') as HTMLElement | null; const k = el && !el.classList.contains('back') && matchMedia('(hover: hover)').matches ? Number(el.dataset.kind) : null; setHoverKind((cur) => (cur === k ? cur : k)) }}
+      onMouseLeave={() => setHoverKind(null)}>
       {me.human && me.idle && v.phase !== 'over' && (
         <div className="overlay idleover" role="alertdialog">
           <div className={'modal idlemodal ' + me.idle}>
@@ -438,6 +440,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         )}
         <div className="info">
           {dirs.map(([name, r]) => dirOn(r) ? <span key={'b' + name} className={`dirbar db-${name}`} /> : null)}
+          {dirs.map(([name, r]) => rel(r).riichi ? <span key={'r' + name} className={`rstick rs-${name}`} title={`${rel(r).name}: ${t('riichi')}`} /> : null)}
           {dirs.map(([name, r]) => <span key={name} className={`cw cw-${name}` + (dirOn(r) ? ' on' : '') + (rel(r).seat === v.dealer ? ' east' : '')}><b>{WINDS[lang === 'en' ? 'en' : 'zh'][rel(r).seatWind]}</b></span>)}
           <div className="rnd">{roundName}</div>
           <div className="infolines">{[

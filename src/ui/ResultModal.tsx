@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import type { ClientMsg } from '../net/protocol'
@@ -64,10 +64,10 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
   const Yaku = ({ items }: { items: { name: string; zh?: string; value: number; yakuman?: boolean }[] }) => (
     <div className="yaku">
       {items.map((y, i) => (
-        <div key={i} style={{ display: 'contents' }}>
+        <Fragment key={i}>
           <div>{yakuName(y, lang)}</div>
           <div>{y.yakuman ? (y.value >= 26 ? t('doubleYakuman') : t('yakuman')) : `${y.value} ${unit}`}</div>
-        </div>
+        </Fragment>
       ))}
     </div>
   )
