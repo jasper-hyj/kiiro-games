@@ -1399,3 +1399,5 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 
 /* NOTCH / DYNAMIC ISLAND: on a phone held sideways the sensor housing covers one side; the app keeps clear of the safe area (env() is the real size reported by the phone, 0 where there is none) */
 #root { box-sizing: border-box; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+@media (orientation: portrait) { .chatfeed { top: max(calc(150px + env(safe-area-inset-top)), 21dvh); width: min(300px, 70vw); } }
+@media (min-width: 601px) and (min-height: 521px) { .chatfeed { top: auto; bottom: calc(var(--hbh, 190px) + 8px); } }
