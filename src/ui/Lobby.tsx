@@ -83,8 +83,8 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
 }
 
 type Step = 'start' | 'rules' | 'options' | 'code' | 'name'
-type Mode = 'friends' | 'bots' | 'join'
-const FLOW: Record<Mode, Step[]> = { friends: ['rules', 'name'], bots: ['rules', 'options', 'name'], join: ['code', 'name'] }
+type Mode = 'play' | 'join'
+const FLOW: Record<Mode, Step[]> = { play: ['rules', 'options', 'name'], join: ['code', 'name'] }
 
 export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onCreate, onJoin }: {
   name: string; setName: (s: string) => void; config: RoomConfig; setConfig: (c: RoomConfig) => void
@@ -92,7 +92,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
 }) {
   const { t } = useLang()
   const [step, setStep] = useState<Step>('start')
-  const [mode, setMode] = useState<Mode>('friends')
+  const [mode, setMode] = useState<Mode>('play')
   const [code, setCode] = useState('')
   const change: Change = (c) => setConfig({ ...config, ...c })
   const seq = FLOW[mode]
@@ -100,7 +100,8 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
   const go = (m: Mode) => { setMode(m); setStep(FLOW[m][0]) }
   const next = () => { if (idx >= 0 && idx < seq.length - 1) setStep(seq[idx + 1]) }
   const back = () => setStep(idx > 0 ? seq[idx - 1] : 'start')
-  const finish = () => (mode === 'friends' ? onCreate() : mode === 'bots' ? onSolo() : onJoin(code))
+  // one Play button: an online room whose empty seats are bots (a room with nobody else is just a game against bots); without a server it runs in the browser
+  const finish = () => (mode === 'play' ? (onlineConfigured ? onCreate() : onSolo()) : onJoin(code))
   const fan = [3, 13, 31, 32, 33, 26]
   const pickRule = (id: RuleId) => {
     setConfig({ ...config, rule: id, rounds: (id === 'taiwan' ? (config.rounds === 2 ? 4 : config.rounds) : (config.rounds === 4 ? 2 : config.rounds)) as 1 | 2 | 4, minFan: id === 'mcr' ? 8 : id === 'hk' ? 3 : config.minFan })
@@ -123,14 +124,12 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
               {IDS.map((id) => <span key={id} data-rule={id}><b>{GLYPH[id]}</b><span className="rn">{ruleName(id, t)}</span></span>)}
             </div>
             <div className="playrow">
-              <button className="btn gold big" onClick={() => go('friends')} disabled={!onlineConfigured}>{t('playFriends')}</button>
-              <button className="btn felt big" onClick={() => go('bots')}>{t('playBots')}</button>
+              <button className="btn gold big" onClick={() => go('play')}>{t('play')}</button>
             </div>
             <div className="linkrow">
               <button className="linkbtn" onClick={() => go('join')} disabled={!onlineConfigured}>{t('haveCode')}</button>
               <button className="linkbtn" onClick={onTutorial}>{t('learnPlay')}</button>
             </div>
-            {!onlineConfigured && <p className="muted small onlineoff">{t('onlineOff')}</p>}
           </>
         )}
         {step === 'rules' && (
@@ -168,12 +167,12 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
           <section className="shelf narrow">
             <h2 className="eyebrow">{t('nickname')}</h2>
             <input className="bigname" type="text" autoFocus value={name === 'Player' ? '' : name} placeholder={t('yourName')} maxLength={16} onChange={(e) => setName(e.target.value || 'Player')} onKeyDown={(e) => { if (e.key === 'Enter') finish() }} aria-label={t('nickname')} />
-            {mode === 'bots' && (
+            {mode === 'play' && !onlineConfigured && (
               <div className="seatpreview" aria-label={t('seatPreview')}>
                 {[name === 'Player' ? t('you') : name, t('botName', { n: 1 }), t('botName', { n: 2 }), t('botName', { n: 3 })].map((n, i) => <span key={i} className={i === 0 ? 'me' : ''}><b>{WINDS[i]}</b>{n}</span>)}
               </div>
             )}
-            <button className="btn gold big" onClick={finish}>{mode === 'friends' ? t('createRoom') : mode === 'bots' ? t('startGame') : t('joinRoom')}</button>
+            <button className="btn gold big" onClick={finish}>{mode === 'play' ? (onlineConfigured ? t('createRoom') : t('startGame')) : t('joinRoom')}</button>
           </section>
         )}
       </div>

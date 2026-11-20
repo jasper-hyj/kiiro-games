@@ -22,7 +22,7 @@ for (const [w, h, touch, tag] of [[1280, 720, false, 'desk'], [844, 390, true, '
     const shot = async (p: any, name: string) => { await p.screenshot({ path: `${OUT}/${tag}-${lang}-${name}.png` }); n++ }
     let p = await open('/')
     await shot(p, 'home')
-    await click(p, '.btn.felt'); await sleep(500); await shot(p, 'rules')
+    await click(p, '.btn.gold.big'); await sleep(500); await shot(p, 'rules')
     await click(p, 'button.rule'); await sleep(500); await shot(p, 'options')
     await click(p, '.btn.big'); await sleep(500); await shot(p, 'name')
     await p.close()

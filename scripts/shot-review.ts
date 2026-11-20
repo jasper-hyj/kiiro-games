@@ -15,7 +15,7 @@ for (const lang of langs) for (const [dn, w, h, touch] of devs) {
   const shot = async (n: string) => { await sleep(500); await p.screenshot({ path: `${OUT}/${lang}-${dn}-${n}.png` }) }
   const click = (sel: string, re?: RegExp) => p.evaluate((sel, src) => { const els = [...document.querySelectorAll<HTMLElement>(sel)]; const el = src ? els.find((e) => new RegExp(src, 'i').test(e.innerText)) : els[0]; el?.click() }, sel, re?.source)
   await p.goto('http://localhost:5199/', { waitUntil: 'networkidle0' }); await shot('01-start')
-  await click('.btn.felt'); await shot('02-rules')
+  await click('.btn.gold.big'); await shot('02-rules')
   await click('button.rule'); await shot('03-options')
   await click('.btn.big'); await shot('04-name')
   await p.goto('http://localhost:5199/?stress=call&players=4&rule=riichi', { waitUntil: 'networkidle0' }); await shot('05-table-call')

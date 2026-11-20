@@ -43,7 +43,7 @@ for (const lang of ['zh', 'ja']) {
   }
   let p = await open('/')
   record(lang, 'home', await english(p))
-  await click(p, '.btn.felt'); await sleep(500)
+  await click(p, '.btn.gold.big'); await sleep(500)
   record(lang, 'rules step', await english(p))
   await click(p, 'button.rule'); await sleep(500)
   record(lang, 'options step', await english(p))

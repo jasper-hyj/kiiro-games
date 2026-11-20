@@ -132,7 +132,7 @@ for (const [w, h, touch] of VIEWPORTS) {
     await run('menu', async () => {
       const p = await open('/')
       await check(p, 'home')
-      await click(p, '.btn.felt'); await sleep(450); await check(p, 'rules step')
+      await click(p, '.btn.gold.big'); await sleep(450); await check(p, 'rules step')
       for (const i of [0, 1, 2, 3, 4]) {
         await clickNth(p, 'button.rule', i); await sleep(450); await check(p, `options ${i}`)
         await click(p, '.btn.gold.big'); await sleep(450); await check(p, `name ${i}`)

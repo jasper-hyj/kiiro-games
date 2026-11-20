@@ -10,7 +10,7 @@ for (const lang of ['en', 'zh']) for (const [dn, w, h, touch] of devs) {
   const p = await c.newPage(); await p.addInitScript((l: string) => localStorage.setItem('kiiro-lang', l), lang)
   const snap = async (n: string) => { await p.waitForTimeout(500); await p.screenshot({ path: `${out}/${lang}-${dn}-${n}.png` }) }
   await p.goto('http://localhost:5199/', { waitUntil: 'networkidle' }); await snap('1start')
-  await p.click('.btn.felt'); await snap('2rules')
+  await p.click('.btn.gold.big'); await snap('2rules')
   await p.click('button.rule >> nth=2'); await snap('3options')
   await p.click('.btn.big'); await snap('4name')
   await p.goto('http://localhost:5199/?stress=call&players=4&rule=taiwan', { waitUntil: 'networkidle' }); await snap('5table')

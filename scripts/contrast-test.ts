@@ -80,9 +80,9 @@ const run = async (label: string, url: string, w: number, h: number, steps?: (p:
 }
 const click = (p: any, sel: string) => p.evaluate((s: string) => (document.querySelector(s) as HTMLElement | null)?.click(), sel)
 await run('home', '/', 1100, 700)
-await run('rules step', '/', 1100, 700, async (p) => { await click(p, '.btn.felt'); await sleep(500) })
-await run('options step', '/', 1100, 700, async (p) => { await click(p, '.btn.felt'); await sleep(500); await click(p, 'button.rule'); await sleep(500) })
-await run('name step', '/', 1100, 700, async (p) => { await click(p, '.btn.felt'); await sleep(500); await click(p, 'button.rule'); await sleep(500); await click(p, '.btn.big'); await sleep(500) })
+await run('rules step', '/', 1100, 700, async (p) => { await click(p, '.btn.gold.big'); await sleep(500) })
+await run('options step', '/', 1100, 700, async (p) => { await click(p, '.btn.gold.big'); await sleep(500); await click(p, 'button.rule'); await sleep(500) })
+await run('name step', '/', 1100, 700, async (p) => { await click(p, '.btn.gold.big'); await sleep(500); await click(p, 'button.rule'); await sleep(500); await click(p, '.btn.big'); await sleep(500) })
 for (const rule of ['taiwan', 'riichi', 'sichuan']) {
   await run(`table ${rule}`, `/?stress=full&players=4&rule=${rule}`, 1280, 720)
   await run(`table call ${rule}`, `/?stress=call&players=4&rule=${rule}`, 1280, 720)
