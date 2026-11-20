@@ -1036,7 +1036,7 @@ button.rule[data-rule] { align-content: flex-start; justify-content: flex-start;
 .page.lobby > :last-child, .page.joinpage > :last-child { margin-bottom: auto; }
 .page.lobby > * { max-width: 820px; width: 100%; }
 .modal > .row, .modal .lobbyactions { justify-content: center; }
-.handbar:not(.acting):not(:has(.hint)) .statusbar { grid-column: 2; justify-self: center; }
+.handbar:not(.acting) .statusbar { grid-column: 2; justify-self: center; }
 @media (max-height: 800px) { .page.lobby { gap: 12px; padding-top: 60px; padding-bottom: 20px; } .lobby .bigroom { font-size: clamp(44px, 9vw, 64px); } .lobby .rulebanner { padding: 10px 18px; } .lobby .rulebanner .glyph { font-size: 44px; width: 56px; } .lobby .rbname { font-size: 28px; } .lobby .seatsnote { margin: 0; } }
 
 /* =====================================================================
@@ -1268,9 +1268,6 @@ html[data-rule] .handrow.mine { box-shadow: none; }
 @media (max-width: 760px) { .quickauto .full { display: none; } .quickauto .abbr { display: inline; } .quickauto button { padding: 0 9px; } .roomchip .rl { display: none; } }
 .chatfeed li { background: linear-gradient(90deg, rgba(8,12,28,.72), rgba(8,12,28,0)); padding: 1px 14px 1px 4px; border-radius: 4px; }
 
-/* small wind letter on each discard (who threw it), shown with the small tile numbers */
-.tile .frm { position: absolute; left: calc(var(--tw) * .07); top: calc(var(--tw) * .06); font: 800 var(--idx) / 1 system-ui, sans-serif; color: #3d5fae; }
-html[data-idx='off'] .tile .frm { display: none; }
 .iconbtn .ico, .quickauto .ico { display: block; }
 .quickauto button.ic { display: grid; place-items: center; padding: 0 8px; }
 @media (max-width: 900px) { .rulechip span { display: none; } }
@@ -1384,3 +1381,18 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 .chatfeed:hover, .chatfeed:focus-within, .chatfeed.open { opacity: 1; }
 .chatfeed .chatopen { background: rgba(15,23,49,.45); }
 .chatfeed li { background: linear-gradient(90deg, rgba(8,12,28,.45), rgba(8,12,28,0)); }
+
+/* the tile that was just discarded: a bright cyan ring (red was hard to tell from the red tile faces) that pulses gently */
+.pond .tile.last { box-shadow: var(--cap), 0 0 0 3px #2fd8ff, 0 0 12px 2px rgba(47,216,255,.75); position: relative; z-index: 2; animation: lastpulse 1.4s ease-in-out infinite; }
+@keyframes lastpulse { 0%, 100% { box-shadow: var(--cap), 0 0 0 3px #2fd8ff, 0 0 8px 1px rgba(47,216,255,.55); } 50% { box-shadow: var(--cap), 0 0 0 3px #7be8ff, 0 0 16px 4px rgba(47,216,255,.9); } }
+
+/* HINTS float above the hand with the other notes: turning them on or off never moves anything */
+:root:root:root .handbar .notes .hint { position: static; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 8px; max-width: min(94vw, 640px); height: auto; min-height: 0; padding: 6px 12px; border-radius: 12px; background: rgba(8,12,28,.78); pointer-events: none; grid-column: auto; }
+.handbar .notes .hint .waitlist { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; }
+.handbar .notes .hint .waitchip { padding: 2px 8px 2px 4px; }
+.handbar .notes .hint .waitchip .tile { --tw: 20px; }
+.handbar .notes .hint .wmeta, .handbar .notes .hint .hstat { font-size: 12px; }
+@media (hover: none), (max-height: 520px) { .chatfeed { bottom: auto; top: calc(56px + env(safe-area-inset-top)); } }
+.roomchip { opacity: .85; }
+.stagewrap[data-narrow='1'] .board .cgrid .dorapanel { right: auto; left: 0; top: auto; bottom: calc(100% + 8px); }
+@media (orientation: portrait) { .chatfeed { top: calc(96px + env(safe-area-inset-top)); } }

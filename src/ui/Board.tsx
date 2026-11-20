@@ -69,7 +69,7 @@ function Pond({ p, v, rel }: { p: PlayerView; v: NonNullable<TableView['game']>;
       <div className="pondin">
         {p.discards.map((d, i) => {
           const last = v.lastDiscard?.from === p.seat && i === p.discards.length - 1 && v.phase !== 'turn'
-          const tile = <Tile key={i} id={d.tile} from={WINDS[wk(lang)][p.seatWind]} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
+          const tile = <Tile key={i} id={d.tile} className={(d.called ? 'called ' : '') + (last ? 'last' : '')} />
           return d.riichi ? <Side key={i}>{tile}</Side> : tile
         })}
       </div>
@@ -538,6 +538,36 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         )}
         <div className="notes">
+          {!popOpen && hints && v.hint && (
+            <div className="hint">
+              <span className="hstat">{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
+              {v.hint.furiten && <span className="tag warn">{t('furiten')}</span>}
+              {v.hint.waits.length > 0 && (
+                <span className="waitlist">
+                  {v.hint.waits.map((k) => {
+                    const left = v.hint!.left[k] ?? 0
+                    const val = v.hint!.values[k]
+                    return (
+                      <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
+                        <Tile kind={k} />
+                        <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')} className={val ? '' : 'nowin'}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' || ruleId === 'mcr' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : (v.hint!.why?.[k] ? t('why.' + v.hint!.why[k].code, { n: v.hint!.why[k].n ?? 0, need: v.hint!.why[k].need ?? 0 }) : '—')}</span></span>
+                      </span>
+                    )
+                  })}
+                </span>
+              )}
+              {selWaits && (
+                <span className="waitlist">
+                  <span className="muted">{t('discardWaits')}</span>
+                  {selWaits.map((k) => (
+                    <span key={k} className={'waitchip' + ((v.hint!.left[k] ?? 0) === 0 ? ' none' : '')}>
+                      <Tile kind={k} /><span className="wmeta"><b>{t('leftTiles', { n: v.hint!.left[k] ?? 0 })}</b></span>
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
+          )}
           {help && popOpen && <div className="callhelp">{help}</div>}
           {riichiMode && furiSet.size > 0 && <div className={'callhelp furiwarn' + (sel !== null && furiSet.has(sel) ? ' on' : '')} role="alert">{t('furiWarn')}</div>}
         {auto.coach && v.coach && (
@@ -567,36 +597,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           </div>
         
         </div>
-        {!popOpen && hints && v.hint && (
-          <div className="hint">
-            <span className="hstat">{v.hint.shanten < 0 ? t('complete') : v.hint.shanten === 0 ? t('tenpai') : t('shanten', { n: v.hint.shanten })}</span>
-            {v.hint.furiten && <span className="tag warn">{t('furiten')}</span>}
-            {v.hint.waits.length > 0 && (
-              <span className="waitlist">
-                {v.hint.waits.map((k) => {
-                  const left = v.hint!.left[k] ?? 0
-                  const val = v.hint!.values[k]
-                  return (
-                    <span key={k} className={'waitchip' + (left === 0 ? ' none' : '')}>
-                      <Tile kind={k} />
-                      <span className="wmeta"><b>{t('leftTiles', { n: left })}</b><span title={val ? '' : t('noValue')} className={val ? '' : 'nowin'}>{val ? `${val.label ? t('label.' + val.label) !== 'label.' + val.label ? t('label.' + val.label) : val.label : `${val.total} ${t(ruleId === 'riichi' ? 'han' : ruleId === 'hk' || ruleId === 'mcr' ? 'fan' : 'tai')}`}${val.riichi ? ' ' + t('withRiichi') : ''}` : (v.hint!.why?.[k] ? t('why.' + v.hint!.why[k].code, { n: v.hint!.why[k].n ?? 0, need: v.hint!.why[k].need ?? 0 }) : '—')}</span></span>
-                    </span>
-                  )
-                })}
-              </span>
-            )}
-            {selWaits && (
-              <span className="waitlist">
-                <span className="muted">{t('discardWaits')}</span>
-                {selWaits.map((k) => (
-                  <span key={k} className={'waitchip' + ((v.hint!.left[k] ?? 0) === 0 ? ' none' : '')}>
-                    <Tile kind={k} /><span className="wmeta"><b>{t('leftTiles', { n: v.hint!.left[k] ?? 0 })}</b></span>
-                  </span>
-                ))}
-              </span>
-            )}
-          </div>
-        )}
         <div className={'handrow' + (mine ? ' mine' : '') + (twoRows ? ' two' : '')} style={{ ['--tw' as string]: tw + 'px' }}>
           {handTiles.map((id) => (
             <Tile key={id} id={id} className={auto.coach && v.coach?.tile === id && (v.coach.kind === 'discard' || v.coach.kind === 'riichi') ? 'coachpick' : ''} dora={doraOf(id) || undefined} badge={riichiMode && furiSet.has(id) ? t('furiBadge') : undefined} selected={sel === id || swapSel.includes(id)} onClick={tileClick(id)} onFlick={tileFlick(id)} onDrag={!auto.sort ? (x) => dragTile(id, x) : undefined} dim={tileDim(id)} mark={hints && !!o && !!tenpaiKinds[kindOf(id)]} />
