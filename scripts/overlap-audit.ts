@@ -106,6 +106,31 @@ const probe = () => {
       if (br.width > 4 && (it.r.left < br.left - 2 || it.r.right > br.right + 2 || (!sy && (it.r.top < br.top - 2 || it.r.bottom > br.bottom + 2)))) push('OVERFLOWS ITS BOX', it, null, ` out of <${describe(box)}>`)
     }
   }
+  // text that sits right on the border / edge of its own box (no breathing room)
+  const edgeBox = (el: Element) => {
+    for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) {
+      if (a.matches('.tile, svg')) return null
+      const cs = getComputedStyle(a)
+      const hasBorder = ['Top', 'Right', 'Bottom', 'Left'].some((d) => parseFloat((cs as any)['border' + d + 'Width']) > 0 && (cs as any)['border' + d + 'Style'] !== 'none' && !/, 0\)$/.test((cs as any)['border' + d + 'Color']))
+      const hasBg = cs.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|, 0\)$/.test(cs.backgroundColor)
+      if (hasBorder || hasBg) return a
+    }
+    return null
+  }
+  for (const it of items) {
+    if (it.kind !== 'text') continue
+    const box = edgeBox(it.el)
+    if (!box || box === document.documentElement || /overlay|stagewrap|stage|board|gamecol|page|app|root|shelf/.test(String(box.className))) continue
+    const br = box.getBoundingClientRect()
+    if (box.matches('li, i, .cjk') || br.width < 60 || br.height < 6 || br.width > innerWidth * 0.98 && br.height > innerHeight * 0.9) continue
+    const bcs = getComputedStyle(box)
+    const side = (d: string) => parseFloat((bcs as any)['border' + d + 'Width']) > 0 && (bcs as any)['border' + d + 'Style'] !== 'none' && !/, 0\)$/.test((bcs as any)['border' + d + 'Color'])
+    const filled = bcs.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|, 0\)$/.test(bcs.backgroundColor)
+    const g = [it.r.left - br.left, br.right - it.r.right, it.r.top - br.top, br.bottom - it.r.bottom]
+    const on = ['Left', 'Right', 'Top', 'Bottom'].map((d, i) => (i < 2 ? filled || side(d) : side(d))) // filled boxes: sideways gap only; bordered boxes: that side
+    const tight = g.filter((x, i) => on[i] && x < 3 && x > -2)
+    if (tight.length) push('TEXT ON BORDER', it, null, ` in <${describe(box)}> (gaps L${Math.round(g[0])} R${Math.round(g[1])} T${Math.round(g[2])} B${Math.round(g[3])})`)
+  }
   // horizontal overflow of the page
   if (document.documentElement.scrollWidth > innerWidth + 2) out.push(`PAGE SCROLLS SIDEWAYS (${document.documentElement.scrollWidth} > ${innerWidth})`)
   return out

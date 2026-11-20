@@ -18,5 +18,19 @@ const same = await p.evaluate((k: string) => document.querySelectorAll(`.gamecol
 check(`hovering a hand tile lights every tile of that kind (${n} of ${same})`, n >= 1 && n === same)
 await p.mouse.move(5, 5); await sleep(300)
 check('moving away clears it', (await hl()) === 0)
+// call buttons show no tile pictures; pointing at one lights up the tiles it would use
+await p.goto('http://localhost:5199/?stress=call&players=4&rule=taiwan', { waitUntil: 'networkidle0' })
+await sleep(800)
+check('call buttons carry no tile pictures', (await p.evaluate(() => document.querySelectorAll('.actionpop .cbtn .mini').length)) === 0)
+const callBtns = await p.$$('.actionpop .cbtn.call')
+check('there are call buttons to test', callBtns.length > 0)
+for (const btn of callBtns) {
+  const label = await btn.evaluate((e) => (e as HTMLElement).innerText.split(/\s+/).join(' ').trim())
+  await btn.hover(); await sleep(250)
+  const lit = await p.evaluate(() => ({ hand: document.querySelectorAll('.handrow .tile.callhl').length, river: document.querySelectorAll('.pond .tile.callhl').length }))
+  check(`hovering "${label}" lights tiles in the hand (${lit.hand}) and the discard (${lit.river})`, lit.hand >= 1)
+}
+await p.mouse.move(5, 5); await sleep(250)
+check('moving away clears the call highlight', (await p.evaluate(() => document.querySelectorAll('.tile.callhl').length)) === 0)
 await b.close()
 process.exit(fails ? 1 : 0)
