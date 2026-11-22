@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
 import { useAccount } from './Account'
 import { Bar } from '../hub/Hub'
@@ -10,7 +10,7 @@ function Table({ rows, cols }: { rows: any[]; cols: [string, (r: any) => any][] 
   return (
     <div className="adscroll"><table className="kgt">
       <thead><tr>{cols.map(([h]) => <th key={h}>{h}</th>)}</tr></thead>
-      <tbody>{rows.map((r, i) => <tr key={i}>{cols.map(([h, f]) => <td key={h}>{f(r)}</td>)}</tr>)}</tbody>
+      <tbody>{(Array.isArray(rows) ? rows : []).map((r, i) => <tr key={i}>{cols.map(([h, f]) => <td key={h}>{f(r)}</td>)}</tr>)}</tbody>
     </table></div>
   )
 }
@@ -24,12 +24,15 @@ export default function Admin() {
   const [q, setQ] = useState('')
   const [err, setErr] = useState('')
   const [pick, setPick] = useState<string>('')
+  const seq = useRef(0)
   const load = async (t: Tab = tab) => {
     setErr('')
+    const mine = ++seq.current // a slow answer for a tab we already left must not overwrite the current one
     try {
       const path = t === 'users' ? `/admin/users?q=${encodeURIComponent(q)}` : t === 'ledger' ? `/admin/ledger${pick ? `?user=${pick}` : ''}` : `/admin/${t}`
-      setData(await api(path))
-    } catch (e) { setData(null); setErr(e instanceof ApiError ? e.code : 'offline') }
+      const d = await api(path)
+      if (mine === seq.current) setData(d)
+    } catch (e) { if (mine !== seq.current) return; setData(null); setErr(e instanceof ApiError ? e.code : 'offline') }
   }
   useEffect(() => { if (me?.admin) void load() }, [tab, me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const act = async (path: string, body: object) => { try { await api('/admin/' + path, body); await load() } catch (e) { setErr(e instanceof ApiError ? e.code : 'offline') } }
@@ -43,7 +46,7 @@ export default function Admin() {
     <Shell>
       <h1>Admin</h1>
       <nav className="adtabs">
-        {(['overview', 'users', 'matches', 'ledger', 'audit'] as Tab[]).map((x) => <button key={x} className={tab === x ? 'on' : ''} onClick={() => { setPick(''); setTab(x) }}>{x}</button>)}
+        {(['overview', 'users', 'matches', 'ledger', 'audit'] as Tab[]).map((x) => <button key={x} className={tab === x ? 'on' : ''} onClick={() => { setPick(''); setData(null); setTab(x) }}>{x}</button>)}
       </nav>
       {err && <p className="acerr" role="alert">{err}</p>}
       {tab === 'overview' && data && (
@@ -60,7 +63,7 @@ export default function Admin() {
           {data && <Table rows={data.users} cols={[
             ['Name', (r) => r.name], ['Login', (r) => r.username ?? r.email], ['Games', (r) => r.games], ['Chips', (r) => r.balance ?? '—'], ['Last seen', (r) => ago(r.last_seen)], ['Joined', (r) => ago(r.created_at)],
             ['Actions', (r) => (<span className="adcells">
-              <button className="ghost" onClick={() => { setPick(r.id); setTab('ledger') }}>ledger</button>
+              <button className="ghost" onClick={() => { setPick(r.id); setData(null); setTab('ledger') }}>ledger</button>
               <button className="ghost" onClick={() => { const a = prompt(`Chips to add (negative removes) for ${r.name}`, '1000'); if (a) void act('grant', { user: r.id, amount: Number(a) }) }}>chips</button>
               <button className="ghost" onClick={() => { const n = prompt('New display name', r.name); if (n) void act('rename', { user: r.id, name: n }) }}>rename</button>
               {r.username && <button className="ghost" onClick={() => { const n = prompt(`Temporary password for ${r.name} (8+ characters). They are signed out everywhere.`); if (n) void act('resetpw', { user: r.id, password: n }) }}>password</button>}
