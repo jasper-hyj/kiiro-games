@@ -1,5 +1,6 @@
 /** Talks to the Worker's /api routes. The session token lives in localStorage and is sent as a Bearer header. */
-const envHost = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) || ''
+// accept the host with or without https:// and a trailing slash
+const envHost = ((import.meta.env.VITE_PARTYKIT_HOST as string | undefined) || '').trim().replace(/^(https?|wss?):\/\//, '').replace(/\/+$/, '')
 const host = envHost || `${location.hostname || 'localhost'}:8787`
 const local = /^(localhost|127\.|192\.168\.|10\.|\[?::1)/.test(host)
 export const API_BASE = `${local ? 'http' : 'https'}://${host}/api`

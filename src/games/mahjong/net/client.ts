@@ -53,7 +53,8 @@ export function connectLocal(id: string, name: string, config: RoomConfig, h: Ha
   }
 }
 
-const envHost = (import.meta.env.VITE_PARTYKIT_HOST as string | undefined) || ''
+// accept the host with or without https:// and a trailing slash
+const envHost = ((import.meta.env.VITE_PARTYKIT_HOST as string | undefined) || '').trim().replace(/^(https?|wss?):\/\//, '').replace(/\/+$/, '')
 // dev default: the machine serving the page (so a phone on the LAN can use `npm run party:dev` on the same computer)
 export const PARTY_HOST = envHost || `${location.hostname || 'localhost'}:8787`
 /** false on a deployed site that has no VITE_PARTYKIT_HOST (online rooms cannot work there) */
