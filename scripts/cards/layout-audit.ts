@@ -54,6 +54,16 @@ async function inspect(p: Page): Promise<string[]> {
       const c = centre.getBoundingClientRect()
       for (const s of Array.from(document.querySelectorAll('.hdseat:not(.empty), .btseat'))) { const r = s.getBoundingClientRect(); if (c.width && r.left < c.right - 2 && c.left < r.right - 2 && r.top < c.bottom - 2 && c.top < r.bottom - 2) out.push('a seat covers the cards in the middle') }
     }
+    // the bottom-left chat overlay must not sit on top of buttons, hand cards or seats
+    const chat = document.querySelector('.kgchat') as HTMLElement | null
+    if (chat) {
+      const c = chat.getBoundingClientRect()
+      if (c.left < -1 || c.right > W + 1 || c.top < 0) out.push('chat is off-screen')
+      for (const el of Array.from(document.querySelectorAll('.hdbar button, .btcard, .hdseat:not(.empty), .bjseat, .btseat, .hdraise, .hdboard, .btplay, .bjdealer, .bjchip'))) {
+        const r = (el as HTMLElement).getBoundingClientRect()
+        if (r.width && r.height && r.left < c.right - 1 && c.left < r.right - 1 && r.top < c.bottom - 1 && c.top < r.bottom - 1) out.push(`chat covers ${(el.className || el.tagName).toString().slice(0, 20)} "${(el.textContent || '').trim().slice(0, 16)}"`)
+      }
+    }
     return out
   })
 }
@@ -117,6 +127,7 @@ for (const [w, h] of SELECTED) {
     await p.goto(BASE + '/bigtwo', { waitUntil: 'networkidle0' })
     await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.btlobby')
     report(`bigtwo lobby ${tag}`, await inspect(p))
+    await p.$eval('.hdform .hdbtn.primary', (e) => e.scrollIntoView({ block: 'center' })) // a player scrolls the page clear of the chat first
     await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard'); await sleep(1500)
     const cards = await p.$$('.bthand .btcard'); if (cards[0]) await cards[0].click(); await sleep(150)
     report(`bigtwo table ${tag}`, await inspect(p))
