@@ -1,0 +1,88 @@
+/* Texas Hold'em: the table and its controls, in the same quiet look as the hub. No green. */
+.hd { --felt: #0f1832; --felt2: #0c1328; }
+.hd .muted { color: var(--mute); }
+.hdform { display: grid; gap: 12px; margin-bottom: 20px; align-content: start; }
+.hdform label, .hdbuy { display: grid; gap: 6px; font-size: 13px; color: var(--mute); }
+.hdrow { display: flex; gap: 8px; }
+:root:root .hd input[type=text], :root:root .hd input:not([type]), :root:root .hd input[inputmode], :root:root .hd select { background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid rgba(232,236,246,.14); border-radius: 8px; padding: 0 12px; min-height: 40px; font: 400 15px var(--sans, system-ui); user-select: text; -webkit-user-select: text; }
+:root:root .hd select { appearance: none; }
+:root:root .hd input[type=range] { accent-color: #c9d2e6; width: 100%; padding: 0; min-height: 28px; background: none; border: 0; }
+:root:root .hdbtn, :root:root .hdseg button, :root:root .hdpresets button { font: 500 14px var(--sans, system-ui); min-height: 42px; padding: 0 18px; border: 0; border-radius: 8px; background: rgba(255,255,255,.09); color: var(--ink); cursor: pointer; }
+:root:root .hdbtn.primary { background: #c9d2e6; color: #0b1020; font-weight: 600; }
+:root:root .hdbtn:disabled { opacity: .4; cursor: default; }
+:root:root .hdlink { background: none; border: 0; color: var(--mute); font: 500 13px var(--sans, system-ui); cursor: pointer; padding: 6px 8px; }
+:root:root .hdlink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.hdseg { display: flex; gap: 4px; }
+:root:root .hdseg button { flex: 1; background: rgba(255,255,255,.05); color: var(--mute); }
+:root:root .hdseg button.on { background: rgba(201,210,230,.18); color: var(--ink); }
+.hdhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; flex-wrap: wrap; font-size: 14px; }
+.hdtools { display: flex; gap: 4px; }
+.hdbanner { margin: 6px 0; }
+.hdstatus { margin-top: 40px; }
+.hdwrap { padding-bottom: 28px; }
+
+/* the table */
+.hdfelt { position: relative; width: 100%; height: min(58vh, 560px); min-height: 380px; margin: 4px auto 0; border-radius: 999px / 50%; background: radial-gradient(ellipse at 50% 45%, #16224a 0%, var(--felt) 60%, var(--felt2) 100%); box-shadow: inset 0 0 0 1px rgba(232,236,246,.1); }
+.hdcenter { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; gap: 10px; justify-items: center; width: min(70%, 460px); text-align: center; }
+.hdpot { color: var(--mute); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; } .hdpot b { color: var(--ink); font: 600 18px var(--sans, system-ui); letter-spacing: 0; margin-left: 6px; }
+.hdboard { display: flex; gap: 6px; justify-content: center; }
+.pkslot { width: var(--cw, 46px); height: calc(var(--cw, 46px) * 1.4); border-radius: 6px; border: 1px dashed rgba(232,236,246,.14); }
+.hdmsg { min-height: 20px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; }
+.hdwin { color: #f5d76e; font-weight: 600; }
+.hd { --cw: 46px; }
+
+.pkcard { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: var(--cw); height: calc(var(--cw) * 1.4); border-radius: 6px; background: #f3f1ea; color: #1b2340; box-shadow: 0 1px 0 rgba(0,0,0,.35); font-family: var(--sans, system-ui); line-height: 1; gap: 2px; }
+.pkcard b { font-size: calc(var(--cw) * .42); font-weight: 700; } .pkcard i { font-style: normal; font-size: calc(var(--cw) * .4); }
+.pkcard.red { color: #c4384a; }
+.pkcard.small { --cw: 30px; }
+.pkcard.back { background: repeating-linear-gradient(45deg, #24336b 0 4px, #1c2858 4px 8px); box-shadow: inset 0 0 0 2px #e8ecf6, 0 1px 0 rgba(0,0,0,.35); }
+
+.hdseat { position: absolute; transform: translate(-50%, -50%); display: grid; gap: 3px; justify-items: center; width: 118px; padding: 8px 8px 7px; border-radius: 10px; background: rgba(11,16,32,.82); box-shadow: inset 0 0 0 1px rgba(232,236,246,.12); text-align: center; }
+.hdseat.empty { background: none; box-shadow: none; }
+.hdseat.me { box-shadow: inset 0 0 0 1px rgba(201,210,230,.5); }
+.hdseat.turn { box-shadow: inset 0 0 0 2px #f5d76e; }
+.hdseat.folded { opacity: .45; }
+.hdseat.away .hdname { text-decoration: line-through; text-decoration-color: rgba(232,236,246,.3); }
+.hdseat.won { box-shadow: inset 0 0 0 2px #f5d76e; }
+.hdhole { display: flex; gap: 3px; margin-top: -26px; }
+.hdseat.me .hdhole { --cw: 40px; margin-top: -34px; }
+.hdname { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; gap: 5px; align-items: center; justify-content: center; }
+.hdbtn-d { font-style: normal; font-size: 10px; font-weight: 800; background: #f5d76e; color: #0b1020; border-radius: 999px; min-width: 16px; height: 16px; display: inline-grid; place-items: center; padding: 0 3px; }
+.hdstack { font: 600 14px var(--sans, system-ui); font-variant-numeric: tabular-nums; }
+.hdlast { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.hdbet { position: absolute; transform: translate(-50%, -50%); font: 600 13px var(--sans, system-ui); font-variant-numeric: tabular-nums; background: rgba(245,215,110,.14); color: #f5d76e; padding: 2px 8px; border-radius: 999px; }
+.hdtimer { width: 100%; height: 3px; background: rgba(232,236,246,.12); border-radius: 2px; overflow: hidden; } .hdtimer span { display: block; height: 100%; background: #f5d76e; transition: width .5s linear; }
+
+/* actions */
+.hdbar { position: sticky; bottom: 0; z-index: 5; padding: 14px 0 max(12px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, rgba(11,16,32,0), var(--bg) 22%); }
+.hdactions { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; justify-content: center; }
+.hdactions.idle { align-items: center; }
+.hdraise { display: grid; gap: 8px; min-width: min(300px, 100%); flex: 1 1 260px; max-width: 420px; }
+.hdpresets { display: flex; gap: 6px; } :root:root .hdpresets button { min-height: 32px; padding: 0 10px; font-size: 12px; flex: 1; }
+.hdsit { display: grid; gap: 10px; justify-items: center; }
+.hdbuy { width: min(360px, 100%); } .hdbuy b { color: var(--ink); font: 600 16px var(--sans, system-ui); display: inline; }
+.hdrebuy { display: inline-flex; gap: 8px; align-items: center; min-width: 220px; }
+
+@media (max-width: 640px) {
+  .hd { --cw: 36px; }
+  .hdfelt { height: min(64vh, 520px); min-height: 400px; border-radius: 40px; }
+  .hdseat { width: 92px; padding: 6px 5px; } .hdname { font-size: 12px; } .hdstack { font-size: 13px; }
+  .pkcard.small { --cw: 24px; } .hdseat.me .hdhole { --cw: 32px; }
+  .hdcenter { width: 84%; gap: 8px; }
+}
+
+@media (max-width: 640px) {
+  .hdfelt { height: min(48vh, 440px); min-height: 330px; }
+  .hdactions { gap: 8px; } .hdraise { flex-basis: 100%; max-width: none; }
+  :root:root .hdbtn { min-height: 44px; }
+}
+/* landscape phones: the table takes what is left above the action row */
+@media (max-height: 520px) and (orientation: landscape) {
+  .hd .kg-bar { display: none; }
+  .hdfelt { height: calc(100vh - 136px); min-height: 200px; margin-top: 0; }
+  .hdlast { display: none; }
+  .hdhead { padding: 4px 0; } .hdbar { padding-top: 6px; }
+  .hdseat { width: 92px; padding: 4px; gap: 1px; } .hdhole { margin-top: -22px; } .hdseat.me .hdhole { margin-top: -26px; --cw: 30px; } .hd { --cw: 32px; }
+  .hdraise { flex-basis: 260px; } :root:root .hdbtn { min-height: 38px; } .hdpresets { display: none; }
+  .hdcenter { gap: 4px; }
+}

@@ -95,6 +95,10 @@ export default function MahjongApp() {
         handlers.onView(v)
       },
       onError: (m: string) => {
+        if (m.startsWith('wrong_game:')) { // this code belongs to another game in the shared room-code space
+          if (create && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return }
+          location.href = `/${m.split(':')[1]}?room=${c}`; return
+        }
         if (create && m === 'code_taken' && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return } // that code is already in use: pick another
         if (m === 'room_not_found' || m === 'room_full' || m === 'code_taken') { // forget the stale room so a refresh does not try it again
           try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }

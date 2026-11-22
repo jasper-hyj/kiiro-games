@@ -50,3 +50,10 @@ a.kg-game:hover .kg-go { transform: translateX(2px); }
   .kg-acct { max-width: 30vw; }
   .kg-acct small { display: none; }
 }
+
+.kg-join { margin-top: 28px; display: grid; gap: 8px; max-width: 320px; }
+.kg-join label { color: var(--mute); font-size: 13px; }
+.kg-join > div { display: flex; gap: 8px; }
+:root:root .kg-join input { flex: 1; min-width: 0; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid rgba(232,236,246,.14); border-radius: 8px; padding: 0 12px; min-height: 40px; font: 500 16px var(--sans, system-ui); letter-spacing: .2em; user-select: text; -webkit-user-select: text; }
+:root:root .kg-join button { background: #c9d2e6; color: #0b1020; border: 0; border-radius: 8px; padding: 0 16px; min-height: 40px; font: 600 14px var(--sans, system-ui); cursor: pointer; }
+:root:root .kg-join button:disabled { opacity: .4; cursor: default; }

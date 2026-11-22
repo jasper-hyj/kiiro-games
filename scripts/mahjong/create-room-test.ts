@@ -15,7 +15,7 @@ for (const [index, rule] of [[0, 'taiwan'], [1, 'hk'], [2, 'riichi'], [3, 'mcr']
   await p.evaluate((i: number) => (document.querySelectorAll('button.rule')[i] as HTMLElement).click(), index); await sleep(500)
   await click('.btn.gold.big'); await sleep(500) // options -> continue
   await click('.btn.gold.big'); await sleep(2500) // name -> create the room
-  const got = await p.evaluate(() => (document.querySelector('.page.lobby [data-rule]') as HTMLElement | null)?.dataset.rule ?? document.documentElement.dataset.rule ?? 'none')
+  const got = await p.evaluate(() => document.documentElement.dataset.rule ?? 'none')
   const ok = got === rule
   if (!ok) fails++
   console.log(ok ? 'ok  ' : 'FAIL', `picked ${rule} -> room has ${got}`)

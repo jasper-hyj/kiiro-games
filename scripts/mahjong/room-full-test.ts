@@ -27,7 +27,7 @@ async function main() {
       return p
     }
     const host = await mk()
-    await host.goto(BASE, { waitUntil: 'networkidle0' })
+    await host.goto(BASE + '/mahjong', { waitUntil: 'networkidle0' })
     await hostCreate(host)
     await host.waitForSelector('.copyrow input[readonly]')
     const link = await host.$eval('.copyrow input[readonly]', (e) => (e as HTMLInputElement).value)

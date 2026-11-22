@@ -57,6 +57,15 @@ npm run party:deploy
 
 `APP_URL` and `MAIL_FROM` are plain vars in `wrangler.jsonc`. For local work copy `.dev.vars` (gitignored) with `DEV_MODE=1`, `ADMIN_EMAILS=...`, `APP_URL=http://localhost:5173`: the sign-in link is then returned on screen instead of emailed. Local database: `npx wrangler d1 migrations apply kiiro-games --local`. Tests: `npx tsx scripts/accounts/economy-test.ts` (stop `wrangler dev` first) and `ranked-ws-test.ts` (needs `wrangler dev`).
 
+## Texas Hold'em
+
+`/holdem`, 2 to 6 players, no bots. Room codes are shared with Mahjong: the first player to create a code decides its game, and joining a code from the other game's page redirects to the right one (the hub has one "room code" box for everything).
+
+- **Casual tables:** free temporary stacks, guests welcome, nothing saved.
+- **Cash tables:** need an account. The buy-in (20 to 100 big blinds) comes off the season balance as a ledger `hold`; leaving returns the stack and the difference is booked as profit (`play:holdem`). A daily alarm and a 60 s disconnect grace make sure chips come home even if the room object is evicted. Each hand is saved as a match.
+- **Engine:** `src/games/holdem/engine` (evaluator, betting rounds, side pots, timers). `npm run test:holdem` includes a fuzz test that checks chips are conserved. `scripts/holdem/ws-test.ts` plays casual and cash tables over WebSockets (needs `wrangler dev`).
+- Not built yet: chat at the table, tournaments.
+
 ## Develop
 
 ```bash

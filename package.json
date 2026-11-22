@@ -11,8 +11,9 @@
     "party:deploy": "wrangler deploy",
     "sim": "tsx scripts/mahjong/sim.ts",
     "test": "tsx scripts/mahjong/test.ts",
-    "check": "tsc --noEmit && tsx scripts/mahjong/test.ts && tsx scripts/mahjong/win-test.ts",
-    "test:mahjong": "sh scripts/mahjong/run-engine-suite.sh"
+    "check": "tsc --noEmit && tsx scripts/mahjong/test.ts && tsx scripts/mahjong/win-test.ts && tsx scripts/holdem/engine-test.ts",
+    "test:mahjong": "sh scripts/mahjong/run-engine-suite.sh",
+    "test:holdem": "tsx scripts/holdem/engine-test.ts"
   },
   "dependencies": {
     "partyserver": "^0.5.10",

@@ -1,5 +1,6 @@
 import { useLang } from '../i18n'
-import { MAHJONG_PATH } from '../route'
+import { useState } from 'react'
+import { HOLDEM_PATH, MAHJONG_PATH } from '../route'
 import { AccountChip, Leaderboard } from '../account/Panels'
 import './hub.css'
 import './strings'
@@ -23,6 +24,18 @@ export function Bar() {
   )
 }
 
+/** One room-code box for every game: the code finds the table, and the table says which game it is. */
+function JoinCode() {
+  const { t } = useLang()
+  const [c, setC] = useState('')
+  return (
+    <form className="kg-join" onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(c)) location.href = `${MAHJONG_PATH}?room=${c}` }}>
+      <label htmlFor="kgcode">{t('hubHaveCode')}</label>
+      <div><input id="kgcode" inputMode="numeric" maxLength={4} value={c} onChange={(e) => setC(e.target.value.replace(/\D/g, ''))} placeholder="1234" /><button disabled={!/^\d{4}$/.test(c)}>{t('hubJoin')}</button></div>
+    </form>
+  )
+}
+
 /** The front page: a plain list of games next to the season leaderboard. Mahjong needs no sign-in. */
 export function Hub() {
   const { t } = useLang()
@@ -40,12 +53,13 @@ export function Hub() {
                 <b>{t('hubMahjong')}</b><span className="kg-go">{t('hubOpen')} →</span>
                 <p>{t('hubMahjongBlurb')}</p>
               </a></li>
-              <li><div className="kg-game soon" aria-disabled="true">
-                <b>{t('hubHoldem')}</b><span className="kg-go">{t('hubSoon')}</span>
+              <li><a className="kg-game" href={HOLDEM_PATH}>
+                <b>{t('hubHoldem')}</b><span className="kg-go">{t('hubOpen')} →</span>
                 <p>{t('hubHoldemBlurb')}</p>
-              </div></li>
+              </a></li>
             </ul>
             <p className="kg-note">{t('hubNoSignin')}</p>
+            <JoinCode />
           </section>
           <Leaderboard />
         </div>

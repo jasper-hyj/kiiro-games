@@ -1,5 +1,6 @@
 /** Where things live: the hub (game picker) at "/", Mahjong at "/mahjong". Old links such as "/?room=1234" or "/?solo=1" still open the game. */
 export const MAHJONG_PATH = '/mahjong'
+export const HOLDEM_PATH = '/holdem'
 const GAME_PARAMS = ['room', 'solo', 'stress', 'tutorial', 'tiles', 'debug', 'rule', 'players']
 export function isHub(): boolean {
   if (typeof location === 'undefined') return false
@@ -10,3 +11,4 @@ export function isHub(): boolean {
 }
 
 export function isAdminPage(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/admin' }
+export function isHoldem(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === HOLDEM_PATH }
