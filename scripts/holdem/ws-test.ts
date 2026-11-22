@@ -3,7 +3,7 @@ export {}
 const API = 'http://localhost:8787/api'
 const post = async (p: string, b: unknown, tok?: string) => (await fetch(API + p, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify(b) })).json() as Promise<any>
 const get = async (p: string, tok: string) => (await fetch(API + p, { headers: { Authorization: 'Bearer ' + tok } })).json() as Promise<any>
-const login = async (email: string) => { const r = await post('/auth/email', { email }); return (await post('/auth/verify', { token: /signin=([a-f0-9]+)/.exec(r.devLink)![1] })).token as string }
+const login = async (name: string) => { const u = name.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20).padEnd(3, 'x'), password = 'test-password-1'; const r = await post('/auth/register', { username: u, password }); return (r.token ?? (await post('/auth/login', { username: u, password })).token) as string }
 let fails = 0
 const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))

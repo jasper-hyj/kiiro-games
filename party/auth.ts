@@ -11,7 +11,6 @@ function rand(bytes = 32): string {
 }
 
 const SESSION_MS = 90 * 24 * 3600e3
-const MAGIC_MS = 15 * 60e3
 
 export interface User { id: string; email: string; name: string; banned: number; games: number }
 
@@ -69,39 +68,67 @@ export async function upsertUser(db: D1, email: string, nameHint: string, google
   return u
 }
 
-const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
+const USERNAME = /^[a-z0-9_]{3,20}$/
+const PW_ITER = 100_000 // the most WebCrypto PBKDF2 allows in a Worker
+const hex = (a: Uint8Array) => [...a].map((x) => x.toString(16).padStart(2, '0')).join('')
 
-export async function startMagic(db: D1, env: Env, emailRaw: string, ip: string): Promise<{ ok: boolean; error?: string; devLink?: string }> {
-  const email = String(emailRaw || '').trim().toLowerCase()
-  if (!EMAIL.test(email) || email.length > 254) return { ok: false, error: 'bad_email' }
-  if (!(await allow(db, 'mail:' + email, 3, 3600)) || !(await allow(db, 'mailip:' + ip, 10, 3600))) return { ok: false, error: 'slow_down' }
-  const token = rand()
-  await db.prepare('INSERT INTO magic (hash,email,expires) VALUES (?,?,?)').bind(await sha256(token), email, Date.now() + MAGIC_MS).run()
-  await db.prepare('DELETE FROM magic WHERE expires < ?').bind(Date.now()).run()
-  const link = `${(env.APP_URL || 'http://localhost:5173').replace(/\/$/, '')}/?signin=${token}`
-  if (env.DEV_MODE === '1') return { ok: true, devLink: link }
-  if (!env.RESEND_API_KEY || !env.MAIL_FROM) return { ok: false, error: 'mail_not_configured' }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: env.MAIL_FROM, to: [email], subject: 'Your Kiiro Games sign-in link',
-      text: `Open this link to sign in to Kiiro Games (valid for 15 minutes):\n\n${link}\n\nIf you did not ask for this, ignore this email.`,
-    }),
-  })
-  return res.ok ? { ok: true } : { ok: false, error: 'mail_failed' }
+async function pbkdf2(pw: string, salt: BufferSource): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits'])
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: PW_ITER }, key, 256)
+  return hex(new Uint8Array(bits))
+}
+export async function hashPassword(pw: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  return `p1$${hex(salt)}$${await pbkdf2(pw, salt)}`
+}
+async function checkPassword(pw: string, stored: string | null): Promise<boolean> {
+  // an unknown user still costs one hash, so response time does not reveal which usernames exist
+  const [v, saltHex, want = ''] = (stored ?? 'p1$00000000000000000000000000000000$x').split('$')
+  const salt = new Uint8Array((saltHex.match(/../g) ?? []).map((h) => parseInt(h, 16)))
+  const got = await pbkdf2(pw, salt)
+  let diff = got.length ^ want.length
+  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ (want.charCodeAt(i) || 0)
+  return !!stored && v === 'p1' && diff === 0
+}
+export function badPassword(pw: string): boolean { return pw.length < 8 || pw.length > 72 }
+
+type Signed = { user: User; token: string } | { error: string }
+
+export async function register(db: D1, usernameRaw: string, pw: string, ip: string): Promise<Signed> {
+  const username = String(usernameRaw ?? '').trim().toLowerCase()
+  if (!USERNAME.test(username)) return { error: 'bad_username' }
+  if (badPassword(String(pw ?? ''))) return { error: 'bad_password' }
+  if (!(await allow(db, 'reg:' + ip, 10, 3600))) return { error: 'slow_down' }
+  if (await db.prepare('SELECT 1 AS x FROM users WHERE username=?').bind(username).first()) return { error: 'username_taken' }
+  const id = rand(12)
+  const hash = await hashPassword(pw)
+  try {
+    await db.prepare('INSERT INTO users (id,email,name,username,pw,created_at,games,banned,last_seen) VALUES (?,?,?,?,?,?,0,0,?)').bind(id, 'u:' + username, username, username, hash, Date.now(), Date.now()).run()
+  } catch { return { error: 'username_taken' } }
+  return { user: { id, email: 'u:' + username, name: username, banned: 0, games: 0 }, token: await newSession(db, id) }
 }
 
-export async function finishMagic(db: D1, token: string): Promise<{ user: User; token: string } | null> {
-  if (!token || token.length < 32 || token.length > 200) return null
-  const h = await sha256(token)
-  const row = await db.prepare('SELECT email,expires FROM magic WHERE hash=?').bind(h).first<{ email: string; expires: number }>()
-  if (!row) return null
-  await db.prepare('DELETE FROM magic WHERE hash=?').bind(h).run() // single use
-  if (row.expires < Date.now()) return null
-  const user = await upsertUser(db, row.email, '')
-  if (user.banned) return null
+export async function login(db: D1, usernameRaw: string, pw: string, ip: string): Promise<Signed> {
+  const username = String(usernameRaw ?? '').trim().toLowerCase()
+  pw = String(pw ?? '')
+  if (!USERNAME.test(username) || pw.length > 72) return { error: 'bad_login' }
+  if (!(await allow(db, 'login:' + ip, 30, 600)) || !(await allow(db, 'loginu:' + username, 10, 900))) return { error: 'slow_down' }
+  const row = await db.prepare('SELECT id,email,name,banned,games,pw FROM users WHERE username=?').bind(username).first<User & { pw: string | null }>()
+  const good = await checkPassword(pw, row?.pw ?? null)
+  if (!row || !good || row.banned) return { error: 'bad_login' }
+  const { pw: _pw, ...user } = row
   return { user, token: await newSession(db, user.id) }
+}
+
+/** Change a password and sign out every other session. `keep` is the token to leave signed in. */
+export async function setPassword(db: D1, userId: string, pw: string, keep?: string | null): Promise<void> {
+  await db.prepare('UPDATE users SET pw=? WHERE id=?').bind(await hashPassword(pw), userId).run()
+  if (keep) await db.prepare('DELETE FROM sessions WHERE user_id=? AND hash!=?').bind(userId, await sha256(keep)).run()
+  else await db.prepare('DELETE FROM sessions WHERE user_id=?').bind(userId).run()
+}
+export async function passwordOk(db: D1, userId: string, pw: string): Promise<boolean> {
+  const row = await db.prepare('SELECT pw FROM users WHERE id=?').bind(userId).first<{ pw: string | null }>()
+  return checkPassword(String(pw ?? ''), row?.pw ?? null)
 }
 
 /** Verify a Google Identity Services credential with Google and check it was issued for this app. */
@@ -117,7 +144,9 @@ export async function finishGoogle(db: D1, env: Env, credential: string): Promis
   return { user, token: await newSession(db, user.id) }
 }
 
+/** Admins are listed in ADMIN_USERS (usernames) and/or ADMIN_EMAILS (Google accounts). Username accounts carry 'u:<name>' in the email column. */
 export function isAdmin(env: Env, email: string): boolean {
-  const list = String(env.ADMIN_EMAILS || '').toLowerCase().split(',').map((s) => s.trim()).filter(Boolean)
-  return list.includes(email.toLowerCase())
+  const split = (v?: string) => String(v || '').toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)
+  const e = email.toLowerCase()
+  return e.startsWith('u:') ? split(env.ADMIN_USERS).includes(e.slice(2)) : split(env.ADMIN_EMAILS).includes(e)
 }

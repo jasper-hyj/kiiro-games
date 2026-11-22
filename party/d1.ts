@@ -12,11 +12,10 @@ export interface D1 {
 export interface Env {
   DB?: D1
   GOOGLE_CLIENT_ID?: string
-  RESEND_API_KEY?: string
-  MAIL_FROM?: string
   APP_URL?: string
   /** comma-separated emails allowed into /admin */
   ADMIN_EMAILS?: string
+  ADMIN_USERS?: string
   /** "1" in .dev.vars only: the magic link is returned in the API response instead of emailed */
   DEV_MODE?: string
   [k: string]: unknown

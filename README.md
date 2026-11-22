@@ -36,26 +36,26 @@ A new game = a new folder under `src/games/` (and `scripts/<game>/`), a card on 
 
 Optional sign-in for the whole site. Guests can still play every casual game; nothing is saved for them.
 
-- **Sign-in:** Google (Identity Services) or an emailed one-time link (Resend). Sessions are bearer tokens kept in localStorage.
+- **Sign-in:** username + password (no email needed): usernames are 3-20 letters, numbers or underscores; passwords 8-72 characters, stored as salted PBKDF2-SHA256. Failed logins are rate limited per username and per IP. Google sign-in is an optional extra. Sessions are bearer tokens kept in localStorage. There is no self-service reset: an admin sets a temporary password from the Users tab, which also signs the player out everywhere. Players can change their own password from their profile.
 - **Chips:** play money, no cash value. Everyone starts a season with 10,000. A daily floor tops anyone under 2,000 back up. Veterans get a small start bonus capped at 10%. Every movement is a row in the `ledger` table.
 - **Seasons:** monthly (`YYYY-MM`). The leaderboard ranks season *profit* (grants excluded), so a newcomer's first good session already counts. Lifetime games and level stay.
 - **Ranked Mahjong:** the host switches a room to Ranked. It needs 2+ players, all signed in; chips move zero-sum between them at game end. Bots and guests never move chips. Casual rooms and practice never touch chips.
 - **History:** every finished game is saved (summary, per-seat results, replay log; replays are trimmed after 90 days by a daily cron).
-- **Admin:** `/admin`, for emails listed in `ADMIN_EMAILS`: overview, users (ban, rename, grant chips), matches, ledger, and an audit that flags balance/ledger drift.
+- **Admin:** `/admin`, for usernames listed in `ADMIN_USERS` (or Google emails in `ADMIN_EMAILS`): overview, users (ban, rename, grant chips), matches, ledger, and an audit that flags balance/ledger drift.
 - Tunables live at the top of `party/economy.ts`.
 
 ### Set it up
 
 ```sh
-npx wrangler d1 create kiiro-games              # copy the database_id into wrangler.jsonc
-npx wrangler d1 migrations apply kiiro-games --remote
-npx wrangler secret put ADMIN_EMAILS            # comma-separated, e.g. you@example.com
-npx wrangler secret put RESEND_API_KEY          # needs a verified sending domain in Resend
-npx wrangler secret put GOOGLE_CLIENT_ID        # OAuth web client; add the site origin as an authorised JavaScript origin
-npm run party:deploy
+npx wrangler secret put ADMIN_USERS             # comma-separated usernames, e.g. jasper
+npx wrangler secret put GOOGLE_CLIENT_ID        # optional: OAuth web client; add the site origin as an authorised JavaScript origin
+npx wrangler secret put ADMIN_EMAILS            # optional: admin Google accounts
+npm run party:deploy   # deploys; wrangler creates the D1 database on the first deploy (no id needed), then applies the migrations
 ```
 
-`APP_URL` and `MAIL_FROM` are plain vars in `wrangler.jsonc`. For local work copy `.dev.vars` (gitignored) with `DEV_MODE=1`, `ADMIN_EMAILS=...`, `APP_URL=http://localhost:5173`: the sign-in link is then returned on screen instead of emailed. Local database: `npx wrangler d1 migrations apply kiiro-games --local`. Tests: `npx tsx scripts/accounts/economy-test.ts` (stop `wrangler dev` first) and `ranked-ws-test.ts` (needs `wrangler dev`).
+If the Worker is built by Cloudflare from GitHub, set the deploy command to `npm run party:deploy` so the migrations run too.
+
+For local work put `ADMIN_USERS=yourname` in `.dev.vars` (gitignored). Local database: `npx wrangler d1 migrations apply kiiro-games --local`. Tests: `npx tsx scripts/accounts/auth-test.ts` (needs `wrangler dev`; clear the `throttle` table between many runs, registration is limited to 10 per hour per IP), `npx tsx scripts/accounts/economy-test.ts` (stop `wrangler dev` first) and `ranked-ws-test.ts` (needs `wrangler dev`).
 
 ## Texas Hold'em
 

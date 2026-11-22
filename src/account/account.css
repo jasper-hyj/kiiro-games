@@ -44,3 +44,10 @@
 .adstats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); border-top: 1px solid rgba(232,236,246,.1); }
 .adstats > div { padding: 14px 0; border-bottom: 1px solid rgba(232,236,246,.1); display: grid; gap: 2px; }
 .adstats b { font: 600 22px var(--serif); font-variant-numeric: tabular-nums; } .adstats span { color: #8e97b0; font-size: 12px; }
+
+.acstack { display: grid; gap: 10px; } .acstack input { min-width: 0; min-height: 40px; user-select: text; -webkit-user-select: text; }
+
+/* with the 44px back button showing (later menu steps) the chip moves clear of it; on narrow phones it drops under the toolbar on the start screen and hides on later steps */
+.app:has(.backbtn) .accorner { left: calc(70px + env(safe-area-inset-left)); }
+@media (max-width: 640px) { .accorner { top: calc(54px + env(safe-area-inset-top)); } .app:has(.backbtn) .accorner { display: none; } }
+@media (max-width: 640px) and (max-height: 460px) { .accorner { top: calc(48px + env(safe-area-inset-top)); } }

@@ -1,5 +1,5 @@
 import type { Env } from './d1'
-import { allow, cleanName, endSession, finishGoogle, finishMagic, isAdmin, startMagic, userFromToken, type User } from './auth'
+import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, login, passwordOk, register, setPassword, userFromToken, type User } from './auth'
 import { ensureAccount, FLOOR_CHIPS, leaderboard, level, seasonOf, START_CHIPS } from './economy'
 import { trimReplays } from './matches'
 
@@ -24,15 +24,16 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
 
   if (req.method === 'GET' && path === '/config') return json({ google: env.GOOGLE_CLIENT_ID || null, season: seasonOf(), start: START_CHIPS, floor: FLOOR_CHIPS })
 
-  if (req.method === 'POST' && path === '/auth/email') {
+  if (req.method === 'POST' && (path === '/auth/register' || path === '/auth/login')) {
     const b = await body(req)
-    const r = await startMagic(db, env, String(b.email ?? ''), ip)
-    return json(r, r.ok ? 200 : r.error === 'slow_down' ? 429 : 400)
+    const r = path === '/auth/register' ? await register(db, String(b.username ?? ''), String(b.password ?? ''), ip) : await login(db, String(b.username ?? ''), String(b.password ?? ''), ip)
+    if ('error' in r) return json({ error: r.error }, r.error === 'slow_down' ? 429 : r.error === 'bad_login' ? 401 : 400)
+    return json({ token: r.token, user: { id: r.user.id, name: r.user.name } })
   }
-  if (req.method === 'POST' && (path === '/auth/verify' || path === '/auth/google')) {
+  if (req.method === 'POST' && path === '/auth/google') {
     if (!(await allow(db, 'auth:' + ip, 30, 600))) return json({ error: 'slow_down' }, 429)
     const b = await body(req)
-    const r = path === '/auth/verify' ? await finishMagic(db, String(b.token ?? '')) : await finishGoogle(db, env, String(b.credential ?? ''))
+    const r = await finishGoogle(db, env, String(b.credential ?? ''))
     if (!r) return json({ error: 'invalid' }, 401)
     return json({ token: r.token, user: { id: r.user.id, name: r.user.name } })
   }
@@ -49,7 +50,16 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   if (req.method === 'POST' && path === '/auth/logout') { await endSession(db, token!); return json({ ok: true }) }
   if (req.method === 'GET' && path === '/me') {
     const acct = await ensureAccount(db, user.id)
-    return json({ id: user.id, name: user.name, email: user.email, admin: isAdmin(env, user.email), ...acct, level: level(user.games) })
+    return json({ id: user.id, name: user.name, username: user.email.startsWith('u:') ? user.email.slice(2) : null, admin: isAdmin(env, user.email), ...acct, level: level(user.games) })
+  }
+  if (req.method === 'POST' && path === '/me/password') {
+    if (!user.email.startsWith('u:')) return json({ error: 'no_password' }, 400)
+    if (!(await allow(db, 'pw:' + user.id, 5, 900))) return json({ error: 'slow_down' }, 429)
+    const b = await body(req)
+    if (badPassword(String(b.next ?? ''))) return json({ error: 'bad_password' }, 400)
+    if (!(await passwordOk(db, user.id, String(b.current ?? '')))) return json({ error: 'bad_login' }, 401)
+    await setPassword(db, user.id, String(b.next), token)
+    return json({ ok: true })
   }
   if (req.method === 'POST' && path === '/me/name') {
     if (!(await allow(db, 'rename:' + user.id, 5, 3600))) return json({ error: 'slow_down' }, 429)
@@ -111,8 +121,8 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
   if (req.method === 'GET' && path === '/users') {
     const q = '%' + (url.searchParams.get('q') || '').replace(/[%_]/g, '') + '%'
     const { results } = await db.prepare(
-      `SELECT u.id,u.name,u.email,u.games,u.banned,u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
-        WHERE u.name LIKE ? OR u.email LIKE ? ORDER BY u.last_seen DESC LIMIT 100`).bind(season, q, q).all()
+      `SELECT u.id,u.name,u.username,u.email,u.games,u.banned,u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
+        WHERE u.name LIKE ? OR u.email LIKE ? OR u.username LIKE ? ORDER BY u.last_seen DESC LIMIT 100`).bind(season, q, q, q).all()
     return json({ users: results })
   }
   if (req.method === 'GET' && path === '/matches') {
@@ -167,6 +177,13 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
         db.prepare('UPDATE season_accounts SET balance=balance+? WHERE season=? AND user_id=?').bind(delta, season, id),
       ])
       return json({ ok: true, delta })
+    }
+    if (path === '/resetpw') {
+      // for a player who forgot their password: set a temporary one and tell them in person; this signs them out everywhere
+      const pw = String(b.password ?? '')
+      if (badPassword(pw)) return json({ error: 'bad_password' }, 400)
+      await setPassword(db, id, pw)
+      return json({ ok: true })
     }
     if (path === '/trim') { await trimReplays(db); return json({ ok: true }) }
   }

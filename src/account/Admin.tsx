@@ -56,13 +56,14 @@ export default function Admin() {
       )}
       {tab === 'users' && (
         <>
-          <form className="acform" onSubmit={(e) => { e.preventDefault(); void load() }}><input placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} /><button className="primary">Search</button></form>
+          <form className="acform" onSubmit={(e) => { e.preventDefault(); void load() }}><input placeholder="Search name or username" value={q} onChange={(e) => setQ(e.target.value)} /><button className="primary">Search</button></form>
           {data && <Table rows={data.users} cols={[
-            ['Name', (r) => r.name], ['Email', (r) => r.email], ['Games', (r) => r.games], ['Chips', (r) => r.balance ?? '—'], ['Last seen', (r) => ago(r.last_seen)], ['Joined', (r) => ago(r.created_at)],
+            ['Name', (r) => r.name], ['Login', (r) => r.username ?? r.email], ['Games', (r) => r.games], ['Chips', (r) => r.balance ?? '—'], ['Last seen', (r) => ago(r.last_seen)], ['Joined', (r) => ago(r.created_at)],
             ['Actions', (r) => (<span className="adcells">
               <button className="ghost" onClick={() => { setPick(r.id); setTab('ledger') }}>ledger</button>
               <button className="ghost" onClick={() => { const a = prompt(`Chips to add (negative removes) for ${r.name}`, '1000'); if (a) void act('grant', { user: r.id, amount: Number(a) }) }}>chips</button>
               <button className="ghost" onClick={() => { const n = prompt('New display name', r.name); if (n) void act('rename', { user: r.id, name: n }) }}>rename</button>
+              {r.username && <button className="ghost" onClick={() => { const n = prompt(`Temporary password for ${r.name} (8+ characters). They are signed out everywhere.`); if (n) void act('resetpw', { user: r.id, password: n }) }}>password</button>}
               <button className="ghost" onClick={() => { if (confirm(`${r.banned ? 'Unban' : 'Ban'} ${r.name}?`)) void act('ban', { user: r.id, banned: !r.banned }) }}>{r.banned ? 'unban' : 'ban'}</button></span>)],
           ]} />}
         </>

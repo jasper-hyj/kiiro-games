@@ -14,11 +14,16 @@ for (const [w, h, tag] of [[1280, 720, 'desk'], [390, 760, 'phone'], [844, 390, 
   await p.screenshot({ path: `${out}/hub-${tag}.png` })
   await p.click('.kg-acct'); await sleep(300)
   await p.screenshot({ path: `${out}/signin-${tag}.png` })
-  // sign in through the dev magic link
-  await p.type('.acbox input[type=email]', `shot${tag}@example.com`)
-  await p.click('.acbox .primary'); await p.waitForSelector('.acok a'); await sleep(200)
-  const link = await p.$eval('.acok a', (a) => (a as HTMLAnchorElement).href)
-  await p.goto(link, { waitUntil: 'networkidle0' }); await sleep(600)
+  // create an account through the form (reuse it on later runs)
+  const u = `shot${tag}`
+  await p.type('.acbox input[autocomplete=username]', u)
+  await p.type('.acbox input[type=password]', 'test-password-1')
+  await p.click('.acbox .primary'); await sleep(900)
+  if (await p.$('.acbox .acerr')) {
+    await p.click('.acbox .ghost'); await sleep(200) // switch to "have an account"
+    await p.click('.acbox .acstack .primary'); await sleep(900)
+  }
+  await sleep(300)
   await p.screenshot({ path: `${out}/hub-in-${tag}.png` })
   await p.click('.kg-acct'); await sleep(400)
   await p.screenshot({ path: `${out}/profile-${tag}.png` })

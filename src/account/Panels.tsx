@@ -52,6 +52,7 @@ export function Profile({ onClose }: { onClose(): void }) {
           <button className="primary" disabled={!name || name === me.name}>{t('acSave')}</button>
         </form>
         {err && <p className="acerr" role="alert">{err}</p>}
+        {me.username && <PasswordForm />}
         <h3>{t('acHistory')}</h3>
         {hist === null ? null : hist.length === 0 ? <p className="muted small">{t('acNoHistory')}</p> : (
           <ul className="achist">{hist.map((h) => (
@@ -82,5 +83,26 @@ export function AccountChip() {
         : <button className="kg-acct" onClick={openSignIn}>{t('acSignIn')}</button>}
       {open && <Profile onClose={() => setOpen(false)} />}
     </>
+  )
+}
+
+/** Change password: the current one is required, and every other device is signed out. */
+function PasswordForm() {
+  const { t } = useLang()
+  const [open, setOpen] = useState(false)
+  const [cur, setCur] = useState(''), [next, setNext] = useState('')
+  const [msg, setMsg] = useState(''), [done, setDone] = useState(false)
+  if (!open) return <button className="ghost" onClick={() => setOpen(true)}>{t('acChangePw')}</button>
+  return (
+    <form className="acstack" onSubmit={async (e) => {
+      e.preventDefault(); setMsg(''); setDone(false)
+      try { await api('/me/password', { current: cur, next }); setDone(true); setCur(''); setNext('') } catch (x) { setMsg(t(x instanceof ApiError ? x.code : 'offline')) }
+    }}>
+      <input type="password" autoComplete="current-password" placeholder={t('acCurrentPw')} aria-label={t('acCurrentPw')} maxLength={72} value={cur} onChange={(e) => setCur(e.target.value)} />
+      <input type="password" autoComplete="new-password" placeholder={t('acNewPw')} aria-label={t('acNewPw')} maxLength={72} value={next} onChange={(e) => setNext(e.target.value)} />
+      <button className="primary" disabled={!cur || next.length < 8}>{t('acSave')}</button>
+      {done && <p className="acok">{t('acPwChanged')}</p>}
+      {msg && <p className="acerr" role="alert">{msg}</p>}
+    </form>
   )
 }

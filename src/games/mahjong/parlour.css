@@ -222,8 +222,8 @@ table.ref td, table.ref th { border-bottom-color: rgba(170,186,214,.18); }
 kbd { background: rgba(255,255,255,.08); color: var(--ivory); border-color: rgba(170,186,214,.3); }
 
 
-/* ---------- type: Italiana (thin high-contrast display), Zen Antique (antique mincho glyphs), LXGW WenKai TC (calligraphic Chinese), Instrument Sans (UI) ---------- */
-:root { --serif: 'Italiana', 'LXGW WenKai TC', 'Zen Antique', 'Songti TC', Georgia, serif; --glyph: 'Zen Antique', 'LXGW WenKai TC', 'Noto Serif TC', serif; --sans: 'Instrument Sans', 'Hiragino Sans', 'Noto Sans JP', 'LXGW WenKai TC', system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif; }
+/* ---------- type: Fraunces (soft, readable display serif), Zen Antique (antique mincho glyphs), LXGW WenKai TC (calligraphic Chinese), Instrument Sans (UI) ---------- */
+:root { --serif: 'Fraunces', 'LXGW WenKai TC', 'Zen Antique', 'Songti TC', Georgia, serif; --glyph: 'Zen Antique', 'LXGW WenKai TC', 'Noto Serif TC', serif; --sans: 'Instrument Sans', 'Hiragino Sans', 'Noto Sans JP', 'LXGW WenKai TC', system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', sans-serif; }
 body { font-family: var(--sans); font-synthesis: none; }
 .hero .cjk, button.rule .glyph { font-family: var(--glyph); font-weight: 400; }
 .hero .cjk { letter-spacing: .18em; padding-left: .18em; }

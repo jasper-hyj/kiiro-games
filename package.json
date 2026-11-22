@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "party:dev": "wrangler dev",
-    "party:deploy": "wrangler deploy",
+    "party:deploy": "wrangler deploy && wrangler d1 migrations apply DB --remote",
     "sim": "tsx scripts/mahjong/sim.ts",
     "test": "tsx scripts/mahjong/test.ts",
     "check": "tsc --noEmit && tsx scripts/mahjong/test.ts && tsx scripts/mahjong/win-test.ts && tsx scripts/holdem/engine-test.ts && tsx scripts/blackjack/engine-test.ts && tsx scripts/bigtwo/engine-test.ts",

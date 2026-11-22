@@ -12,8 +12,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null)
   const [ready, setReady] = useState(!accountsAvailable || !getToken())
   const [open, setOpen] = useState(false)
-  const [note, setNote] = useState('')
-  const { t } = useLang()
 
   const refresh = useCallback(async () => {
     if (!accountsAvailable || !getToken()) { setMe(null); setReady(true); return }
@@ -21,21 +19,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     setReady(true)
   }, [])
 
-  useEffect(() => {
-    // a sign-in link from the email arrives as /?signin=TOKEN: trade it for a session, then clean the address bar
-    const q = new URLSearchParams(location.search)
-    const link = q.get('signin')
-    if (link && accountsAvailable) {
-      history.replaceState(null, '', location.pathname)
-      api<{ token: string }>('/auth/verify', { token: link }).then((r) => { setToken(r.token); return refresh() }).catch((e) => { setNote(t(e instanceof ApiError ? e.code : 'invalid')); setReady(true) })
-    } else void refresh()
-  }, [refresh]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void refresh() }, [refresh])
 
   const signOut = useCallback(async () => { try { await api('/auth/logout', {}) } catch { /* the token is dropped locally either way */ } setToken(null); setMe(null) }, [])
   return (
     <C.Provider value={{ me, ready, available: accountsAvailable, refresh, signOut, openSignIn: () => setOpen(true) }}>
       {children}
-      {note && <div className="acnote" role="status" onClick={() => setNote('')}>{note}</div>}
       {open && <SignIn onClose={() => setOpen(false)} onDone={async () => { setOpen(false); await refresh() }} />}
     </C.Provider>
   )
@@ -53,17 +42,19 @@ function loadGsi(): Promise<void> {
 
 function SignIn({ onClose, onDone }: { onClose(): void; onDone(): void }) {
   const { t } = useLang()
-  const [email, setEmail] = useState('')
+  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [user, setUser] = useState('')
+  const [pw, setPw] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
-  const [sent, setSent] = useState(false)
-  const [dev, setDev] = useState('')
   const gbtn = useRef<HTMLDivElement>(null)
+  const [hasGoogle, setHasGoogle] = useState(false)
 
   useEffect(() => {
     let dead = false
     api<{ google: string | null }>('/config').then(async (c) => {
       if (!c.google || dead) return
+      setHasGoogle(true)
       await loadGsi()
       if (dead || !gbtn.current) return
       window.google.accounts.id.initialize({
@@ -73,31 +64,33 @@ function SignIn({ onClose, onDone }: { onClose(): void; onDone(): void }) {
         },
       })
       window.google.accounts.id.renderButton(gbtn.current, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', width: 280 })
-    }).catch(() => { /* Google is optional; email still works */ })
+    }).catch(() => { /* Google is optional */ })
     return () => { dead = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = async () => {
+  const submit = async () => {
     setBusy(true); setMsg('')
-    try { const r = await api<{ devLink?: string }>('/auth/email', { email }); setSent(true); setDev(r.devLink || '') } catch (e) { setMsg(t(e instanceof ApiError ? e.code : 'offline')) }
+    try {
+      const out = await api<{ token: string }>(mode === 'login' ? '/auth/login' : '/auth/register', { username: user, password: pw })
+      setToken(out.token); onDone()
+    } catch (e) { setMsg(t(e instanceof ApiError ? e.code : 'offline')) }
     setBusy(false)
   }
+  const ready = /^[A-Za-z0-9_]{3,20}$/.test(user.trim()) && pw.length >= (mode === 'register' ? 8 : 1)
   return (
     <div className="acmodal" onClick={onClose}>
       <div className="acbox" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h2>{t('acSignIn')}</h2>
+        <h2>{mode === 'login' ? t('acSignIn') : t('acCreate')}</h2>
         <p className="muted small">{t('acWhy')}</p>
-        <div ref={gbtn} className="gbtn" />
-        <p className="muted small acor">{t('acOr')}</p>
-        {sent ? (
-          <p className="acok">{t('acSent')}{dev && <> <a href={dev}>{t('acDevLink')}</a></>}</p>
-        ) : (
-          <form onSubmit={(e) => { e.preventDefault(); void send() }} className="acform">
-            <input type="email" inputMode="email" autoComplete="email" placeholder={t('acEmail')} value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <button className="primary" disabled={busy || !email}>{t('acSend')}</button>
-          </form>
-        )}
+        <form onSubmit={(e) => { e.preventDefault(); if (ready) void submit() }} className="acstack">
+          <input autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder={t('acUsername')} aria-label={t('acUsername')} maxLength={20} value={user} onChange={(e) => setUser(e.target.value)} />
+          <input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder={t('acPassword')} aria-label={t('acPassword')} maxLength={72} value={pw} onChange={(e) => setPw(e.target.value)} />
+          {mode === 'register' && <p className="muted small">{t('acRules')}</p>}
+          <button className="primary" disabled={busy || !ready}>{mode === 'login' ? t('acSignIn') : t('acCreate')}</button>
+        </form>
         {msg && <p className="acerr" role="alert">{msg}</p>}
+        <button className="ghost" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMsg('') }}>{mode === 'login' ? t('acToCreate') : t('acToLogin')}</button>
+        {hasGoogle && <><p className="muted small acor">{t('acOr')}</p><div ref={gbtn} className="gbtn" /></>}
         <p className="muted small">{t('acNoChips')}</p>
         <button className="ghost" onClick={onClose}>{t('acGuest')}</button>
       </div>
