@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer-core'
 const BASE = process.env.BASE ?? 'http://localhost:5199'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
-const ALLOWED = /^(Bot \d|Kiiro Mahjong|E|S|W|N|OK|ON|OFF|AI|HK|MCR|\d+)$/
+const ALLOWED = /^(Bot \d|Kiiro Mahjong|Kiiro Games|E|S|W|N|OK|ON|OFF|AI|HK|MCR|\d+)$/
 const click = (p: any, sel: string) => p.evaluate((s: string) => (document.querySelector(s) as HTMLElement | null)?.click(), sel)
 const english = (p: any): Promise<string[]> => p.evaluate(() => {
   const out = new Set<string>()

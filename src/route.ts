@@ -1,0 +1,10 @@
+/** Where things live: the hub (game picker) at "/", Mahjong at "/mahjong". Old links such as "/?room=1234" or "/?solo=1" still open the game. */
+export const MAHJONG_PATH = '/mahjong'
+const GAME_PARAMS = ['room', 'solo', 'stress', 'tutorial', 'tiles', 'debug', 'rule', 'players']
+export function isHub(): boolean {
+  if (typeof location === 'undefined') return false
+  const path = location.pathname.replace(/\/+$/, '') || '/'
+  if (path !== '/') return false
+  const q = new URLSearchParams(location.search)
+  return !GAME_PARAMS.some((k) => q.has(k))
+}

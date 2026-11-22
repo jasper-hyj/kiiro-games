@@ -11,12 +11,14 @@ import { stressView } from './ui/stress'
 import { RulesHelp } from './ui/RulesHelp'
 import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
+import { Hub } from './ui/Hub'
+import { isHub, MAHJONG_PATH } from './route'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
 const makeCode = () => String(Math.floor(Math.random() * 9000) + 1000) // four digits, never starts with 0
 
-export default function App() {
+function MahjongApp() {
   const { lang, setLang, simplified, setSimplified, t } = useLang()
   const [rulesOpen, setRulesOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
@@ -181,4 +183,8 @@ export default function App() {
       </div>
     </AkaCtx.Provider>
   )
+}
+
+export default function App() {
+  return isHub() ? <Hub /> : <MahjongApp />
 }

@@ -4,6 +4,7 @@ import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
 import { useLang } from '../i18n'
 import { onlineConfigured } from '../net/client'
+import { MAHJONG_PATH } from '../route'
 import { Tile } from './Tile'
 
 const TAGS: Record<RuleId, string[]> = { taiwan: ['tg.t16', 'tg.flowers', 'tg.tai'], hk: ['tg.t13', 'tg.min3', 'tg.flowers'], riichi: ['tg.yaku', 'tg.dora', 'tg.riichi'], mcr: ['tg.fan81', 'tg.min8'], sichuan: ['tg.t108', 'tg.swap', 'tg.blood'] } as Record<RuleId, string[]>
@@ -132,6 +133,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
             <div className="linkrow">
               <button className="linkbtn" onClick={() => go('join')} disabled={!onlineConfigured}>{t('haveCode')}</button>
               <button className="linkbtn" onClick={onTutorial}>{t('learnPlay')}</button>
+              <a className="linkbtn" href="/">{t('hubAll')}</a>
             </div>
           </>
         )}
@@ -200,7 +202,7 @@ function summary(c: RoomConfig, t: (k: string) => string): string {
 
 export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room: string; send: (m: ClientMsg) => void; onLeave: () => void }) {
   const { t, lang } = useLang()
-  const link = `${location.origin}${location.pathname}?room=${room}`
+  const link = `${location.origin}${MAHJONG_PATH}?room=${room}`
   const [copied, setCopied] = useState(false)
   const humans = view.seats.filter((s) => s.human).length
   const copy = () => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }

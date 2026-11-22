@@ -90,6 +90,6 @@ export class Main extends Server<Env> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    return (await routePartykitRequest(request, env as never)) || new Response('Kiiro Mahjong server', { status: 200 })
+    return (await routePartykitRequest(request, env as never)) || new Response('Kiiro Games server', { status: 200 })
   },
 }

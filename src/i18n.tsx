@@ -1,6 +1,7 @@
 import { startSimplify, stopSimplify } from './simplify'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { JA } from './i18n.ja'
+import { isHub } from './route'
 
 export type Lang = 'en' | 'zh' | 'ja'
 
@@ -221,6 +222,10 @@ const D: Record<string, [string, string]> = {
   'coachstate.furi': ["But this wait is furiten: you cannot win on a discard, only by self-draw (tsumo).", "但這個聽牌是振聽：不能胡別人打的牌，只能自摸。"],
   'furiBadge': ["Furiten", "振聽"],
   'furiWarn': ["Furiten: this wait includes a tile you already discarded, so you could only win by self-draw (tsumo), never off a discard. Riichi is allowed but risky.", "振聽：這個聽牌包含你已經打過的牌，只能自摸，不能胡別人打的牌。可以立直，但很吃虧。"],
+  hubName: ['Kiiro Games', 'Kiiro 遊戲'], hubTagline: ['Games for friends and clubs. Free to play, no sign-in needed for Mahjong.', '和朋友、社團一起玩的小遊戲。免費，玩麻將不需要登入。'],
+  hubMahjong: ['Kiiro Mahjong', 'Kiiro 麻將'], hubMahjongBlurb: ['Taiwanese, Hong Kong, Japanese Riichi, Chinese Official and Sichuan. Play friends online, bots fill empty seats.', '台灣、香港、日本、國標與四川麻將。和朋友線上對戰，空位由電腦補上。'],
+  hubOpen: ['Play now', '馬上玩'], hubNoSignin: ['No sign-in', '免登入'], hubSoon: ['Coming soon', '即將推出'],
+  hubHoldem: ["Texas Hold'em", '德州撲克'], hubHoldemBlurb: ['Friendly tables with play chips and a leaderboard.', '使用遊戲籌碼的友誼賽桌，附排行榜。'], hubAll: ['All games', '所有遊戲'],
   tapAgain: ['Tap again to confirm — the lit tiles will be used', '再點一次確認，亮起的牌會被使用'],
   winTitle: ['{name} wins', '{name} 胡牌'], winningTile: ['Winning tile', '胡的牌'],
   paysRon: ['{from} pays {winner} {pts}', '{from} 付 {pts} 給 {winner}'], paysTsumo: ['Everyone pays {winner} — {pts} in total', '其他人付給 {winner}，共 {pts}'],
@@ -262,7 +267,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const [simplified, setSimp] = useState(() => { try { return new URLSearchParams(location.search).get('lang') === 'zhs' || localStorage.getItem('kiiro-zhs') === '1' } catch { return false } })
   const setSimplified = (b: boolean) => { setSimp(b); try { localStorage.setItem('kiiro-zhs', b ? '1' : '0') } catch { /* ignore */ } }
   useEffect(() => { if (lang === 'zh' && simplified) startSimplify(); else stopSimplify() }, [lang, simplified])
-  useEffect(() => { document.documentElement.lang = lang === 'zh' ? (simplified ? 'zh-Hans' : 'zh-Hant') : lang === 'ja' ? 'ja' : 'en'; document.title = lang === 'zh' ? (simplified ? 'Kiiro 麻将' : 'Kiiro 麻將') : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang, simplified])
+  useEffect(() => { document.documentElement.lang = lang === 'zh' ? (simplified ? 'zh-Hans' : 'zh-Hant') : lang === 'ja' ? 'ja' : 'en'; document.title = isHub() ? (lang === 'zh' ? (simplified ? 'Kiiro 游戏' : 'Kiiro 遊戲') : lang === 'ja' ? 'Kiiro ゲームズ' : 'Kiiro Games') : lang === 'zh' ? (simplified ? 'Kiiro 麻将' : 'Kiiro 麻將') : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang, simplified])
   const value = useMemo<Ctx>(() => ({
     lang, setLang, simplified, setSimplified,
     t: (k, vars) => {
