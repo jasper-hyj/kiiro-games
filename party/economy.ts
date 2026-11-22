@@ -4,7 +4,7 @@ import type { D1, D1Stmt } from './d1'
 export const START_CHIPS = 10000
 export const FLOOR_CHIPS = 2000
 export const MAX_BONUS_PCT = 0.1
-export const GRANTS = ['start', 'bonus', 'floor']
+export const GRANTS = ['start', 'bonus', 'floor', 'hold']
 
 export function seasonOf(ms = Date.now()): string { return new Date(ms).toISOString().slice(0, 7) }
 const dayOf = (ms = Date.now()) => new Date(ms).toISOString().slice(0, 10)
@@ -46,7 +46,7 @@ export async function ensureAccount(db: D1, userId: string): Promise<Account> {
     ])
     row.balance = FLOOR_CHIPS
   }
-  const p = await db.prepare(`SELECT COALESCE(SUM(delta),0) AS p FROM ledger WHERE season=? AND user_id=? AND reason NOT IN ('start','bonus','floor')`).bind(season, userId).first<{ p: number }>()
+  const p = await db.prepare(`SELECT COALESCE(SUM(delta),0) AS p FROM ledger WHERE season=? AND user_id=? AND reason NOT IN ('start','bonus','floor','hold')`).bind(season, userId).first<{ p: number }>()
   return { season, balance: row.balance, profit: p?.p ?? 0, level: level(games), games }
 }
 
@@ -80,7 +80,41 @@ export async function leaderboard(db: D1, season = seasonOf(), me?: string, limi
   const { results } = await db.prepare(
     `SELECT u.id AS id, u.name AS name, u.games AS games, SUM(l.delta) AS profit
        FROM ledger l JOIN users u ON u.id=l.user_id
-      WHERE l.season=? AND l.reason NOT IN ('start','bonus','floor')
+      WHERE l.season=? AND l.reason NOT IN ('start','bonus','floor','hold')
       GROUP BY l.user_id ORDER BY profit DESC, games ASC LIMIT ?`).bind(season, limit).all<{ id: string; name: string; games: number; profit: number }>()
   return results.map((r, i) => ({ rank: i + 1, name: r.name, level: level(r.games), profit: r.profit, games: r.games, me: r.id === me || undefined }))
+}
+
+/**
+ * Take chips off the balance to sit at a cash table. They stay on the ledger as a "hold" (not profit)
+ * until the player leaves and `release` returns whatever they have left. Returns false when the balance is too low.
+ */
+export async function hold(db: D1, userId: string, amount: number, ref: string): Promise<boolean> {
+  if (!Number.isInteger(amount) || amount <= 0) return false
+  const acct = await ensureAccount(db, userId)
+  if (acct.balance < amount) return false
+  const season = seasonOf()
+  const dup = await db.prepare('SELECT 1 AS x FROM ledger WHERE user_id=? AND reason=? AND ref=?').bind(userId, 'hold', ref).first()
+  if (dup) return true
+  // the balance check is repeated inside the update so two simultaneous buy-ins cannot overdraw
+  const res = await db.prepare('UPDATE season_accounts SET balance=balance-? WHERE season=? AND user_id=? AND balance>=?').bind(amount, season, userId, amount).run()
+  if (!res.meta?.changes) return false
+  await entry(db, season, userId, -amount, 'hold', ref).run()
+  return true
+}
+
+/** Close a cash-table session: the held chips come back, and the difference counts as that session's profit or loss. */
+export async function release(db: D1, userId: string, principal: number, stack: number, ref: string): Promise<void> {
+  const season = seasonOf()
+  const done = await db.prepare('SELECT 1 AS x FROM ledger WHERE user_id=? AND reason=? AND ref=?').bind(userId, 'hold', ref + ':r').first()
+  if (done) return
+  await ensureAccount(db, userId)
+  const net = stack - principal
+  const stmts = [
+    entry(db, season, userId, principal, 'hold', ref + ':r'),
+    db.prepare('UPDATE season_accounts SET balance=balance+? WHERE season=? AND user_id=?').bind(stack, season, userId),
+  ]
+  if (net !== 0) stmts.push(entry(db, season, userId, net, 'play:holdem', ref + ':n'))
+  stmts.push(db.prepare('UPDATE users SET games=games+1 WHERE id=?').bind(userId))
+  await db.batch(stmts)
 }

@@ -144,6 +144,22 @@ export class PokerTable {
     this.hostId = [...this.members][0] ?? this.seats.find((s) => s.id)?.id ?? null
   }
 
+  /** Would a seat with this buy-in be accepted right now? (the server checks before it takes chips from the ledger) */
+  canSit(id: string, amount: number): string | null {
+    if (this.seatOf(id) >= 0) return 'already_seated'
+    if (!Number.isInteger(amount) || amount < this.minBuyin || amount > this.maxBuyin) return 'bad_buyin'
+    if (!this.seats.some((s) => !s.id)) return 'table_full'
+    return null
+  }
+  /** Close the seats of players who have been gone longer than the grace period; returns how many are still waiting to expire. */
+  sweep(now = Date.now()): number {
+    let waiting = 0
+    for (const s of [...this.seats]) {
+      if (!s.id || s.connected) continue
+      if (now - s.dcAt >= this.graceMs) this.standUp(s.id); else waiting++
+    }
+    return waiting
+  }
   /** Take a seat with `amount` chips. The caller has already secured the chips (ledger hold, or a free casual stack). */
   sit(id: string, name: string, amount: number): { ok: true; seat: number } | { ok: false; error: string } {
     if (this.seatOf(id) >= 0) return { ok: false, error: 'already_seated' }

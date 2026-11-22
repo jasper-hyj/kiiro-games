@@ -132,7 +132,7 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
          FROM season_accounts a WHERE a.season=? AND a.balance != COALESCE((SELECT SUM(delta) FROM ledger l WHERE l.season=a.season AND l.user_id=a.user_id),0)`).bind(season).all()
     const { results: negative } = await db.prepare('SELECT user_id,balance FROM season_accounts WHERE season=? AND balance<0').bind(season).all()
     const { results: unbalanced } = await db.prepare(
-      `SELECT ref AS match_id, SUM(delta) AS net FROM ledger WHERE season=? AND reason LIKE 'play:%' GROUP BY ref HAVING ABS(SUM(delta)) > 5`).bind(season).all()
+      `SELECT ref AS match_id, SUM(delta) AS net FROM ledger WHERE season=? AND reason LIKE 'play:%' AND reason != 'play:holdem' GROUP BY ref HAVING ABS(SUM(delta)) > 5`).bind(season).all()
     return json({ season, balanceDrift: drift, negativeBalances: negative, unbalancedMatches: unbalanced, ok: !drift.length && !negative.length && !unbalanced.length })
   }
   if (req.method === 'POST') {

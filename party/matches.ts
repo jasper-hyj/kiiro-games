@@ -5,6 +5,8 @@ export interface MatchPlayer { seat: number; name: string; userId: string | null
 export interface MatchRecord {
   id: string; game: string; rule: string; ranked: boolean; room: string
   startedAt: number; config: unknown; players: MatchPlayer[]; history: unknown; replay: unknown
+  /** per-seat chip change when the game itself already moved the chips (cash tables); disables the zero-sum settlement */
+  chips?: Record<number, number>
 }
 
 /** Chips for a ranked game: zero-sum among the signed-in humans, proportional to how far each finished from their average. */
@@ -23,7 +25,7 @@ export async function recordMatch(db: D1, m: MatchRecord): Promise<void> {
   const exists = await db.prepare('SELECT 1 AS x FROM matches WHERE id=?').bind(m.id).first()
   if (exists) return
   const ordered = [...m.players].sort((a, b) => b.points - a.points)
-  const chips = m.ranked ? chipsFor(m.players) : {}
+  const chips = m.chips ?? (m.ranked ? chipsFor(m.players) : {})
   const stmts = [
     db.prepare('INSERT INTO matches (id,game,rule,ranked,season,room,started_at,ended_at,config,summary,replay) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
       .bind(m.id, m.game, m.rule, m.ranked ? 1 : 0, seasonOf(), m.room, m.startedAt, Date.now(), JSON.stringify(m.config), JSON.stringify(m.history), JSON.stringify(m.replay)),
@@ -32,7 +34,7 @@ export async function recordMatch(db: D1, m: MatchRecord): Promise<void> {
         .bind(m.id, p.userId, p.name, p.seat, ordered.findIndex((o) => o.seat === p.seat) + 1, p.points, chips[p.seat] ?? 0)),
   ]
   await db.batch(stmts)
-  if (m.ranked) {
+  if (m.ranked && !m.chips) {
     const results = m.players.filter((p) => p.userId && chips[p.seat] !== undefined).map((p) => ({ userId: p.userId as string, delta: chips[p.seat] }))
     if (results.length) await settle(db, m.game, m.id, results)
   }
