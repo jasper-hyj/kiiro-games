@@ -8,3 +8,5 @@ export function isHub(): boolean {
   const q = new URLSearchParams(location.search)
   return !GAME_PARAMS.some((k) => q.has(k))
 }
+
+export function isAdminPage(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/admin' }

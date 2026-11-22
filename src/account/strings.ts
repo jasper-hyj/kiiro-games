@@ -1,0 +1,32 @@
+import { registerStrings } from '../i18n'
+
+export const ACCOUNT_STRINGS: Record<string, [string, string]> = {
+  acSignIn: ['Sign in', '登入'], acSignOut: ['Sign out', '登出'], acClose: ['Close', '關閉'],
+  acWhy: ['Sign in to save your results, climb the leaderboard and play ranked rooms with play chips. You can always play as a guest.', '登入後可儲存戰績、登上排行榜並玩使用遊戲籌碼的排名房。你也可以隨時以訪客身分遊玩。'],
+  acGoogle: ['Continue with Google', '使用 Google 繼續'], acOr: ['or get a sign-in link by email', '或用電子郵件取得登入連結'],
+  acEmail: ['you@example.com', 'you@example.com'], acSend: ['Email me a link', '寄登入連結給我'],
+  acSent: ['Check your inbox for the sign-in link. It works for 15 minutes.', '請到信箱收取登入連結，15 分鐘內有效。'],
+  acDevLink: ['Dev mode: open this link', '開發模式：點此連結'],
+  acGuest: ['Keep playing as a guest', '以訪客繼續'],
+  acNoChips: ['Guests can play every casual game. Results and chips are not saved.', '訪客可以玩所有休閒遊戲，但不會儲存戰績與籌碼。'],
+  acChips: ['chips', '籌碼'], acProfit: ['Season profit', '本季盈虧'], acLevel: ['Level', '等級'], acGames: ['games', '場'],
+  acSeason: ['Season {s}', '{s} 賽季'], acBoard: ['Leaderboard', '排行榜'], acBoardNote: ['Ranked by profit this season, so new players can climb fast. Chips are play money with no cash value.', '依本季盈虧排名，新玩家也能快速上榜。籌碼僅供遊戲，沒有現金價值。'],
+  acEmpty: ['No ranked games yet this season.', '本季還沒有排名賽。'], acYou: ['You', '你'],
+  acHistory: ['Recent games', '最近對局'], acNoHistory: ['No games saved yet. Play a ranked room to start your record.', '還沒有對局紀錄。玩一場排名房即可開始記錄。'],
+  acRank: ['Rank', '名次'], acPlayer: ['Player', '玩家'], acPlace: ['Place {n}', '第 {n} 名'], acRanked: ['Ranked', '排名賽'], acCasual: ['Casual', '休閒'],
+  acRename: ['Display name', '顯示名稱'], acSave: ['Save', '儲存'], acAdmin: ['Admin page', '管理頁面'],
+  acRankedOpt: ['Ranked (chips)', '排名賽（籌碼）'], acRankedOff: ['Casual', '休閒'],
+  acRankedHint: ['Needs 2+ players who are all signed in. Chips move between players at the end; bots never win or lose chips.', '需要兩位以上且全部已登入的玩家。結束時籌碼在玩家之間轉移，電腦不會贏或輸籌碼。'],
+  acRankedLocked: ['Sign in to host a ranked room.', '登入後才能開排名房。'],
+  ranked_needs_signin: ['Sign in to host a ranked room.', '登入後才能開排名房。'],
+  ranked_needs_players: ['Ranked games need at least two players, all signed in. Switch to casual or ask everyone to sign in.', '排名賽需要至少兩位玩家且全部已登入。請改為休閒，或請大家先登入。'],
+  already_seated: ['You already have a seat in this room on another device.', '你已在另一個裝置上入座此房間。'],
+  bad_email: ['That email address does not look right.', '電子郵件格式不正確。'], slow_down: ['Too many tries. Please wait a bit.', '嘗試次數過多，請稍後再試。'],
+  mail_failed: ['Could not send the email. Try Google sign-in or try again later.', '無法寄出郵件，請改用 Google 登入或稍後再試。'],
+  mail_not_configured: ['Email sign-in is not set up on this site yet.', '此網站尚未設定電子郵件登入。'],
+  invalid: ['That sign-in link is invalid or has expired. Ask for a new one.', '登入連結無效或已過期，請重新申請。'],
+  offline: ['Cannot reach the server. Check your connection.', '無法連線到伺服器，請檢查網路。'],
+  accounts_not_configured: ['Accounts are not available on this server yet.', '此伺服器尚未啟用帳號功能。'], bad_name: ['Names need 2–16 characters and no links.', '名稱需 2–16 字，且不可含連結。'],
+  acHome: ['All games', '所有遊戲'],
+}
+registerStrings(ACCOUNT_STRINGS)

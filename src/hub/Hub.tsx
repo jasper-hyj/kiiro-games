@@ -1,37 +1,53 @@
 import { useLang } from '../i18n'
 import { MAHJONG_PATH } from '../route'
+import { AccountChip, Leaderboard } from '../account/Panels'
 import './hub.css'
 import './strings'
 
-/** The front page of the site: pick a game. Mahjong needs no sign-in. */
-export function Hub() {
-  const { lang, setLang, simplified, setSimplified, t } = useLang()
+/** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
+export function Bar() {
+  const { lang, setLang, simplified, setSimplified } = useLang()
   return (
-    <div className="page menu parlour hub">
-      <div className="floatbar">
-        <div className="seg langsw">
+    <div className="kg-bar">
+      <a className="kg-brand" href="/">Kiiro Games</a>
+      <div className="kg-tools">
+        <div className="kg-lang" role="group" aria-label="Language">
           <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
-          <button className={lang === 'zh' && !simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(false) }}>繁中</button>
-          <button className={lang === 'zh' && simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(true) }}>简中</button>
-          <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
+          <button className={lang === 'zh' && !simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(false) }}>繁</button>
+          <button className={lang === 'zh' && simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(true) }}>简</button>
+          <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日</button>
         </div>
+        <AccountChip />
       </div>
-      <header className="hero">
-        <h1 className="title"><span className="latin hubname">{t('hubName')}</span></h1>
-        <p className="tagline">{t('hubTagline')}</p>
-      </header>
-      <div className="hubgrid">
-        <a className="hubcard" href={MAHJONG_PATH} data-rule="riichi">
-          <span className="hubglyph" aria-hidden="true">麻雀</span>
-          <b>{t('hubMahjong')}</b>
-          <span className="muted small">{t('hubMahjongBlurb')}</span>
-          <span className="tags"><span className="tg rec">{t('hubOpen')}</span><span className="tg">{t('hubNoSignin')}</span></span>
-        </a>
-        <div className="hubcard soon" aria-disabled="true">
-          <span className="hubglyph" aria-hidden="true">♠</span>
-          <b>{t('hubHoldem')}</b>
-          <span className="muted small">{t('hubHoldemBlurb')}</span>
-          <span className="tags"><span className="tg">{t('hubSoon')}</span></span>
+    </div>
+  )
+}
+
+/** The front page: a plain list of games next to the season leaderboard. Mahjong needs no sign-in. */
+export function Hub() {
+  const { t } = useLang()
+  return (
+    <div className="kg">
+      <div className="kg-wrap">
+        <Bar />
+        <h1>{t('hubHeadline')}</h1>
+        <p className="kg-lead">{t('hubTagline')}</p>
+        <div className="kg-cols">
+          <section>
+            <h2>{t('hubGames')}</h2>
+            <ul className="kg-games">
+              <li><a className="kg-game" href={MAHJONG_PATH}>
+                <b>{t('hubMahjong')}</b><span className="kg-go">{t('hubOpen')} →</span>
+                <p>{t('hubMahjongBlurb')}</p>
+              </a></li>
+              <li><div className="kg-game soon" aria-disabled="true">
+                <b>{t('hubHoldem')}</b><span className="kg-go">{t('hubSoon')}</span>
+                <p>{t('hubHoldemBlurb')}</p>
+              </div></li>
+            </ul>
+            <p className="kg-note">{t('hubNoSignin')}</p>
+          </section>
+          <Leaderboard />
         </div>
       </div>
     </div>

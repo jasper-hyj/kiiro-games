@@ -3,4 +3,5 @@ import App from './App'
 import { LangProvider } from './i18n'
 import './games/mahjong/styles.css'
 import './games/mahjong/parlour.css'
+import './account/account.css'
 createRoot(document.getElementById('root')!).render(<LangProvider><App /></LangProvider>)

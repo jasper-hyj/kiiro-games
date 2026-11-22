@@ -1,6 +1,7 @@
 import PartySocket from 'partysocket'
 import { Table, type RoomConfig, type TableView } from '../engine/table'
 import type { ClientMsg, ServerMsg } from './protocol'
+import { getToken } from '../../../account/api'
 
 export interface Conn {
   send(m: ClientMsg): void
@@ -85,7 +86,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   ws.addEventListener('open', () => {
     stopRetry()
     h.onStatus('open')
-    ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}) } satisfies ClientMsg))
+    ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}), ...(getToken() ? { token: getToken()! } : {}) } satisfies ClientMsg))
     lastPong = Date.now()
     beat()
     if (beatTimer) clearInterval(beatTimer)

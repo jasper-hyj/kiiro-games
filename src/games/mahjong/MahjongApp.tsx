@@ -1,3 +1,4 @@
+import { AccountChip } from '../../account/Panels'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
@@ -135,6 +136,7 @@ export default function MahjongApp() {
   return (
     <AkaCtx.Provider value={aka}>
       <div className={'app' + (playing ? ' game' : '')}>
+        {!playing && !active && <div className="accorner"><AccountChip /></div>}
         {!playing && (
           <div className="floatbar">
             {room && active && !view && <span className="roomtag"><span className={'status-dot ' + status} />{room}</span>}

@@ -6,6 +6,7 @@ import { useLang } from '../../../i18n'
 import { onlineConfigured } from '../net/client'
 import { MAHJONG_PATH } from '../../../route'
 import { Tile } from './Tile'
+import { useAccount } from '../../../account/Account'
 
 const TAGS: Record<RuleId, string[]> = { taiwan: ['tg.t16', 'tg.flowers', 'tg.tai'], hk: ['tg.t13', 'tg.min3', 'tg.flowers'], riichi: ['tg.yaku', 'tg.dora', 'tg.riichi'], mcr: ['tg.fan81', 'tg.min8'], sichuan: ['tg.t108', 'tg.swap', 'tg.blood'] } as Record<RuleId, string[]>
 const WINDS = ['東', '南', '西', '北']
@@ -43,6 +44,7 @@ function Seg<T extends string | number | boolean>({ value, items, onPick, disabl
 
 export function Options({ config, onChange, readOnly, open, flat }: { config: RoomConfig; onChange: Change; readOnly?: boolean; open?: boolean; flat?: boolean }) {
   const { t } = useLang()
+  const { me, available } = useAccount()
   const tw = config.rule === 'taiwan'
   const Wrap = flat ? 'div' : 'details'
   return (
@@ -78,6 +80,12 @@ export function Options({ config, onChange, readOnly, open, flat }: { config: Ro
         <div className="opt"><span>{t('coachOpt')}</span>
           <Seg disabled={readOnly} value={config.coach !== false} onPick={(v) => onChange({ coach: v })} items={[[true, t('allowed')], [false, t('off')]]} />
         </div>
+        {available && (
+          <div className="opt"><span>{t('acRankedOpt')}</span>
+            <Seg disabled={readOnly || !me} value={!!config.ranked && !!me} onPick={(v) => onChange({ ranked: v })} items={[[false, t('acRankedOff')], [true, t('acRankedOpt')]]} />
+            <span className="muted small">{me ? t('acRankedHint') : t('acRankedLocked')}</span>
+          </div>
+        )}
         <div className="opt"><span>{t('bots')}</span>
           <Seg disabled={readOnly} value={config.botLevel ?? 'normal'} onPick={(l) => onChange({ botLevel: l })} items={[['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]]} />
         </div>
