@@ -1,6 +1,6 @@
 import { startSimplify, stopSimplify } from './simplify'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { isHub } from './route'
+import { isAdminPage, isBigTwo, isBlackjack, isHoldem, isHub } from './route'
 
 export type Lang = 'en' | 'zh' | 'ja'
 
@@ -26,13 +26,28 @@ const detect = (): Lang => {
   return /^zh/i.test(nl) ? 'zh' : /^ja/i.test(nl) ? 'ja' : 'en'
 }
 
+/** The browser tab title: each page names itself, so only the Mahjong page says Mahjong. [en, 繁, 简, ja] */
+const TITLES = {
+  hub: ['Kiiro Games', 'Kiiro 遊戲', 'Kiiro 游戏', 'Kiiro ゲームズ'],
+  mahjong: ['Kiiro Mahjong', 'Kiiro 麻將', 'Kiiro 麻将', 'Kiiro 麻雀'],
+  holdem: ["Texas Hold'em · Kiiro Games", '德州撲克 · Kiiro 遊戲', '德州扑克 · Kiiro 游戏', 'テキサスホールデム · Kiiro ゲームズ'],
+  blackjack: ['Blackjack · Kiiro Games', '二十一點 · Kiiro 遊戲', '二十一点 · Kiiro 游戏', 'ブラックジャック · Kiiro ゲームズ'],
+  bigtwo: ['Big Two · Kiiro Games', '大老二 · Kiiro 遊戲', '大老二 · Kiiro 游戏', '大老二 · Kiiro ゲームズ'],
+  admin: ['Admin · Kiiro Games', '管理 · Kiiro 遊戲', '管理 · Kiiro 游戏', '管理 · Kiiro ゲームズ'],
+} as const
+function pageTitle(lang: string, simplified: boolean): string {
+  const page = isAdminPage() ? 'admin' : isHoldem() ? 'holdem' : isBlackjack() ? 'blackjack' : isBigTwo() ? 'bigtwo' : isHub() ? 'hub' : 'mahjong'
+  const row = TITLES[page]
+  return lang === 'zh' ? row[simplified ? 2 : 1] : lang === 'ja' ? row[3] : row[0]
+}
+
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detect)
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('kiiro-lang', l) } catch { /* ignore */ } }
   const [simplified, setSimp] = useState(() => { try { return new URLSearchParams(location.search).get('lang') === 'zhs' || localStorage.getItem('kiiro-zhs') === '1' } catch { return false } })
   const setSimplified = (b: boolean) => { setSimp(b); try { localStorage.setItem('kiiro-zhs', b ? '1' : '0') } catch { /* ignore */ } }
   useEffect(() => { if (lang === 'zh' && simplified) startSimplify(); else stopSimplify() }, [lang, simplified])
-  useEffect(() => { document.documentElement.lang = lang === 'zh' ? (simplified ? 'zh-Hans' : 'zh-Hant') : lang === 'ja' ? 'ja' : 'en'; document.title = isHub() ? (lang === 'zh' ? (simplified ? 'Kiiro 游戏' : 'Kiiro 遊戲') : lang === 'ja' ? 'Kiiro ゲームズ' : 'Kiiro Games') : lang === 'zh' ? (simplified ? 'Kiiro 麻将' : 'Kiiro 麻將') : lang === 'ja' ? 'Kiiro 麻雀' : 'Kiiro Mahjong' }, [lang, simplified])
+  useEffect(() => { document.documentElement.lang = lang === 'zh' ? (simplified ? 'zh-Hans' : 'zh-Hant') : lang === 'ja' ? 'ja' : 'en'; document.title = pageTitle(lang, simplified) }, [lang, simplified])
   const value = useMemo<Ctx>(() => ({
     lang, setLang, simplified, setSimplified,
     t: (k, vars) => {
