@@ -76,7 +76,7 @@ function SignIn({ onClose, onDone }: { onClose(): void; onDone(): void }) {
     } catch (e) { setMsg(t(e instanceof ApiError ? e.code : 'offline')) }
     setBusy(false)
   }
-  const ready = /^[A-Za-z0-9_]{3,20}$/.test(user.trim()) && pw.length >= (mode === 'register' ? 8 : 1)
+  const ready = user.trim().length > 0 && pw.length > 0 // the server explains what is wrong; a silently disabled button looked like a bug
   return (
     <div className="acmodal" onClick={onClose}>
       <div className="acbox" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">

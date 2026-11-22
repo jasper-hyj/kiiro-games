@@ -68,7 +68,7 @@ export async function upsertUser(db: D1, email: string, nameHint: string, google
   return u
 }
 
-const USERNAME = /^[a-z0-9_]{3,20}$/
+const USERNAME = /^[a-z0-9_.-]{3,20}$/ // compared in lower case, so Jasper, JASPER and jasper are one account
 const PW_ITER = 100_000 // the most WebCrypto PBKDF2 allows in a Worker
 const hex = (a: Uint8Array) => [...a].map((x) => x.toString(16).padStart(2, '0')).join('')
 
@@ -103,9 +103,9 @@ export async function register(db: D1, usernameRaw: string, pw: string, ip: stri
   const id = rand(12)
   const hash = await hashPassword(pw)
   try {
-    await db.prepare('INSERT INTO users (id,email,name,username,pw,created_at,games,banned,last_seen) VALUES (?,?,?,?,?,?,0,0,?)').bind(id, 'u:' + username, username, username, hash, Date.now(), Date.now()).run()
+    await db.prepare('INSERT INTO users (id,email,name,username,pw,created_at,games,banned,last_seen) VALUES (?,?,?,?,?,?,0,0,?)').bind(id, 'u:' + username, cleanName(String(usernameRaw).trim(), username), username, hash, Date.now(), Date.now()).run()
   } catch { return { error: 'username_taken' } }
-  return { user: { id, email: 'u:' + username, name: username, banned: 0, games: 0 }, token: await newSession(db, id) }
+  return { user: { id, email: 'u:' + username, name: cleanName(String(usernameRaw).trim(), username), banned: 0, games: 0 }, token: await newSession(db, id) }
 }
 
 export async function login(db: D1, usernameRaw: string, pw: string, ip: string): Promise<Signed> {

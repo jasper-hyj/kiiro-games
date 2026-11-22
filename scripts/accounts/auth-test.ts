@@ -10,9 +10,10 @@ const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m
 const u = 'authtest' + Math.floor(Math.random() * 1e6)
 
 ok((await call('/auth/register', { username: 'a b', password: 'longenough1' })).error === 'bad_username', 'a username with a space is refused')
+ok((await call('/auth/register', { username: 'me@x.com', password: 'longenough1' })).error === 'bad_username', 'an email address is not a username')
 ok((await call('/auth/register', { username: u, password: 'short' })).error === 'bad_password', 'a short password is refused')
-const reg = await call('/auth/register', { username: u, password: 'first-password' })
-ok(typeof reg.token === 'string' && reg.user?.name === u, 'registering gives a session and uses the username as the name')
+const reg = await call('/auth/register', { username: u.replace('authtest', 'AuthTest'), password: 'first-password' })
+ok(typeof reg.token === 'string' && reg.user?.name === u.replace('authtest', 'AuthTest'), 'registering gives a session and keeps the capitals as the display name')
 ok((await call('/auth/register', { username: u.toUpperCase(), password: 'another-one-1' })).error === 'username_taken', 'usernames are unique, case-insensitively')
 const me = await call('/me', undefined, reg.token)
 ok(me.username === u && !('pw' in me), '/me shows the username and never the password hash')
