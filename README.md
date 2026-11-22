@@ -1,67 +1,66 @@
-# Kiiro Mahjong
+# Kiiro Games
 
-Browser mahjong — **Taiwanese (16-tile)**, **Hong Kong** and **Japanese Riichi** (4-player and 3-player sanma) — with English and Traditional Chinese.
+Small browser games for friends and clubs, free to play.
 
-- **Play vs bots** in the browser (no server needed), or **online rooms** with an invite link. Empty seats are filled by bots; bots take over if someone drops (after a short grace period) and the player can rejoin; late joiners can replace a bot.
-- Mahjong Soul-style helpers: auto-win, auto-discard, skip calls, wait / tiles-left / hand-value hints, round history, keyboard shortcuts, quick chat.
-- The table is a fixed-size stage that scales to any window and rotates on a portrait phone, so the layout cannot overlap or clip. Tap a tile twice to discard.
-- Riichi extras: dora indicator panel (indicator → dora), dora badges on your tiles, red fives, ura dora, kan dora, nuki (sanma), abortive draws, furiten, kuikae, double ron, West extension and agari-yame.
+| game | address | status |
+|---|---|---|
+| **Kiiro Mahjong** | `/mahjong` | playable by anyone, no sign-in: Taiwanese, Hong Kong, Japanese Riichi (4 and 3 players), Chinese Official, Sichuan; English, 繁中, 简中, 日本語 |
+| Texas Hold'em | – | planned |
 
-See [NOTES.md](NOTES.md) for architecture notes, known limitations and the test catalogue.
+`/` is the hub (game picker). Old Mahjong links such as `/?room=1234` and `/?solo=1` still open the game.
+
+## Mahjong in short
+- **Play** online with an invite link / 4-digit room code; empty seats are bots. Without a game server the same Play button runs a game against bots in the browser.
+- Coach, wait hints, auto-win / auto-discard / skip, round history, hand review, rulebook with 69 worked examples, a 10-lesson guide.
+- Works on desktop, tablets and phones (landscape and upright).
+
+## Layout
+
+```text
+src/main.tsx, App.tsx     entry; App shows the hub at "/" and a game otherwise
+src/hub/                  the game picker page
+src/i18n.tsx, simplify.ts language state (EN / 繁中 / 简中 / 日本語); each game registers its own strings
+src/route.ts              which page the address means
+src/games/mahjong/        everything Mahjong
+  engine/                   tiles, hand analysis, rulesets (rules/), game state machine, bots, table host
+  net/                      in-browser table / PartyServer socket + protocol
+  ui/                       Board, Lobby, result card, rulebook, guide, tiles, stage
+  *.css, strings*.ts        styles and texts of the game
+party/                    Cloudflare Worker (PartyServer) that hosts the rooms
+scripts/mahjong/          tests, simulations and browser harnesses for Mahjong
+```
+
+A new game = a new folder under `src/games/` (and `scripts/<game>/`), a card on the hub and a route in `src/route.ts` / `src/App.tsx`.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev          # web app on http://localhost:5173 (vs-bots works on its own)
-npm run party:dev    # optional: online-rooms server (wrangler dev) on localhost:8787
-npm test             # scoring / shanten / dora / match-end unit tests
-npm run sim          # bot-vs-bot full games (point conservation, no stuck games)
+npm run dev            # web app on http://localhost:5173 (/ = hub, /mahjong = the game; vs-bots works on its own)
+npm run party:dev      # optional: online-rooms server (wrangler dev) on localhost:8787
+npm test               # Mahjong scoring / shanten / dora unit tests
+npm run test:mahjong   # the whole engine test suite (a few minutes)
 ```
 
-More checks (need the dev server; the browser tests use your local Google Chrome via `puppeteer-core`):
+Browser tests use your local Google Chrome through `puppeteer-core` and need `npm run dev`; the online ones also need `npm run party:dev`. See `scripts/mahjong/` (for example `overlap-audit.ts`, `game-test.ts`, `online-test.ts`).
 
-```bash
-npx tsx scripts/win-test.ts        # the whole win flow (ron on a discard, tsumo, double ron, furiten, …)
-npx tsx scripts/fuzz.ts 24 60      # randomized chaos: any rule/settings/player action/disconnect
-npx tsx scripts/layout-test.ts     # worst-case table at hundreds of window sizes (overlap/clipping/clickability)
-npx tsx scripts/ui-test.ts         # real clicks and taps through every screen, 6 device sizes, EN + 繁中
-npx tsx scripts/game-test.ts       # full games to the game-over screen with real input
-npx tsx scripts/online-ui-test.ts  # two browsers: invite link, lobby, play, chat, refresh/rejoin (needs party:dev)
-npx tsx scripts/room-full-test.ts  # five browsers, "room is full" flow (needs party:dev)
-npx tsx scripts/server-fuzz.ts     # hostile WebSocket client against the real server (needs party:dev)
-```
-
-Debug URLs: `/?solo=1&rule=riichi&players=3&speed=0.05` starts a solo game straight away (fast bots); `/?stress=full|call|min[&rule=riichi]` renders a worst-case table; `/?tiles=1` shows every tile.
+Debug URLs: `/?solo=1&rule=riichi&players=3&speed=0.05` starts a solo game (fast bots); `/?stress=full|call|min[&rule=riichi]` renders a worst-case table; `/?tiles=1` shows every tile.
 
 ## Deploy
 
 ### 1. Online server (Cloudflare Workers + PartyServer)
-
 Only needed for online rooms.
 
 ```bash
 npx wrangler login
 npm run party:deploy
-# prints a URL like https://kiiro-mahjong.<you>.workers.dev
+# prints a URL like https://kiiro-games.<you>.workers.dev
 ```
 
-If you have not connected auto-deploy (Cloudflare *Workers Builds*), a `git push` does **not** redeploy the Worker: run `npm run party:deploy` again after changing `src/engine`, `src/net` or `party/`.
+The Worker is named `kiiro-games` (`wrangler.jsonc`). Renaming a Worker creates a new one with an empty set of rooms; update `VITE_PARTYKIT_HOST` afterwards. Without Cloudflare *Workers Builds*, a `git push` does not redeploy the Worker: run `npm run party:deploy` after changing `src/games/mahjong/engine`, `src/games/mahjong/net` or `party/`.
 
 ### 2. Web app (Vercel)
-
-1. Import the Git repo in Vercel (framework preset: Vite, auto-detected), or run `npx vercel`.
-2. Add the environment variable `VITE_PARTYKIT_HOST` = your Worker host without `https://`, e.g. `kiiro-mahjong.<you>.workers.dev`.
-3. Deploy. Vercel redeploys on every push. Vs-bots mode works even without step 1.
-
-## Layout
-
-```text
-src/engine   game logic: tiles, hand analysis, 3 rulesets, game state machine, bots, table host
-src/net      client connections (in-browser table / PartyServer socket) + protocol
-src/ui       React components (Stage, Board, Lobby, panels, tiles)
-party        PartyServer / Cloudflare Worker (wraps the same Table class)
-scripts      tests, simulations and browser test harnesses
-```
-
-Adding a ruleset = a new file in `src/engine/rules/` exporting a `RuleSet` (`evaluate` + `settle`).
+1. Import the Git repo in Vercel (framework preset: Vite) or run `npx vercel`. `vercel.json` rewrites every path to `index.html`, which `/mahjong` needs.
+2. Environment variable `VITE_PARTYKIT_HOST` = your Worker host without `https://`, e.g. `kiiro-games.<you>.workers.dev`.
+3. Add the domain (for example `games.<your-domain>`) in the Vercel project and point its DNS record at Vercel.
+4. Optional: make the old address redirect to `https://games.<your-domain>/mahjong` (Vercel → Domains → Redirect) so existing links keep working.

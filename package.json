@@ -9,9 +9,10 @@
     "preview": "vite preview",
     "party:dev": "wrangler dev",
     "party:deploy": "wrangler deploy",
-    "sim": "tsx scripts/sim.ts",
-    "test": "tsx scripts/test.ts",
-    "check": "tsc --noEmit && tsx scripts/test.ts && tsx scripts/win-test.ts"
+    "sim": "tsx scripts/mahjong/sim.ts",
+    "test": "tsx scripts/mahjong/test.ts",
+    "check": "tsc --noEmit && tsx scripts/mahjong/test.ts && tsx scripts/mahjong/win-test.ts",
+    "test:mahjong": "sh scripts/mahjong/run-engine-suite.sh"
   },
   "dependencies": {
     "partyserver": "^0.5.10",

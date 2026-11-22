@@ -1,6 +1,7 @@
 import { useLang } from '../i18n'
 import { MAHJONG_PATH } from '../route'
 import './hub.css'
+import './strings'
 
 /** The front page of the site: pick a game. Mahjong needs no sign-in. */
 export function Hub() {

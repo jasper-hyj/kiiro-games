@@ -1,6 +1,6 @@
 import { routePartykitRequest, Server, type Connection, type WSMessage } from 'partyserver'
-import { Table } from '../src/engine/table'
-import type { ClientMsg, ServerMsg } from '../src/net/protocol'
+import { Table } from '../src/games/mahjong/engine/table'
+import type { ClientMsg, ServerMsg } from '../src/games/mahjong/net/protocol'
 
 type Env = Record<string, unknown>
 
