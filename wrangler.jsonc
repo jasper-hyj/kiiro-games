@@ -6,5 +6,8 @@
   "durable_objects": {
     "bindings": [{ "name": "Main", "class_name": "Main" }]
   },
+  "d1_databases": [{ "binding": "DB", "database_name": "kiiro-games", "database_id": "REPLACE_WITH_YOUR_D1_ID", "migrations_dir": "migrations" }],
+  "triggers": { "crons": ["17 4 * * *"] },
+  "vars": { "APP_URL": "https://games.jasperhuang.me", "MAIL_FROM": "Kiiro Games <login@jasperhuang.me>" },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Main"] }]
 }

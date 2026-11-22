@@ -7,7 +7,7 @@ import { kindOf } from './tiles'
 
 export interface Coach { kind: 'tsumo' | 'ron' | 'riichi' | 'discard' | 'call' | 'pass' | 'nuki' | 'kan'; tile?: number; n?: number; call?: string; threat?: boolean; /** the rule behind the advice */ why?: string; /** what the hand is heading for */ plan?: string; /** the discard leaves a tenpai hand that is furiten */ furi?: boolean }
 export const CHAT_KEYS = ['hello', 'nice', 'thanks', 'hurry', 'oops', 'gg', 'e1', 'e2', 'e3', 'e4']
-export interface RoomConfig extends GameOptions { rule: RuleId }
+export interface RoomConfig extends GameOptions { rule: RuleId; /** chips move between signed-in players when the game ends (set by the host, enforced by the server) */ ranked?: boolean }
 export const DEFAULT_CONFIG: RoomConfig = { rule: 'taiwan', aka: true, rounds: 1, minFan: 3, players: 4, botLevel: 'normal', coach: true }
 
 export interface SeatSlot { id: string | null; name: string; connected: boolean; bot: boolean; afk?: number; dcAt?: number }
@@ -63,6 +63,9 @@ export class Table {
   slots: SeatSlot[] = []
   game: Game | null = null
   status: 'lobby' | 'playing' = 'lobby'
+  /** identifies the current game for the match history; set when a game starts */
+  matchId: string | null = null
+  startedAt = 0
   hostId: string | null = null
   acks = new Set<number>()
   listeners = new Set<() => void>()
@@ -105,7 +108,7 @@ export class Table {
   /** Everything needed to rebuild this room after a server restart. */
   serialize(): string {
     return JSON.stringify({
-      v: 1, config: this.config, hostId: this.hostId, status: this.status, acks: [...this.acks], chatN: this.chatN,
+      v: 1, matchId: this.matchId, startedAt: this.startedAt, config: this.config, hostId: this.hostId, status: this.status, acks: [...this.acks], chatN: this.chatN,
       slots: this.slots.map((s) => ({ id: s.id, name: s.name, bot: s.bot, afk: s.afk ?? 0 })),
       game: this.game ? this.game.serialize() : null,
     })
@@ -114,7 +117,7 @@ export class Table {
   restore(json: string, resume = true) {
     const d = JSON.parse(json)
     if (!d || d.v !== 1) return
-    this.config = d.config; this.hostId = d.hostId ?? null; this.status = d.status; this.chatN = d.chatN ?? 0
+    this.config = d.config; this.hostId = d.hostId ?? null; this.status = d.status; this.matchId = d.matchId ?? null; this.startedAt = d.startedAt ?? 0; this.chatN = d.chatN ?? 0
     this.acks = new Set<number>(d.acks ?? [])
     this.slots = (d.slots as { id: string | null; name: string; bot: boolean; afk: number }[]).map((s) => ({ id: s.id, name: s.name, bot: s.bot, afk: s.afk, connected: false, dcAt: s.id ? Date.now() : undefined }))
     this.game = d.game ? Game.restore(d.game) : null
@@ -216,6 +219,7 @@ export class Table {
     if (c.rounds === 1 || c.rounds === 2 || c.rounds === 4) clean.rounds = c.rounds
     if (typeof c.aka === 'boolean') clean.aka = c.aka
     if (typeof c.coach === 'boolean') clean.coach = c.coach
+    if (typeof c.ranked === 'boolean') clean.ranked = c.ranked
     if (Number.isInteger(c.minFan) && c.minFan! >= 0 && c.minFan! <= 13) clean.minFan = c.minFan
     if (c.players === 3 || c.players === 4) clean.players = c.players
     if (c.botLevel === 'easy' || c.botLevel === 'normal' || c.botLevel === 'hard') clean.botLevel = c.botLevel
@@ -238,6 +242,8 @@ export class Table {
     this.renameBots()
     this.game = new Game(this.config.rule, { ...this.config, fixedDealer: !this.randomize }, this.slots.map((s) => s.name))
     this.status = 'playing'
+    this.matchId = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+    this.startedAt = Date.now()
     this.acks.clear()
     this.emit(); this.drive()
   }
