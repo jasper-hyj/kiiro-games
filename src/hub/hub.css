@@ -12,23 +12,28 @@
 .kg-acct { background: none; border: 0; color: var(--ink); font: 500 14px inherit; cursor: pointer; padding: 6px 0; min-width: 0; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kg-acct small { color: var(--mute); font-size: 13px; margin-left: 8px; }
 .kg-acct:hover { text-decoration: underline; text-underline-offset: 4px; }
-.kg h1 { font: 600 clamp(26px, 4.4vw, 38px)/1.15 var(--serif); letter-spacing: .01em; margin: 44px 0 6px; }
-.kg-lead { color: var(--mute); margin: 0 0 36px; max-width: 46ch; }
+.kg h1 { font: 600 clamp(28px, 5vw, 44px)/1.12 var(--serif); letter-spacing: .005em; margin: 0 0 10px; }
+.kg-lead { color: var(--mute); margin: 0; max-width: 44ch; }
 .kg-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
-@media (max-width: 760px) { .kg-cols { grid-template-columns: 1fr; gap: 40px; } .kg-wrap { padding: 0 18px 48px; } }
-.kg h2 { font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin: 0 0 6px; display: flex; justify-content: space-between; gap: 12px; }
+@media (max-width: 760px) { .kg-cols { grid-template-columns: 1fr; gap: 40px; } }
+.kg-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px 48px; align-items: end; padding: 56px 0 40px; }
+.kg-hero .kg-join { margin: 0; width: 280px; }
+@media (max-width: 760px) { .kg-hero { grid-template-columns: 1fr; padding: 36px 0 28px; } .kg-hero .kg-join { width: 100%; max-width: 360px; } .kg-wrap { padding: 0 18px 48px; } }
+.kg h2 { font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin: 0 0 14px; display: flex; justify-content: space-between; gap: 12px; }
 .kg h2 span { letter-spacing: .04em; text-transform: none; font-weight: 400; }
-.kg-games { list-style: none; margin: 0; padding: 0; }
-.kg-game { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: baseline; padding: 18px 0; border-top: 1px solid var(--line); text-decoration: none; }
-.kg-game:last-child { border-bottom: 1px solid var(--line); }
-.kg-game b { font: 600 18px var(--serif); }
-.kg-game p { grid-column: 1; margin: 0; color: var(--mute); font-size: 14px; max-width: 44ch; }
-.kg-go { grid-row: 1; grid-column: 2; color: var(--accent); font-weight: 500; font-size: 14px; white-space: nowrap; }
-a.kg-game:hover b, a.kg-game:focus-visible b { text-decoration: underline; text-underline-offset: 5px; }
-a.kg-game:hover .kg-go { transform: translateX(2px); }
-.kg-go { transition: transform .15s; }
-.kg-game.soon { opacity: .5; }
-.kg-note { color: var(--mute); font-size: 13px; margin: 12px 0 0; max-width: 52ch; }
+.kg-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 560px) { .kg-grid { grid-template-columns: 1fr; gap: 10px; } }
+.kg-game { position: relative; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "art art" "name go" "blurb blurb"; gap: 4px 12px; align-items: baseline; height: 100%; box-sizing: border-box; padding: 20px 20px 22px; background: var(--panel); border-radius: 14px; text-decoration: none; transition: background .2s, transform .2s; }
+.kg-art { grid-area: art; display: block; margin-bottom: 18px; }
+.kg-art svg { display: block; width: 76px; height: 57px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .85; transition: opacity .2s, transform .25s; }
+.kg-game b { grid-area: name; font: 600 19px var(--serif); }
+.kg-game p { grid-area: blurb; margin: 4px 0 0; color: var(--mute); font-size: 14px; }
+.kg-go { grid-area: go; color: var(--accent); font-weight: 500; font-size: 14px; white-space: nowrap; transition: transform .15s; }
+a.kg-game:hover, a.kg-game:focus-visible { background: #172043; transform: translateY(-2px); outline: none; }
+a.kg-game:hover .kg-art svg, a.kg-game:focus-visible .kg-art svg { opacity: 1; transform: translateX(3px); }
+a.kg-game:hover .kg-go { transform: translateX(3px); }
+.kg-note { color: var(--mute); font-size: 13px; margin: 16px 0 0; max-width: 52ch; }
+.kg-board { margin-top: 56px; }
 .kg-empty { color: var(--mute); margin: 14px 0 0; }
 
 /* leaderboard / tables */
