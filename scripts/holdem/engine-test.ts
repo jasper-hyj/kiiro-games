@@ -30,7 +30,7 @@ const mk = (n = 3, stacks: number[] = [], cfg = { sb: 25, bb: 50, casual: false,
   const t = new PokerTable(cfg)
   t.turnTimerMs = 0; t.resultMs = 0
   const cash: Record<string, number> = {}
-  hist.length = 0; t.onHand = (r) => { hist.push(r) }
+  hist.length = 0; t.onHand = (rec) => { hist.push({ handNo: rec.handNo, won: rec.net.map((n, i) => n + (t.seats[i]?.total ?? 0)), net: rec.net, pots: (rec.summary as any).pots, shown: [], board: [], byFold: false } as any) }
   t.onCashout = (id, stack) => { cash[id] = (cash[id] ?? 0) + stack }
   t.autostart = false
   for (let i = 0; i < n; i++) t.sit('p' + i, 'P' + i, stacks[i] ?? 2000)

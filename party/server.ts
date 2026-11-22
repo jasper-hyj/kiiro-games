@@ -6,8 +6,15 @@ import { handleApi } from './api'
 import { userFromToken } from './auth'
 import { recordMatch, trimReplays } from './matches'
 import { hold, release } from './economy'
-import { PokerTable, DEFAULT_POKER, BLINDS, MAX_BUYIN_BB, type HandResult, type PSeat } from '../src/games/holdem/engine/table'
+import { PokerTable, DEFAULT_POKER, BLINDS } from '../src/games/holdem/engine/table'
+import { makeBlackjack } from '../src/games/blackjack/engine/table'
+import type { CashGame, HandRecord } from '../src/games/shared/cash'
 import type { PokerMsg, PokerServerMsg } from '../src/games/holdem/net/protocol'
+
+export type Kind = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
+const CASH_KINDS: Kind[] = ['holdem', 'blackjack']
+/** most a player may take home from the house per day at Blackjack: keeps the leaderboard from being farmed against the dealer */
+const BLACKJACK_DAILY_CAP = 20000
 
 /** One Durable Object (room) == one table. The server owns the game; clients only ever see their own view. */
 export class Main extends Server<Env> {
@@ -16,8 +23,10 @@ export class Main extends Server<Env> {
   accounts = new Map<string, { userId: string; name: string }>()
   private recorded: string | null = null
   /** which game this room is: decided by whoever creates the room code, then fixed */
-  kind: 'mahjong' | 'holdem' | null = null
-  poker: PokerTable | null = null
+  kind: Kind | null = null
+  /** the chip-table game of this room (Hold'em, Blackjack) */
+  game: CashGame | null = null
+  private isCash() { return this.kind !== null && CASH_KINDS.includes(this.kind) }
   /** cash-table sessions: client id -> ledger account and the reference that ties the buy-in to the cash-out */
   psess = new Map<string, { userId: string; ref: string; n: number }>()
   private tableId = Math.random().toString(36).slice(2, 10)
@@ -31,31 +40,31 @@ export class Main extends Server<Env> {
     this.table.turnTimerMs = 30000
     // a restart or redeploy evicts this object from memory: bring the room back from storage
     try {
-      this.kind = (await this.store.get<'mahjong' | 'holdem'>('kind')) ?? null
+      this.kind = (await this.store.get<Kind>('kind')) ?? null
       const saved = await this.store.get<string>('table')
       if (saved && !this.kind) this.kind = 'mahjong' // rooms saved before Hold'em existed
-      if (this.kind === 'holdem') {
-        const ps = await this.store.get<string>('poker')
-        if (ps) { this.startPoker(JSON.parse(ps).config); this.poker!.restore(ps) }
+      if (this.isCash()) {
+        const ps = await this.store.get<string>('cash')
+        if (ps) { this.startCash(this.kind!, JSON.parse(ps).config); this.game!.restore(ps) }
         const ss = await this.store.get<[string, { userId: string; ref: string; n: number }][]>('psess')
         if (ss) this.psess = new Map(ss)
         this.tableId = (await this.store.get<string>('tableId')) ?? this.tableId
-        if (this.poker?.seats.some((x) => x.id)) this.scheduleSweep()
+        if (this.game && this.game.hasPlayers()) this.scheduleSweep()
       } else if (saved) this.table.restore(saved)
       const acc = await this.store.get<[string, { userId: string; name: string }][]>('accounts')
       if (acc) this.accounts = new Map(acc)
       this.recorded = (await this.store.get<string>('recorded')) ?? null
     } catch (e) { console.error('restore failed', e) }
-    this.table.onChange(() => { if (this.kind !== 'holdem') { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } })
+    this.table.onChange(() => { if (!this.isCash()) { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } })
   }
 
   private persistSoon() {
     if (this.persistTimer) return
     this.persistTimer = setTimeout(() => {
       this.persistTimer = null
-      if (this.kind === 'holdem' && this.poker) {
-        if (!this.poker.hasPlayers()) { void this.store.delete('poker'); void this.store.delete('psess'); void this.store.delete('kind'); this.kind = null; this.poker = null }
-        else { void this.store.put('poker', this.poker.serialize()); void this.store.put('psess', [...this.psess]); void this.store.put('accounts', [...this.accounts]); void this.store.put('tableId', this.tableId) }
+      if (this.isCash() && this.game) {
+        if (!this.game.hasPlayers()) { void this.store.delete('cash'); void this.store.delete('psess'); void this.store.delete('kind'); this.kind = null; this.game = null }
+        else { void this.store.put('cash', this.game.serialize()); void this.store.put('psess', [...this.psess]); void this.store.put('accounts', [...this.accounts]); void this.store.put('tableId', this.tableId) }
         return
       }
       if (!this.table.slots.some((s) => s.id)) { void this.store.delete('table'); void this.store.delete('kind'); if (this.kind === 'mahjong') this.kind = null } // an empty room is not worth keeping
@@ -82,54 +91,62 @@ export class Main extends Server<Env> {
 
   private sendPoker(conn: Connection, id: string) {
     const acct = this.accounts.get(id)
-    const view = { ...this.poker!.view(id), signedIn: !!acct, balance: null as number | null }
-    const msg: PokerServerMsg = { t: 'pview', view }
+    const view = { ...(this.game!.view(id) as object), signedIn: !!acct, balance: null as number | null }
+    const msg = { t: 'pview', game: this.kind, view } as unknown as PokerServerMsg
     conn.send(JSON.stringify(msg))
   }
   private send(conn: Connection, m: ServerMsg) { conn.send(JSON.stringify(m)) }
 
-  /** Hold'em: build the table and wire its callbacks to the ledger and match history. */
-  private startPoker(cfg: Partial<typeof DEFAULT_POKER> | undefined) {
-    const blinds = BLINDS.find(([sb, bb]) => cfg && sb === cfg.sb && bb === cfg.bb) ?? [DEFAULT_POKER.sb, DEFAULT_POKER.bb]
-    const p = new PokerTable({ sb: blinds[0], bb: blinds[1], casual: cfg?.casual !== false || !this.envv.DB, maxSeats: 6 })
-    p.turnTimerMs = 30000
-    p.onChange(() => { this.broadcastViews(); this.persistSoon() })
-    p.onCashout = (id, stack, buyin) => this.cashOut(id, stack, buyin)
-    p.onHand = (r, seats) => { void this.recordHand(r, seats) }
-    this.poker = p
+  /** Build the chip table for this room's game and wire its callbacks to the ledger and match history. */
+  private startCash(kind: Kind, cfg: { sb?: number; bb?: number; casual?: boolean } | undefined) {
+    const casual = cfg?.casual !== false || !this.envv.DB
+    let g: CashGame
+    if (kind === 'blackjack') {
+      g = makeBlackjack(cfg?.bb, casual)
+    } else {
+      const blinds = BLINDS.find(([sb, bb]) => cfg && sb === cfg.sb && bb === cfg.bb) ?? [DEFAULT_POKER.sb, DEFAULT_POKER.bb]
+      const p = new PokerTable({ sb: blinds[0], bb: blinds[1], casual, maxSeats: 6 })
+      p.turnTimerMs = 30000
+      g = p
+    }
+    g.onChange(() => { this.broadcastViews(); this.persistSoon() })
+    g.onCashout = (id, stack, buyin) => this.cashOut(id, stack, buyin)
+    g.onHand = (rec) => { void this.recordHand(rec) }
+    this.game = g
   }
   /** a player's seat closed: send their remaining chips back to the ledger (cash tables only) */
   private cashOut(id: string, stack: number, buyin: number) {
     const sess = this.psess.get(id)
     this.psess.delete(id)
     if (!sess || !this.envv.DB) return
-    void release(this.envv.DB, sess.userId, buyin, stack, sess.ref).catch((e) => console.error('release failed', e))
+    void release(this.envv.DB, sess.userId, buyin, stack, sess.ref, this.kind === 'blackjack' ? { game: 'blackjack', dailyCap: BLACKJACK_DAILY_CAP } : undefined).catch((e) => console.error('release failed', e))
   }
-  private async recordHand(r: HandResult, seats: PSeat[]) {
-    const p = this.poker
-    if (!p || p.config.casual || !this.envv.DB) return
-    const dealt = seats.map((s, i) => ({ s, i })).filter((x) => x.s.inHand)
+  private async recordHand(rec: HandRecord) {
+    const g = this.game
+    if (!g || g.config.casual || !this.envv.DB || !this.kind) return
+    const dealt = rec.seats.filter((x) => x.id)
+    if (dealt.length === 0) return
     try {
       await recordMatch(this.envv.DB, {
-        id: `${this.tableId}-${r.handNo}`, game: 'holdem', rule: `${p.config.sb}/${p.config.bb}`, ranked: true, room: this.name, startedAt: Date.now(), config: p.config,
-        players: dealt.map(({ s, i }) => ({ seat: i, name: s.name, userId: this.psess.get(s.id ?? '')?.userId ?? null, points: r.net[i] })),
-        history: { board: r.board, pots: r.pots, byFold: r.byFold, shown: r.shown }, replay: null,
-        chips: Object.fromEntries(dealt.map(({ i }) => [i, r.net[i]])),
+        id: `${this.tableId}-${rec.handNo}`, game: this.kind, rule: rec.rule, ranked: true, room: this.name, startedAt: Date.now(), config: g.config,
+        players: dealt.map((x) => ({ seat: x.seat, name: x.name, userId: this.psess.get(x.id ?? '')?.userId ?? null, points: rec.net[x.seat] })),
+        history: rec.summary, replay: null,
+        chips: Object.fromEntries(dealt.map((x) => [x.seat, rec.net[x.seat]])),
       })
     } catch (e) { console.error('hand record failed', e) }
   }
   /** a safety net: if every connection is gone the object may be evicted, so an alarm closes abandoned seats later */
   private scheduleSweep() {
-    try { void (this as unknown as { ctx: { storage: { setAlarm(t: number): Promise<void> } } }).ctx.storage.setAlarm(Date.now() + (this.poker?.graceMs ?? 60000) + 2000) } catch { /* ignore */ }
+    try { void (this as unknown as { ctx: { storage: { setAlarm(t: number): Promise<void> } } }).ctx.storage.setAlarm(Date.now() + (this.game?.graceMs ?? 60000) + 2000) } catch { /* ignore */ }
   }
   async onAlarm() {
-    if (this.kind !== 'holdem' || !this.poker) return
-    const waiting = this.poker.sweep()
+    if (!this.isCash() || !this.game) return
+    const waiting = this.game.sweep()
     if (waiting > 0) this.scheduleSweep()
   }
 
   private broadcastViews() {
-    if (this.kind === 'holdem' && this.poker) {
+    if (this.isCash() && this.game) {
       for (const c of this.getConnections<{ id?: string }>()) {
         const id = c.state?.id
         if (id) this.sendPoker(c, id)
@@ -154,14 +171,14 @@ export class Main extends Server<Env> {
     if (m.t === 'join') {
       if (typeof m.id !== 'string' || !m.id || m.id.length > 64) return this.send(sender, { t: 'error', message: 'bad_id' })
       const id = m.id
-      const want = m.game === 'holdem' ? 'holdem' : 'mahjong'
+      const want: Kind = m.game === 'holdem' || m.game === 'blackjack' || m.game === 'bigtwo' ? m.game : 'mahjong'
       if (!this.kind) {
         if (m.create !== true) return this.send(sender, { t: 'error', message: 'room_not_found' })
         this.kind = want
         void this.store.put('kind', want)
-        if (want === 'holdem') this.startPoker(m.pcfg)
+        if (CASH_KINDS.includes(want)) this.startCash(want, m.pcfg)
       } else if (this.kind !== want) return this.send(sender, { t: 'error', message: 'wrong_game:' + this.kind })
-      if (this.kind === 'holdem') return this.joinPoker(m, sender)
+      if (this.isCash()) return this.joinCash(m, sender)
       const verdict = this.table.admit(id, m.create === true)
       if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
       // a valid account session turns this player into a signed-in one (named after the account); anything else plays as a guest
@@ -182,7 +199,7 @@ export class Main extends Server<Env> {
     }
     const id = sender.state?.id
     if (!id) return
-    if (this.kind === 'holdem') { if (m.t === 'p') await this.pokerMsg(id, sender, m.m); else if (m.t === 'bye') { this.poker?.standUp(id); this.poker?.disconnect(id) } return }
+    if (this.isCash()) { if (m.t === 'p') await this.cashMsg(id, sender, m.m); else if (m.t === 'bye') { this.game?.standUp(id); this.game?.disconnect(id) } return }
     switch (m.t) {
       case 'config': {
         const c = m.config && typeof m.config === 'object' ? { ...m.config } : {}
@@ -210,8 +227,8 @@ export class Main extends Server<Env> {
     }
   }
 
-  private async joinPoker(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
-    const p = this.poker!, id = m.id
+  private async joinCash(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
+    const p = this.game!, id = m.id
     const verdict = p.admit(id, m.create === true)
     if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
     if (typeof m.token === 'string' && m.token && this.envv.DB) {
@@ -230,8 +247,8 @@ export class Main extends Server<Env> {
   }
   private guestNames = new Map<string, string>()
 
-  private async pokerMsg(id: string, sender: Connection<{ id?: string }>, m: PokerMsg) {
-    const p = this.poker!
+  private async cashMsg(id: string, sender: Connection<{ id?: string }>, m: PokerMsg) {
+    const p = this.game!
     const err = (message: string) => this.send(sender, { t: 'error', message })
     const acct = this.accounts.get(id)
     const db = this.envv.DB
@@ -239,7 +256,7 @@ export class Main extends Server<Env> {
     if (m.k === 'sit') {
       const name = acct?.name ?? this.guestNames.get(id) ?? 'Player'
       if (p.config.casual) { // free temporary stack, nothing is saved
-        const r = p.sit(id, name, p.config.bb * MAX_BUYIN_BB)
+        const r = p.sit(id, name, p.casualStack)
         if (!r.ok) err(r.error)
         return
       }
@@ -275,7 +292,7 @@ export class Main extends Server<Env> {
     // only drop the seat if no other live socket belongs to the same player
     const still = [...this.getConnections<{ id?: string }>()].some((c) => c.id !== conn.id && c.state?.id === id)
     if (still) return
-    if (this.kind === 'holdem' && this.poker) { this.poker.disconnect(id); if (this.poker.seats.some((x) => x.id && !x.connected)) this.scheduleSweep(); return }
+    if (this.isCash() && this.game) { this.game.disconnect(id); this.scheduleSweep(); return }
     this.table.leave(id)
   }
 }

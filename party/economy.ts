@@ -104,17 +104,24 @@ export async function hold(db: D1, userId: string, amount: number, ref: string):
 }
 
 /** Close a cash-table session: the held chips come back, and the difference counts as that session's profit or loss. */
-export async function release(db: D1, userId: string, principal: number, stack: number, ref: string): Promise<void> {
+export async function release(db: D1, userId: string, principal: number, stack: number, ref: string, cap?: { game: string; dailyCap: number }): Promise<void> {
   const season = seasonOf()
   const done = await db.prepare('SELECT 1 AS x FROM ledger WHERE user_id=? AND reason=? AND ref=?').bind(userId, 'hold', ref + ':r').first()
   if (done) return
   await ensureAccount(db, userId)
-  const net = stack - principal
+  let net = stack - principal
+  // against the house (Blackjack) the day's profit is capped: whatever is above the cap is not paid out
+  if (cap && net > 0) {
+    const dayStart = new Date().setUTCHours(0, 0, 0, 0)
+    const row = await db.prepare('SELECT COALESCE(SUM(delta),0) AS d FROM ledger WHERE user_id=? AND reason=? AND at>=?').bind(userId, 'play:' + cap.game, dayStart).first<{ d: number }>()
+    const room = Math.max(0, cap.dailyCap - (row?.d ?? 0))
+    if (net > room) { stack = principal + room; net = room }
+  }
   const stmts = [
     entry(db, season, userId, principal, 'hold', ref + ':r'),
     db.prepare('UPDATE season_accounts SET balance=balance+? WHERE season=? AND user_id=?').bind(stack, season, userId),
   ]
-  if (net !== 0) stmts.push(entry(db, season, userId, net, 'play:holdem', ref + ':n'))
+  if (net !== 0) stmts.push(entry(db, season, userId, net, 'play:' + (cap?.game ?? 'holdem'), ref + ':n'))
   stmts.push(db.prepare('UPDATE users SET games=games+1 WHERE id=?').bind(userId))
   await db.batch(stmts)
 }

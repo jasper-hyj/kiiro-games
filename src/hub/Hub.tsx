@@ -1,9 +1,10 @@
 import { useLang } from '../i18n'
 import { useState } from 'react'
-import { HOLDEM_PATH, MAHJONG_PATH } from '../route'
+import { BLACKJACK_PATH, HOLDEM_PATH, MAHJONG_PATH } from '../route'
 import { AccountChip, Leaderboard } from '../account/Panels'
 import './hub.css'
 import './strings'
+import '../games/blackjack/strings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -56,6 +57,10 @@ export function Hub() {
               <li><a className="kg-game" href={HOLDEM_PATH}>
                 <b>{t('hubHoldem')}</b><span className="kg-go">{t('hubOpen')} →</span>
                 <p>{t('hubHoldemBlurb')}</p>
+              </a></li>
+              <li><a className="kg-game" href={BLACKJACK_PATH}>
+                <b>{t('bjName')}</b><span className="kg-go">{t('hubOpen')} →</span>
+                <p>{t('hubBjBlurb')}</p>
               </a></li>
             </ul>
             <p className="kg-note">{t('hubNoSignin')}</p>

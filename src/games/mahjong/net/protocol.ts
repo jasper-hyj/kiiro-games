@@ -2,7 +2,7 @@ import type { Decision, TurnAction } from '../engine/game'
 import type { RoomConfig, TableView } from '../engine/table'
 
 export type ClientMsg =
-  | { t: 'join'; id: string; name: string; create?: boolean; /** account session, if signed in */ token?: string; /** which game a new room is for (default mahjong); joining a room of another game is refused */ game?: 'mahjong' | 'holdem'; /** Hold'em table settings for a new room */ pcfg?: { sb: number; bb: number; casual: boolean } }
+  | { t: 'join'; id: string; name: string; create?: boolean; /** account session, if signed in */ token?: string; /** which game a new room is for (default mahjong); joining a room of another game is refused */ game?: 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'; /** Hold'em table settings for a new room */ pcfg?: { sb: number; bb: number; casual: boolean } }
   | { t: 'bye' }
   | { t: 'config'; config: Partial<RoomConfig> }
   | { t: 'start' }

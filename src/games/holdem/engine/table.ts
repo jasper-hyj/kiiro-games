@@ -1,4 +1,5 @@
 import { shuffled } from './cards'
+import type { CashGame, HandRecord } from '../../shared/cash'
 import { best, categoryOf } from './eval'
 
 export interface PokerConfig {
@@ -65,7 +66,7 @@ export interface PokerView {
 type Listener = () => void
 const clean = (s: unknown, n = 16) => String(s ?? '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, n)
 
-export class PokerTable {
+export class PokerTable implements CashGame {
   config: PokerConfig
   seats: PSeat[] = []
   members = new Set<string>()
@@ -83,7 +84,8 @@ export class PokerTable {
   /** called when a player's seat is closed: gives back the chips they still hold (the server credits the ledger) */
   onCashout: ((id: string, stack: number, buyin: number) => void) | null = null
   /** called when a hand finishes (the server records it) */
-  onHand: ((r: HandResult, seats: PSeat[]) => void) | null = null
+  onHand: ((rec: HandRecord) => void) | null = null
+  get casualStack() { return this.config.bb * MAX_BUYIN_BB }
   /** per-decision limit in ms (0 = off). After two timeouts in a row the player is sat out. */
   turnTimerMs = 30000
   /** ms to show a finished hand before the next one starts (0 = immediately, for tests) */
@@ -271,13 +273,15 @@ export class PokerTable {
   }
 
   /** A player's action. Returns an error code or null. */
-  act(id: string, a: PokerAct): string | null {
+  act(id: string, a: PokerAct | unknown): string | null {
+    const kinds = ['fold', 'check', 'call', 'raise', 'allin']
+    if (!a || typeof a !== 'object' || !kinds.includes((a as { a?: string }).a ?? '')) return 'bad_action'
     const i = this.seatOf(id)
     if (i < 0) return 'not_seated'
     if (this.street === 'wait' || this.street === 'showdown') return 'not_your_turn'
     if (this.toAct !== i) return 'not_your_turn'
     const s = this.seats[i]; s.missed = 0
-    return this.apply(i, a)
+    return this.apply(i, a as PokerAct)
   }
   private apply(i: number, a: PokerAct): string | null {
     const s = this.seats[i]
@@ -398,7 +402,7 @@ export class PokerTable {
     this.result = { handNo: this.handNo, won, net, pots, shown, board: [...this.board], byFold }
     for (const s of this.seats) { s.bet = 0 }
     this.toAct = -1
-    this.onHand?.(this.result, this.seats)
+    this.onHand?.({ handNo: this.handNo, rule: `${this.config.sb}/${this.config.bb}`, seats: this.seats.map((x, i) => ({ seat: i, id: x.inHand ? x.id : null, name: x.name })), net, summary: { board: this.result.board, pots: this.result.pots, byFold, shown: this.result.shown } })
     this.emit()
     this.scheduleNext()
   }
