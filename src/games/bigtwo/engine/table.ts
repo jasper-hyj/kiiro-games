@@ -42,6 +42,8 @@ export class BigTwoTable {
   turnTimerMs = 45000
   botDelayMs = 900
   graceMs = 8000
+  /** random seat order at the start of every game (tests switch this off) */
+  shuffleSeats = true
   /** tests: deal exactly these four hands */
   riggedHands: number[][] | null = null
   onOver: ((t: BigTwoTable) => void) | null = null
@@ -99,7 +101,7 @@ export class BigTwoTable {
     let n = 1
     for (const s of this.seats) { if (!s.id) { s.bot = true; s.name = 'Bot ' + n++; s.connected = true } s.passed = false; s.missed = 0 }
     // random seat order so nobody is always first
-    for (let i = this.seats.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [this.seats[i], this.seats[j]] = [this.seats[j], this.seats[i]] }
+    if (this.shuffleSeats) for (let i = this.seats.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [this.seats[i], this.seats[j]] = [this.seats[j], this.seats[i]] }
     const deck = shuffled()
     for (let i = 0; i < 4; i++) this.seats[i].hand = this.riggedHands ? [...this.riggedHands[i]] : deck.slice(i * 13, i * 13 + 13)
     this.seats.forEach((s) => s.hand.sort((a, b) => power(a) - power(b)))

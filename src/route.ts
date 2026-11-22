@@ -2,6 +2,7 @@
 export const MAHJONG_PATH = '/mahjong'
 export const HOLDEM_PATH = '/holdem'
 export const BLACKJACK_PATH = '/blackjack'
+export const BIGTWO_PATH = '/bigtwo'
 const GAME_PARAMS = ['room', 'solo', 'stress', 'tutorial', 'tiles', 'debug', 'rule', 'players']
 export function isHub(): boolean {
   if (typeof location === 'undefined') return false
@@ -14,3 +15,4 @@ export function isHub(): boolean {
 export function isAdminPage(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/admin' }
 export function isHoldem(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === HOLDEM_PATH }
 export function isBlackjack(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === BLACKJACK_PATH }
+export function isBigTwo(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === BIGTWO_PATH }

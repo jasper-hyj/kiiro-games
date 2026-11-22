@@ -3,7 +3,7 @@ import { PARTY_HOST } from '../mahjong/net/client'
 import { getToken } from '../../account/api'
 
 export type Status = 'connecting' | 'open' | 'closed'
-export type CashGameName = 'holdem' | 'blackjack'
+export type CashGameName = 'holdem' | 'blackjack' | 'bigtwo'
 export interface CashHandlers<V> { onView(v: V): void; onStatus(s: Status): void; onError(m: string): void }
 export interface CashConn<M> { send(m: M): void; close(): void }
 export interface CashCreate { sb?: number; bb: number; casual: boolean }

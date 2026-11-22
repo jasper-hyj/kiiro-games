@@ -66,6 +66,16 @@ npm run party:deploy
 - **Engine:** `src/games/holdem/engine` (evaluator, betting rounds, side pots, timers). `npm run test:holdem` includes a fuzz test that checks chips are conserved. `scripts/holdem/ws-test.ts` plays casual and cash tables over WebSockets (needs `wrangler dev`).
 - Not built yet: chat at the table, tournaments.
 
+## Blackjack
+
+`/blackjack`, 1 to 6 players at a shared table against the dealer. Six-deck shoe, dealer stands on all 17s, blackjack pays 3:2, double on any two cards, one split (split aces get one card each), dealer peeks for a natural, no insurance. Casual tables are free; cash tables bet from a ledger buy-in exactly like Hold'em. Because the house is not a player, a day's net profit at cash tables is capped (`BLACKJACK_DAILY_CAP` in `party/server.ts`, 20,000): anything above it is not paid out when the player leaves. Engine tests: `npm run test:blackjack`.
+
+## Big Two
+
+`/bigtwo`, four players, bots fill empty seats. 3 is lowest, 2 highest; suits low to high diamonds, clubs, hearts, spades (`SUIT_POWER` in `src/games/bigtwo/engine/combos.ts`). Singles, pairs, triples and the five-card hands; a straight cannot include a 2. The 3 of diamonds opens. A game is one deal: the first to go out wins, others pay 1 point per card left (x2 from 8 cards, x3 from 10, x4 for all 13). Ranked rooms settle 50 chips per point, zero-sum between the signed-in humans (bots never move chips). Engine tests: `npm run test:bigtwo`.
+
+All chip games share one room-code space; `src/games/shared/cash.ts` is the contract a new table game implements.
+
 ## Develop
 
 ```bash

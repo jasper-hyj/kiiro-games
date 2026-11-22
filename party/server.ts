@@ -8,6 +8,8 @@ import { recordMatch, trimReplays } from './matches'
 import { hold, release } from './economy'
 import { PokerTable, DEFAULT_POKER, BLINDS } from '../src/games/holdem/engine/table'
 import { makeBlackjack } from '../src/games/blackjack/engine/table'
+import { BigTwoTable } from '../src/games/bigtwo/engine/table'
+import type { BtMsg } from '../src/games/bigtwo/net/protocol'
 import type { CashGame, HandRecord } from '../src/games/shared/cash'
 import type { PokerMsg, PokerServerMsg } from '../src/games/holdem/net/protocol'
 
@@ -26,6 +28,9 @@ export class Main extends Server<Env> {
   kind: Kind | null = null
   /** the chip-table game of this room (Hold'em, Blackjack) */
   game: CashGame | null = null
+  /** Big Two room (a four-player card game with bots, settled like ranked Mahjong) */
+  bt: BigTwoTable | null = null
+  private btRecorded: string | null = null
   private isCash() { return this.kind !== null && CASH_KINDS.includes(this.kind) }
   /** cash-table sessions: client id -> ledger account and the reference that ties the buy-in to the cash-out */
   psess = new Map<string, { userId: string; ref: string; n: number }>()
@@ -50,18 +55,27 @@ export class Main extends Server<Env> {
         if (ss) this.psess = new Map(ss)
         this.tableId = (await this.store.get<string>('tableId')) ?? this.tableId
         if (this.game && this.game.hasPlayers()) this.scheduleSweep()
+      } else if (this.kind === 'bigtwo') {
+        const bs = await this.store.get<string>('bt')
+        if (bs) { this.startBigTwo(); this.bt!.restore(bs) }
+        this.btRecorded = (await this.store.get<string>('btRecorded')) ?? null
       } else if (saved) this.table.restore(saved)
       const acc = await this.store.get<[string, { userId: string; name: string }][]>('accounts')
       if (acc) this.accounts = new Map(acc)
       this.recorded = (await this.store.get<string>('recorded')) ?? null
     } catch (e) { console.error('restore failed', e) }
-    this.table.onChange(() => { if (!this.isCash()) { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } })
+    this.table.onChange(() => { if (!this.isCash() && this.kind !== 'bigtwo') { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } })
   }
 
   private persistSoon() {
     if (this.persistTimer) return
     this.persistTimer = setTimeout(() => {
       this.persistTimer = null
+      if (this.kind === 'bigtwo' && this.bt) {
+        if (!this.bt.hasPlayers()) { void this.store.delete('bt'); void this.store.delete('kind'); this.kind = null; this.bt = null }
+        else { void this.store.put('bt', this.bt.serialize()); void this.store.put('accounts', [...this.accounts]) }
+        return
+      }
       if (this.isCash() && this.game) {
         if (!this.game.hasPlayers()) { void this.store.delete('cash'); void this.store.delete('psess'); void this.store.delete('kind'); this.kind = null; this.game = null }
         else { void this.store.put('cash', this.game.serialize()); void this.store.put('psess', [...this.psess]); void this.store.put('accounts', [...this.accounts]); void this.store.put('tableId', this.tableId) }
@@ -145,7 +159,32 @@ export class Main extends Server<Env> {
     if (waiting > 0) this.scheduleSweep()
   }
 
+  private startBigTwo() {
+    const b = new BigTwoTable()
+    b.onChange(() => { this.broadcastViews(); this.persistSoon() })
+    b.onOver = (t) => { void this.recordBigTwo(t) }
+    this.bt = b
+  }
+  /** Big Two is over: save it, and for ranked rooms settle chips zero-sum between the signed-in humans (bots never move chips). */
+  private async recordBigTwo(t: BigTwoTable) {
+    if (!this.envv.DB || !t.result || !t.matchId || this.btRecorded === t.matchId) return
+    this.btRecorded = t.matchId; void this.store.put('btRecorded', t.matchId)
+    const ranked = t.config.ranked
+    const players = t.seats.map((s, i) => ({ seat: i, name: s.name, userId: s.id && !s.bot ? this.accounts.get(s.id)?.userId ?? null : null, points: t.result!.points[i] }))
+    const humans = players.filter((p) => p.userId)
+    const mean = humans.length ? humans.reduce((a, p) => a + p.points, 0) / humans.length : 0
+    const chips: Record<number, number> = {}
+    if (ranked && humans.length >= 2) for (const p of humans) chips[p.seat] = Math.round(50 * (p.points - mean))
+    try {
+      await recordMatch(this.envv.DB, { id: t.matchId, game: 'bigtwo', rule: 'standard', ranked, room: this.name, startedAt: t.startedAt, config: t.config, players, history: { left: t.result.left, winner: t.result.winner }, replay: null, chips, settle: true })
+    } catch (e) { console.error('big two record failed', e); this.btRecorded = null }
+  }
+
   private broadcastViews() {
+    if (this.kind === 'bigtwo' && this.bt) {
+      for (const c of this.getConnections<{ id?: string }>()) { const id = c.state?.id; if (id) c.send(JSON.stringify({ t: 'pview', game: 'bigtwo', view: { ...this.bt.view(id), signedIn: this.accounts.has(id) } })) }
+      return
+    }
     if (this.isCash() && this.game) {
       for (const c of this.getConnections<{ id?: string }>()) {
         const id = c.state?.id
@@ -177,8 +216,10 @@ export class Main extends Server<Env> {
         this.kind = want
         void this.store.put('kind', want)
         if (CASH_KINDS.includes(want)) this.startCash(want, m.pcfg)
+        if (want === 'bigtwo') this.startBigTwo()
       } else if (this.kind !== want) return this.send(sender, { t: 'error', message: 'wrong_game:' + this.kind })
       if (this.isCash()) return this.joinCash(m, sender)
+      if (this.kind === 'bigtwo') return this.joinBigTwo(m, sender)
       const verdict = this.table.admit(id, m.create === true)
       if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
       // a valid account session turns this player into a signed-in one (named after the account); anything else plays as a guest
@@ -199,6 +240,7 @@ export class Main extends Server<Env> {
     }
     const id = sender.state?.id
     if (!id) return
+    if (this.kind === 'bigtwo') { if (m.t === 'p') this.btMsg(id, sender, m.m as unknown as BtMsg); else if (m.t === 'bye') this.bt?.leave(id, true); return }
     if (this.isCash()) { if (m.t === 'p') await this.cashMsg(id, sender, m.m); else if (m.t === 'bye') { this.game?.standUp(id); this.game?.disconnect(id) } return }
     switch (m.t) {
       case 'config': {
@@ -227,6 +269,43 @@ export class Main extends Server<Env> {
     }
   }
 
+  private async joinBigTwo(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
+    const b = this.bt!, id = m.id
+    const verdict = b.admit(id, m.create === true)
+    if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
+    let name = typeof m.name === 'string' ? m.name : 'Player'
+    if (typeof m.token === 'string' && m.token && this.envv.DB) {
+      const u = await userFromToken(this.envv.DB, m.token)
+      if (u) {
+        const other = [...this.accounts].find(([cid, a]) => a.userId === u.id && cid !== id && b.seatOf(cid) >= 0)
+        if (other) return this.send(sender, { t: 'error', message: 'already_seated' })
+        this.accounts.set(id, { userId: u.id, name: u.name }); name = u.name
+      } else this.accounts.delete(id)
+    } else this.accounts.delete(id)
+    if (b.join(id, name) < 0) return this.send(sender, { t: 'error', message: 'room_full' })
+    sender.setState({ id })
+    this.broadcastViews()
+  }
+  private btMsg(id: string, sender: Connection<{ id?: string }>, m: BtMsg) {
+    const b = this.bt!
+    if (!m || typeof m !== 'object') return
+    const err = (message: string) => this.send(sender, { t: 'error', message })
+    if (m.k === 'play') { const e = b.play(id, Array.isArray(m.cards) ? m.cards.map(Number) : []); if (e) err(e); return }
+    if (m.k === 'pass') { const e = b.pass(id); if (e) err(e); return }
+    if (m.k === 'config') {
+      const c = { ...m.config }
+      if (c.ranked === true && !this.accounts.has(id)) { delete c.ranked; err('ranked_needs_signin') }
+      b.setConfig(id, c); return
+    }
+    if (m.k === 'start') {
+      if (b.config.ranked && id === b.hostId) {
+        const humans = b.seats.filter((s) => s.id)
+        if (humans.length < 2 || humans.some((s) => !this.accounts.has(s.id!))) return err('ranked_needs_players')
+      }
+      b.start(id); return
+    }
+    if (m.k === 'lobby') { b.backToLobby(id); return }
+  }
   private async joinCash(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
     const p = this.game!, id = m.id
     const verdict = p.admit(id, m.create === true)
@@ -293,6 +372,7 @@ export class Main extends Server<Env> {
     const still = [...this.getConnections<{ id?: string }>()].some((c) => c.id !== conn.id && c.state?.id === id)
     if (still) return
     if (this.isCash() && this.game) { this.game.disconnect(id); this.scheduleSweep(); return }
+    if (this.kind === 'bigtwo' && this.bt) { this.bt.leave(id); return }
     this.table.leave(id)
   }
 }

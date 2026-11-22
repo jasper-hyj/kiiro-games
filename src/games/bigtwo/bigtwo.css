@@ -1,0 +1,22 @@
+/* Big Two: four seats around a play area, your hand along the bottom. Shares card and control styles with holdem.css. */
+.bt { --cw: 52px; }
+.btsec { margin: 20px 0 6px; }
+.btlobby { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 0; max-width: 360px; }
+.btlobby li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.bttable { position: relative; min-height: 300px; border-radius: 28px; background: radial-gradient(ellipse at 50% 40%, #16224a 0%, var(--felt) 62%, var(--felt2) 100%); box-shadow: inset 0 0 0 1px rgba(232,236,246,.1); display: grid; place-items: center; padding: 70px 90px; }
+.btseat { position: absolute; display: grid; gap: 2px; justify-items: center; padding: 8px 12px; border-radius: 10px; background: rgba(11,16,32,.82); box-shadow: inset 0 0 0 1px rgba(232,236,246,.12); min-width: 90px; }
+.btseat.turn { box-shadow: inset 0 0 0 2px #f5d76e; } .btseat.away { opacity: .5; }
+.btseat.pos1 { left: 14px; top: 50%; transform: translateY(-50%); } .btseat.pos2 { top: 12px; left: 50%; transform: translateX(-50%); } .btseat.pos3 { right: 14px; top: 50%; transform: translateY(-50%); }
+.bttag { font-size: 13px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .btcount { font: 600 14px var(--sans, system-ui); } .btpass { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.btcenter { display: grid; gap: 8px; justify-items: center; text-align: center; }
+.btplay { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: calc(var(--cw) * 1.4); }
+.btresult { display: grid; gap: 12px; justify-items: center; min-width: 260px; }
+.bthand { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 26px 0 6px; }
+:root:root .btcard { background: none; border: 0; padding: 0; cursor: pointer; transition: transform .12s; min-height: 0; border-radius: 6px; }
+:root:root .btcard.sel { transform: translateY(-14px); filter: drop-shadow(0 0 0 #f5d76e); outline: 2px solid #f5d76e; outline-offset: 1px; }
+:root:root .btcard:disabled { cursor: default; }
+@media (max-width: 640px) {
+  .bt { --cw: 40px; } .bttable { padding: 64px 10px 20px; min-height: 280px; }
+  .btseat { padding: 5px 8px; min-width: 70px; } .btseat.pos1 { left: 6px; top: 46%; } .btseat.pos3 { right: 6px; top: 46%; } .bttag { max-width: 76px; font-size: 12px; }
+  .bthand { gap: 0; padding-top: 22px; } .bthand .pkcard { --cw: 34px; } .btcard { margin-right: -6px; }
+}

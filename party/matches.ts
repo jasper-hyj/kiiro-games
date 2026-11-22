@@ -7,6 +7,8 @@ export interface MatchRecord {
   startedAt: number; config: unknown; players: MatchPlayer[]; history: unknown; replay: unknown
   /** per-seat chip change when the game itself already moved the chips (cash tables); disables the zero-sum settlement */
   chips?: Record<number, number>
+  /** with `chips`: still settle them through the ledger (the game did not move chips itself) */
+  settle?: boolean
 }
 
 /** Chips for a ranked game: zero-sum among the signed-in humans, proportional to how far each finished from their average. */
@@ -34,7 +36,7 @@ export async function recordMatch(db: D1, m: MatchRecord): Promise<void> {
         .bind(m.id, p.userId, p.name, p.seat, ordered.findIndex((o) => o.seat === p.seat) + 1, p.points, chips[p.seat] ?? 0)),
   ]
   await db.batch(stmts)
-  if (m.ranked && !m.chips) {
+  if (m.ranked && (!m.chips || m.settle)) {
     const results = m.players.filter((p) => p.userId && chips[p.seat] !== undefined).map((p) => ({ userId: p.userId as string, delta: chips[p.seat] }))
     if (results.length) await settle(db, m.game, m.id, results)
   }
