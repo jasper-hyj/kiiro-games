@@ -8,6 +8,8 @@ import { Card } from './ui/Cards'
 import { Rules } from '../shared/Rules'
 import { best, categoryOf } from './engine/eval'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
+import { TalkBox } from '../shared/TalkBox'
+import type { TalkMsg } from '../shared/cashClient'
 import './strings'
 import './holdem.css'
 
@@ -36,6 +38,7 @@ export default function HoldemApp() {
   const [casual, setCasual] = useState(() => load('kiiro-hd-casual', '1') === '1')
   const [code, setCode] = useState('')
   const [buyin, setBuyin] = useState(0)
+  const [talk, setTalk] = useState<TalkMsg[]>([])
   const conn = useRef<PokerConn | null>(null)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
   const startedFor = useRef<string | null>(null)
@@ -45,8 +48,10 @@ export default function HoldemApp() {
   const handlers = useMemo(() => ({
     onView: (v: HoldemView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
+    onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
+    onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
-      if (m === 'code_taken' && retry.current) { retry.current(); return }
+      if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/mahjong?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -58,7 +63,7 @@ export default function HoldemApp() {
     conn.current?.close()
     const nm = (name.trim() || me?.name || 'Player').slice(0, 16)
     startedFor.current = rm
-    setRoom(rm); setView(null)
+    setRoom(rm); setView(null); setTalk([])
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectHoldem(rm, getClientId(), nm, handlers, create)
   }, [name, me?.name, handlers])
@@ -117,17 +122,17 @@ export default function HoldemApp() {
       </div>
     )
   }
-  return <Table view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} api={api} />
+  return <Table view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} api={api} />
 }
 
 interface TableProps {
   view: HoldemView | null; status: Status; room: string; error: string
-  send: PokerConn['send']; leave(): void
+  send: PokerConn['send']; leave(): void; talk: TalkMsg[]; say(text: string): void
   me: ReturnType<typeof useAccount>['me']; openSignIn(): void
   buyin: number; setBuyin(n: number): void; refreshMe(): Promise<void>; api: typeof api
 }
 
-function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, setBuyin, refreshMe }: TableProps) {
+function Table({ view, status, room, error, send, talk, say, leave, me, openSignIn, buyin, setBuyin, refreshMe }: TableProps) {
   const { t } = useLang()
   const narrow = useNarrow()
   const spots = narrow ? PHONE_SPOTS : SPOTS
@@ -263,6 +268,7 @@ function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, 
             </div>
           )}
         </div>
+        <TalkBox lines={talk} say={say} />
       </div>
     </div>
   )

@@ -4,7 +4,8 @@ import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
 import { Card } from '../holdem/ui/Cards'
 import { connectLocalBigTwo } from '../shared/localCash'
-import { connectCash, getClientId, type CashConn, type Status } from '../shared/cashClient'
+import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
+import { TalkBox } from '../shared/TalkBox'
 import { beats, evalCombo, power } from './engine/combos'
 import { Rules } from '../shared/Rules'
 import type { BigTwoView, BtMsg } from './net/protocol'
@@ -26,6 +27,7 @@ export default function BigTwoApp() {
   const [error, setError] = useState('')
   const [room, setRoom] = useState<string | null>(null)
   const [code, setCode] = useState('')
+  const [talk, setTalk] = useState<TalkMsg[]>([])
   const conn = useRef<CashConn<BtMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
   const retry = useRef<(() => void) | null>(null)
@@ -33,8 +35,10 @@ export default function BigTwoApp() {
   const handlers = useMemo(() => ({
     onView: (v: BigTwoView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
+    onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
+    onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
-      if (m === 'code_taken' && retry.current) { retry.current(); return }
+      if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken' || m === 'room_full') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -42,7 +46,7 @@ export default function BigTwoApp() {
     },
   }), [])
   const open = useCallback((rm: string, create?: boolean) => {
-    conn.current?.close(); startedFor.current = rm; setRoom(rm); setView(null)
+    conn.current?.close(); startedFor.current = rm; setRoom(rm); setView(null); setTalk([])
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectCash<BigTwoView, BtMsg>('bigtwo', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create ? { bb: 0, casual: true } : undefined)
   }, [name, me?.name, handlers])
@@ -83,10 +87,10 @@ export default function BigTwoApp() {
     )
   }
   if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
-  return <BtTable v={view} status={status} room={room} error={error} send={send} leave={leave} me={me} openSignIn={openSignIn} />
+  return <BtTable v={view} status={status} room={room} error={error} send={send} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} />
 }
 
-function BtTable({ v, status, room, error, send, leave, me, openSignIn }: { v: BigTwoView; status: Status; room: string; error: string; send: (m: BtMsg) => void; leave(): void; me: ReturnType<typeof useAccount>['me']; openSignIn(): void }) {
+function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignIn }: { v: BigTwoView; status: Status; room: string; error: string; send: (m: BtMsg) => void; talk: TalkMsg[]; say(text: string): void; leave(): void; me: ReturnType<typeof useAccount>['me']; openSignIn(): void }) {
   const { t } = useLang()
   const [sel, setSel] = useState<number[]>([])
   const [copied, setCopied] = useState(false)
@@ -133,6 +137,7 @@ function BtTable({ v, status, room, error, send, leave, me, openSignIn }: { v: B
           </div>
         ) : <p className="kg-note">{t('btWaitHost')}</p>}
         <p className="kg-note">{t('btRules')}</p>
+        {room !== 'practice' && <TalkBox lines={talk} say={say} />}
       </div></div>
     )
   }
@@ -175,6 +180,7 @@ function BtTable({ v, status, room, error, send, leave, me, openSignIn }: { v: B
           <button className="hdbtn primary" disabled={!myTurn || !legal} onClick={() => send({ k: 'play', cards: sel })}>{t('btPlayBtn')}{chosen ? ` · ${t('btt.' + chosen.type)}` : ''}</button>
         </div>
       </div>
+      {room !== 'practice' && <TalkBox lines={talk} say={say} />}
     </div></div>
   )
 }

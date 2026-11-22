@@ -4,7 +4,8 @@ import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
 import { Card } from '../holdem/ui/Cards'
 import { connectLocalBlackjack } from '../shared/localCash'
-import { connectCash, getClientId, type CashConn, type Status } from '../shared/cashClient'
+import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
+import { TalkBox } from '../shared/TalkBox'
 import { MIN_BETS } from './engine/table'
 import { Rules } from '../shared/Rules'
 import type { BjMsg, BlackjackView } from './net/protocol'
@@ -29,6 +30,7 @@ export default function BlackjackApp() {
   const [casual, setCasual] = useState(() => load('kiiro-bj-casual', '1') === '1')
   const [code, setCode] = useState('')
   const [buyin, setBuyin] = useState(0)
+  const [talk, setTalk] = useState<TalkMsg[]>([])
   const conn = useRef<CashConn<BjMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
   const retry = useRef<(() => void) | null>(null)
@@ -37,8 +39,10 @@ export default function BlackjackApp() {
   const handlers = useMemo(() => ({
     onView: (v: BlackjackView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
+    onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
+    onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
-      if (m === 'code_taken' && retry.current) { retry.current(); return }
+      if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -48,7 +52,7 @@ export default function BlackjackApp() {
   const open = useCallback((rm: string, create?: { bb: number; casual: boolean }) => {
     conn.current?.close()
     startedFor.current = rm
-    setRoom(rm); setView(null)
+    setRoom(rm); setView(null); setTalk([])
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectCash<BlackjackView, BjMsg>('blackjack', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
   }, [name, me?.name, handlers])
@@ -97,11 +101,11 @@ export default function BlackjackApp() {
       </div>
     )
   }
-  return <BjTable view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} />
+  return <BjTable view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} room_={room} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} />
 }
 
-function BjTable({ view, status, room, error, send, leave, me, openSignIn, buyin, setBuyin, refreshMe }: {
-  view: BlackjackView | null; status: Status; room: string; error: string; send: (m: BjMsg) => void; leave(): void
+function BjTable({ view, status, room, error, send, talk, say, leave, me, openSignIn, buyin, setBuyin, refreshMe }: {
+  view: BlackjackView | null; status: Status; room: string; error: string; send: (m: BjMsg) => void; leave(): void; talk: TalkMsg[]; say(text: string): void; room_?: string
   me: ReturnType<typeof useAccount>['me']; openSignIn(): void; buyin: number; setBuyin(n: number): void; refreshMe(): Promise<void>
 }) {
   const { t } = useLang()
@@ -211,6 +215,7 @@ function BjTable({ view, status, room, error, send, leave, me, openSignIn, buyin
             </div>
           )}
         </div>
+        {room !== 'practice' && <TalkBox lines={talk} say={say} />}
       </div>
     </div>
   )

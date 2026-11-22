@@ -103,3 +103,11 @@
 .hdrules summary::after { content: '  +'; color: var(--mute); } .hdrules[open] summary::after { content: '  −'; }
 .hdrules ul { margin: 4px 0 8px; padding-left: 18px; display: grid; gap: 4px; }
 .hdmine { font-size: 12px; color: #f5d76e; text-transform: none; letter-spacing: 0; }
+
+/* table chat */
+.hdchat { margin: 12px 0 0; font-size: 14px; max-width: 520px; }
+.hdchat summary { cursor: pointer; color: var(--mute); padding: 6px 0; list-style: none; } .hdchat summary::-webkit-details-marker { display: none; }
+.hdchat[open] summary { color: var(--ink); }
+.hdbadge { margin-left: 8px; background: #f5d76e; color: #0b1020; border-radius: 999px; font-size: 11px; padding: 1px 7px; }
+.hdfeed { max-height: 150px; overflow: auto; display: grid; gap: 3px; padding: 6px 0 8px; align-content: start; color: var(--ink); overflow-wrap: anywhere; }
+.hdfeed b { font-weight: 600; margin-right: 4px; color: var(--accent); }

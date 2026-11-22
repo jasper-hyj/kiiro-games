@@ -18,4 +18,6 @@ export type ClientMsg =
   | { t: 'say'; text: string }
   | { t: 'ping'; ts: number }
   | { t: 'p'; m: import('../../holdem/net/protocol').PokerMsg }
+  /** free-text table chat for the card games */
+  | { t: 'talk'; text: string }
 export type ServerMsg = { t: 'view'; view: TableView } | { t: 'error'; message: string } | { t: 'pong'; ts: number }

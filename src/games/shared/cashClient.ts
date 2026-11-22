@@ -4,8 +4,9 @@ import { getToken } from '../../account/api'
 
 export type Status = 'connecting' | 'open' | 'closed'
 export type CashGameName = 'holdem' | 'blackjack' | 'bigtwo'
-export interface CashHandlers<V> { onView(v: V): void; onStatus(s: Status): void; onError(m: string): void }
-export interface CashConn<M> { send(m: M): void; close(): void }
+export interface TalkMsg { n: number; name: string; text: string }
+export interface CashHandlers<V> { onView(v: V): void; onStatus(s: Status): void; onError(m: string): void; onTalk?(m: TalkMsg): void; onTalkLog?(m: TalkMsg[]): void }
+export interface CashConn<M> { send(m: M): void; close(): void; say?(text: string): void }
 export interface CashCreate { sb?: number; bb: number; casual: boolean }
 
 export function getClientId(): string {
@@ -31,14 +32,17 @@ export function connectCash<V, M>(game: CashGameName, room: string, id: string, 
   ws.addEventListener('close', () => { if (!closed) h.onStatus('closed') })
   ws.addEventListener('message', (e) => {
     if (closed) return
-    const m = JSON.parse(e.data as string) as { t: string; view?: V; message?: string }
+    const m = JSON.parse(e.data as string) as { t: string; view?: V; message?: string; msg?: TalkMsg; msgs?: TalkMsg[] }
     if (m.t === 'pview') h.onView(m.view as V)
+    else if (m.t === 'talk' && m.msg) h.onTalk?.(m.msg)
+    else if (m.t === 'talklog' && m.msgs) h.onTalkLog?.(m.msgs)
     else if (m.t === 'error') h.onError(m.message ?? 'error')
   })
   const wake = () => { if (!closed && document.visibilityState === 'visible' && ws.readyState !== 1) ws.reconnect() }
   document.addEventListener('visibilitychange', wake)
   return {
     send: (m) => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'p', m })) },
+    say: (text) => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'talk', text })) },
     close: () => { closed = true; if (beat) clearInterval(beat); document.removeEventListener('visibilitychange', wake); try { ws.send(JSON.stringify({ t: 'bye' })) } catch { /* ignore */ } ws.close() },
   }
 }

@@ -76,6 +76,13 @@ npm run party:deploy
 
 All chip games share one room-code space; `src/games/shared/cash.ts` is the contract a new table game implements.
 
+## Checks for the card games
+
+- `npm run check` runs the type check plus the Mahjong, Hold'em, Blackjack and Big Two engine tests.
+- `npm run test:cards` runs the statistical checks (shuffle uniformity, seven-card hand frequencies against the exact values, pocket aces equity, blackjack basic strategy against the known house edge of about -0.5%, even seat wins at Hold'em, fair Big Two deals) and the disconnect/timeout tests.
+- With `wrangler dev` (:8787) and `vite --port 5200` running: `scripts/cards/layout-audit.ts` (244 screens over 19 phone, tablet and desktop sizes; `ONLY=390x844 ...` narrows it), `scripts/cards/talk-test.ts` (chat), `scripts/cards/collision-test.ts` (room codes shared between games), `scripts/cards/practice-test.ts` (offline practice, needs only vite), and the `ws-test.ts` in each game's folder (real tables over WebSockets, with the ledger audit).
+- `scripts/cards/i18n-audit.ts` checks every text key exists in English, Chinese and Japanese.
+
 ## Develop
 
 ```bash

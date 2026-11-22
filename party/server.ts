@@ -34,6 +34,10 @@ export class Main extends Server<Env> {
   private isCash() { return this.kind !== null && CASH_KINDS.includes(this.kind) }
   /** cash-table sessions: client id -> ledger account and the reference that ties the buy-in to the cash-out */
   psess = new Map<string, { userId: string; ref: string; n: number }>()
+  /** recent table chat for the card games (kept in memory only) */
+  private talkLog: { n: number; name: string; text: string }[] = []
+  private talkN = 0
+  private lastTalk = new Map<string, number>()
   private tableId = Math.random().toString(36).slice(2, 10)
 
   private persistTimer: ReturnType<typeof setTimeout> | null = null
@@ -240,6 +244,7 @@ export class Main extends Server<Env> {
     }
     const id = sender.state?.id
     if (!id) return
+    if (m.t === 'talk' && (this.isCash() || this.kind === 'bigtwo')) return this.talk(id, sender, m.text)
     if (this.kind === 'bigtwo') { if (m.t === 'p') this.btMsg(id, sender, m.m as unknown as BtMsg); else if (m.t === 'bye') this.bt?.leave(id, true); return }
     if (this.isCash()) { if (m.t === 'p') await this.cashMsg(id, sender, m.m); else if (m.t === 'bye') { this.game?.standUp(id); this.game?.disconnect(id) } return }
     switch (m.t) {
@@ -269,6 +274,20 @@ export class Main extends Server<Env> {
     }
   }
 
+  /** Table chat: one message a second at most, 140 characters, plain text. */
+  private talk(id: string, sender: Connection<{ id?: string }>, raw: unknown) {
+    const text = String(raw ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140)
+    if (!text) return
+    const now = Date.now()
+    if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.send(sender, { t: 'error', message: 'slow_down' })
+    this.lastTalk.set(id, now)
+    const seatName = this.kind === 'bigtwo' ? this.bt?.seats.find((x) => x.id === id)?.name : this.game ? this.guestNames.get(id) : undefined
+    const name = this.accounts.get(id)?.name ?? seatName ?? this.guestNames.get(id) ?? 'Player'
+    const msg = { n: ++this.talkN, name, text }
+    this.talkLog.push(msg); if (this.talkLog.length > 40) this.talkLog.shift()
+    for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) c.send(JSON.stringify({ t: 'talk', msg }))
+  }
+  private sendTalkLog(conn: Connection) { if (this.talkLog.length) conn.send(JSON.stringify({ t: 'talklog', msgs: this.talkLog })) }
   private async joinBigTwo(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
     const b = this.bt!, id = m.id
     const verdict = b.admit(id, m.create === true)
@@ -284,7 +303,9 @@ export class Main extends Server<Env> {
     } else this.accounts.delete(id)
     if (b.join(id, name) < 0) return this.send(sender, { t: 'error', message: 'room_full' })
     sender.setState({ id })
+    this.guestNames.set(id, name)
     this.broadcastViews()
+    this.sendTalkLog(sender)
   }
   private btMsg(id: string, sender: Connection<{ id?: string }>, m: BtMsg) {
     const b = this.bt!
@@ -323,6 +344,7 @@ export class Main extends Server<Env> {
     this.guestNames.set(id, name)
     p.join(id)
     this.sendPoker(sender, id)
+    this.sendTalkLog(sender)
   }
   private guestNames = new Map<string, string>()
 
