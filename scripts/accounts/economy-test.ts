@@ -57,6 +57,33 @@ const lb = await leaderboard(db, undefined, a)
 ok(lb.some((r) => r.me && r.profit === ch[0]), 'newcomer appears on the leaderboard after one game')
 ok(lb.every((r, i) => i === 0 || lb[i - 1].profit >= r.profit), 'leaderboard sorted by profit')
 
+// 5b. cash-table hold / release, and the daily cap against the house
+{
+  const { hold, release } = await import('../../party/economy')
+  const u = await mk('h')
+  await ensureAccount(db, u)
+  ok(await hold(db, u, 2000, `t${tag}:1:b0`), 'buy-in holds 2000 chips')
+  ok((await ensureAccount(db, u)).balance === START_CHIPS - 2000, 'balance drops by the buy-in')
+  ok(!(await hold(db, u, 99999, `t${tag}:2:b0`)), 'a buy-in above the balance is refused')
+  ok(await hold(db, u, 2000, `t${tag}:1:b0`) && (await ensureAccount(db, u)).balance === START_CHIPS - 2000, 'the same buy-in reference is not charged twice')
+  await release(db, u, 2000, 2600, `t${tag}:1`); await release(db, u, 2000, 2600, `t${tag}:1`)
+  const r1 = await ensureAccount(db, u)
+  ok(r1.balance === START_CHIPS + 600 && r1.profit === 600, 'cash-out returns the stack once; the difference is profit')
+  // blackjack: profit above the daily cap is not paid
+  const v = await mk('v2')
+  await ensureAccount(db, v)
+  await hold(db, v, 2000, `b${tag}:1:b0`)
+  await release(db, v, 2000, 2000 + 30000, `b${tag}:1`, { game: 'blackjack', dailyCap: 20000 })
+  const r2 = await ensureAccount(db, v)
+  ok(r2.balance === START_CHIPS + 20000 && r2.profit === 20000, `blackjack profit is capped at 20,000 a day (got ${r2.profit})`)
+  await hold(db, v, 2000, `b${tag}:2:b0`)
+  await release(db, v, 2000, 2000 + 5000, `b${tag}:2`, { game: 'blackjack', dailyCap: 20000 })
+  ok((await ensureAccount(db, v)).profit === 20000, 'once the cap is reached, further blackjack wins pay nothing')
+  await hold(db, v, 2000, `b${tag}:3:b0`)
+  await release(db, v, 2000, 500, `b${tag}:3`, { game: 'blackjack', dailyCap: 20000 })
+  ok((await ensureAccount(db, v)).profit === 20000 - 1500, 'losses are never capped')
+}
+
 // 6. ledger and balances agree
 const drift = await db.prepare(`SELECT COUNT(*) AS n FROM season_accounts a WHERE a.balance != (SELECT SUM(delta) FROM ledger l WHERE l.season=a.season AND l.user_id=a.user_id)`).first<{ n: number }>()
 ok(drift?.n === 0, 'no balance/ledger drift')

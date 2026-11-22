@@ -134,7 +134,7 @@ function BtTable({ v, status, room, error, send, leave, me, openSignIn }: { v: B
       <div className="bttable">
         {v.seats.filter((s) => !s.me).map((s) => (
           <div key={s.seat} className={'btseat pos' + rel(s.seat) + (v.turn === s.seat ? ' turn' : '') + (!s.connected && !s.bot ? ' away' : '')}>
-            <div className="bttag">{s.name}{s.bot && ' ·'}</div>
+            <div className="bttag">{s.name}</div>
             <div className="btcount">{t('btCards', { n: s.count })}</div>
             {s.passed && v.status === 'playing' && <div className="btpass">{t('btPassed')}</div>}
           </div>

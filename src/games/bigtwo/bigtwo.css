@@ -17,6 +17,15 @@
 :root:root .btcard:disabled { cursor: default; }
 @media (max-width: 640px) {
   .bt { --cw: 40px; } .bttable { padding: 64px 10px 20px; min-height: 280px; }
+  .btplay .pkcard { --cw: 30px; } .btplay { gap: 3px; }
   .btseat { padding: 5px 8px; min-width: 70px; } .btseat.pos1 { left: 6px; top: 46%; } .btseat.pos3 { right: 6px; top: 46%; } .bttag { max-width: 76px; font-size: 12px; }
-  .bthand { gap: 0; padding-top: 22px; } .bthand .pkcard { --cw: 34px; } .btcard { margin-right: -6px; }
+  .bthand { gap: 0; padding: 22px 12px 6px; flex-wrap: nowrap; justify-content: center; } .bthand .pkcard { --cw: 36px; } .btcard { margin-right: -10px; flex: none; } .btcard:last-child { margin-right: 0; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .bt .kg-bar { display: none; }
+  .bttable { min-height: 0; height: calc(100vh - 176px); padding: 44px 100px 8px; }
+  .btplay .pkcard { --cw: 30px; } .btplay { gap: 3px; min-height: 0; }
+  .bthand { padding: 16px 0 2px; flex-wrap: nowrap; } .bthand .pkcard { --cw: 34px; } .btcard { margin-right: -8px; flex: none; } .btcard:last-child { margin-right: 0; }
+  .bt .hdhead { padding: 4px 0; } .bt .hdbar { padding-top: 4px; }
 }

@@ -40,6 +40,7 @@ g.close(); await sleep(300)
 const b = client(room, 'b' + tag, 'B', { token: tb }); await sleep(500)
 const before = [(await get('/me', ta)).balance, (await get('/me', tb)).balance]
 a.p({ k: 'start' }); await sleep(500)
+console.log('debug', a.errors, b.errors, a.view?.status, a.view?.seats?.map((x: any) => x.name))
 ok(a.view?.status === 'playing' && a.view.hand.length === 13, 'ranked game starts with two signed-in humans and two bots')
 ok(b.view?.hand.length === 13 && JSON.stringify(a.view.hand) !== JSON.stringify(b.view.hand), 'each human gets their own 13 cards')
 for (let i = 0; i < 400 && a.view?.status === 'playing'; i++) { move(a); move(b); await sleep(120) }
