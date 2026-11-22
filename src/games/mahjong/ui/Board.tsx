@@ -5,7 +5,6 @@ import { doraFrom, isRedFive, kindOf, numOf, suitOf } from '../engine/tiles'
 import type { ClientMsg } from '../net/protocol'
 import type { ReactNode } from 'react'
 import { Side, Tile } from './Tile'
-import { ChatFeed } from './ChatFeed'
 import { ResultModal } from './ResultModal'
 import { useLang } from '../../../i18n'
 import { setSetting, useSettings } from '../settings'
@@ -218,7 +217,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
     const act = (m: ClientMsg) => { e.preventDefault(); send(m) }
     if (v.phase === 'result') { if (!announce && (k === 'enter' || k === ' ')) act({ t: 'ack' }); return }
     if (panel) { if (k === 'escape') setPanel(null); return }
-    if (online && (k === '/' || (k === 'enter' && !(o && sel !== null) && !reaction))) { e.preventDefault(); setPanel('chat'); return }
+    if (online && (k === '/' || (k === 'enter' && !(o && sel !== null) && !reaction))) { e.preventDefault(); (document.querySelector('.kgin input') as HTMLInputElement | null)?.focus(); return }
     if (reaction) {
       if (k === 'r' && reaction.ron) act({ t: 'decide', d: { type: 'ron' } })
       else if (k === 'p' && reaction.pon) act({ t: 'decide', d: { type: 'pon' } })
@@ -312,7 +311,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           <div className="seg">{(['auto', 'chinese', 'japanese'] as const).map((k) => <button key={k} className={settings.tileStyle === k ? 'on' : ''} onClick={() => setSetting('tileStyle', k)}>{t({ auto: 'tileAuto', chinese: 'tileCn', japanese: 'tileJp' }[k])}</button>)}</div>
         </div>
         <div className="dockrule" />
-        {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
+        {online && <button className="menuitem" onClick={() => { (document.querySelector('.kgin input') as HTMLInputElement | null)?.focus(); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
         <button className="menuitem" onClick={() => { setPanel('keys'); closeDock() }}>{t('shortcuts')}</button>
         <div className="dockrule" />
@@ -630,7 +629,6 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
       </div>
     )}
       {note && <div className="toast" role="status">{note}</div>}
-      {online && <ChatFeed v={v} send={send} open={panel === 'chat'} onClose={() => setPanel(null)} onOpen={() => setPanel('chat')} />}
       {panel === 'rules' && <RulesHelp initial={ruleId} onClose={() => setPanel(null)} />}
       {panel === 'history' && <HistoryModal v={v} you={you} onClose={() => setPanel(null)} />}
       {panel === 'keys' && <ShortcutsModal onClose={() => setPanel(null)} />}

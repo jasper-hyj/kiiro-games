@@ -2,8 +2,10 @@ import type { Decision, TurnAction } from '../engine/game'
 import type { RoomConfig, TableView } from '../engine/table'
 
 export type ClientMsg =
-  | { t: 'join'; id: string; name: string; create?: boolean; /** account session, if signed in */ token?: string; /** which game a new room is for (default mahjong); joining a room of another game is refused */ game?: 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'; /** Hold'em table settings for a new room */ pcfg?: { sb: number; bb: number; casual: boolean } }
+  | { t: 'join'; id: string; name: string; create?: boolean; /** watch the room without taking a seat */ watch?: boolean; /** account session, if signed in */ token?: string; /** which game a new room is for (default mahjong); joining a room of another game is refused */ game?: 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'; /** Hold'em table settings for a new room */ pcfg?: { sb: number; bb: number; casual: boolean } }
   | { t: 'bye' }
+  /** an observer takes a free seat */
+  | { t: 'sit' }
   | { t: 'config'; config: Partial<RoomConfig> }
   | { t: 'start' }
   | { t: 'act'; a: TurnAction }
@@ -21,3 +23,4 @@ export type ClientMsg =
   /** free-text table chat for the card games */
   | { t: 'talk'; text: string }
 export type ServerMsg = { t: 'view'; view: TableView } | { t: 'error'; message: string } | { t: 'pong'; ts: number }
+  | { t: 'talk'; msg: { n: number; name: string; text: string } } | { t: 'talklog'; msgs: { n: number; name: string; text: string }[] }

@@ -21,6 +21,8 @@ export interface PlayerView {
   idle?: 'slow' | 'auto'
 }
 export interface TableView {
+  /** people watching without a seat (filled in by the server) */
+  watching?: number
   status: 'lobby' | 'playing'
   config: RoomConfig
   seats: { name: string; human: boolean; connected: boolean; bot: boolean }[]

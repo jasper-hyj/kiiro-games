@@ -38,6 +38,9 @@ export class Main extends Server<Env> {
   private talkLog: { n: number; name: string; text: string }[] = []
   private talkN = 0
   private lastTalk = new Map<string, number>()
+  /** people who are in the room watching, without a seat (Big Two, Mahjong): they see only what the table shows publicly and can read and write chat */
+  private watchers = new Set<string>()
+  private watching() { const ids = new Set<string>(); for (const c of this.getConnections<{ id?: string }>()) { const id = c.state?.id; if (id && this.watchers.has(id)) ids.add(id) } return ids.size }
   private tableId = Math.random().toString(36).slice(2, 10)
 
   private persistTimer: ReturnType<typeof setTimeout> | null = null
@@ -186,7 +189,7 @@ export class Main extends Server<Env> {
 
   private broadcastViews() {
     if (this.kind === 'bigtwo' && this.bt) {
-      for (const c of this.getConnections<{ id?: string }>()) { const id = c.state?.id; if (id) c.send(JSON.stringify({ t: 'pview', game: 'bigtwo', view: { ...this.bt.view(id), signedIn: this.accounts.has(id) } })) }
+      for (const c of this.getConnections<{ id?: string }>()) { const id = c.state?.id; if (id) c.send(JSON.stringify({ t: 'pview', game: 'bigtwo', view: { ...this.bt.view(id), signedIn: this.accounts.has(id), watching: this.watching() } })) }
       return
     }
     if (this.isCash() && this.game) {
@@ -198,7 +201,7 @@ export class Main extends Server<Env> {
     }
     for (const c of this.getConnections<{ id?: string }>()) {
       const id = c.state?.id
-      if (id) this.send(c, { t: 'view', view: this.table.view(id) })
+      if (id) this.send(c, { t: 'view', view: { ...this.table.view(id), watching: this.watching() } })
     }
   }
 
@@ -236,15 +239,17 @@ export class Main extends Server<Env> {
           this.accounts.set(id, { userId: u.id, name: u.name }); name = u.name
         } else this.accounts.delete(id)
       } else this.accounts.delete(id)
-      const seat = this.table.join(id, name)
-      if (seat < 0) return this.send(sender, { t: 'error', message: 'room_full' })
+      // asked to watch, or the table is full: watch instead of being turned away
+      const seat = m.watch === true ? -1 : this.table.join(id, name)
+      if (seat < 0) { this.watchers.add(id); this.guestNames.set(id, name) } else this.watchers.delete(id)
       sender.setState({ id })
       this.broadcastViews()
+      this.sendTalkLog(sender)
       return
     }
     const id = sender.state?.id
     if (!id) return
-    if (m.t === 'talk' && (this.isCash() || this.kind === 'bigtwo')) return this.talk(id, sender, m.text)
+    if (m.t === 'talk') return this.talk(id, sender, m.text)
     if (this.kind === 'bigtwo') { if (m.t === 'p') this.btMsg(id, sender, m.m as unknown as BtMsg); else if (m.t === 'bye') this.bt?.leave(id, true); return }
     if (this.isCash()) { if (m.t === 'p') await this.cashMsg(id, sender, m.m); else if (m.t === 'bye') { this.game?.standUp(id); this.game?.disconnect(id) } return }
     switch (m.t) {
@@ -271,6 +276,11 @@ export class Main extends Server<Env> {
       case 'say': this.table.say(id, m.text); break
       case 'bye': this.table.leave(id, true); break
       case 'here': this.table.here(id); break
+      case 'sit': {
+        if (this.table.seatOf(id) >= 0) { this.watchers.delete(id); break }
+        if (this.table.join(id, this.accounts.get(id)?.name ?? this.guestNames.get(id) ?? 'Player') < 0) return this.send(sender, { t: 'error', message: 'room_full' })
+        this.watchers.delete(id); this.broadcastViews(); break
+      }
     }
   }
 
@@ -281,7 +291,7 @@ export class Main extends Server<Env> {
     const now = Date.now()
     if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.send(sender, { t: 'error', message: 'slow_down' })
     this.lastTalk.set(id, now)
-    const seatName = this.kind === 'bigtwo' ? this.bt?.seats.find((x) => x.id === id)?.name : this.game ? this.guestNames.get(id) : undefined
+    const seatName = this.kind === 'bigtwo' ? this.bt?.seats.find((x) => x.id === id)?.name : this.game ? this.guestNames.get(id) : this.table.slots.find((x) => x.id === id)?.name
     const name = this.accounts.get(id)?.name ?? seatName ?? this.guestNames.get(id) ?? 'Player'
     const msg = { n: ++this.talkN, name, text }
     this.talkLog.push(msg); if (this.talkLog.length > 40) this.talkLog.shift()
@@ -301,7 +311,8 @@ export class Main extends Server<Env> {
         this.accounts.set(id, { userId: u.id, name: u.name }); name = u.name
       } else this.accounts.delete(id)
     } else this.accounts.delete(id)
-    if (b.join(id, name) < 0) return this.send(sender, { t: 'error', message: 'room_full' })
+    // asked to watch, or no seat is free: watch instead of being turned away
+    if (m.watch === true || b.join(id, name) < 0) this.watchers.add(id); else this.watchers.delete(id)
     sender.setState({ id })
     this.guestNames.set(id, name)
     this.broadcastViews()
@@ -324,6 +335,11 @@ export class Main extends Server<Env> {
         if (humans.length < 2 || humans.some((s) => !this.accounts.has(s.id!))) return err('ranked_needs_players')
       }
       b.start(id); return
+    }
+    if (m.k === 'sit') {
+      if (b.seatOf(id) >= 0) { this.watchers.delete(id); return }
+      if (b.join(id, this.accounts.get(id)?.name ?? this.guestNames.get(id) ?? 'Player') < 0) return err('room_full')
+      this.watchers.delete(id); this.broadcastViews(); return
     }
     if (m.k === 'lobby') { b.backToLobby(id); return }
   }

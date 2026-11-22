@@ -31,7 +31,7 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
     const place = () => {
       const w = box.current?.getBoundingClientRect().width ?? 330
       let top = innerHeight
-      for (const el of Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'))) {
+      for (const el of Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .handbar, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'))) {
         const r = el.getBoundingClientRect()
         if (r.height > 0 && r.left < w + 12 && r.right > 0 && r.top > innerHeight * 0.3 && r.top < top) top = r.top
       }

@@ -2,7 +2,7 @@ import { registerStrings } from '../../i18n'
 
 export const BT_STRINGS: Record<string, [string, string]> = {
   btName: ['Big Two', '大老二'], btTagline: ['Get rid of your cards first. 2 is the highest card; singles, pairs, triples and five-card hands.', '最先出完手牌者獲勝。2 最大；可出單張、對子、三條與五張牌型。'],
-  btPlay: ['Play with friends', '和朋友玩'], btPractice: ['Practice vs bots', '和電腦練習'], btStart: ['Start game', '開始遊戲'], btWaitHost: ['Waiting for the host to start.', '等待房主開始。'],
+  btPlay: ['Play with friends', '和朋友玩'], btPractice: ['Practice vs bots', '和電腦練習'], btStart: ['Start game', '開始遊戲'], btWaitHost: ['Waiting for the host to start.', '等待房主開始。'], btWatchers: ['{n} watching', '{n} 人觀戰'],
   btRanked: ['Ranked (chips)', '排名賽（籌碼）'], btCasual: ['Casual', '休閒'], btRankedHint: ['Needs 2+ players, all signed in. Chips move between players; bots never win or lose chips.', '需要兩位以上且全部已登入的玩家。籌碼在玩家之間轉移，電腦不會贏或輸籌碼。'],
   btSeats: ['Players', '玩家'], btBot: ['Bot (fills empty seats)', '電腦（補空位）'], btYou: ['you', '你'],
   btPlayBtn: ['Play', '出牌'], btPassBtn: ['Pass', '過'], btYourTurn: ['Your turn', '輪到你'], btLead: ['You lead: play anything', '你先出：任意牌型'], btOpen: ['You open: include the 3 of diamonds', '你開局：必須包含方塊 3'],
@@ -22,7 +22,7 @@ registerStrings(BT_STRINGS)
 
 registerStrings({}, {
   btName: '大老二', btTagline: '最初に手札を出し切った人の勝ち。2が最強で、シングル・ペア・スリーカード・5枚役で出します。',
-  btPlay: '友達と遊ぶ', btPractice: 'CPUと練習', btStart: 'ゲーム開始', btWaitHost: 'ホストの開始を待っています。', btRanked: 'ランク戦（チップ）', btCasual: 'カジュアル',
+  btPlay: '友達と遊ぶ', btPractice: 'CPUと練習', btStart: 'ゲーム開始', btWaitHost: 'ホストの開始を待っています。', btWatchers: '{n}人が観戦中', btRanked: 'ランク戦（チップ）', btCasual: 'カジュアル',
   btRankedHint: '全員がログイン済みの2人以上が必要です。チップはプレイヤー間で移動し、CPUは得も失いもしません。', btSeats: 'プレイヤー', btBot: 'CPU（空席を埋めます）', btYou: 'あなた',
   btPlayBtn: '出す', btPassBtn: 'パス', btYourTurn: 'あなたの番です', btLead: '先手：好きな役を出せます', btOpen: '開始：ダイヤの3を含めてください', btWaitTurn: '{name} の番', btPassed: 'パス', btCards: '{n} 枚',
   btWins: '{name} があがり', btPoints: '得点', btAgain: 'ロビーに戻る', btLeft: '残り {n}',

@@ -5,5 +5,6 @@ export type BtMsg =
   | { k: 'play'; cards: number[] }
   | { k: 'pass' }
   | { k: 'lobby' }
+  | { k: 'sit' } // an observer takes a free seat
   | { k: 'config'; config: Partial<BtConfig> }
-export type BigTwoView = BtView & { signedIn: boolean }
+export type BigTwoView = BtView & { signedIn: boolean; /** people watching without a seat */ watching: number }

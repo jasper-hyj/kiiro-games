@@ -32,6 +32,7 @@ export default function BigTwoApp() {
   const startedFor = useRef<string | null>(null)
   const retry = useRef<(() => void) | null>(null)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
+  const watchOnly = useMemo(() => new URLSearchParams(location.search).get('watch') === '1', [])
   const handlers = useMemo(() => ({
     onView: (v: BigTwoView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
@@ -47,9 +48,9 @@ export default function BigTwoApp() {
   }), [])
   const open = useCallback((rm: string, create?: boolean) => {
     conn.current?.close(); startedFor.current = rm; setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}`)
-    conn.current = connectCash<BigTwoView, BtMsg>('bigtwo', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create ? { bb: 0, casual: true } : undefined)
-  }, [name, me?.name, handlers])
+    history.replaceState(null, '', `${location.pathname}?room=${rm}${watchOnly ? '&watch=1' : ''}`)
+    conn.current = connectCash<BigTwoView, BtMsg>('bigtwo', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create ? { bb: 0, casual: true } : undefined, { watch: watchOnly })
+  }, [name, me?.name, handlers, watchOnly])
   const practice = () => {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBigTwo(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
@@ -107,7 +108,9 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
   const chosen = sel.length ? evalCombo(sel) : null
   const curCombo = v.current ? evalCombo(v.current.cards) : null
   const legal = !!chosen && beats(chosen, curCombo) && (!v.mustOpen || sel.includes(27))
-  const rel = (seat: number) => (seat - v.you + 4) % 4 // 0 me, 1 left, 2 top, 3 right
+  const ref = Math.max(0, v.you)
+  const watcher = v.you < 0
+  const rel = (seat: number) => (seat - ref + 4) % 4 // 0 me, 1 left, 2 top, 3 right
   const secs = deadline.current ? Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)) : null
   const toggle = (c: number) => setSel((s) => (s.includes(c) ? s.filter((x) => x !== c) : s.length < 5 ? [...s, c] : s))
   const hand = [...v.hand].sort((a, b) => power(a) - power(b))
@@ -127,6 +130,7 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
     return (
       <div className="kg hd bt"><div className="kg-wrap hdwrap">{head}
         <h2 className="btsec">{t('btSeats')}</h2>
+        {v.you < 0 && <p className="kg-note">{t('hdSpectating')} <button className="hdbtn primary" onClick={() => send({ k: 'sit' })}>{t('hdSit')}</button></p>}
         <ul className="btlobby">{v.seats.map((s) => <li key={s.seat} className={s.empty ? 'muted' : ''}>{s.empty ? t('btBot') : <>{s.name}{s.me && <span className="muted"> · {t('btYou')}</span>}</>}</li>)}</ul>
         {v.host ? (
           <div className="hdform">
@@ -136,6 +140,7 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
             <div><button className="hdbtn primary" onClick={() => send({ k: 'start' })}>{t('btStart')}</button></div>
           </div>
         ) : <p className="kg-note">{t('btWaitHost')}</p>}
+        {v.watching > 0 && <p className="kg-note">{t('btWatchers', { n: v.watching })}</p>}
         <p className="kg-note">{t('btRules')}</p>
         {room !== 'practice' && <TalkBox lines={talk} say={say} />}
       </div></div>
@@ -146,7 +151,7 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
   return (
     <div className="kg hd bt"><div className="kg-wrap hdwrap">{head}
       <div className="bttable">
-        {v.seats.filter((s) => !s.me).map((s) => (
+        {v.seats.filter((s) => s.seat !== ref).map((s) => (
           <div key={s.seat} className={'btseat pos' + rel(s.seat) + (v.turn === s.seat ? ' turn' : '') + (!s.connected && !s.bot ? ' away' : '')}>
             <div className="bttag">{s.name}</div>
             <div className="btcount">{t('btCards', { n: s.count })}</div>
@@ -171,14 +176,24 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
         </div>
       </div>
 
+      {watcher ? (
+        <div className="bthand btwatch" role="group" aria-label="watching">
+          <div className="btseat bottom"><div className="bttag">{v.seats[ref].name}</div><div className="btcount">{t('btCards', { n: v.seats[ref].count })}</div></div>
+        </div>
+      ) : (
       <div className="bthand" role="group" aria-label="hand">
         {hand.map((c) => <button key={c} className={'btcard' + (sel.includes(c) ? ' sel' : '')} onClick={() => toggle(c)} disabled={v.status !== 'playing'}><Card c={c} /></button>)}
       </div>
+      )}
       <div className="hdbar">
+        {watcher ? (
+          <div className="hdactions"><span className="muted small">{t('hdSpectating')}{v.watching > 0 ? ` · ${t('btWatchers', { n: v.watching })}` : ''}</span><button className="hdbtn primary" onClick={() => send({ k: 'sit' })}>{t('hdSit')}</button></div>
+        ) : (
         <div className="hdactions">
           <button className="hdbtn" disabled={!myTurn || !v.canPass} onClick={() => send({ k: 'pass' })}>{t('btPassBtn')}</button>
           <button className="hdbtn primary" disabled={!myTurn || !legal} onClick={() => send({ k: 'play', cards: sel })}>{t('btPlayBtn')}{chosen ? ` · ${t('btt.' + chosen.type)}` : ''}</button>
         </div>
+        )}
       </div>
       {room !== 'practice' && <TalkBox lines={talk} say={say} />}
     </div></div>

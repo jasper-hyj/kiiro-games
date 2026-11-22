@@ -18,14 +18,14 @@ export function getClientId(): string {
 }
 
 /** Connects to a chip-table room (same socket and room-code space as every other game: the first player to create a code decides its game). */
-export function connectCash<V, M>(game: CashGameName, room: string, id: string, name: string, h: CashHandlers<V>, create?: CashCreate): CashConn<M> {
+export function connectCash<V, M>(game: CashGameName, room: string, id: string, name: string, h: CashHandlers<V>, create?: CashCreate, opts?: { watch?: boolean }): CashConn<M> {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
   let closed = false
   let beat: ReturnType<typeof setInterval> | null = null
   ws.addEventListener('open', () => {
     h.onStatus('open')
-    ws.send(JSON.stringify({ t: 'join', id, name, game, ...(create ? { create: true, pcfg: create } : {}), ...(getToken() ? { token: getToken() } : {}) }))
+    ws.send(JSON.stringify({ t: 'join', id, name, game, ...(opts?.watch ? { watch: true } : {}), ...(create ? { create: true, pcfg: create } : {}), ...(getToken() ? { token: getToken() } : {}) }))
     if (beat) clearInterval(beat)
     beat = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })) }, 15000)
   })

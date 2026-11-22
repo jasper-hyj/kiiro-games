@@ -12,7 +12,7 @@ export interface Conn {
   reconnect?(): void
 }
 export type Status = 'connecting' | 'open' | 'closed'
-export interface Handlers { onView(v: TableView): void; onStatus(s: Status): void; onError(m: string): void; onLatency?(ms: number): void }
+export interface Handlers { onView(v: TableView): void; onStatus(s: Status): void; onError(m: string): void; onLatency?(ms: number): void; onTalk?(m: { n: number; name: string; text: string }): void; onTalkLog?(m: { n: number; name: string; text: string }[]): void }
 
 export function getClientId(): string {
   try {
@@ -60,7 +60,7 @@ export const PARTY_HOST = envHost || `${location.hostname || 'localhost'}:8787`
 /** false on a deployed site that has no VITE_PARTYKIT_HOST (online rooms cannot work there) */
 export const onlineConfigured = !!envHost || import.meta.env.DEV || ['localhost', '127.0.0.1', ''].includes(location.hostname)
 
-export function connectRemote(room: string, id: string, name: string, h: Handlers, create = false): Conn {
+export function connectRemote(room: string, id: string, name: string, h: Handlers, create = false, watch = false): Conn {
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
   let lastPong = 0
@@ -87,7 +87,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   ws.addEventListener('open', () => {
     stopRetry()
     h.onStatus('open')
-    ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}), ...(getToken() ? { token: getToken()! } : {}) } satisfies ClientMsg))
+    ws.send(JSON.stringify({ t: 'join', id, name, ...(create ? { create: true } : {}), ...(watch ? { watch: true } : {}), ...(getToken() ? { token: getToken()! } : {}) } satisfies ClientMsg))
     lastPong = Date.now()
     beat()
     if (beatTimer) clearInterval(beatTimer)
@@ -99,6 +99,8 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     const m = JSON.parse(e.data as string) as ServerMsg
     if (m.t === 'view') h.onView(m.view)
     else if (m.t === 'pong') { lastPong = Date.now(); if (watchdog) clearTimeout(watchdog); h.onLatency?.(Date.now() - m.ts) }
+    else if (m.t === 'talk') h.onTalk?.(m.msg)
+    else if (m.t === 'talklog') h.onTalkLog?.(m.msgs)
     else h.onError(m.message)
   })
   return {

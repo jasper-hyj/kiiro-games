@@ -22,7 +22,7 @@ export function connectLocalBlackjack(id: string, name: string, minBet: number, 
 
 export function connectLocalBigTwo(id: string, name: string, h: CashHandlers<BigTwoView>): CashConn<BtMsg> {
   const t = new BigTwoTable()
-  const push = () => h.onView({ ...t.view(id), signedIn: false })
+  const push = () => h.onView({ ...t.view(id), signedIn: false, watching: 0 })
   t.onChange(push)
   t.join(id, name)
   t.start(id) // practice starts at once: three bots take the other seats

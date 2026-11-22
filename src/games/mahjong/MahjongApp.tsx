@@ -13,6 +13,8 @@ import { stressView } from './ui/stress'
 import { RulesHelp } from './ui/RulesHelp'
 import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
+import { TalkBox } from '../shared/TalkBox'
+import '../holdem/strings'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
@@ -25,6 +27,8 @@ export default function MahjongApp() {
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
+  const [talk, setTalk] = useState<{ n: number; name: string; text: string }[]>([])
+  const watchOnly = new URLSearchParams(location.search).get('watch') === '1'
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
   // bots are named "Bot 1…" by the engine; show them in the player's language
@@ -82,10 +86,13 @@ export default function MahjongApp() {
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
-    history.replaceState(null, '', `?room=${c}${dbg ? '&debug=1' : ''}`)
+    history.replaceState(null, '', `?room=${c}${watchOnly ? '&watch=1' : ''}${dbg ? '&debug=1' : ''}`)
     if (!create) pendingCfg.current = null
+    if (!create) setTalk([])
     const roomHandlers = {
       ...handlers,
+      onTalk: (m: { n: number; name: string; text: string }) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
+      onTalkLog: (ms: { n: number; name: string; text: string }[]) => setTalk(ms),
       onView: (v: TableView) => {
         if (pendingCfg.current && v.host && v.status === 'lobby') { // a freshly created room starts with the default rules: apply what the player chose
           const { rule, rounds, aka, minFan, players, botLevel, swap } = pendingCfg.current
@@ -108,7 +115,7 @@ export default function MahjongApp() {
       },
     }
     const mine = ++seq.current
-    conn.current = connectRemote(c, id.current, name || 'Player', guard(roomHandlers, mine), create)
+    conn.current = connectRemote(c, id.current, name || 'Player', guard(roomHandlers, mine), create, watchOnly)
     if (dbg) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
     if (failTimer.current) clearTimeout(failTimer.current)
@@ -183,6 +190,10 @@ export default function MahjongApp() {
           </div>
         )}
         {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
+        {active && shown && room && shown.you < 0 && (
+          <div className="mjwatch" role="status">{t('mjWatching')}{shown.watching ? ` · ${t('mjWatchers', { n: shown.watching })}` : ''}<button className="btn gold" onClick={() => send({ t: 'sit' })}>{t('mjSit')}</button></div>
+        )}
+        {active && room && shown && <TalkBox lines={talk} say={(x) => conn.current?.send({ t: 'talk', text: x })} />}
         {active && shown && !playing && room && <RoomLobby view={shown} room={room} send={send} onLeave={leave} />}
         {active && shown && playing && <Board room={room} status={status} view={shown} send={send} hints={hints} setHints={setHints} onLeave={leave} online={!!room || !!stress} />}
       </div>

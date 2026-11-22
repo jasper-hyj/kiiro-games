@@ -1408,3 +1408,7 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 :root:root:root .dock .tilestyle { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; }
 :root:root:root .dock .tilestyle .seg { flex: none; }
 :root:root:root .dock .tilestyle .seg button { padding: 4px 10px; min-height: 30px; font-size: 13px; }
+
+/* observers: a slim bar at the top centre, out of the way of the tiles */
+.mjwatch { position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: var(--z-top); display: flex; align-items: center; gap: 12px; padding: 4px 6px 4px 14px; border-radius: 999px; background: rgba(8,12,24,.6); backdrop-filter: blur(4px); color: #eef1f8; font: 500 13px var(--sans); white-space: nowrap; }
+.mjwatch .btn { min-height: 30px; padding: 0 14px; font-size: 13px; }

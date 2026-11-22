@@ -161,6 +161,7 @@ export const MAHJONG_STRINGS: Record<string, [string, string]> = {
   room_not_found: ['No room with that code. Check the four digits, or ask your friend for the code again.', '找不到這個房間。請確認四位數代碼，或請朋友再給你一次。'],
   code_taken: ['That code is already in use. Please try again.', '這個代碼已被使用，請再試一次。'],
   room_full: ['This room is full — all four seats are taken by players.', '此房間已滿，四個座位都有玩家。'],
+  mjWatching: ['Watching', '觀戰中'], mjWatchers: ['{n} watching', '{n} 人觀戰'], mjSit: ['Take a seat', '入座'],
   bad_id: ['Your browser sent an invalid player id. Reload the page and try again.', '玩家識別碼無效，請重新整理頁面後再試。'],
   conn_failed: ['Could not reach the game server. Check your connection and try again.', '無法連線到遊戲伺服器，請檢查網路後再試。'],
   calcTw: ['Base 30 + 10 per tai: 30 + 10 × {n} = {base} from each payer', '底 30 + 每台 10：30 + 10 × {n} = {base}（每位付款者）'],
