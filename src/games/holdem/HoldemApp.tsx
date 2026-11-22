@@ -5,6 +5,8 @@ import { useAccount } from '../../account/Account'
 import { api } from '../../account/api'
 import { BLINDS } from './engine/table'
 import { Card } from './ui/Cards'
+import { Rules } from '../shared/Rules'
+import { best, categoryOf } from './engine/eval'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
 import './strings'
 import './holdem.css'
@@ -37,11 +39,14 @@ export default function HoldemApp() {
   const conn = useRef<PokerConn | null>(null)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
   const startedFor = useRef<string | null>(null)
+  /** set while creating a table: a code that is already in use is retried with a new one */
+  const retry = useRef<(() => void) | null>(null)
 
   const handlers = useMemo(() => ({
-    onView: (v: HoldemView) => { setView(v); setError('') },
+    onView: (v: HoldemView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
     onError: (m: string) => {
+      if (m === 'code_taken' && retry.current) { retry.current(); return }
       if (m.startsWith('wrong_game:')) { location.href = `/mahjong?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -61,9 +66,11 @@ export default function HoldemApp() {
   const create = () => {
     const bb = BLINDS.find(([s]) => s === sb)?.[1] ?? sb * 2
     save('kiiro-name', name); save('kiiro-hd-sb', String(sb)); save('kiiro-hd-casual', casual ? '1' : '0')
-    open(String(1000 + Math.floor(Math.random() * 9000)), { sb, bb, casual })
+    let n = 0
+    const go = () => { retry.current = n++ < 8 ? go : null; open(String(1000 + Math.floor(Math.random() * 9000)), { sb, bb, casual }) }
+    go()
   }
-  const join = (c: string) => { save('kiiro-name', name); open(c.trim()) }
+  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) join(urlRoom) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // a sign-in (or sign-out) while at the table: reconnect so the server knows who you are
@@ -84,6 +91,7 @@ export default function HoldemApp() {
           <div className="hdform">
             <label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label>
           </div>
+          <Rules title="hdHow" lines={['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5']} />
           <div className="kg-cols">
             <section className="hdform">
               <h2>{t('hdCreate')}</h2>
@@ -148,6 +156,8 @@ function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, 
   const potNow = v.pot
   const winners = v.result ? v.result.won.map((w, i) => ({ w, i })).filter((x) => x.w > 0) : []
   const toActName = v.toAct >= 0 ? v.seats[v.toAct].name : ''
+  const mine = youSeat && !youSeat.folded && youSeat.hole && youSeat.hole.length === 2 && v.board.length >= 3 ? [...youSeat.hole, ...v.board] : null
+  const mineName = mine ? t('hand.' + categoryOf(best(mine))) : ''
   const secsLeft = deadline.current ? Math.max(0, Math.ceil((deadline.current.at - Date.now()) / 1000)) : null
   const nextS = nextAt.current ? Math.max(0, Math.ceil((nextAt.current - Date.now()) / 1000)) : null
   const link = `${location.origin}${location.pathname}?room=${room}`
@@ -180,7 +190,8 @@ function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, 
                     return <span key={i} className="hdwin">{t('hdWins', { name: v.seats[i].name || '—', n: fmt(w) })}{sh ? ` · ${t('hand.' + sh.cat)}` : ''}</span>
                   })}{nextS != null && <span className="muted"> · {t('hdNext', { s: nextS })}</span>}</>
                 : v.street === 'wait' ? (v.seats.filter((s) => !s.empty).length < 2 ? t('hdWaiting') : '')
-                : turn ? t('hdYourTurn') : toActName ? t('hdWaitTurn', { name: toActName }) : ''}
+                : (turn ? t('hdYourTurn') : toActName ? t('hdWaitTurn', { name: toActName }) : '')}
+              {mineName && !v.result && <span className="hdmine">{t('hdYouHave', { hand: mineName })}</span>}
             </div>
           </div>
           {v.seats.map((s) => {

@@ -17,6 +17,14 @@ export const HOLDEM_STRINGS: Record<string, [string, string]> = {
   hdSB: ['SB', '小盲'], hdBB: ['BB', '大盲'], hdDealer: ['D', '莊'],
   hdLastFold: ['fold', '棄牌'], hdLastCheck: ['check', '過牌'], hdLastCall: ['call', '跟注'], hdLastRaise: ['raise', '加注'], hdLastBet: ['bet', '下注'], hdLastAllin: ['all in', '全下'], hdLastSb: ['small blind', '小盲'], hdLastBb: ['big blind', '大盲'],
   'hand.0': ['High card', '高牌'], 'hand.1': ['Pair', '一對'], 'hand.2': ['Two pair', '兩對'], 'hand.3': ['Three of a kind', '三條'], 'hand.4': ['Straight', '順子'], 'hand.5': ['Flush', '同花'], 'hand.6': ['Full house', '葫蘆'], 'hand.7': ['Four of a kind', '四條'], 'hand.8': ['Straight flush', '同花順'],
+  hdHow: ["How to play Texas Hold'em", '德州撲克玩法'],
+  hdR1: ['Everyone gets two private cards; five shared cards are dealt in three steps (flop, turn, river).', '每人兩張底牌，另有五張公共牌分三階段發出（翻牌、轉牌、河牌）。'],
+  hdR2: ['Each round you may fold, check or call, or bet and raise. The best five-card hand wins the pot.', '每輪可棄牌、過牌或跟注，也可下注、加注。以最大的五張牌型贏得底池。'],
+  hdR3: ['Hands from low to high: high card, pair, two pair, three of a kind, straight, flush, full house, four of a kind, straight flush.', '牌型由小到大：高牌、一對、兩對、三條、順子、同花、葫蘆、四條、同花順。'],
+  hdR4: ['Blinds are forced bets that rotate around the table. If you do not act in 30 seconds you are folded.', '盲注是輪流強制下的注。30 秒內沒有動作會自動棄牌。'],
+  hdR5: ['Cash tables use play chips from your balance and have no cash value. Casual tables use free temporary chips.', '現金桌使用你餘額中的遊戲籌碼，沒有現金價值。休閒桌使用免費的臨時籌碼。'],
+  hdYouHave: ['You have {hand}', '你的牌型：{hand}'],
+  practiceOffline: ['Practice offline', '離線練習'], practiceTitle: ['Practice', '練習'],
   hdOffline: ['Cannot reach the game server.', '無法連線到遊戲伺服器。'],
   hdConnecting: ['Connecting…', '連線中…'], hdLost: ['Connection lost. Reconnecting…', '連線中斷，重新連線中…'],
   signin_required: ['Sign in to sit at a cash table.', '登入後才能入座現金桌。'], not_enough_chips: ['Not enough chips for that buy-in.', '籌碼不足，無法買入。'],
@@ -24,3 +32,22 @@ export const HOLDEM_STRINGS: Record<string, [string, string]> = {
   cannot_check: ['You cannot check now.', '現在不能過牌。'], cannot_raise: ['You cannot raise now.', '現在不能加注。'], bad_amount: ['That amount is not allowed.', '金額不符。'],
 }
 registerStrings(HOLDEM_STRINGS)
+
+registerStrings({}, {
+  hdName: 'テキサスホールデム', hdTagline: 'プレイ用チップで遊ぶ気軽なテーブル。CPUはいません。チップに現金価値はありません。',
+  hdCreate: 'テーブルを作る', hdJoin: 'コードで参加', hdCode: '4桁のコード', hdJoinBtn: '参加', hdCreateBtn: 'テーブルを作る', hdNick: 'あなたの名前', hdBlinds: 'ブラインド', hdMode: 'テーブルの種類',
+  hdCasual: 'カジュアル', hdCash: 'キャッシュ（プレイ用チップ）', hdCasualNote: '無料の一時チップ。ゲストも参加でき、何も保存されません。', hdCashNote: '残高からバイインし、退席時に換金します。アカウントが必要です。',
+  hdRoom: 'テーブル', hdCopy: '招待リンクをコピー', hdCopied: 'コピーしました', hdLeave: '退席する', hdSit: '着席する', hdBuyin: 'バイイン', hdSitCash: '{n} で着席', hdSignIn: 'キャッシュテーブルはログインが必要です',
+  hdWaiting: '他のプレイヤーを待っています…', hdSpectating: '観戦中です。着席すると参加できます。', hdFold: 'フォールド', hdCheck: 'チェック', hdCall: 'コール {n}', hdRaise: '{n} までレイズ', hdBet: 'ベット {n}', hdAllIn: 'オールイン',
+  hdMin: '最小', hdHalf: '½ ポット', hdPot: 'ポット', hdYourTurn: 'あなたの番です', hdWaitTurn: '{name} の番', hdPotLabel: 'ポット', hdWins: '{name} が {n} を獲得', hdSplit: '引き分け', hdNext: '{s} 秒後に次のハンド',
+  hdSitOut: '離席する', hdBack: '戻りました', hdOutNote: '離席中です。', hdRebuy: 'チップを追加', hdDealer: 'D',
+  hdLastFold: 'フォールド', hdLastCheck: 'チェック', hdLastCall: 'コール', hdLastRaise: 'レイズ', hdLastBet: 'ベット', hdLastAllin: 'オールイン', hdLastSb: 'スモールブラインド', hdLastBb: 'ビッグブラインド',
+  'hand.0': 'ハイカード', 'hand.1': 'ワンペア', 'hand.2': 'ツーペア', 'hand.3': 'スリーカード', 'hand.4': 'ストレート', 'hand.5': 'フラッシュ', 'hand.6': 'フルハウス', 'hand.7': 'フォーカード', 'hand.8': 'ストレートフラッシュ',
+  hdConnecting: '接続中…', hdLost: '接続が切れました。再接続中…', hdYouHave: 'あなたの役：{hand}', practiceOffline: 'オフラインで練習', practiceTitle: '練習',
+  signin_required: 'キャッシュテーブルに座るにはログインしてください。', not_enough_chips: 'そのバイインに必要なチップが足りません。', bad_buyin: 'そのバイイン額は使えません。', table_full: 'テーブルは満席です。',
+  not_your_turn: 'まだあなたの番ではありません。', cannot_check: '今はチェックできません。', cannot_raise: '今はレイズできません。', bad_amount: 'その金額は使えません。',
+  hdHow: 'テキサスホールデムの遊び方',
+  hdR1: '各自に2枚の手札が配られ、5枚の共通カードが3段階（フロップ、ターン、リバー）で開かれます。', hdR2: '各ラウンドでフォールド、チェック、コール、またはベット・レイズを選びます。最強の5枚の役がポットを獲得します。',
+  hdR3: '役の強さ（弱い順）：ハイカード、ワンペア、ツーペア、スリーカード、ストレート、フラッシュ、フルハウス、フォーカード、ストレートフラッシュ。',
+  hdR4: 'ブラインドは順番に支払う強制ベットです。30秒間操作しないと自動でフォールドします。', hdR5: 'キャッシュテーブルは残高のプレイ用チップを使い、現金価値はありません。カジュアルテーブルは無料の一時チップです。',
+})

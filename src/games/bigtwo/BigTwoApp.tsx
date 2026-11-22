@@ -3,8 +3,10 @@ import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
 import { Card } from '../holdem/ui/Cards'
+import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status } from '../shared/cashClient'
 import { beats, evalCombo, power } from './engine/combos'
+import { Rules } from '../shared/Rules'
 import type { BigTwoView, BtMsg } from './net/protocol'
 import '../holdem/strings'
 import '../blackjack/strings'
@@ -26,11 +28,13 @@ export default function BigTwoApp() {
   const [code, setCode] = useState('')
   const conn = useRef<CashConn<BtMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
+  const retry = useRef<(() => void) | null>(null)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
   const handlers = useMemo(() => ({
-    onView: (v: BigTwoView) => { setView(v); setError('') },
+    onView: (v: BigTwoView) => { retry.current = null; setView(v); setError('') },
     onStatus: setStatus,
     onError: (m: string) => {
+      if (m === 'code_taken' && retry.current) { retry.current(); return }
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken' || m === 'room_full') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -42,8 +46,12 @@ export default function BigTwoApp() {
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectCash<BigTwoView, BtMsg>('bigtwo', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create ? { bb: 0, casual: true } : undefined)
   }, [name, me?.name, handlers])
-  const create = () => { save('kiiro-name', name); open(String(1000 + Math.floor(Math.random() * 9000)), true) }
-  const join = (c: string) => { save('kiiro-name', name); open(c.trim()) }
+  const practice = () => {
+    conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
+    conn.current = connectLocalBigTwo(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
+  }
+  const create = () => { save('kiiro-name', name); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(String(1000 + Math.floor(Math.random() * 9000)), true) }; go() }
+  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) join(urlRoom) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(true)
@@ -60,8 +68,9 @@ export default function BigTwoApp() {
           <p className="kg-lead">{t('btTagline')}</p>
           {error && <p className="acerr" role="alert">{t(error)}</p>}
           <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label></div>
+          <Rules title="btHow" lines={['btR1', 'btR2', 'btR3', 'btR4', 'btR5']} />
           <div className="kg-cols">
-            <section className="hdform"><h2>{t('hdCreate')}</h2><p className="kg-note">{t('btRules')}</p><div><button className="hdbtn primary" onClick={create}>{t('hdCreateBtn')}</button></div></section>
+            <section className="hdform"><h2>{t('hdCreate')}</h2><p className="kg-note">{t('btRules')}</p><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('hdCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div></section>
             <section className="hdform"><h2>{t('hdJoin')}</h2>
               <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
                 <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
@@ -102,8 +111,8 @@ function BtTable({ v, status, room, error, send, leave, me, openSignIn }: { v: B
     <>
       <Bar />
       <div className="hdhead">
-        <span><b>{t('hdRoom')} {room}</b> <span className="muted">· {v.config.ranked ? t('btRanked') : t('btCasual')}</span></span>
-        <span className="hdtools"><button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button><button className="hdlink" onClick={leave}>{t('hdLeave')}</button></span>
+        <span><b>{room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}</b> <span className="muted">· {room === 'practice' ? t('btCasual') : v.config.ranked ? t('btRanked') : t('btCasual')}</span></span>
+        <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{t('hdLeave')}</button></span>
       </div>
       {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}

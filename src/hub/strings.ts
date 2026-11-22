@@ -8,6 +8,10 @@ export const HUB_STRINGS: Record<string, [string, string]> = {
   hubHoldem: ["Texas Hold'em", '德州撲克'], hubHoldemBlurb: ['2 to 6 players, no bots. Casual tables for guests, cash tables with play chips for accounts.', '2 到 6 位玩家，沒有電腦。訪客可玩休閒桌，帳號可玩使用遊戲籌碼的現金桌。'], hubAll: ['All games', '所有遊戲'],
 }
 export const HUB_JA: Record<string, string> = {
+  hubBjBlurb: 'ディーラーと勝負する共有テーブル、1〜6人。カジュアルか、プレイ用チップのキャッシュテーブル。',
+  hubBtBlurb: '4人対戦で空席はCPUが埋めます。ランク戦ではログイン済みのプレイヤー間でプレイ用チップを精算します。',
+  hubHaveCode: 'ルームコードをお持ちですか？どのゲームでも使えます。', hubJoin: '参加',
+  hubHoldemBlurb: '2〜6人、CPUなし。ゲストはカジュアルテーブル、アカウントはプレイ用チップのキャッシュテーブルで遊べます。',
   hubName: 'Kiiro ゲームズ', hubHeadline: '友達やサークルで遊ぶゲーム。', hubGames: 'ゲーム',
   hubTagline: '無料。プレイ用チップと月間ランキング付き。現金も広告もありません。',
   hubMahjong: 'Kiiro 麻雀',
@@ -16,7 +20,6 @@ export const HUB_JA: Record<string, string> = {
   hubNoSignin: '麻雀はログイン不要。記録を残したいときだけログインしてください。',
   hubSoon: '近日公開',
   hubHoldem: 'テキサスホールデム',
-  hubHoldemBlurb: 'プレイ用チップとランキングのある気軽なテーブル。',
   hubAll: 'ゲーム一覧',
 }
 registerStrings(HUB_STRINGS, HUB_JA)

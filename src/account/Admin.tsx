@@ -49,6 +49,7 @@ export default function Admin() {
       {tab === 'overview' && data && (
         <>
           <div className="adstats">{([['Users', data.users], ['New today', data.newToday], ['Active 24h', data.active24h], ['Active 7d', data.active7d], ['Matches', data.matches], ['Matches today', data.matchesToday], [`Ranked ${data.season}`, data.rankedThisSeason], ['Chips in play', data.chipsInCirculation?.toLocaleString()], ['Banned', data.banned]] as [string, any][]).map(([k, v]) => <div key={k}><b>{v}</b><span>{k}</span></div>)}</div>
+          <h3>By game</h3><Table rows={data.byGame ?? []} cols={[['Game', (r) => r.game], ['Matches', (r) => r.matches], ['Last 24h', (r) => r.last24h], ['Signed-in players', (r) => r.players]]} />
           <h3>Matches per day</h3><Table rows={data.matchesPerDay} cols={[['Day', (r) => r.day], ['Matches', (r) => r.n]]} />
           <h3>Sign-ups per day</h3><Table rows={data.signupsPerDay} cols={[['Day', (r) => r.day], ['New users', (r) => r.n]]} />
         </>

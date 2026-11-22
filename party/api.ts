@@ -103,7 +103,10 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
     ])
     const { results: perDay } = await db.prepare('SELECT strftime(\'%Y-%m-%d\', ended_at/1000, \'unixepoch\') AS day, COUNT(*) AS n FROM matches WHERE ended_at>? GROUP BY day ORDER BY day').bind(now - 14 * day).all()
     const { results: signups } = await db.prepare('SELECT strftime(\'%Y-%m-%d\', created_at/1000, \'unixepoch\') AS day, COUNT(*) AS n FROM users WHERE created_at>? GROUP BY day ORDER BY day').bind(now - 14 * day).all()
-    return json({ season, users: users.n, newToday: newToday.n, active24h: active24.n, active7d: active7.n, matches: matches.n, matchesToday: matchesToday.n, rankedThisSeason: ranked.n, chipsInCirculation: chips.n, banned: banned.n, matchesPerDay: perDay, signupsPerDay: signups })
+    const { results: byGame } = await db.prepare(
+      `SELECT m.game AS game, COUNT(DISTINCT m.id) AS matches, COUNT(DISTINCT p.user_id) AS players, COUNT(DISTINCT CASE WHEN m.ended_at>? THEN m.id END) AS last24h
+         FROM matches m LEFT JOIN match_players p ON p.match_id=m.id AND p.user_id IS NOT NULL GROUP BY m.game ORDER BY matches DESC`).bind(now - day).all()
+    return json({ byGame, season, users: users.n, newToday: newToday.n, active24h: active24.n, active7d: active7.n, matches: matches.n, matchesToday: matchesToday.n, rankedThisSeason: ranked.n, chipsInCirculation: chips.n, banned: banned.n, matchesPerDay: perDay, signupsPerDay: signups })
   }
   if (req.method === 'GET' && path === '/users') {
     const q = '%' + (url.searchParams.get('q') || '').replace(/[%_]/g, '') + '%'

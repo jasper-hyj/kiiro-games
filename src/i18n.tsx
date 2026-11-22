@@ -8,6 +8,8 @@ export type Lang = 'en' | 'zh' | 'ja'
 // key: [English, 繁體中文]; a missing Japanese string falls back to English
 const D: Record<string, [string, string]> = {}
 const JA: Record<string, string> = {}
+/** for the translation audit script */
+export const allStrings = () => ({ D, JA })
 export function registerStrings(enZh: Record<string, [string, string]>, ja: Record<string, string> = {}) { Object.assign(D, enZh); Object.assign(JA, ja) }
 
 interface Ctx { lang: Lang; setLang: (l: Lang) => void; /** Simplified Chinese (only with lang 'zh'): the Traditional text is converted on screen */ simplified: boolean; setSimplified: (b: boolean) => void; t: (k: string, vars?: Record<string, string | number>) => string }

@@ -30,3 +30,24 @@ export const ACCOUNT_STRINGS: Record<string, [string, string]> = {
   acHome: ['All games', '所有遊戲'],
 }
 registerStrings(ACCOUNT_STRINGS)
+
+registerStrings({}, {
+  acDevLink: '開発モード：このリンクを開く', acEmail: 'you@example.com',
+  acSignIn: 'ログイン', acSignOut: 'ログアウト', acClose: '閉じる',
+  acWhy: 'ログインすると成績が保存され、ランキングに参加し、プレイ用チップのランク戦で遊べます。ゲストとしてもいつでも遊べます。',
+  acGoogle: 'Googleで続ける', acOr: 'またはメールでログインリンクを受け取る', acSend: 'リンクをメールで送る',
+  acSent: '受信箱のログインリンクを確認してください。15分間有効です。', acGuest: 'ゲストのまま続ける',
+  acNoChips: 'ゲストはすべてのカジュアルゲームで遊べますが、結果とチップは保存されません。',
+  acChips: 'チップ', acProfit: '今季の収支', acLevel: 'レベル', acGames: '試合', acSeason: '{s} シーズン', acBoard: 'ランキング',
+  acBoardNote: '今季の収支で順位が決まるので、新しい人もすぐに上位を狙えます。チップは遊び用で現金価値はありません。',
+  acEmpty: '今季のランク戦はまだありません。', acYou: 'あなた', acHistory: '最近の対局', acNoHistory: '保存された対局はまだありません。ランク戦で記録を始めましょう。',
+  acRank: '順位', acPlayer: 'プレイヤー', acPlace: '{n}位', acRanked: 'ランク戦', acCasual: 'カジュアル', acRename: '表示名', acSave: '保存', acAdmin: '管理ページ',
+  acRankedOpt: 'ランク戦（チップ）', acRankedOff: 'カジュアル',
+  acRankedHint: '全員がログイン済みの2人以上が必要です。終了時にチップがプレイヤー間で移動します。CPUはチップを得も失いもしません。',
+  acRankedLocked: 'ランク戦の部屋を作るにはログインしてください。', ranked_needs_signin: 'ランク戦の部屋を作るにはログインしてください。',
+  ranked_needs_players: 'ランク戦には全員がログイン済みの2人以上が必要です。カジュアルに切り替えるか、全員にログインを依頼してください。',
+  already_seated: '別の端末ですでにこの部屋に着席しています。', bad_email: 'メールアドレスの形式が正しくありません。', slow_down: '試行回数が多すぎます。しばらくお待ちください。',
+  mail_failed: 'メールを送信できませんでした。Googleログインを試すか、後でもう一度お試しください。', mail_not_configured: 'このサイトではメールログインがまだ設定されていません。',
+  invalid: 'ログインリンクが無効か期限切れです。新しいリンクを請求してください。', offline: 'サーバーに接続できません。通信状況を確認してください。',
+  accounts_not_configured: 'このサーバーではアカウント機能がまだ使えません。', bad_name: '名前は2〜16文字で、リンクは使えません。', acHome: 'ゲーム一覧',
+})
