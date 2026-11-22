@@ -29,3 +29,16 @@
   .bthand { padding: 16px 0 2px; flex-wrap: nowrap; } .bthand .pkcard { --cw: 34px; } .btcard { margin-right: -8px; flex: none; } .btcard:last-child { margin-right: 0; }
   .bt .hdhead { padding: 4px 0; } .bt .hdbar { padding-top: 4px; }
 }
+
+@media (max-width: 400px) {
+  .bttable { padding: 64px 4px 18px; }
+  .btseat { min-width: 56px; padding: 4px 5px; } .bttag { max-width: 56px; font-size: 11px; } .btcount { font-size: 12px; }
+  .btplay .pkcard { --cw: 26px; } .btplay { gap: 3px; }
+  .bthand { padding-left: 8px; padding-right: 8px; } .bthand .pkcard { --cw: 34px; } .btcard { margin-right: -14px; }
+}
+
+/* short landscape screens: the played cards sit at the bottom of the table so the top seat cannot cover them */
+@media (max-height: 440px) and (orientation: landscape) {
+  .bttable { place-items: end center; height: calc(100vh - 150px); padding: 60px 96px 6px; min-height: 160px; }
+  .btcenter { gap: 2px; } .btplay .pkcard { --cw: 26px; } .bthand .pkcard { --cw: 30px; }
+}

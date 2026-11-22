@@ -14,6 +14,13 @@ const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catc
 const fmt = (n: number) => n.toLocaleString()
 /** where each seat sits on the table, as % of its box: you are always at the bottom */
 const SPOTS: [number, number][] = [[50, 90], [13, 68], [16, 22], [50, 9], [84, 22], [87, 68]]
+/** on phones the side seats move out of the way of the board cards */
+const PHONE_SPOTS: [number, number][] = [[50, 92], [13, 76], [16, 21], [50, 8], [84, 21], [87, 76]]
+function useNarrow() {
+  const [n, setN] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches)
+  useEffect(() => { const m = matchMedia('(max-width: 640px)'); const f = () => setN(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f) }, [])
+  return n
+}
 
 export default function HoldemApp() {
   const { t } = useLang()
@@ -114,6 +121,8 @@ interface TableProps {
 
 function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, setBuyin, refreshMe }: TableProps) {
   const { t } = useLang()
+  const narrow = useNarrow()
+  const spots = narrow ? PHONE_SPOTS : SPOTS
   const [copied, setCopied] = useState(false)
   const [raise, setRaise] = useState(0)
   const [, tick] = useState(0)
@@ -175,7 +184,7 @@ function Table({ view, status, room, error, send, leave, me, openSignIn, buyin, 
             </div>
           </div>
           {v.seats.map((s) => {
-            const [x, y] = SPOTS[rel(s.seat) % SPOTS.length]
+            const [x, y] = spots[rel(s.seat) % spots.length]
             const bx = x + (50 - x) * 0.32, by = y + (50 - y) * 0.32
             const showCards = s.dealt && !s.folded
             const isTurn = v.toAct === s.seat && v.street !== 'showdown' && v.street !== 'wait'
