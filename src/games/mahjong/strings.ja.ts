@@ -53,6 +53,7 @@ export const MAHJONG_JA: Record<string, string> = {
   'tip.riichi': 'リーチ：門前でテンパイ。1000点を払って宣言し、以後手牌は変えられません。', 'tip.pass': 'パス：何もせず続行します。',
   learnPlay: '遊び方を学ぶ', 'tut.title': '練習対局', 'tut.ok': 'わかった',
   showIndex: '牌の隅の小さな数字',
+  tileSet: '牌のデザイン', tileAuto: '自動', tileCn: '中国式', tileJp: '日本式',
   streakShort: '連荘 {n}', sticksShort: '供託 {n}', honbaShort: '{n}本場', swapOpt: '牌の交換（換三張）',
   scNone: '誰も和了せず、牌山が尽きました',
   inviteLink: '招待リンクをコピー', copied: 'コピーしました', seatsNote: '人 · 空席はCPUが自動で参加します',

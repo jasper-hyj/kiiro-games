@@ -115,6 +115,7 @@ export const MAHJONG_STRINGS: Record<string, [string, string]> = {
   'tut.tenpai': ['Almost there! One more tile completes your hand (tenpai). Turn on Hints in the menu to see which tiles you are waiting for and how many are left.', '快胡了！再來一張牌就完成牌型（聽牌）。在選單開啟「提示」可以看到你在等哪些牌、還剩幾張。'],
   'tut.ok': ['Got it', '知道了'],
   showIndex: ['Small corner numbers on tiles', '牌角小數字'],
+  tileSet: ['Tile style', '牌面風格'], tileAuto: ['Auto', '自動'], tileCn: ['Chinese', '中式'], tileJp: ['Japanese', '日式'],
   swapOpt: ['Swap three tiles', '換三張'],
   scNone: ['Nobody won — the wall ran out', '流局，沒有人胡牌'],
   'taiwan.blurb': ['16 tiles · 8 flowers · tai scoring · dealer streaks', '16 張 · 8 張花牌 · 台數計分 · 連莊拉莊'],

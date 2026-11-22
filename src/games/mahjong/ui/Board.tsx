@@ -308,6 +308,9 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
         {!coachOk && <p className="muted small">{t('coachOffRoom')}</p>}
         {coachOk && <label className="switch" title={t('hintsTip')}><input type="checkbox" checked={hints} onChange={() => setHints(!hints)} /><span className="knob" />{t('hints')}</label>}
         <label className="switch"><input type="checkbox" checked={settings.showIndex} onChange={() => setSetting('showIndex', !settings.showIndex)} /><span className="knob" />{t('showIndex')}</label>
+        <div className="tilestyle"><span>{t('tileSet')}</span>
+          <div className="seg">{(['auto', 'chinese', 'japanese'] as const).map((k) => <button key={k} className={settings.tileStyle === k ? 'on' : ''} onClick={() => setSetting('tileStyle', k)}>{t({ auto: 'tileAuto', chinese: 'tileCn', japanese: 'tileJp' }[k])}</button>)}</div>
+        </div>
         <div className="dockrule" />
         {online && <button className="menuitem" onClick={() => { setPanel('chat'); closeDock() }}>{t('chatTitle')}</button>}
         <button className="menuitem" onClick={() => { setPanel('history'); closeDock() }}>{t('history')}</button>
