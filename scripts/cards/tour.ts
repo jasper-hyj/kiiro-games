@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer-core'
 setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 150000)
 const out = process.argv[2] || '.'
 const [w, h] = [Number(process.argv[3] || 390), Number(process.argv[4] || 844)]
-const tag = w < 600 ? 'p' : 'd'
+const tag = (w < 600 ? 'p' : 'd') + (process.env.LANGX && process.env.LANGX !== 'en' ? '-' + process.env.LANGX : '')
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const B = 'http://localhost:5200'
 const mkc = (g: string, cfg: object) => `${B}/${g}?room=${1000 + Math.floor(Math.random() * 9000)}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}`
@@ -12,7 +12,7 @@ const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.
 const shot = async (name: string, url: string, after?: (p: any) => Promise<void>) => {
   const p = await (await b.createBrowserContext()).newPage()
   await p.setViewport({ width: w, height: h, hasTouch: w < 600, isMobile: w < 600 })
-  await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
+  await p.evaluateOnNewDocument((l: string) => localStorage.setItem('kiiro-lang', l), process.env.LANGX || 'en')
   try { await p.goto(url, { waitUntil: 'domcontentloaded' }); await sleep(1800); if (after) await after(p); await sleep(600); await p.screenshot({ path: `${out}/tour-${tag}-${name}.png` }) } catch (e) { console.log('skip', name, String((e as Error).message).slice(0, 80)) }
   await p.browserContext().close()
 }

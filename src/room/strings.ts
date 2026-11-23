@@ -17,6 +17,7 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
   rmCreateNote: ['Tables start from a room: gather your friends first, then choose the game and rules together.', '牌桌從房間開始：先集合朋友，再一起選擇遊戲和規則。'],
   rmNoTableTitle: ['This table is not open', '這張牌桌未開放'], rmNoTableBody: ['Tables are opened from a room: create one, pick the game and invite friends.', '牌桌從房間開啟：開一個房間、選擇遊戲並邀請朋友。'],
   rmCodeClash: ['This room code is already used by another table. Go back and create a new room.', '這個房間代碼已被其他牌桌使用，請回去重新開一個房間。'],
+  kgBot: ['Bot', '電腦'],
   rmConnecting: ['Connecting…', '連線中…'], rmLost: ['Connection lost. Reconnecting…', '連線中斷，重新連線中…'],
   rmOr: ['Have a direct table code? Joining it works here too.', '有牌桌代碼嗎？也可以在這裡輸入加入。'],
 }
@@ -39,6 +40,7 @@ registerStrings({}, {
   rmCreateNote: 'テーブルはルームから始まります。まず友達を集めて、一緒にゲームとルールを選びましょう。',
   rmNoTableTitle: 'このテーブルは開いていません', rmNoTableBody: 'テーブルはルームから開きます。ルームを作り、ゲームを選んで友達を招待しましょう。',
   rmCodeClash: 'このルームコードは別のテーブルで使われています。戻って新しいルームを作ってください。',
+  kgBot: 'CPU',
   rmConnecting: '接続中…', rmLost: '接続が切れました。再接続中…',
   rmOr: 'テーブルのコードをお持ちですか？ここから参加もできます。',
 })

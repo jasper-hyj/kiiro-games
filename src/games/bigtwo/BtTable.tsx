@@ -4,7 +4,7 @@ import { Bar } from '../../hub/Hub'
 import { Card } from '../holdem/ui/Cards'
 import { TalkBox } from '../shared/TalkBox'
 import { fromRoom } from '../shared/fromRoom'
-import { Kbd, ResultPanel, SeatChip, TableHeader, useHotkeys } from '../../ui/components'
+import { Kbd, ResultPanel, SeatChip, TableHeader, useHotkeys, useShownName } from '../../ui/components'
 import { beats, evalCombo, power, THREE_DIAMONDS } from './engine/combos'
 import { chooseMove } from './engine/table'
 import type { BigTwoView, BtMsg } from './net/protocol'
@@ -33,6 +33,7 @@ function useWidth<T extends HTMLElement>() {
 /** Big Two: the lobby, the table, your hand and what you can do with it. Same controls with a finger, a mouse or a keyboard. */
 export function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignIn }: Props) {
   const { t } = useLang()
+  const shown = useShownName()
   const [sel, setSel] = useState<number[]>([])
   const [copied, setCopied] = useState(false)
   const [, tick] = useState(0)
@@ -111,7 +112,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
     )
   }
 
-  const msg = v.status === 'over' ? '' : myTurn ? t('btYourTurn') + (secs != null ? ` · ${secs}s` : '') : v.turn >= 0 ? t('btWaitTurn', { name: v.seats[v.turn].name }) : ''
+  const msg = v.status === 'over' ? '' : myTurn ? t('btYourTurn') + (secs != null ? ` · ${secs}s` : '') : v.turn >= 0 ? t('btWaitTurn', { name: shown(v.seats[v.turn].name) }) : ''
   return (
     <div className="kg hd bt"><div className="kg-wrap hdwrap">{head}
       <div className="bttable k-felt">
@@ -123,7 +124,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
         ))}
         <div className="btcenter">
           {v.status === 'over' && v.result ? (
-            <ResultPanel title={t('btWins', { name: v.seats[v.result.winner].name })} columns={[t('acPlayer'), t('btPoints')]}
+            <ResultPanel title={t('btWins', { name: shown(v.seats[v.result.winner].name) })} columns={[t('acPlayer'), t('btPoints')]}
               rows={v.seats.map((s) => ({ name: s.name, me: s.me, value: `${v.result!.points[s.seat] > 0 ? '+' : ''}${v.result!.points[s.seat]}`, tone: v.result!.points[s.seat] > 0 ? 'up' : v.result!.points[s.seat] < 0 ? 'down' : 'flat', detail: t('btLeft', { n: v.result!.left[s.seat] }) }))}
               note={v.host ? undefined : t('btWaitHost')}>
               {v.host && <button className="hdbtn primary" onClick={() => send({ k: 'lobby' })}>{t('btAgain')}</button>}
@@ -131,7 +132,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
           ) : (
             <>
               <div className="btplay">{v.current ? v.current.cards.map((c) => <Card key={c} c={c} />) : <span className="pkslot" />}</div>
-              {v.current && <div className="muted small">{v.seats[v.current.seat].name} · {curName}</div>}
+              {v.current && <div className="muted small">{shown(v.seats[v.current.seat].name)} · {curName}</div>}
               <div className={'hdmsg' + (myTurn ? ' mine' : '')} aria-live="polite">{msg}</div>
             </>
           )}

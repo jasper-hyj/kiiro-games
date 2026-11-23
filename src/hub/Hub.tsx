@@ -48,7 +48,7 @@ const ART: Record<string, JSX.Element> = {
 
 const GAMES: { key: keyof typeof ART; name: string; blurb: string; practice?: string }[] = [
   { key: 'mahjong', name: 'hubMahjong', blurb: 'hubMahjongBlurb', practice: `${MAHJONG_PATH}?solo=1` },
-  { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb' },
+  { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb', practice: '/holdem?practice=1' },
   { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: `${BLACKJACK_PATH}?practice=1` },
   { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: `${BIGTWO_PATH}?practice=1` },
 ]

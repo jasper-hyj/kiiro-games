@@ -8,6 +8,7 @@ import { BLINDS } from './engine/table'
 import { Card } from './ui/Cards'
 import { Rules } from '../shared/Rules'
 import { best, categoryOf } from './engine/eval'
+import { connectLocalHoldem } from '../shared/localCash'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
@@ -92,6 +93,11 @@ export default function HoldemApp() {
   }, [name, me?.name, handlers])
 
   const create = () => { writeName(name); location.href = '/room?create=1&pick=holdem' } // tables start from a room now: gather first, then choose the game and rules
+  const practice = () => {
+    conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
+    conn.current = connectLocalHoldem(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
+  }
+  useEffect(() => { if (new URLSearchParams(location.search).get('practice') === '1' && !conn.current) practice() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { const sb = Number(mk.sb) || 25, bb = Number(mk.bb) || 50; open(urlRoom, { sb, bb, casual: mk.casual !== false }) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
@@ -100,7 +106,7 @@ export default function HoldemApp() {
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [meId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 
   if (!room) return <NoRoom game="holdem" error={error} />
   return <Table view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} api={api} />
@@ -165,8 +171,8 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
       <div className="kg-wrap hdwrap">
         <Hotkeys enabled={!!turn} keys={{ f: doFold, c: doCall, r: doRaise, a: doAllIn, arrowup: () => stepRaise(1), arrowdown: () => stepRaise(-1) }} />
         <Bar />
-        <TableHeader title={`${t('hdRoom')} ${room}`} sub={`${v.config.sb}/${v.config.bb} · ${v.config.casual ? t('hdCasual') : t('hdCash')}`} watching={v.spectators}
-          copied={copied} onCopy={copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'hdHow', lines: ['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5'] }} />
+        <TableHeader title={room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`} sub={`${v.config.sb}/${v.config.bb} · ${room === 'practice' ? t('hdCasual') : v.config.casual ? t('hdCasual') : t('hdCash')}`} watching={v.spectators}
+          copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'hdHow', lines: ['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5'] }} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
 
         <div ref={feltRef} className="hdfelt k-felt" role="group" aria-label={t('hdRoom')}>
@@ -260,7 +266,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
             </div>
           )}
         </div>
-        <TalkBox lines={talk} say={say} />
+        {room !== 'practice' && <TalkBox lines={talk} say={say} />}
       </div>
     </div>
   )

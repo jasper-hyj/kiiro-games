@@ -103,6 +103,13 @@ for (const [w, h] of SELECTED) {
     await A.goto(`${BASE}/room`, { waitUntil: 'networkidle0' }); report(`room menu ${tag}`, await inspect(A))
     await closeAll(A, B)
   })
+  await section('holdem practice', async () => {
+    // offline Hold'em against bots: the table and the action bar once it is my turn
+    const p = await mk(w, h)
+    await p.goto(`${BASE}/holdem?practice=1`, { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.hd-actions', { timeout: 20000 }); await sleep(500)
+    report(`holdem practice ${tag}`, await inspect(p))
+    await closeAll(p)
+  })
   await section('holdem', async () => {
     // hold'em with three players (casual): preflop with action, then after a flop
     const [A, B, C] = [await mk(w, h), await mk(w, h), await mk(w, h)]

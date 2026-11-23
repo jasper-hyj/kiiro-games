@@ -14,6 +14,12 @@ export function Avatar({ name, size = 28 }: { name: string; size?: number }) {
   return <span className="k-av" style={{ width: size, height: size, fontSize: size * 0.46, background: avatarColor(name) }} aria-hidden="true">{initial(name)}</span>
 }
 
+/** Bots are named "Bot 1" by the game servers; show them in the player's language. */
+export function useShownName() {
+  const { t } = useLang()
+  return (name: string) => { const m = /^Bot (\d+)$/.exec(name); return m ? `${t('kgBot')} ${m[1]}` : name }
+}
+
 /* ------------------------------------------------------------------ input devices */
 /** True on a screen that is used with a finger: hints about keys are only useful elsewhere. */
 export const isTouchPrimary = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
@@ -76,10 +82,11 @@ export function TableHeader({ title, sub, watching, copied, onCopy, onLeave, lea
 export function SeatChip({ name, sub, state = '', badge, className = '', style, children, title }: {
   name: string; sub?: ReactNode; state?: string; badge?: ReactNode; className?: string; style?: CSSProperties; children?: ReactNode; title?: string
 }) {
+  const shown = useShownName()(name)
   return (
     <div className={`k-seat ${state} ${className}`.trim()} style={style} title={title}>
-      <Avatar name={name || '?'} size={26} />
-      <div className="k-seatname">{badge}<span>{name}</span></div>
+      <Avatar name={shown || '?'} size={26} />
+      <div className="k-seatname">{badge}<span>{shown}</span></div>
       {sub != null && <div className="k-seatsub">{sub}</div>}
       {children}
     </div>
@@ -90,6 +97,7 @@ export function SeatChip({ name, sub, state = '', badge, className = '', style, 
 export interface ResultRow { name: string; value: ReactNode; tone?: 'up' | 'down' | 'flat'; me?: boolean; detail?: ReactNode }
 /** The one end-of-round panel: who won, a row per player, what happens next. */
 export function ResultPanel({ title, rows, columns, note, children }: { title: ReactNode; rows: ResultRow[]; columns?: [string, string]; note?: ReactNode; children?: ReactNode }) {
+  const shown = useShownName()
   return (
     <div className="k-result" role="status" aria-live="polite">
       <div className="k-resulttitle">{title}</div>
@@ -97,7 +105,7 @@ export function ResultPanel({ title, rows, columns, note, children }: { title: R
         {columns && <li className="k-rowhead"><span>{columns[0]}</span><span>{columns[1]}</span></li>}
         {rows.map((r, i) => (
           <li key={i} className={'k-row' + (r.me ? ' me' : '')}>
-            <span className="k-rowname"><Avatar name={r.name} size={22} />{r.name}{r.detail != null && <span className="k-rowdetail">{r.detail}</span>}</span>
+            <span className="k-rowname"><Avatar name={shown(r.name)} size={22} />{shown(r.name)}{r.detail != null && <span className="k-rowdetail">{r.detail}</span>}</span>
             <span className={'k-rowval ' + (r.tone ?? 'flat')}>{r.value}</span>
           </li>
         ))}

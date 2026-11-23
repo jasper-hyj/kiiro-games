@@ -1,5 +1,9 @@
 import { BlackjackTable } from '../blackjack/engine/table'
 import { BigTwoTable } from '../bigtwo/engine/table'
+import { PokerTable } from '../holdem/engine/table'
+import { botDecision } from '../holdem/engine/bot'
+import type { HoldemView } from '../holdem/net/client'
+import type { PokerMsg } from '../holdem/net/protocol'
 import type { BjMsg, BlackjackView } from '../blackjack/net/protocol'
 import type { BigTwoView, BtMsg } from '../bigtwo/net/protocol'
 import type { CashConn, CashHandlers } from './cashClient'
@@ -34,5 +38,45 @@ export function connectLocalBigTwo(id: string, name: string, h: CashHandlers<Big
       else if (m.k === 'lobby') { t.backToLobby(id); t.start(id) } // "play again" deals a new game straight away
     },
     close() { t.dispose() },
+  }
+}
+
+/** Offline Hold'em: the real table engine in the browser, you and three bots. Free practice stacks, nothing is saved. */
+export function connectLocalHoldem(id: string, name: string, h: CashHandlers<HoldemView>): CashConn<PokerMsg> {
+  const t = new PokerTable({ sb: 25, bb: 50, casual: true, maxSeats: 6 })
+  t.resultMs = 3500
+  const bots = ['bot-1', 'bot-2', 'bot-3']
+  const timers = new Set<ReturnType<typeof setTimeout>>()
+  let planned = ''
+  const push = () => h.onView({ ...t.view(id), signedIn: false, balance: null })
+  const botTurn = () => {
+    if (t.toAct < 0 || t.street === 'wait' || t.street === 'showdown') return
+    const botId = t.seats[t.toAct]?.id
+    if (!botId || !bots.includes(botId)) return
+    const key = `${t.handNo}:${t.street}:${t.toAct}`
+    if (key === planned) return // already thinking about this decision
+    planned = key
+    const timer = setTimeout(() => {
+      timers.delete(timer)
+      if (t.seats[t.toAct]?.id !== botId) return
+      const v = t.view(botId)
+      if (!v.turn) return
+      const err = t.act(botId, botDecision(v))
+      if (err) t.act(botId, v.turn.canCheck ? { a: 'check' } : { a: 'fold' }) // never get stuck on a rejected move
+    }, 900 + Math.random() * 900)
+    timers.add(timer)
+  }
+  t.onChange(() => { push(); botTurn() })
+  t.autostart = false // seat everyone first, then deal
+  t.join(id); t.sit(id, name, t.casualStack)
+  bots.forEach((b, i) => { t.join(b); t.sit(b, `Bot ${i + 1}`, t.casualStack) })
+  t.autostart = true
+  h.onStatus('open'); push(); t.drive()
+  return {
+    send(m) {
+      if (m.k === 'act') { const e = t.act(id, m.a); if (e) h.onError(e) }
+      else if (m.k === 'out') t.setOut(id, m.out)
+    },
+    close() { for (const x of timers) clearTimeout(x); timers.clear(); t.dispose() },
   }
 }
