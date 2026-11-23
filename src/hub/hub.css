@@ -74,3 +74,4 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 :root:root .kg a.kg-go { color: var(--k-accent-hi); font-weight: 700; text-decoration: none; padding: 10px 0; }
 :root:root .kg a.kg-practice { color: var(--k-mute); font-weight: 600; font-size: 14px; text-decoration: none; padding: 8px 14px; border-radius: 999px; background: rgba(243,236,221,.07); }
 @media (hover: hover) { :root:root .kg a.kg-practice:hover { color: var(--k-ink); background: rgba(243,236,221,.13); } .kg-game:hover { background: var(--k-panel2); transform: translateY(-2px); } }
+.kg h1 { text-wrap: balance; }

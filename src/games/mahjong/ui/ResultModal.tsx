@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { fromRoom } from '../../shared/fromRoom'
+import '../../../room/strings'
 import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
 import type { ClientMsg } from '../net/protocol'
@@ -96,7 +98,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <div className="row">
           {view.host && <button className="btn gold" onClick={() => send({ t: 'lobby' })}>{t('backLobby')}</button>}
           <button className="btn" onClick={() => setReview(true)}>{t('reviewHands')}</button>
-          <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
+          <button className="btn alt" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
         </div>
         {review && <ReplayModal v={v} you={you} onClose={() => setReview(false)} />}
       </div></div>, document.body)
@@ -134,7 +136,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
         <AckBar view={view} />
         <div className="row">
           <button className="btn gold" disabled={acked} onClick={() => send({ t: 'ack' })}>{acked ? t('waitingAck', { n: v.acks.length }) : t('nextHand')}</button>
-          <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
+          <button className="btn alt" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
         </div>
       </div></div>,
       document.body,
@@ -204,7 +206,7 @@ export function ResultModal({ view, send, onLeave }: { view: TableView; send: (m
       <AckBar view={view} />
       <div className="row">
         <button className="btn gold" disabled={acked} onClick={() => send({ t: 'ack' })}>{acked ? t('waitingAck', { n: v.acks.length }) : t('nextHand')}</button>
-        <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
+        <button className="btn alt" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
       </div>
     </div></div>,
     document.body,
