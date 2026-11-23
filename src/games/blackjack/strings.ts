@@ -3,7 +3,8 @@ import { registerStrings } from '../../i18n'
 export const BJ_STRINGS: Record<string, [string, string]> = {
   bjName: ['Blackjack', '二十一點'], bjTagline: ['Beat the dealer at a shared table. Blackjack pays 3:2, the dealer stands on all 17s.', '在共享牌桌上對戰莊家。二十一點賠 3:2，莊家 17 點必停。'],
   bjCreate: ['Create a table', '開桌'], bjJoin: ['Join with a code', '輸入代碼加入'], bjMinBet: ['Minimum bet', '最小下注'],
-  bjDealer: ['Dealer', '莊家'], bjBetNow: ['Place your bet', '請下注'], bjBet: ['Bet {n}', '下注 {n}'], bjBetPlaced: ['Bet placed: {n}', '已下注：{n}'], bjChange: ['Change bet', '更改下注'],
+  bjDealer: ['Dealer', '莊家'], bjBetNow: ['Place your bet', '請下注'], bjBet: ['Bet {n}', '下注 {n}'], bjBetPlaced: ['Bet placed: {n}', '已下注：{n}'], bjYourBet: ['Your bet', '你的下注'], bjChips: ['Chips', '籌碼'], bjClear: ['Clear', '清除'], bjRepeat: ['Repeat {n}', '重複 {n}'],
+  bjMinBetNote: ['The minimum bet at this table is {n}.', '本桌最小下注為 {n}。'], bjEvenNote: ['Bets must be even numbers (so a blackjack pays 3:2 exactly).', '下注需為偶數（這樣 21 點才能剛好 3:2 賠付）。'], bjChange: ['Change bet', '更改下注'],
   bjHit: ['Hit', '要牌'], bjStand: ['Stand', '停牌'], bjDouble: ['Double', '加倍'], bjSplit: ['Split', '分牌'], bjDeal: ['Dealing…', '發牌中…'],
   bjWatching: ['Next round starts soon.', '下一局即將開始。'], bjWaiting: ['Waiting for a player to sit down…', '等待玩家入座…'],
   bjYourTurn: ['Your turn', '輪到你'], bjWaitTurn: ['{name} is playing', '{name} 操作中'], bjDealerPlays: ['Dealer plays', '莊家補牌'], bjNext: ['Next round in {s}s', '{s} 秒後下一局'],
@@ -21,7 +22,8 @@ registerStrings(BJ_STRINGS)
 
 registerStrings({}, {
   bjName: 'ブラックジャック', bjTagline: '共有テーブルでディーラーと勝負。ブラックジャックは3:2、ディーラーは17以上で必ずスタンドします。',
-  bjCreate: 'テーブルを作る', bjJoin: 'コードで参加', bjMinBet: '最小ベット', bjDealer: 'ディーラー', bjBetNow: 'ベットしてください', bjBet: 'ベット {n}', bjBetPlaced: 'ベット済み：{n}', bjChange: 'ベットを変更',
+  bjCreate: 'テーブルを作る', bjJoin: 'コードで参加', bjMinBet: '最小ベット', bjDealer: 'ディーラー', bjBetNow: 'ベットしてください', bjBet: 'ベット {n}', bjBetPlaced: 'ベット済み：{n}', bjYourBet: 'あなたのベット', bjChips: 'チップ', bjClear: 'クリア', bjRepeat: '{n} を繰り返す',
+  bjMinBetNote: 'このテーブルの最小ベットは {n} です。', bjEvenNote: 'ベットは偶数にしてください（ブラックジャックを正確に3:2で払うため）。', bjChange: 'ベットを変更',
   bjHit: 'ヒット', bjStand: 'スタンド', bjDouble: 'ダブル', bjSplit: 'スプリット', bjDeal: '配札中…', bjWatching: '次のラウンドがまもなく始まります。', bjWaiting: 'プレイヤーの着席を待っています…',
   bjYourTurn: 'あなたの番です', bjWaitTurn: '{name} がプレイ中', bjDealerPlays: 'ディーラーのターン', bjNext: '{s} 秒後に次のラウンド',
   'bjo.blackjack': 'ブラックジャック', 'bjo.win': '勝ち', 'bjo.push': '引き分け', 'bjo.lose': '負け', 'bjo.bust': 'バースト', bjMinMax: 'ベット上限 {min}〜{max}', bjSoft: 'ソフト',

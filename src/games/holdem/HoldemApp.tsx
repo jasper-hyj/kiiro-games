@@ -9,6 +9,7 @@ import { Rules } from '../shared/Rules'
 import { best, categoryOf } from './engine/eval'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
 import { TalkBox } from '../shared/TalkBox'
+import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
 import '../../room/strings'
 import type { TalkMsg } from '../shared/cashClient'
@@ -164,21 +165,24 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
   const canSitCash = !v.config.casual
   const raiseLabel = turn && v.pot > 0 && turn.canRaise ? (v.seats.some((s) => s.bet > 0) ? t('hdRaise', { n: fmt(raise) }) : t('hdBet', { n: fmt(raise) })) : ''
 
+  const raiseStep = Math.max(5, v.config.bb)
+  const clampRaise = (n: number) => turn ? Math.min(Math.max(n, turn.minRaiseTo), turn.maxRaiseTo) : n
+  const stepRaise = (d: number) => setRaise((r) => clampRaise(Math.round((clampRaise(r) + d * raiseStep) / 5) * 5))
+  const doFold = () => { if (turn && !turn.canCheck) send({ k: 'act', a: { a: 'fold' } }) }
+  const doCall = () => { if (turn) send({ k: 'act', a: turn.canCheck ? { a: 'check' } : { a: 'call' } }) }
+  const doRaise = () => { if (turn?.canRaise) send({ k: 'act', a: raise >= turn.maxRaiseTo ? { a: 'allin' } : { a: 'raise', to: clampRaise(raise) } }) }
+  const doAllIn = () => { if (turn && turn.maxRaiseTo > 0) send({ k: 'act', a: { a: 'allin' } }) }
+
   return (
     <div className="kg hd">
       <div className="kg-wrap hdwrap">
+        <Hotkeys enabled={!!turn} keys={{ f: doFold, c: doCall, r: doRaise, a: doAllIn, arrowup: () => stepRaise(1), arrowdown: () => stepRaise(-1) }} />
         <Bar />
-        <div className="hdhead">
-          <span><b>{t('hdRoom')} {room}</b> <span className="muted">· {v.config.sb}/{v.config.bb} · {v.config.casual ? t('hdCasual') : t('hdCash')}</span></span>
-          <span className="hdtools">
-            <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>
-            <button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button>
-          </span>
-        </div>
-        {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
+        <TableHeader title={`${t('hdRoom')} ${room}`} sub={`${v.config.sb}/${v.config.bb} · ${v.config.casual ? t('hdCasual') : t('hdCash')}`} watching={v.spectators}
+          copied={copied} onCopy={copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
 
-        <div className="hdfelt" role="group" aria-label={t('hdRoom')}>
+        <div className="hdfelt k-felt" role="group" aria-label={t('hdRoom')}>
           <div className="hdcenter">
             <div className="hdpot">{t('hdPotLabel')} <b>{fmt(potNow)}</b></div>
             <div className="hdboard">{[0, 1, 2, 3, 4].map((i) => v.board[i] !== undefined ? <Card key={i} c={v.board[i]} /> : <span key={i} className="pkslot" />)}</div>
@@ -202,15 +206,14 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
             return (
               <div key={s.seat}>
                 {s.bet > 0 && <div className="hdbet" style={{ left: bx + '%', top: by + '%' }}>{fmt(s.bet)}</div>}
-                <div className={'hdseat' + (s.empty ? ' empty' : '') + (s.me ? ' me' : '') + (isTurn ? ' turn' : '') + (s.folded ? ' folded' : '') + (won > 0 ? ' won' : '') + (s.out || !s.connected ? ' away' : '')} style={{ left: x + '%', top: y + '%' }}>
-                  {!s.empty && <>
-                    {showCards && <div className="hdhole">{s.hole && s.hole.length === 2 ? s.hole.map((c, i) => <Card key={i} c={c} small={!s.me} />) : [0, 1].map((i) => <Card key={i} back small />)}</div>}
-                    <div className="hdname">{s.seat === v.button && <i className="hdbtn-d" title={t('hdDealer')}>{t('hdDealer')}</i>}{s.name}</div>
-                    <div className="hdstack">{s.allIn && v.street !== 'wait' && v.street !== 'showdown' ? t('hdLastAllin') : fmt(s.stack)}</div>
-                    {s.last && !s.empty && v.street !== 'wait' && <div className="hdlast">{lastLabel(t, s.last)}</div>}
-                    {isTurn && secsLeft != null && s.me && <div className="hdtimer"><span style={{ width: `${Math.min(100, (secsLeft / 30) * 100)}%` }} /></div>}
-                  </>}
-                </div>
+                <SeatChip className={'hdseat' + (s.empty ? ' empty' : '')} style={{ left: x + '%', top: y + '%' }} name={s.name || ''}
+                  state={(s.me ? 'me ' : '') + (isTurn ? 'turn ' : '') + (s.folded ? 'folded ' : '') + (won > 0 ? 'won ' : '') + (s.out || !s.connected ? 'away' : '')}
+                  badge={s.seat === v.button ? <i className="hdbtn-d" title={t('hdDealer')}>{t('hdDealer')}</i> : undefined}
+                  sub={s.allIn && v.street !== 'wait' && v.street !== 'showdown' ? t('hdLastAllin') : fmt(s.stack)}>
+                  {showCards && <div className="hdhole">{s.hole && s.hole.length === 2 ? s.hole.map((c, i) => <Card key={i} c={c} small={!s.me} />) : [0, 1].map((i) => <Card key={i} back small />)}</div>}
+                  {s.last && v.street !== 'wait' && <div className="hdlast">{lastLabel(t, s.last)}</div>}
+                  {isTurn && secsLeft != null && s.me && <div className="hdtimer"><span style={{ width: `${Math.min(100, (secsLeft / 30) * 100)}%` }} /></div>}
+                </SeatChip>
               </div>
             )
           })}
@@ -219,22 +222,27 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
         <div className="hdbar">
           {youSeat ? (
             turn ? (
-              <div className="hdactions">
-                <button className="hdbtn" onClick={() => send({ k: 'act', a: { a: 'fold' } })}>{t('hdFold')}</button>
-                <button className="hdbtn primary" onClick={() => send({ k: 'act', a: turn.canCheck ? { a: 'check' } : { a: 'call' } })}>{turn.canCheck ? t('hdCheck') : t('hdCall', { n: fmt(turn.call) })}</button>
+              <div className="hdactions hd-actions">
+                {!turn.canCheck && <button className="hdbtn" onClick={doFold}>{t('hdFold')}<Kbd k="F" /></button>}
+                <button className="hdbtn primary" onClick={doCall}>{turn.canCheck ? t('hdCheck') : t('hdCall', { n: fmt(turn.call) })}<Kbd k="C" /></button>
                 {turn.canRaise && (
                   <div className="hdraise">
-                    <input type="range" min={turn.minRaiseTo} max={turn.maxRaiseTo} step={5} value={Math.min(Math.max(raise, turn.minRaiseTo), turn.maxRaiseTo)} onChange={(e) => setRaise(Number(e.target.value))} aria-label={raiseLabel} />
+                    <div className="hd-stepper">
+                      <button aria-label="−" onClick={() => stepRaise(-1)}>−</button>
+                      <span className="hd-amount" aria-live="polite">{fmt(clampRaise(raise))}</span>
+                      <button aria-label="+" onClick={() => stepRaise(1)}>+</button>
+                    </div>
+                    <input type="range" min={turn.minRaiseTo} max={turn.maxRaiseTo} step={raiseStep} value={clampRaise(raise)} onChange={(e) => setRaise(Number(e.target.value))} aria-label={raiseLabel} />
                     <div className="hdpresets">
                       <button onClick={() => setRaise(turn.minRaiseTo)}>{t('hdMin')}</button>
                       <button onClick={() => setRaise(Math.min(turn.maxRaiseTo, Math.max(turn.minRaiseTo, Math.round((v.pot / 2 + turn.call + (v.seats[v.you].bet)) / 5) * 5)))}>{t('hdHalf')}</button>
                       <button onClick={() => setRaise(Math.min(turn.maxRaiseTo, Math.max(turn.minRaiseTo, Math.round((v.pot + turn.call + v.seats[v.you].bet) / 5) * 5)))}>{t('hdPot')}</button>
-                      <button onClick={() => setRaise(turn.maxRaiseTo)}>{t('hdAllIn')}</button>
+                      <button onClick={() => setRaise(turn.maxRaiseTo)}>{t('hdAllIn')}<Kbd k="A" /></button>
                     </div>
-                    <button className="hdbtn primary" onClick={() => send({ k: 'act', a: raise >= turn.maxRaiseTo ? { a: 'allin' } : { a: 'raise', to: Math.min(Math.max(raise, turn.minRaiseTo), turn.maxRaiseTo) } })}>{raise >= turn.maxRaiseTo ? t('hdAllIn') : raiseLabel}</button>
+                    <button className="hdbtn primary" onClick={doRaise}>{raise >= turn.maxRaiseTo ? t('hdAllIn') : raiseLabel}<Kbd k="R" /></button>
                   </div>
                 )}
-                {!turn.canRaise && turn.maxRaiseTo > 0 && <button className="hdbtn" onClick={() => send({ k: 'act', a: { a: 'allin' } })}>{t('hdAllIn')}</button>}
+                {!turn.canRaise && turn.maxRaiseTo > 0 && <button className="hdbtn" onClick={() => send({ k: 'act', a: { a: 'allin' } })}>{t('hdAllIn')}<Kbd k="A" /></button>}
               </div>
             ) : (
               <div className="hdactions idle">

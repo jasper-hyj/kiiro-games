@@ -6,6 +6,7 @@ import { Card } from '../holdem/ui/Cards'
 import { connectLocalBlackjack } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
+import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
 import '../../room/strings'
 import { MIN_BETS } from './engine/table'
@@ -113,6 +114,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   const { t } = useLang()
   const [copied, setCopied] = useState(false)
   const [bet, setBet] = useState(0)
+  const [lastBet, setLastBet] = useState(0)
   const [, tick] = useState(0)
   const nextAt = useRef<number | null>(null)
   const deadline = useRef<number | null>(null)
@@ -138,6 +140,10 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   const room_ = v.betLimits.max
   const cap = Math.min(v.betLimits.max, you ? you.stack + you.pending : 0)
   const addChip = (n: number) => setBet((b) => Math.min(cap, b + n))
+  const betOk = bet >= minB && bet % 2 === 0 && bet <= cap
+  const placeBet = () => { if (v.canBet && betOk) { setLastBet(bet); send({ k: 'act', a: { a: 'bet', amount: bet } }) } }
+  const act = (a: 'hit' | 'stand' | 'double' | 'split') => { if (v.options && (a === 'stand' || v.options[a])) send({ k: 'act', a: { a } }) }
+  // keys: H hit, S stand, D double, P split; when betting: 1-5 add a chip, Enter places the bet, Esc clears it
   const message = v.phase === 'bet' ? t('bjBetNow') + (secs != null ? ` · ${secs}s` : '')
     : v.phase === 'play' ? (v.options ? t('bjYourTurn') : toActName ? t('bjWaitTurn', { name: toActName }) : t('bjDeal'))
     : v.phase === 'dealer' ? t('bjDealerPlays')
@@ -146,15 +152,18 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   return (
     <div className="kg hd bj">
       <div className="kg-wrap hdwrap">
+        <Hotkeys enabled={!!you} keys={{
+          h: () => act('hit'), s: () => act('stand'), d: () => act('double'), p: () => act('split'),
+          enter: v.canBet ? placeBet : undefined, escape: v.canBet ? () => setBet(0) : undefined,
+          ...Object.fromEntries([1, 2, 3, 4, 5].map((i) => [String(i), v.canBet ? () => addChip(minB * [1, 2, 5, 10, 25][i - 1]) : undefined])),
+        }} />
         <Bar />
-        <div className="hdhead">
-          <span><b>{room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}</b> <span className="muted">· {t('bjMinMax', { min: fmt(v.config.bet), max: fmt(room_ > 0 ? v.config.bet * 50 : 0) })} · {v.config.casual ? t('hdCasual') : t('hdCash')}</span></span>
-          <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button></span>
-        </div>
-        {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
+        <TableHeader title={room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}
+          sub={`${t('bjMinMax', { min: fmt(v.config.bet), max: fmt(room_ > 0 ? v.config.bet * 50 : 0) })} · ${v.config.casual ? t('hdCasual') : t('hdCash')}`}
+          copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
 
-        <div className="bjtable">
+        <div className="bjtable k-felt">
           <div className="bjdealer">
             <div className="bjlabel">{t('bjDealer')}{v.dealer.value != null && <b>{v.dealer.value}</b>}</div>
             <div className="bjcards">{v.dealer.cards.length === 0 ? <span className="pkslot" /> : v.dealer.cards.map((c, i) => c === null ? <Card key={i} back /> : <Card key={i} c={c} />)}</div>
@@ -164,9 +173,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
             {v.seats.filter((s) => !s.empty).map((s) => {
               const turnHere = v.toAct?.seat === s.seat && v.phase === 'play'
               return (
-                <div key={s.seat} className={'bjseat' + (s.me ? ' me' : '') + (turnHere ? ' turn' : '') + (s.out || !s.connected ? ' away' : '')}>
-                  <div className="bjname">{s.name}</div>
-                  <div className="hdstack">{fmt(s.stack)}</div>
+                <SeatChip key={s.seat} className="bjseat" name={s.name} sub={fmt(s.stack)} state={(s.me ? 'me ' : '') + (turnHere ? 'turn ' : '') + (s.out || !s.connected ? 'away' : '')}>
                   {v.phase === 'bet' && s.pending > 0 && <div className="bjbet">{fmt(s.pending)}</div>}
                   <div className="bjhands">
                     {s.hands.map((h, hi) => (
@@ -177,7 +184,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
                       </div>
                     ))}
                   </div>
-                </div>
+                </SeatChip>
               )
             })}
           </div>
@@ -186,19 +193,26 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
         <div className="hdbar">
           {you ? (
             v.options ? (
-              <div className="hdactions">
-                <button className="hdbtn" onClick={() => send({ k: 'act', a: { a: 'stand' } })}>{t('bjStand')}</button>
-                <button className="hdbtn primary" disabled={!v.options.hit} onClick={() => send({ k: 'act', a: { a: 'hit' } })}>{t('bjHit')}</button>
-                <button className="hdbtn" disabled={!v.options.double} onClick={() => send({ k: 'act', a: { a: 'double' } })}>{t('bjDouble')}</button>
-                <button className="hdbtn" disabled={!v.options.split} onClick={() => send({ k: 'act', a: { a: 'split' } })}>{t('bjSplit')}</button>
+              <div className="hdactions bj-actions">
+                <button className="hdbtn primary" disabled={!v.options.hit} onClick={() => act('hit')}>{t('bjHit')}<Kbd k="H" /></button>
+                <button className="hdbtn" onClick={() => act('stand')}>{t('bjStand')}<Kbd k="S" /></button>
+                <button className="hdbtn" disabled={!v.options.double} onClick={() => act('double')}>{t('bjDouble')}<Kbd k="D" /></button>
+                <button className="hdbtn" disabled={!v.options.split} onClick={() => act('split')}>{t('bjSplit')}<Kbd k="P" /></button>
               </div>
             ) : v.canBet ? (
               <div className="bjbetbar">
-                <div className="bjchips">{[1, 2, 5, 10, 25].map((m) => <button key={m} className="bjchip" disabled={bet + minB * m > cap} onClick={() => addChip(minB * m)}>+{fmt(minB * m)}</button>)}<button className="hdlink" onClick={() => setBet(0)}>×</button></div>
-                <div className="hdactions">
-                  <button className="hdbtn primary" disabled={bet < minB || bet % 2 !== 0 || bet > cap} onClick={() => send({ k: 'act', a: { a: 'bet', amount: bet } })}>{bet > 0 ? t('bjBet', { n: fmt(bet) }) : t('bjBetNow')}</button>
-                  {myPending > 0 && <span className="muted">{t('bjBetPlaced', { n: fmt(myPending) })}</span>}
+                <div className="bjstake" aria-live="polite"><span className="muted">{t('bjYourBet')}</span><b>{fmt(bet)}</b></div>
+                <div className="bjchips" role="group" aria-label={t('bjChips')}>
+                  {[1, 2, 5, 10, 25].map((m, i) => <button key={m} className={'bjchip c' + i} disabled={bet + minB * m > cap} onClick={() => addChip(minB * m)} aria-label={`+${fmt(minB * m)}`}><span>{fmt(minB * m)}</span></button>)}
                 </div>
+                <div className="hdactions">
+                  {bet > 0 ? <button className="hdbtn quiet" onClick={() => setBet(0)}>{t('bjClear')}<Kbd k="Esc" /></button>
+                    : lastBet >= minB && lastBet <= cap ? <button className="hdbtn" onClick={() => setBet(lastBet)}>{t('bjRepeat', { n: fmt(lastBet) })}</button> : null}
+                  <button className="hdbtn primary" disabled={!betOk} onClick={placeBet}>{bet > 0 ? t('bjBet', { n: fmt(bet) }) : t('bjBetNow')}<Kbd k="↵" /></button>
+                </div>
+                {myPending > 0 && <p className="muted small">{t('bjBetPlaced', { n: fmt(myPending) })}</p>}
+                {bet > 0 && bet < minB && <p className="muted small">{t('bjMinBetNote', { n: fmt(minB) })}</p>}
+                {bet > 0 && bet % 2 !== 0 && <p className="muted small">{t('bjEvenNote')}</p>}
               </div>
             ) : (
               <div className="hdactions idle">

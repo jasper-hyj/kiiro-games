@@ -8,7 +8,7 @@ import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } fr
 import { TalkBox } from '../shared/TalkBox'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
 import '../../room/strings'
-import { beats, evalCombo, power } from './engine/combos'
+import { BtTable } from './BtTable'
 import { Rules } from '../shared/Rules'
 import type { BigTwoView, BtMsg } from './net/protocol'
 import '../holdem/strings'
@@ -101,113 +101,4 @@ export default function BigTwoApp() {
   }
   if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
   return <BtTable v={view} status={status} room={room} error={error} send={send} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} />
-}
-
-function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignIn }: { v: BigTwoView; status: Status; room: string; error: string; send: (m: BtMsg) => void; talk: TalkMsg[]; say(text: string): void; leave(): void; me: ReturnType<typeof useAccount>['me']; openSignIn(): void }) {
-  const { t } = useLang()
-  const [sel, setSel] = useState<number[]>([])
-  const [copied, setCopied] = useState(false)
-  const [, tick] = useState(0)
-  const deadline = useRef<number | null>(null)
-  useEffect(() => { const i = setInterval(() => tick((n) => n + 1), 500); return () => clearInterval(i) }, [])
-  useEffect(() => { deadline.current = v.timeLeft != null ? Date.now() + v.timeLeft : null }, [v])
-  // a play or a new game clears the selection
-  const key = `${v.game}:${v.last.length}:${v.status}`
-  useEffect(() => { setSel([]) }, [key])
-  const link = `${location.origin}${location.pathname}?room=${room}`
-  const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
-  const myTurn = v.status === 'playing' && v.turn === v.you
-  const chosen = sel.length ? evalCombo(sel) : null
-  const curCombo = v.current ? evalCombo(v.current.cards) : null
-  const legal = !!chosen && beats(chosen, curCombo) && (!v.mustOpen || sel.includes(27))
-  const ref = Math.max(0, v.you)
-  const watcher = v.you < 0
-  const rel = (seat: number) => (seat - ref + 4) % 4 // 0 me, 1 left, 2 top, 3 right
-  const secs = deadline.current ? Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)) : null
-  const toggle = (c: number) => setSel((s) => (s.includes(c) ? s.filter((x) => x !== c) : s.length < 5 ? [...s, c] : s))
-  const hand = [...v.hand].sort((a, b) => power(a) - power(b))
-  const head = (
-    <>
-      <Bar />
-      <div className="hdhead">
-        <span><b>{room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}</b> <span className="muted">· {room === 'practice' ? t('btCasual') : v.config.ranked ? t('btRanked') : t('btCasual')}</span></span>
-        <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button></span>
-      </div>
-      {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
-      {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
-    </>
-  )
-
-  if (v.status === 'lobby') {
-    return (
-      <div className="kg hd bt"><div className="kg-wrap hdwrap">{head}
-        <h2 className="btsec">{t('btSeats')}</h2>
-        {v.you < 0 && <p className="kg-note">{t('hdSpectating')} <button className="hdbtn primary" onClick={() => send({ k: 'sit' })}>{t('hdSit')}</button></p>}
-        <ul className="btlobby">{v.seats.map((s) => <li key={s.seat} className={s.empty ? 'muted' : ''}>{s.empty ? t('btBot') : <>{s.name}{s.me && <span className="muted"> · {t('btYou')}</span>}</>}</li>)}</ul>
-        {v.host ? (
-          <div className="hdform">
-            <div className="hdseg"><button className={!v.config.ranked ? 'on' : ''} onClick={() => send({ k: 'config', config: { ranked: false } })}>{t('btCasual')}</button>
-              <button className={v.config.ranked ? 'on' : ''} disabled={!me} onClick={() => send({ k: 'config', config: { ranked: true } })}>{t('btRanked')}</button></div>
-            <p className="kg-note">{me ? t('btRankedHint') : <>{t('acRankedLocked')} <button className="hdlink" onClick={openSignIn}>{t('acSignIn')}</button></>}</p>
-            <div><button className="hdbtn primary" onClick={() => send({ k: 'start' })}>{t('btStart')}</button></div>
-          </div>
-        ) : <p className="kg-note">{t('btWaitHost')}</p>}
-        {v.watching > 0 && <p className="kg-note">{t('btWatchers', { n: v.watching })}</p>}
-        <p className="kg-note">{t('btRules')}</p>
-        {room !== 'practice' && <TalkBox lines={talk} say={say} />}
-      </div></div>
-    )
-  }
-
-  const msg = v.status === 'over' ? '' : myTurn ? (v.mustOpen ? t('btOpen') : !v.current ? t('btLead') : t('btYourTurn') + (secs != null ? ` · ${secs}s` : '')) : v.turn >= 0 ? t('btWaitTurn', { name: v.seats[v.turn].name }) : ''
-  return (
-    <div className="kg hd bt"><div className="kg-wrap hdwrap">{head}
-      <div className="bttable">
-        {v.seats.filter((s) => s.seat !== ref).map((s) => (
-          <div key={s.seat} className={'btseat pos' + rel(s.seat) + (v.turn === s.seat ? ' turn' : '') + (!s.connected && !s.bot ? ' away' : '')}>
-            <div className="bttag">{s.name}</div>
-            <div className="btcount">{t('btCards', { n: s.count })}</div>
-            {s.passed && v.status === 'playing' && <div className="btpass">{t('btPassed')}</div>}
-          </div>
-        ))}
-        <div className="btcenter">
-          {v.status === 'over' && v.result ? (
-            <div className="btresult">
-              <div className="hdwin">{t('btWins', { name: v.seats[v.result.winner].name })}</div>
-              <table className="kgt"><thead><tr><th>{t('acPlayer')}</th><th>{t('btLeft', { n: '' }).trim()}</th><th>{t('btPoints')}</th></tr></thead>
-                <tbody>{v.seats.map((s) => <tr key={s.seat} className={s.me ? 'me' : ''}><td>{s.name}</td><td>{v.result!.left[s.seat]}</td><td className={v.result!.points[s.seat] >= 0 ? 'kg-up' : 'kg-down'}>{v.result!.points[s.seat] > 0 ? '+' : ''}{v.result!.points[s.seat]}</td></tr>)}</tbody></table>
-              {v.host ? <button className="hdbtn primary" onClick={() => send({ k: 'lobby' })}>{t('btAgain')}</button> : <p className="kg-note">{t('btWaitHost')}</p>}
-            </div>
-          ) : (
-            <>
-              <div className="btplay">{v.current ? <>{v.current.cards.map((c) => <Card key={c} c={c} />)}</> : <span className="pkslot" />}</div>
-              {v.current && <div className="muted small">{v.seats[v.current.seat].name} · {t('btt.' + v.current.type)}</div>}
-              <div className="hdmsg">{msg}</div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {watcher ? (
-        <div className="bthand btwatch" role="group" aria-label="watching">
-          <div className="btseat bottom"><div className="bttag">{v.seats[ref].name}</div><div className="btcount">{t('btCards', { n: v.seats[ref].count })}</div></div>
-        </div>
-      ) : (
-      <div className="bthand" role="group" aria-label="hand">
-        {hand.map((c) => <button key={c} className={'btcard' + (sel.includes(c) ? ' sel' : '')} onClick={() => toggle(c)} disabled={v.status !== 'playing'}><Card c={c} /></button>)}
-      </div>
-      )}
-      <div className="hdbar">
-        {watcher ? (
-          <div className="hdactions"><span className="muted small">{t('hdSpectating')}{v.watching > 0 ? ` · ${t('btWatchers', { n: v.watching })}` : ''}</span><button className="hdbtn primary" onClick={() => send({ k: 'sit' })}>{t('hdSit')}</button></div>
-        ) : (
-        <div className="hdactions">
-          <button className="hdbtn" disabled={!myTurn || !v.canPass} onClick={() => send({ k: 'pass' })}>{t('btPassBtn')}</button>
-          <button className="hdbtn primary" disabled={!myTurn || !legal} onClick={() => send({ k: 'play', cards: sel })}>{t('btPlayBtn')}{chosen ? ` · ${t('btt.' + chosen.type)}` : ''}</button>
-        </div>
-        )}
-      </div>
-      {room !== 'practice' && <TalkBox lines={talk} say={say} />}
-    </div></div>
-  )
 }

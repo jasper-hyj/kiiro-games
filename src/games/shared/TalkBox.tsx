@@ -27,15 +27,20 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
     return () => clearInterval(id)
   }, [])
   useEffect(() => {
-    // sit above whatever lives in the bottom-left of the table (action bar, your hand or seat, bet chips) so it never covers a control
+    // sit above whatever would be under it in the bottom-left corner (action bar, your hand or seat, bet chips), and nowhere else
     const place = () => {
-      const w = box.current?.getBoundingClientRect().width ?? 330
-      let top = innerHeight
-      for (const el of Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .handbar, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'))) {
+      const c = box.current; if (!c) return
+      const r0 = c.getBoundingClientRect()
+      const w = r0.width || 330, h = r0.height || 60
+      const base = Math.max(10, parseFloat(getComputedStyle(c).getPropertyValue('--base')) || 10)
+      let need = 0
+      for (const el of Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .bt-me, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'))) {
         const r = el.getBoundingClientRect()
-        if (r.height > 0 && r.left < w + 12 && r.right > 0 && r.top > innerHeight * 0.3 && r.top < top) top = r.top
+        if (r.height <= 0 || r.right < 0 || r.left > w + 12 + 10) continue
+        // would the chat (at the bottom, lifted by nothing) cover it?
+        if (r.bottom > innerHeight - base - h - 6 && r.top < innerHeight) need = Math.max(need, innerHeight - r.top + 8 - base)
       }
-      box.current?.style.setProperty('--lift', top < innerHeight ? Math.max(0, innerHeight - top) + 8 + 'px' : '0px')
+      c.style.setProperty('--lift', Math.max(0, need) + 'px')
     }
     document.body.classList.add('has-kgchat') // lobby pages scroll: they get room at the bottom so nothing is stuck under the chat
     place()

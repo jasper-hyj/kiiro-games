@@ -45,7 +45,7 @@ async function bigTwoMove(p: Page): Promise<boolean> {
     let moves = 0, reloaded = false, done = false
     for (let i = 0; i < 400 && !done; i++) {
       try {
-      if (await p.$('.btresult')) { done = true; break }
+      if (await p.$('.k-result')) { done = true; break }
       if (await bigTwoMove(p)) moves++
       } catch { await sleep(300); continue } // the page may be mid-navigation
       if (moves === 4 && !reloaded && game === 1) {
@@ -60,11 +60,11 @@ async function bigTwoMove(p: Page): Promise<boolean> {
     }
     ok(done, `bigtwo game ${game}: the game finished after ${moves} of my moves`)
     if (done) {
-      const rows = await p.$$eval('.btresult tbody tr', (r) => r.map((x) => x.textContent || ''))
+      const rows = await p.$$eval('.k-result .k-row', (r) => r.map((x) => x.textContent || ''))
       ok(rows.length === 4, 'bigtwo: the result lists four players')
-      const pts = await p.$$eval('.btresult tbody tr td:last-child', (c) => c.map((x) => Number((x.textContent || '0').replace('+', '')) || 0))
+      const pts = await p.$$eval('.k-result .k-rowval', (c) => c.map((x) => Number((x.textContent || '0').replace('+', '')) || 0))
       ok(pts.reduce((a, c) => a + c, 0) === 0, `bigtwo: points are zero-sum (${pts.join(', ')})`)
-      if (game === 1) { await clickText(p, '.btresult .hdbtn', 'again') || await clickText(p, '.btresult button', ''); await sleep(1500); ok(!!(await p.$('.btlobby')), 'bigtwo: "play again" returns to the lobby') }
+      if (game === 1) { await clickText(p, '.k-resultactions .hdbtn', ''); await sleep(1500); ok(!!(await p.$('.btlobby')), 'bigtwo: "play again" returns to the lobby') }
     }
   }
   ok(p.url() === url || p.url().includes('room='), 'bigtwo: still in the same room')
@@ -93,7 +93,7 @@ async function bigTwoMove(p: Page): Promise<boolean> {
     await sleep(350)
   }
   ok(hands >= 4, `holdem: ${hands} hands were played to a result`)
-  const stacks = await A.$$eval('.hdseat:not(.empty) .hdstack', (e) => e.map((x) => Number((x.textContent || '0').replace(/[^\d]/g, ''))))
+  const stacks = await A.$$eval('.hdseat:not(.empty) .k-seatsub', (e) => e.map((x) => Number((x.textContent || '0').replace(/[^\d]/g, ''))))
   ok(stacks.length === 2 && stacks.every((s) => s >= 0), `holdem: both stacks are sensible (${stacks.join(', ')})`)
   await A.browserContext().close(); await B.browserContext().close()
 }

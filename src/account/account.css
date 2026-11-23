@@ -1,7 +1,7 @@
 /* Accounts: sign-in, profile, leaderboard, admin. Same quiet look as the hub (see src/hub/hub.css). */
-.acmodal, .accorner { --panel: #111832; --ink: #e8ecf6; --mute: #8e97b0; --line: rgba(232,236,246,.1); --accent: #c9d2e6; }
+.acmodal, .accorner { --panel: var(--k-panel); --ink: var(--k-ink); --mute: var(--k-mute); --line: rgba(243,236,221,.1); --accent: var(--k-silver); }
 .accorner { position: fixed; top: max(12px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); z-index: 30; max-width: 46vw; }
-.accorner .kg-acct { color: #e8ecf6; font: 500 14px var(--sans, system-ui); background: rgba(11,16,32,.55); padding: 7px 12px; border-radius: 8px; }
+.accorner .kg-acct { color: var(--k-ink); font: 500 14px var(--sans, system-ui); background: rgba(15,20,36,.55); padding: 7px 12px; border-radius: 8px; }
 .accorner .kg-acct small { display: none; }
 .acmodal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(4,7,18,.72); }
 .acbox { width: min(400px, 100%); max-height: 92vh; overflow: auto; display: grid; gap: 14px; padding: 24px; border-radius: 12px; background: var(--panel); color: var(--ink); font: 400 15px/1.5 var(--sans, system-ui); border: 1px solid var(--line); }
@@ -23,27 +23,27 @@
 
 /* buttons and fields in the account screens */
 :root:root .acbox button, :root:root .adpage button, :root:root .adpage .btn, :root:root .acrow a { font: 500 14px var(--sans, system-ui); padding: 0 16px; min-height: 40px; border-radius: 8px; border: 0; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
-:root:root .acbox .primary, :root:root .adpage .primary { background: #c9d2e6; color: #0b1020; font-weight: 600; }
+:root:root .acbox .primary, :root:root .adpage .primary { background: var(--k-accent); color: var(--k-accent-ink); font-weight: 600; }
 :root:root .acbox .primary:disabled { opacity: .4; cursor: default; }
-:root:root .acbox .ghost, :root:root .adpage .ghost, :root:root .acrow .ghost { background: none; color: var(--mute, #8e97b0); padding: 0 8px; }
-:root:root .acbox .ghost:hover, :root:root .adpage .ghost:hover { color: #e8ecf6; text-decoration: underline; text-underline-offset: 4px; }
-:root:root .acbox input, :root:root .adpage input { background: rgba(255,255,255,.06); color: #e8ecf6; border: 1px solid rgba(232,236,246,.14); border-radius: 8px; padding: 0 12px; font: 400 15px var(--sans, system-ui); min-height: 40px; }
-:root:root .acbox input::placeholder, :root:root .adpage input::placeholder { color: rgba(232,236,246,.4); }
-:root:root .acbox input:focus-visible, :root:root .adpage input:focus-visible { outline: 2px solid #c9d2e6; outline-offset: 1px; }
+:root:root .acbox .ghost, :root:root .adpage .ghost, :root:root .acrow .ghost { background: none; color: var(--mute, var(--k-mute)); padding: 0 8px; }
+:root:root .acbox .ghost:hover, :root:root .adpage .ghost:hover { color: var(--k-ink); text-decoration: underline; text-underline-offset: 4px; }
+:root:root .acbox input, :root:root .adpage input { background: rgba(255,255,255,.06); color: var(--k-ink); border: 1px solid rgba(243,236,221,.14); border-radius: 8px; padding: 0 12px; font: 400 15px var(--sans, system-ui); min-height: 40px; }
+:root:root .acbox input::placeholder, :root:root .adpage input::placeholder { color: rgba(243,236,221,.4); }
+:root:root .acbox input:focus-visible, :root:root .adpage input:focus-visible { outline: 2px solid var(--k-silver); outline-offset: 1px; }
 @media (max-height: 460px) { .acbox { gap: 8px; padding: 14px 18px; } }
 
 /* admin */
 .adwrap { padding-top: 8px; display: grid; gap: 14px; }
-.adtabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 18px; border-bottom: 1px solid var(--line, rgba(232,236,246,.1)); }
-:root:root .adtabs button { background: none; color: #8e97b0; border-radius: 0; padding: 10px 12px; min-height: 0; text-transform: capitalize; border-bottom: 2px solid transparent; }
-:root:root .adtabs button.on { color: #e8ecf6; border-bottom-color: #c9d2e6; }
+.adtabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 18px; border-bottom: 1px solid var(--line, rgba(243,236,221,.1)); }
+:root:root .adtabs button { background: none; color: var(--k-mute); border-radius: 0; padding: 10px 12px; min-height: 0; text-transform: capitalize; border-bottom: 2px solid transparent; }
+:root:root .adtabs button.on { color: var(--k-ink); border-bottom-color: var(--k-silver); }
 .adpage h1 { margin-top: 28px; }
-.adpage h3 { font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: #8e97b0; margin: 18px 0 0; }
+.adpage h3 { font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--k-mute); margin: 18px 0 0; }
 .adscroll { overflow-x: auto; max-width: 100%; }
 .adcells { display: flex; gap: 2px; flex-wrap: wrap; }
-.adstats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); border-top: 1px solid rgba(232,236,246,.1); }
-.adstats > div { padding: 14px 0; border-bottom: 1px solid rgba(232,236,246,.1); display: grid; gap: 2px; }
-.adstats b { font: 600 22px var(--serif); font-variant-numeric: tabular-nums; } .adstats span { color: #8e97b0; font-size: 12px; }
+.adstats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); border-top: 1px solid rgba(243,236,221,.1); }
+.adstats > div { padding: 14px 0; border-bottom: 1px solid rgba(243,236,221,.1); display: grid; gap: 2px; }
+.adstats b { font: 600 22px var(--serif); font-variant-numeric: tabular-nums; } .adstats span { color: var(--k-mute); font-size: 12px; }
 
 .acstack { display: grid; gap: 10px; } .acstack input { min-width: 0; min-height: 40px; user-select: text; -webkit-user-select: text; }
 
