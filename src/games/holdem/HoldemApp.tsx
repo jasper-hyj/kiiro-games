@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
@@ -11,6 +12,7 @@ import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Statu
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import { NoRoom } from '../../ui/components'
 import '../../room/strings'
 import type { TalkMsg } from '../shared/cashClient'
 import './strings'
@@ -32,7 +34,7 @@ function useNarrow() {
 export default function HoldemApp() {
   const { t } = useLang()
   const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => load('kiiro-name', ''))
+  const [name, setName] = useState(() => readName(''))
   const [view, setView] = useState<HoldemView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
@@ -76,8 +78,8 @@ export default function HoldemApp() {
     conn.current = connectHoldem(rm, getClientId(), nm, handlers, create)
   }, [name, me?.name, handlers])
 
-  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=holdem' } // tables start from a room now: gather first, then choose the game and rules
-  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
+  const create = () => { writeName(name); location.href = '/room?create=1&pick=holdem' } // tables start from a room now: gather first, then choose the game and rules
+  const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { const sb = Number(mk.sb) || 25, bb = Number(mk.bb) || 50; open(urlRoom, { sb, bb, casual: mk.casual !== false }) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // a sign-in (or sign-out) while at the table: reconnect so the server knows who you are
@@ -87,36 +89,7 @@ export default function HoldemApp() {
 
   const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 
-  if (!room) {
-    return (
-      <div className="kg hd">
-        <div className="kg-wrap">
-          <Bar />
-          <h1>{t('hdName')}</h1>
-          <p className="kg-lead">{t('hdTagline')}</p>
-          {error && <p className="acerr" role="alert">{t(error)}</p>}
-          <div className="hdform">
-            <label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label>
-          </div>
-          <Rules title="hdHow" lines={['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5']} />
-          <div className="kg-cols">
-            <section className="hdform">
-              <h2>{t('hdCreate')}</h2>
-              <p className="kg-note">{t('rmCreateNote')}</p>
-              <div><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button></div>
-            </section>
-            <section className="hdform">
-              <h2>{t('hdJoin')}</h2>
-              <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
-                <input inputMode="numeric" pattern="\d{4}" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
-                <button className="hdbtn primary" disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button>
-              </form>
-            </section>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!room) return <NoRoom game="holdem" error={error} />
   return <Table view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} api={api} />
 }
 

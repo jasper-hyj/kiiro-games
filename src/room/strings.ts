@@ -15,6 +15,7 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
   rmMahjong: ['Kiiro Mahjong', 'Kiiro 麻將'], rmHoldem: ["Texas Hold'em", '德州撲克'], rmBlackjack: ['Blackjack', '二十一點'], rmBigtwo: ['Big Two', '大老二'],
   rmHostOnly: ['Only the host can do that.', '只有房主可以這樣做。'], pick_first: ['Pick a game to start.', '請先選擇遊戲。'], host_only: ['Only the host can do that.', '只有房主可以這樣做。'],
   rmCreateNote: ['Tables start from a room: gather your friends first, then choose the game and rules together.', '牌桌從房間開始：先集合朋友，再一起選擇遊戲和規則。'],
+  rmNoTableTitle: ['This table is not open', '這張牌桌未開放'], rmNoTableBody: ['Tables are opened from a room: create one, pick the game and invite friends.', '牌桌從房間開啟：開一個房間、選擇遊戲並邀請朋友。'],
   rmConnecting: ['Connecting…', '連線中…'], rmLost: ['Connection lost. Reconnecting…', '連線中斷，重新連線中…'],
   rmOr: ['Have a direct table code? Joining it works here too.', '有牌桌代碼嗎？也可以在這裡輸入加入。'],
 }
@@ -35,6 +36,7 @@ registerStrings({}, {
   rmMahjong: 'Kiiro 麻雀', rmHoldem: 'テキサスホールデム', rmBlackjack: 'ブラックジャック', rmBigtwo: '大老二',
   rmHostOnly: 'ホストだけができます。', pick_first: 'ゲームを選んでください。', host_only: 'ホストだけができます。',
   rmCreateNote: 'テーブルはルームから始まります。まず友達を集めて、一緒にゲームとルールを選びましょう。',
+  rmNoTableTitle: 'このテーブルは開いていません', rmNoTableBody: 'テーブルはルームから開きます。ルームを作り、ゲームを選んで友達を招待しましょう。',
   rmConnecting: '接続中…', rmLost: '接続が切れました。再接続中…',
   rmOr: 'テーブルのコードをお持ちですか？ここから参加もできます。',
 })

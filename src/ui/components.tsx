@@ -102,3 +102,23 @@ export function ResultPanel({ title, rows, columns, note, children }: { title: R
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ no table */
+/** What a game page shows when there is no table to open: say why, and offer the one way in (a room). */
+export function NoRoom({ game, error }: { game: string; error?: string }) {
+  const { t } = useLang()
+  return (
+    <div className="kg hd">
+      <div className="kg-wrap">
+        <div className="k-empty">
+          <h1>{t('rmNoTableTitle')}</h1>
+          <p className="kg-lead">{error ? t(error) : t('rmNoTableBody')}</p>
+          <div className="hdrow">
+            <a className="hdbtn primary k-linkbtn" href={`/room?create=1&pick=${game}`}>{t('rmCreateBtn')}</a>
+            <a className="hdbtn k-linkbtn" href="/">{t('acHome')}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

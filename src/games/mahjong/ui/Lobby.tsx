@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fromRoom } from '../../shared/fromRoom'
+import { SeatChip, TableHeader } from '../../../ui/components'
 import '../../../room/strings'
 import type { RoomConfig, TableView } from '../engine/table'
 import { RULESETS, type RuleId } from '../engine/rules'
@@ -218,21 +219,12 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
   const copy = () => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }
   return (
     <div className="page lobby">
-      <div className="roomhead">
-        <span className="eyebrow">{t('room')}</span>
-        <div className="bigroom" aria-label={t('room')}>{room}</div>
-        <div className="copyrow">
-          <input type="text" readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label={t('inviteLink')} />
-          <button className="btn" onClick={copy}>{copied ? t('copied') : t('inviteLink')}</button>
-        </div>
-      </div>
+      <TableHeader title={`${t('room')} ${room}`} sub={`${humans}/${view.seats.length}`} watching={view.watching} copied={copied} onCopy={copy} onLeave={onLeave} leaveLabel={fromRoom() ? t('rmBack') : t('leave')} />
       <div className="seatcards">
         {view.seats.map((s, i) => (
-          <div className={'seatcard' + (i === view.you ? ' you' : '') + (s.human ? '' : ' open')} key={i}>
-            <span className="wind">{WINDS[i] ?? ''}</span>
-            <b>{s.human ? s.name : t('seatOpen')}</b>
-            <span className={'badge' + (i === view.you ? ' ac' : '')}>{i === view.you ? (view.host ? t('seatYouHost') : t('seatYou')) : s.human ? t('seatJoined') : `${t('seatBot')} · ${s.name}`}</span>
-          </div>
+          <SeatChip key={i} className="mj-seatchip" name={s.human ? s.name : t('seatOpen')} state={(i === view.you ? 'me ' : '') + (s.human ? '' : 'away')}
+            badge={<span className="mj-wind" aria-hidden="true">{WINDS[i] ?? ''}</span>}
+            sub={<span className="mj-seatsub">{i === view.you ? (view.host ? t('seatYouHost') : t('seatYou')) : s.human ? t('seatJoined') : `${t('seatBot')} · ${s.name}`}</span>} />
         ))}
       </div>
       <p className="muted small seatsnote">{humans}/{view.seats.length} · {t('seatsNote')}</p>
@@ -246,7 +238,6 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
       </div>
       <div className="row lobbyactions">
         {view.host ? <button className="btn gold big" onClick={() => send({ t: 'start' })}>{t('startGame')}</button> : <span className="muted">{t('waitHost')}</span>}
-        <button className="btn alt" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
       </div>
       <section className="tablesettings always">
         <h2 className="eyebrow">{view.host ? t('changeRules') : t('hostDecides')}</h2>

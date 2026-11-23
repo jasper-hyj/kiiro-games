@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
@@ -8,6 +9,7 @@ import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } fr
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import { NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { MIN_BETS } from './engine/table'
 import { Rules } from '../shared/Rules'
@@ -24,7 +26,7 @@ const fmt = (n: number) => n.toLocaleString()
 export default function BlackjackApp() {
   const { t } = useLang()
   const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => load('kiiro-name', ''))
+  const [name, setName] = useState(() => readName(''))
   const [view, setView] = useState<BlackjackView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
@@ -68,42 +70,16 @@ export default function BlackjackApp() {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBlackjack(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), minBet, handlers)
   }
-  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=blackjack' }
-  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
+  const create = () => { writeName(name); location.href = '/room?create=1&pick=blackjack' }
+  const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) open(urlRoom, { bb: Number(mk.bb) || 10, casual: mk.casual !== false }); else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  useEffect(() => { if (new URLSearchParams(location.search).get('practice') === '1' && !conn.current) practice() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 
-  if (!room) {
-    return (
-      <div className="kg hd bj">
-        <div className="kg-wrap">
-          <Bar />
-          <h1>{t('bjName')}</h1>
-          <p className="kg-lead">{t('bjTagline')}</p>
-          {error && <p className="acerr" role="alert">{t(error)}</p>}
-          <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label></div>
-          <Rules title="bjHow" lines={['bjR1', 'bjR2', 'bjR3', 'bjR4', 'bjR5']} />
-          <div className="kg-cols">
-            <section className="hdform">
-              <h2>{t('bjCreate')}</h2>
-              <p className="kg-note">{t('rmCreateNote')}</p>
-              <div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div>
-            </section>
-            <section className="hdform">
-              <h2>{t('hdJoin')}</h2>
-              <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
-                <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
-                <button className="hdbtn primary" disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button>
-              </form>
-            </section>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!room) return <NoRoom game="blackjack" error={error} />
   return <BjTable view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} room_={room} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} />
 }
 

@@ -66,7 +66,7 @@ export default function MahjongApp() {
     try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
     const back = fromRoom() ? new URLSearchParams(location.search).get('room') : null
     history.replaceState(null, '', location.pathname)
-    if (back) backToRoom(back)
+    if (back) backToRoom(back); else location.href = '/'
   }, [])
 
   const roomTries = useRef(0)

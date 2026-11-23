@@ -1,6 +1,6 @@
 import { useLang } from '../i18n'
 import { useState } from 'react'
-import { BIGTWO_PATH, BLACKJACK_PATH, HOLDEM_PATH, MAHJONG_PATH } from '../route'
+import { BIGTWO_PATH, BLACKJACK_PATH, MAHJONG_PATH } from '../route'
 import { AccountChip, Leaderboard } from '../account/Panels'
 import './hub.css'
 import './strings'
@@ -46,11 +46,11 @@ const ART: Record<string, JSX.Element> = {
   bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="5" y="10" width="20" height="30" rx="4"/><rect x="15" y="8" width="20" height="30" rx="4"/><rect x="25" y="6" width="20" height="30" rx="4"/><rect x="35" y="8" width="20" height="30" rx="4"/><path d="M41 16h8l-8 14h8"/></svg>,
 }
 
-const GAMES: { key: keyof typeof ART; href: string; name: string; blurb: string; tag: string }[] = [
-  { key: 'mahjong', href: MAHJONG_PATH, name: 'hubMahjong', blurb: 'hubMahjongBlurb', tag: 'hubTagMj' },
-  { key: 'holdem', href: HOLDEM_PATH, name: 'hubHoldem', blurb: 'hubHoldemBlurb', tag: 'hubTagCards' },
-  { key: 'blackjack', href: BLACKJACK_PATH, name: 'bjName', blurb: 'hubBjBlurb', tag: 'hubTagCards' },
-  { key: 'bigtwo', href: BIGTWO_PATH, name: 'btName', blurb: 'hubBtBlurb', tag: 'hubTagCards' },
+const GAMES: { key: keyof typeof ART; name: string; blurb: string; practice?: string }[] = [
+  { key: 'mahjong', name: 'hubMahjong', blurb: 'hubMahjongBlurb', practice: `${MAHJONG_PATH}?solo=1` },
+  { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb' },
+  { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: `${BLACKJACK_PATH}?practice=1` },
+  { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: `${BIGTWO_PATH}?practice=1` },
 ]
 
 /** The front page: a short statement, a 2x2 grid of games, and the season board under it. Mahjong needs no sign-in. */
@@ -74,12 +74,15 @@ export function Hub() {
           <h2>{t('hubGames')}</h2>
           <ul className="kg-grid">
             {GAMES.map((g) => (
-              <li key={g.key}><a className="kg-game" href={g.href}>
+              <li key={g.key}><div className="kg-game">
                 <span className="kg-art">{ART[g.key]}</span>
                 <b>{t(g.name)}</b>
                 <p>{t(g.blurb)}</p>
-                <span className="kg-go">{t('hubOpen')} →</span>
-              </a></li>
+                <span className="kg-acts">
+                  <a className="kg-go" href={`/room?create=1&pick=${g.key}`}>{t('hubPlayFriends')} →</a>
+                  {g.practice && <a className="kg-practice" href={g.practice}>{t('hubPractice')}</a>}
+                </span>
+              </div></li>
             ))}
           </ul>
           <p className="kg-note">{t('hubNoSignin')}</p>

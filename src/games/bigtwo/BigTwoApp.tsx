@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
@@ -7,6 +8,7 @@ import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import { NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { BtTable } from './BtTable'
 import { Rules } from '../shared/Rules'
@@ -23,7 +25,7 @@ const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catc
 export default function BigTwoApp() {
   const { t } = useLang()
   const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => load('kiiro-name', ''))
+  const [name, setName] = useState(() => readName(''))
   const [view, setView] = useState<BigTwoView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
@@ -67,38 +69,17 @@ export default function BigTwoApp() {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBigTwo(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
   }
-  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=bigtwo' }
-  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
+  const create = () => { writeName(name); location.href = '/room?create=1&pick=bigtwo' }
+  const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { ranked.current = mk.ranked === true; open(urlRoom, true) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  useEffect(() => { if (new URLSearchParams(location.search).get('practice') === '1' && !conn.current) practice() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
   const send = (m: BtMsg) => conn.current?.send(m)
 
-  if (!room) {
-    return (
-      <div className="kg hd bt">
-        <div className="kg-wrap">
-          <Bar />
-          <h1>{t('btName')}</h1>
-          <p className="kg-lead">{t('btTagline')}</p>
-          {error && <p className="acerr" role="alert">{t(error)}</p>}
-          <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label></div>
-          <Rules title="btHow" lines={['btR1', 'btR2', 'btR3', 'btR4', 'btR5']} />
-          <div className="kg-cols">
-            <section className="hdform"><h2>{t('hdCreate')}</h2><p className="kg-note">{t('rmCreateNote')}</p><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div></section>
-            <section className="hdform"><h2>{t('hdJoin')}</h2>
-              <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
-                <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
-                <button className="hdbtn primary" disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button>
-              </form>
-            </section>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!room) return <NoRoom game="bigtwo" error={error} />
   if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
   return <BtTable v={view} status={status} room={room} error={error} send={send} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} />
 }

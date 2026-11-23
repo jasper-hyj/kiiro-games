@@ -1412,3 +1412,24 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 /* observers: a slim bar at the top centre, out of the way of the tiles */
 .mjwatch { position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: var(--z-top); display: flex; align-items: center; gap: 12px; padding: 4px 6px 4px 14px; border-radius: 999px; background: rgba(8,12,24,.6); backdrop-filter: blur(4px); color: #eef1f8; font: 500 13px var(--sans); white-space: nowrap; }
 .mjwatch .btn { min-height: 30px; padding: 0 14px; font-size: 13px; }
+
+/* lobby: the shared header and name tags (src/ui) in Mahjong's page */
+.lobby .k-head { margin-top: 56px; padding-top: 0; }
+.lobby .seatcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.lobby .mj-seatchip { padding: 12px 10px; }
+.mj-wind { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--k-accent-soft); color: var(--k-accent-hi); font: 700 12px var(--k-serif); }
+.mj-seatsub { font-size: 12px; color: var(--k-mute); font-weight: 500; }
+.lobby .k-seatsub { color: var(--k-mute); }
+.lobby .btn.gold { background: var(--k-accent); color: var(--k-accent-ink); }
+/* connection dot: blue instead of green; the "ok" badge only shows in a game, the lobby already has the header */
+.connbadge .cdot { background: #8fb4ff; box-shadow: 0 0 8px rgba(143,180,255,.7); }
+.status-dot.open { background: #8fb4ff; }
+.app:not(.game) .connbadge.ok { display: none; }
+
+/* result and dialogs: the same soft rounded panel as the other games (src/ui) */
+:root:root .overlay { background: rgba(8,11,22,.74); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+:root:root .modal { background: linear-gradient(180deg, rgba(30,39,70,.97), rgba(22,29,54,.97)); border-radius: var(--k-r-lg); box-shadow: var(--k-shadow), inset 0 0 0 1px rgba(232,182,106,.28); }
+:root:root .modal h2, :root:root .modal .eyebrow { color: var(--k-accent-hi); }
+:root:root .btn { border-radius: 999px; font-family: var(--k-sans); font-weight: 700; }
+:root:root .btn.gold { background: var(--k-accent); color: var(--k-accent-ink); box-shadow: 0 4px 14px rgba(232,182,106,.22); }
+@media (hover: hover) { :root:root .btn.gold:hover { background: var(--k-accent-hi); } }

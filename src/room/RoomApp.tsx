@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { readName, writeName } from '../games/shared/name'
 import { useLang } from '../i18n'
 import { Bar } from '../hub/Hub'
 import { useAccount } from '../account/Account'
 import { BLINDS } from '../games/holdem/engine/table'
 import { MIN_BETS } from '../games/blackjack/engine/table'
 import { TalkBox } from '../games/shared/TalkBox'
+import { TableHeader } from '../ui/components'
 import { getClientId } from '../games/shared/cashClient'
 import { connectRoom, gameUrl, type RoomCfg, type RoomConn, type RoomGame, type RoomView, type TalkLine } from './roomClient'
 import '../games/holdem/strings'
@@ -21,8 +23,6 @@ const GAMES: { id: RoomGame; name: string }[] = [
 ]
 const RULESETS = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
 const DEFAULTS: Record<RoomGame, RoomCfg> = { mahjong: { rule: 'taiwan' }, holdem: { sb: 25, bb: 50, casual: true }, blackjack: { bb: MIN_BETS[0], casual: true }, bigtwo: {} }
-const load = (k: string, d: string) => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as string) : d } catch { return d } }
-const save = (k: string, v: string) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
 const newCode = () => String(1000 + Math.floor(Math.random() * 9000))
 
 /** The room: gather first, then choose the game and its rules together. Starting sends everyone to the table under this code. */
@@ -32,7 +32,7 @@ export default function RoomApp() {
   const q = useMemo(() => new URLSearchParams(location.search), [])
   const urlRoom = q.get('room')
   // a guest gets a distinct default name, kept for the games that follow
-  const [name, setName] = useState(() => { const s = load('kiiro-name', ''); if (s) return s; const g = 'Guest ' + (100 + Math.floor(Math.random() * 900)); save('kiiro-name', g); return g })
+  const [name, setName] = useState(() => { const s = readName(''); if (s) return s; const g = 'Guest ' + (100 + Math.floor(Math.random() * 900)); writeName(g); return g })
   const [room, setRoom] = useState<string | null>(null)
   const [view, setView] = useState<RoomView | null>(null)
   const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>('closed')
@@ -68,8 +68,8 @@ export default function RoomApp() {
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectRoom(rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
   }, [name, me?.name, handlers])
-  const create = () => { save('kiiro-name', name); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(newCode(), true) }; go() }
-  const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
+  const create = () => { writeName(name); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(newCode(), true) }; go() }
+  const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) join(urlRoom); else if (q.get('create') === '1' && !urlRoom && !conn.current) create() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // signing in while in the room: reconnect so the room knows who you are
@@ -108,17 +108,13 @@ export default function RoomApp() {
   const meNow = view.members.find((m) => m.me)
   const gameName = (g: RoomGame) => t(GAMES.find((x) => x.id === g)!.name)
   const setCfg = (patch: RoomCfg) => view.game && send({ t: 'pick', game: view.game, cfg: { ...view.cfg, ...patch } })
-  const goNow = (role: 'play' | 'watch') => { save('kiiro-name', name || me?.name || ''); location.href = gameUrl(room, { game: view.game!, cfg: view.cfg, role }) }
+  const goNow = (role: 'play' | 'watch') => { writeName(name || me?.name || ''); location.href = gameUrl(room, { game: view.game!, cfg: view.cfg, role }) }
 
   return (
     <div className="kg hd rm">
       <div className="kg-wrap hdwrap">
         <Bar />
-        <div className="hdhead">
-          <span><b>{t('rmName')} {room}</b> <span className="muted">· {view.members.length}</span></span>
-          <span className="hdtools"><button className="hdlink" onClick={copy}>{copied ? t('rmCopied') : t('rmCopy')}</button><button className="hdlink" onClick={leave}>{t('rmLeave')}</button></span>
-        </div>
-        {status !== 'open' && <p className="acerr hdbanner">{t('rmLost')}</p>}
+        <TableHeader title={`${t('rmName')} ${room}`} sub={`${view.members.length} ${t('rmPeople').toLowerCase()}`} copied={copied} onCopy={copy} onLeave={leave} leaveLabel={t('rmLeave')} status={status} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
         <div className="kg-cols rmcols">
           <section>
@@ -132,7 +128,7 @@ export default function RoomApp() {
                 </li>
               ))}
             </ul>
-            {!meNow?.signedIn && <label className="rmrename">{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} onBlur={() => { if (name.trim().length >= 2) { save('kiiro-name', name.trim()); send({ t: 'rename', name: name.trim() }) } }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} /></label>}
+            {!meNow?.signedIn && <label className="rmrename">{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} onBlur={() => { if (name.trim().length >= 2) { writeName(name.trim()); send({ t: 'rename', name: name.trim() }) } }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} /></label>}
             <div className="hdseg rmmode">
               <button className={!meNow?.watching ? 'on' : ''} onClick={() => send({ t: 'mode', watching: false })}>{t('rmIPlay')}</button>
               <button className={meNow?.watching ? 'on' : ''} onClick={() => send({ t: 'mode', watching: true })}>{t('rmIWatch')}</button>

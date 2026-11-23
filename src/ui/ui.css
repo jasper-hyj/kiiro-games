@@ -110,3 +110,6 @@ button:focus-visible, a:focus-visible, [role=button]:focus-visible { outline: 2p
 .k-rowname { display: inline-flex; align-items: center; gap: 8px; min-width: 0; text-align: left; } .k-rowdetail { color: var(--k-mute); font-size: 12px; font-weight: 400; }
 .k-rowval { font-variant-numeric: tabular-nums; font-weight: 700; } .k-rowval.up { color: var(--k-good); } .k-rowval.down { color: var(--k-bad); } .k-rowval.flat { color: var(--k-mute); }
 .k-resultnote { font-size: 13px; color: var(--k-mute); } .k-resultactions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+.k-empty { padding: 72px 0 40px; display: grid; gap: 14px; justify-items: start; } .k-empty h1 { margin: 0; }
+:root:root a.k-linkbtn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
