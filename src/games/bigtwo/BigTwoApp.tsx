@@ -6,6 +6,8 @@ import { Card } from '../holdem/ui/Cards'
 import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
+import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import '../../room/strings'
 import { beats, evalCombo, power } from './engine/combos'
 import { Rules } from '../shared/Rules'
 import type { BigTwoView, BtMsg } from './net/protocol'
@@ -31,14 +33,23 @@ export default function BigTwoApp() {
   const conn = useRef<CashConn<BtMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
   const retry = useRef<(() => void) | null>(null)
+  /** the host chose a ranked room: switch it on once the table exists */
+  const ranked = useRef(false)
+  /** opened from a room: the host's table may not exist yet, so a join that finds nothing tries again for a few seconds */
+  const again = useRef<(() => void) | null>(null)
+  const tries = useRef(0)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
   const watchOnly = useMemo(() => new URLSearchParams(location.search).get('watch') === '1', [])
   const handlers = useMemo(() => ({
-    onView: (v: BigTwoView) => { retry.current = null; setView(v); setError('') },
+    onView: (v: BigTwoView) => {
+      retry.current = null; setView(v); setError('')
+      if (ranked.current && v.host && v.status === 'lobby') { ranked.current = false; conn.current?.send({ k: 'config', config: { ranked: true } }) }
+    },
     onStatus: setStatus,
     onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
     onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
+      if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
       if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
@@ -48,20 +59,21 @@ export default function BigTwoApp() {
   }), [])
   const open = useCallback((rm: string, create?: boolean) => {
     conn.current?.close(); startedFor.current = rm; setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}${watchOnly ? '&watch=1' : ''}`)
+    history.replaceState(null, '', `${location.pathname}?room=${rm}${roomSuffix()}`)
+    again.current = create ? null : () => open(rm)
     conn.current = connectCash<BigTwoView, BtMsg>('bigtwo', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create ? { bb: 0, casual: true } : undefined, { watch: watchOnly })
   }, [name, me?.name, handlers, watchOnly])
   const practice = () => {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBigTwo(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
   }
-  const create = () => { save('kiiro-name', name); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(String(1000 + Math.floor(Math.random() * 9000)), true) }; go() }
+  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=bigtwo' }
   const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
-  useEffect(() => { if (urlRoom && !conn.current) join(urlRoom) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { ranked.current = mk.ranked === true; open(urlRoom, true) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const leave = () => { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
   const send = (m: BtMsg) => conn.current?.send(m)
 
   if (!room) {
@@ -75,7 +87,7 @@ export default function BigTwoApp() {
           <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label></div>
           <Rules title="btHow" lines={['btR1', 'btR2', 'btR3', 'btR4', 'btR5']} />
           <div className="kg-cols">
-            <section className="hdform"><h2>{t('hdCreate')}</h2><p className="kg-note">{t('btRules')}</p><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('hdCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div></section>
+            <section className="hdform"><h2>{t('hdCreate')}</h2><p className="kg-note">{t('rmCreateNote')}</p><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div></section>
             <section className="hdform"><h2>{t('hdJoin')}</h2>
               <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
                 <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
@@ -119,7 +131,7 @@ function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignI
       <Bar />
       <div className="hdhead">
         <span><b>{room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}</b> <span className="muted">· {room === 'practice' ? t('btCasual') : v.config.ranked ? t('btRanked') : t('btCasual')}</span></span>
-        <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{t('hdLeave')}</button></span>
+        <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button></span>
       </div>
       {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}

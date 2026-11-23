@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { fromRoom } from '../../shared/fromRoom'
+import '../../../room/strings'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
 import { doraFrom, isRedFive, kindOf, numOf, suitOf } from '../engine/tiles'
@@ -321,7 +323,7 @@ export function Board({ view, send, hints, setHints, onLeave, online, room, stat
           <button className={lang === 'zh' && simplified ? 'on' : ''} onClick={() => { setLang('zh'); setSimplified(true) }}>简中</button>
               <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>日本語</button>
         </div>
-        <button className="btn alt leavebtn" onClick={onLeave}>{t('leave')}</button>
+        <button className="btn alt leavebtn" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
       </div>
     </details>
   )

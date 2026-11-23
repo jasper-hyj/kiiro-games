@@ -10,6 +10,7 @@ export interface D1 {
   batch(s: D1Stmt[]): Promise<unknown[]>
 }
 export interface Env {
+  Room?: unknown
   DB?: D1
   GOOGLE_CLIENT_ID?: string
   APP_URL?: string

@@ -31,7 +31,7 @@ function JoinCode() {
   const { t } = useLang()
   const [c, setC] = useState('')
   return (
-    <form className="kg-join" onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(c)) location.href = `${MAHJONG_PATH}?room=${c}` }}>
+    <form className="kg-join" onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(c)) location.href = `/room?room=${c}` }}>
       <label htmlFor="kgcode">{t('hubHaveCode')}</label>
       <div><input id="kgcode" inputMode="numeric" maxLength={4} value={c} onChange={(e) => setC(e.target.value.replace(/\D/g, ''))} placeholder="1234" /><button disabled={!/^\d{4}$/.test(c)}>{t('hubJoin')}</button></div>
     </form>
@@ -65,7 +65,10 @@ export function Hub() {
             <h1>{t('hubHeadline')}</h1>
             <p className="kg-lead">{t('hubTagline')}</p>
           </div>
-          <JoinCode />
+          <div className="kg-heroside">
+            <a className="kg-create" href="/room?create=1">{t('hubCreateRoom')}</a>
+            <JoinCode />
+          </div>
         </header>
         <section>
           <h2>{t('hubGames')}</h2>

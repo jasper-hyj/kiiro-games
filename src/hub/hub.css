@@ -62,3 +62,9 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 :root:root .kg-join input { flex: 1; min-width: 0; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid rgba(232,236,246,.14); border-radius: 8px; padding: 0 12px; min-height: 40px; font: 500 16px var(--sans, system-ui); letter-spacing: .2em; user-select: text; -webkit-user-select: text; }
 :root:root .kg-join button { background: #c9d2e6; color: #0b1020; border: 0; border-radius: 8px; padding: 0 16px; min-height: 40px; font: 600 14px var(--sans, system-ui); cursor: pointer; }
 :root:root .kg-join button:disabled { opacity: .4; cursor: default; }
+
+.kg-heroside { display: grid; gap: 18px; justify-items: start; }
+.kg-hero .kg-heroside .kg-join { margin: 0; }
+:root:root .kg a.kg-create { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px; border-radius: 10px; background: #c9d2e6; color: #0b1020; font: 600 16px var(--sans, system-ui); text-decoration: none; transition: transform .15s, background .15s; }
+:root:root .kg a.kg-create:hover { background: #dbe2f1; transform: translateY(-1px); }
+@media (max-width: 760px) { .kg-heroside { justify-items: stretch; } .kg-heroside .kg-create { width: 100%; box-sizing: border-box; } }

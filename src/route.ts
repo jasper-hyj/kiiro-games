@@ -16,3 +16,4 @@ export function isAdminPage(): boolean { return typeof location !== 'undefined' 
 export function isHoldem(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === HOLDEM_PATH }
 export function isBlackjack(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === BLACKJACK_PATH }
 export function isBigTwo(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === BIGTWO_PATH }
+export function isRoomPage(): boolean { return typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/room' }

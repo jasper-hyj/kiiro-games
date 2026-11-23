@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { fromRoom } from '../../shared/fromRoom'
+import '../../../room/strings'
 import type { RoomConfig, TableView } from '../engine/table'
 import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
@@ -244,7 +246,7 @@ export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room
       </div>
       <div className="row lobbyactions">
         {view.host ? <button className="btn gold big" onClick={() => send({ t: 'start' })}>{t('startGame')}</button> : <span className="muted">{t('waitHost')}</span>}
-        <button className="btn alt" onClick={onLeave}>{t('leave')}</button>
+        <button className="btn alt" onClick={onLeave}>{fromRoom() ? t('rmBack') : t('leave')}</button>
       </div>
       <section className="tablesettings always">
         <h2 className="eyebrow">{view.host ? t('changeRules') : t('hostDecides')}</h2>

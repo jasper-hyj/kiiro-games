@@ -13,6 +13,7 @@ import type { BtMsg } from '../src/games/bigtwo/net/protocol'
 import type { CashGame, HandRecord } from '../src/games/shared/cash'
 import type { PokerMsg, PokerServerMsg } from '../src/games/holdem/net/protocol'
 
+export { Room } from './room'
 export type Kind = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
 const CASH_KINDS: Kind[] = ['holdem', 'blackjack']
 /** most a player may take home from the house per day at Blackjack: keeps the leaderboard from being farmed against the dealer */

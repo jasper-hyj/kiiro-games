@@ -9,10 +9,11 @@ import '../../src/account/strings'
 import '../../src/games/holdem/strings'
 import '../../src/games/blackjack/strings'
 import '../../src/games/bigtwo/strings'
+import '../../src/room/strings'
 
 const { D, JA } = allStrings()
 const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : [] })
-const files = ['src/hub', 'src/account', 'src/games/holdem', 'src/games/blackjack', 'src/games/bigtwo', 'src/games/shared'].flatMap(walk)
+const files = ['src/hub', 'src/account', 'src/games/holdem', 'src/games/blackjack', 'src/games/bigtwo', 'src/games/shared', 'src/room'].flatMap(walk)
 let missingZh = 0, missingJa = 0, used = new Set<string>()
 for (const f of files) {
   const src = readFileSync(f, 'utf8')

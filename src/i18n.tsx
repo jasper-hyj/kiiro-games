@@ -1,6 +1,6 @@
 import { startSimplify, stopSimplify } from './simplify'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { isAdminPage, isBigTwo, isBlackjack, isHoldem, isHub } from './route'
+import { isRoomPage, isAdminPage, isBigTwo, isBlackjack, isHoldem, isHub } from './route'
 
 export type Lang = 'en' | 'zh' | 'ja'
 
@@ -33,10 +33,11 @@ const TITLES = {
   holdem: ["Texas Hold'em · Kiiro Games", '德州撲克 · Kiiro 遊戲', '德州扑克 · Kiiro 游戏', 'テキサスホールデム · Kiiro ゲームズ'],
   blackjack: ['Blackjack · Kiiro Games', '二十一點 · Kiiro 遊戲', '二十一点 · Kiiro 游戏', 'ブラックジャック · Kiiro ゲームズ'],
   bigtwo: ['Big Two · Kiiro Games', '大老二 · Kiiro 遊戲', '大老二 · Kiiro 游戏', '大老二 · Kiiro ゲームズ'],
+  room: ['Room · Kiiro Games', '房間 · Kiiro 遊戲', '房间 · Kiiro 游戏', 'ルーム · Kiiro ゲームズ'],
   admin: ['Admin · Kiiro Games', '管理 · Kiiro 遊戲', '管理 · Kiiro 游戏', '管理 · Kiiro ゲームズ'],
 } as const
 function pageTitle(lang: string, simplified: boolean): string {
-  const page = isAdminPage() ? 'admin' : isHoldem() ? 'holdem' : isBlackjack() ? 'blackjack' : isBigTwo() ? 'bigtwo' : isHub() ? 'hub' : 'mahjong'
+  const page = isAdminPage() ? 'admin' : isRoomPage() ? 'room' : isHoldem() ? 'holdem' : isBlackjack() ? 'blackjack' : isBigTwo() ? 'bigtwo' : isHub() ? 'hub' : 'mahjong'
   const row = TITLES[page]
   return lang === 'zh' ? row[simplified ? 2 : 1] : lang === 'ja' ? row[3] : row[0]
 }

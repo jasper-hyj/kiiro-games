@@ -57,6 +57,13 @@ If the Worker is built by Cloudflare from GitHub, set the deploy command to `npm
 
 For local work put `ADMIN_USERS=yourname` in `.dev.vars` (gitignored). Local database: `npx wrangler d1 migrations apply kiiro-games --local`. Tests: `npx tsx scripts/accounts/auth-test.ts` (needs `wrangler dev`; clear the `throttle` table between many runs, registration is limited to 10 per hour per IP), `npx tsx scripts/accounts/economy-test.ts` (stop `wrangler dev` first) and `ranked-ws-test.ts` (needs `wrangler dev`).
 
+## Rooms, observers and chat
+
+- **Rooms first:** "Create a room" on the hub opens `/room?room=1234`. The host chooses the game and its rules (Mahjong ruleset and ranked, Hold'em blinds and mode, Blackjack minimum bet and mode, Big Two casual or ranked); everyone in the room sees the choice live. Each person says whether they will play or watch. Starting sends everyone to `/<game>?room=1234&from=room`: the host's page creates the table with the chosen rules (`make=1&cfg=...`), the others join it (watchers with `watch=1`). "Back to room" returns to the room, which stays findable for 12 hours.
+- **Server:** a room is its own Durable Object (`party/room.ts`, party name `room`); game tables stay in `Main`. The two code spaces are separate, so a room and a table may share digits (the host then sees "code taken" when the table is made). A room code that is not a room falls back to a direct game table, so older links still work.
+- **Observers:** in every game a person can watch without a seat: Hold'em and Blackjack show the table until you sit; Big Two and Mahjong let anyone join with `watch` (or when the table is full) and take a seat later. Watchers see only what the table shows publicly (never a hand), can read and write chat, and are counted ("2 watching").
+- **Chat:** one overlay in the bottom-left corner of every table and the room (`src/games/shared/TalkBox.tsx`): translucent, older lines fade, Enter focuses it, it sits above the action bar and your hand, and steps aside on screens under 400 px tall.
+
 ## Texas Hold'em
 
 `/holdem`, 2 to 6 players, no bots. Room codes are shared with Mahjong: the first player to create a code decides its game, and joining a code from the other game's page redirects to the right one (the hub has one "room code" box for everything).
@@ -80,7 +87,7 @@ All chip games share one room-code space; `src/games/shared/cash.ts` is the cont
 
 - `npm run check` runs the type check plus the Mahjong, Hold'em, Blackjack and Big Two engine tests.
 - `npm run test:cards` runs the statistical checks (shuffle uniformity, seven-card hand frequencies against the exact values, pocket aces equity, blackjack basic strategy against the known house edge of about -0.5%, even seat wins at Hold'em, fair Big Two deals) and the disconnect/timeout tests.
-- With `wrangler dev` (:8787) and `vite --port 5200` running: `scripts/cards/layout-audit.ts` (244 screens over 19 phone, tablet and desktop sizes; `ONLY=390x844 ...` narrows it), `scripts/cards/talk-test.ts` (chat), `scripts/cards/collision-test.ts` (room codes shared between games), `scripts/cards/practice-test.ts` (offline practice, needs only vite), and the `ws-test.ts` in each game's folder (real tables over WebSockets, with the ledger audit).
+- With `wrangler dev` (:8787) and `vite --port 5200` running: `scripts/cards/layout-audit.ts` (244 screens over 19 phone, tablet and desktop sizes; `ONLY=390x844 ...` narrows it), `scripts/cards/talk-test.ts` (chat), `scripts/cards/room-test.ts` (rooms over WebSockets), `scripts/cards/room-e2e.ts` (two browsers: create a room, choose game and rules, watch, chat, start, back to the room), `scripts/cards/watch-test.ts` (observers in every game), `scripts/cards/practice-test.ts` (offline practice, needs only vite), and the `ws-test.ts` in each game's folder (real tables over WebSockets, with the ledger audit).
 - `scripts/cards/i18n-audit.ts` checks every text key exists in English, Chinese and Japanese.
 
 ## Develop

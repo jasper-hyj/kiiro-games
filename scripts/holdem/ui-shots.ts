@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer-core'
+const MK = (g: string, cfg: object) => `${process.env.BASE ?? 'http://localhost:5200'}/${g}?room=${1000 + Math.floor(Math.random() * 9000)}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}` // tables are made from a room now; this opens one directly
 // Run: npx tsx scripts/holdem/ui-shots.ts <outDir>   (needs wrangler dev on :8787 and vite on :5200)
 const out = process.argv[2] || '.'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -10,7 +11,7 @@ for (const [w, h, tag] of [[1280, 760, 'desk'], [390, 780, 'phone'], [844, 390, 
   await A.goto('http://localhost:5200/holdem', { waitUntil: 'networkidle0' })
   if (tag === 'phone') await A.screenshot({ path: `${out}/hd-menu-${tag}.png` })
   await A.type('.hdform input', 'Ann')
-  await A.click('.hdform .hdbtn.primary'); await A.waitForSelector('.hdfelt')
+  await A.goto(MK('holdem', { sb: 25, bb: 50, casual: true })); await A.waitForSelector('.hdfelt')
   const room = new URL(A.url()).searchParams.get('room')
   await B.goto(`http://localhost:5200/holdem?room=${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.hdfelt')
   await A.click('.hdsit .hdbtn.primary'); await sleep(300); await B.click('.hdsit .hdbtn.primary'); await sleep(1200)

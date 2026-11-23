@@ -9,6 +9,8 @@ import { Rules } from '../shared/Rules'
 import { best, categoryOf } from './engine/eval'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
 import { TalkBox } from '../shared/TalkBox'
+import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import '../../room/strings'
 import type { TalkMsg } from '../shared/cashClient'
 import './strings'
 import './holdem.css'
@@ -44,6 +46,9 @@ export default function HoldemApp() {
   const startedFor = useRef<string | null>(null)
   /** set while creating a table: a code that is already in use is retried with a new one */
   const retry = useRef<(() => void) | null>(null)
+  /** opened from a room: the host's table may not exist yet, so a join that finds nothing tries again for a few seconds */
+  const again = useRef<(() => void) | null>(null)
+  const tries = useRef(0)
 
   const handlers = useMemo(() => ({
     onView: (v: HoldemView) => { retry.current = null; setView(v); setError('') },
@@ -51,6 +56,7 @@ export default function HoldemApp() {
     onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
     onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
+      if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
       if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/mahjong?room=${startedFor.current}`; return }
       setError(m)
@@ -64,26 +70,21 @@ export default function HoldemApp() {
     const nm = (name.trim() || me?.name || 'Player').slice(0, 16)
     startedFor.current = rm
     setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}`)
+    history.replaceState(null, '', `${location.pathname}?room=${rm}${roomSuffix()}`)
+    again.current = create ? null : () => open(rm)
     conn.current = connectHoldem(rm, getClientId(), nm, handlers, create)
   }, [name, me?.name, handlers])
 
-  const create = () => {
-    const bb = BLINDS.find(([s]) => s === sb)?.[1] ?? sb * 2
-    save('kiiro-name', name); save('kiiro-hd-sb', String(sb)); save('kiiro-hd-casual', casual ? '1' : '0')
-    let n = 0
-    const go = () => { retry.current = n++ < 8 ? go : null; open(String(1000 + Math.floor(Math.random() * 9000)), { sb, bb, casual }) }
-    go()
-  }
+  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=holdem' } // tables start from a room now: gather first, then choose the game and rules
   const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
-  useEffect(() => { if (urlRoom && !conn.current) join(urlRoom) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { const sb = Number(mk.sb) || 25, bb = Number(mk.bb) || 50; open(urlRoom, { sb, bb, casual: mk.casual !== false }) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // a sign-in (or sign-out) while at the table: reconnect so the server knows who you are
   const meId = me?.id
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [meId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const leave = () => { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 
   if (!room) {
     return (
@@ -100,15 +101,8 @@ export default function HoldemApp() {
           <div className="kg-cols">
             <section className="hdform">
               <h2>{t('hdCreate')}</h2>
-              <label>{t('hdBlinds')}
-                <select value={sb} onChange={(e) => setSb(Number(e.target.value))}>{BLINDS.map(([s, b]) => <option key={s} value={s}>{s} / {b}</option>)}</select>
-              </label>
-              <div className="hdseg" role="group" aria-label={t('hdMode')}>
-                <button className={casual ? 'on' : ''} onClick={() => setCasual(true)}>{t('hdCasual')}</button>
-                <button className={!casual ? 'on' : ''} onClick={() => setCasual(false)}>{t('hdCash')}</button>
-              </div>
-              <p className="kg-note">{casual ? t('hdCasualNote') : t('hdCashNote')}</p>
-              <div><button className="hdbtn primary" onClick={create}>{t('hdCreateBtn')}</button></div>
+              <p className="kg-note">{t('rmCreateNote')}</p>
+              <div><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button></div>
             </section>
             <section className="hdform">
               <h2>{t('hdJoin')}</h2>
@@ -178,7 +172,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
           <span><b>{t('hdRoom')} {room}</b> <span className="muted">· {v.config.sb}/{v.config.bb} · {v.config.casual ? t('hdCasual') : t('hdCash')}</span></span>
           <span className="hdtools">
             <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>
-            <button className="hdlink" onClick={leave}>{t('hdLeave')}</button>
+            <button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button>
           </span>
         </div>
         {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}

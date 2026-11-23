@@ -14,6 +14,8 @@ import { RulesHelp } from './ui/RulesHelp'
 import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
 import { TalkBox } from '../shared/TalkBox'
+import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import '../../room/strings'
 import '../holdem/strings'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
@@ -62,9 +64,12 @@ export default function MahjongApp() {
     conn.current?.close(); conn.current = null
     setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
     try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
+    const back = fromRoom() ? new URLSearchParams(location.search).get('room') : null
     history.replaceState(null, '', location.pathname)
+    if (back) backToRoom(back)
   }, [])
 
+  const roomTries = useRef(0)
   const seq = useRef(0) // every connection gets a number; once the player leaves or starts another one, the old one can no longer touch the UI
   const guard = <H extends Handlers>(h: H, mine: number): H => ({ ...h, onView: (v: TableView) => { if (seq.current === mine) h.onView(v) }, onStatus: (st: Status) => { if (seq.current === mine) h.onStatus(st) }, onError: (m: string) => { if (seq.current === mine) h.onError(m) }, onLatency: (ms: number) => { if (seq.current === mine) h.onLatency?.(ms) } })
   const handlers = { onView: setView, onStatus: (st: Status) => { setStatus(st); if (st !== 'open') setLatency(null) }, onLatency: setLatency, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
@@ -86,7 +91,7 @@ export default function MahjongApp() {
     try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
-    history.replaceState(null, '', `?room=${c}${watchOnly ? '&watch=1' : ''}${dbg ? '&debug=1' : ''}`)
+    history.replaceState(null, '', `?room=${c}${roomSuffix()}${dbg ? '&debug=1' : ''}`)
     if (!create) pendingCfg.current = null
     if (!create) setTalk([])
     const roomHandlers = {
@@ -95,13 +100,14 @@ export default function MahjongApp() {
       onTalkLog: (ms: { n: number; name: string; text: string }[]) => setTalk(ms),
       onView: (v: TableView) => {
         if (pendingCfg.current && v.host && v.status === 'lobby') { // a freshly created room starts with the default rules: apply what the player chose
-          const { rule, rounds, aka, minFan, players, botLevel, swap } = pendingCfg.current
+          const { rule, rounds, aka, minFan, players, botLevel, swap, ranked } = pendingCfg.current
           pendingCfg.current = null
-          conn.current?.send({ t: 'config', config: { rule, rounds, aka, minFan, players, botLevel, swap } })
+          conn.current?.send({ t: 'config', config: { rule, rounds, aka, minFan, players, botLevel, swap, ...(ranked ? { ranked } : {}) } })
         }
         handlers.onView(v)
       },
       onError: (m: string) => {
+        if (m === 'room_not_found' && fromRoom() && !create && roomTries.current++ < 12) { setTimeout(() => joinRoom(c), 800); return } // opened from a room: the host's table may not exist yet
         if (m.startsWith('wrong_game:')) { // this code belongs to another game in the shared room-code space
           if (create && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return }
           location.href = `/${m.split(':')[1]}?room=${c}`; return
@@ -129,6 +135,12 @@ export default function MahjongApp() {
 
   useEffect(() => {
     const r = new URLSearchParams(location.search).get('room')
+    if (r && fromRoom()) { // sent here by a room: the host makes the table with the chosen rules, everyone else joins it (or watches)
+      const mk = makeCfg()
+      if (mk) pendingCfg.current = { ...config, ...(mk.rule ? { rule: mk.rule as RoomConfig['rule'] } : {}), ranked: mk.ranked === true }
+      joinRoom(r, !!mk)
+      return
+    }
     if (r) {
       setRoom(r.toUpperCase())
       // page refresh inside a room: rejoin automatically (same client id => same seat)
@@ -179,7 +191,7 @@ export default function MahjongApp() {
         )}
         {!active && !urlRoom && (
           <>
-            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => { pendingCfg.current = config; joinRoom(makeCode(), true) }} onJoin={joinRoom} />
+            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => { save('kiiro-name', name); location.href = `/room?create=1&pick=mahjong&rule=${config.rule}` }} onJoin={joinRoom} />
           </>
         )}
         {active && !view && joinError && (

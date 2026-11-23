@@ -6,6 +6,8 @@ import { Card } from '../holdem/ui/Cards'
 import { connectLocalBlackjack } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
+import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import '../../room/strings'
 import { MIN_BETS } from './engine/table'
 import { Rules } from '../shared/Rules'
 import type { BjMsg, BlackjackView } from './net/protocol'
@@ -34,6 +36,9 @@ export default function BlackjackApp() {
   const conn = useRef<CashConn<BjMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
   const retry = useRef<(() => void) | null>(null)
+  /** opened from a room: the host's table may not exist yet, so a join that finds nothing tries again for a few seconds */
+  const again = useRef<(() => void) | null>(null)
+  const tries = useRef(0)
   const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
 
   const handlers = useMemo(() => ({
@@ -42,6 +47,7 @@ export default function BlackjackApp() {
     onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
     onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
+      if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
       if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
@@ -53,20 +59,21 @@ export default function BlackjackApp() {
     conn.current?.close()
     startedFor.current = rm
     setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}`)
+    history.replaceState(null, '', `${location.pathname}?room=${rm}${roomSuffix()}`)
+    again.current = create ? null : () => open(rm)
     conn.current = connectCash<BlackjackView, BjMsg>('blackjack', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
   }, [name, me?.name, handlers])
   const practice = () => {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBlackjack(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), minBet, handlers)
   }
-  const create = () => { save('kiiro-name', name); save('kiiro-bj-min', String(minBet)); save('kiiro-bj-casual', casual ? '1' : '0'); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(String(1000 + Math.floor(Math.random() * 9000)), { bb: minBet, casual }) }; go() }
+  const create = () => { save('kiiro-name', name); location.href = '/room?create=1&pick=blackjack' }
   const join = (c: string) => { retry.current = null; save('kiiro-name', name); open(c.trim()) }
-  useEffect(() => { if (urlRoom && !conn.current) join(urlRoom) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) open(urlRoom, { bb: Number(mk.bb) || 10, casual: mk.casual !== false }); else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const leave = () => { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  const leave = () => { const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 
   if (!room) {
     return (
@@ -81,13 +88,8 @@ export default function BlackjackApp() {
           <div className="kg-cols">
             <section className="hdform">
               <h2>{t('bjCreate')}</h2>
-              <label>{t('bjMinBet')}<select value={minBet} onChange={(e) => setMinBet(Number(e.target.value))}>{MIN_BETS.map((b) => <option key={b} value={b}>{b}</option>)}</select></label>
-              <div className="hdseg" role="group" aria-label={t('hdMode')}>
-                <button className={casual ? 'on' : ''} onClick={() => setCasual(true)}>{t('hdCasual')}</button>
-                <button className={!casual ? 'on' : ''} onClick={() => setCasual(false)}>{t('hdCash')}</button>
-              </div>
-              <p className="kg-note">{casual ? t('hdCasualNote') : t('hdCashNote')}</p>
-              <div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('hdCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div>
+              <p className="kg-note">{t('rmCreateNote')}</p>
+              <div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button><button className="hdbtn" onClick={practice}>{t('practiceOffline')}</button></div>
             </section>
             <section className="hdform">
               <h2>{t('hdJoin')}</h2>
@@ -147,7 +149,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
         <Bar />
         <div className="hdhead">
           <span><b>{room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}</b> <span className="muted">· {t('bjMinMax', { min: fmt(v.config.bet), max: fmt(room_ > 0 ? v.config.bet * 50 : 0) })} · {v.config.casual ? t('hdCasual') : t('hdCash')}</span></span>
-          <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{t('hdLeave')}</button></span>
+          <span className="hdtools">{room !== 'practice' && <button className="hdlink" onClick={copy}>{copied ? t('hdCopied') : t('hdCopy')}</button>}<button className="hdlink" onClick={leave}>{fromRoom() ? t('rmBack') : t('hdLeave')}</button></span>
         </div>
         {status !== 'open' && <p className="acerr hdbanner">{t('hdLost')}</p>}
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
