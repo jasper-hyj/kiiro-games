@@ -92,3 +92,4 @@
 @media (max-height: 520px) and (orientation: landscape) { .btplay { min-height: 42px; } }
 @media (max-height: 380px) and (orientation: landscape) { .bttable { padding-top: 56px; } }
 @media (max-height: 420px) and (orientation: landscape) { .btseat { grid-auto-flow: column; align-items: center; gap: 8px; padding: 3px 12px; } .btseat .btpass { display: none; } .bttable { padding-top: 46px; } }
+@media (max-height: 520px) and (orientation: landscape) { .bt .hdbar { position: sticky; bottom: 0; } }
