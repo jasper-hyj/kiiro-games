@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../i18n'
 import { api, ApiError, type BoardRow } from './api'
-import { fmt, useAccount } from './Account'
+import { fmt, PasswordInput, useAccount, useEscape } from './Account'
+import { Avatar } from '../ui/components'
 
 export function Leaderboard() {
   const { t } = useLang()
@@ -33,14 +34,15 @@ export function Profile({ onClose }: { onClose(): void }) {
   const { me, signOut, refresh } = useAccount()
   const [hist, setHist] = useState<Hist[] | null>(null)
   const [name, setName] = useState(me?.name ?? '')
-  const [err, setErr] = useState('')
+  const [err, setErr] = useState(''), [saved, setSaved] = useState(false), [confirmOut, setConfirmOut] = useState(false), [all, setAll] = useState(false)
+  useEscape(onClose)
   useEffect(() => { api<{ matches: Hist[] }>('/me/matches').then((r) => setHist(r.matches)).catch(() => setHist([])) }, [])
   if (!me) return null
-  const save = async () => { setErr(''); try { await api('/me/name', { name }); await refresh() } catch (e) { setErr(t(e instanceof ApiError ? e.code : 'offline')) } }
+  const save = async () => { setErr(''); setSaved(false); try { await api('/me/name', { name }); await refresh(); setSaved(true) } catch (e) { setErr(t(e instanceof ApiError ? e.code : 'offline')) } }
   return (
     <div className="acmodal" onClick={onClose}>
       <div className="acbox wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h2>{me.name}</h2>
+        <div className="achead"><Avatar name={me.name} size={48} /><div><h2>{me.name}</h2>{me.username && <span className="muted small">@{me.username}</span>}</div></div>
         <div className="acstats">
           <div><b>{me.balance.toLocaleString()}</b><span>{t('acChips')}</span></div>
           <div><b className={me.profit >= 0 ? 'kg-up' : 'kg-down'}>{fmt(me.profit)}</b><span>{t('acProfit')}</span></div>
@@ -48,21 +50,25 @@ export function Profile({ onClose }: { onClose(): void }) {
           <div><b>{me.games}</b><span>{t('acGames')}</span></div>
         </div>
         <form className="acform" onSubmit={(e) => { e.preventDefault(); void save() }}>
-          <input aria-label={t('acRename')} value={name} maxLength={16} onChange={(e) => setName(e.target.value)} />
+          <input aria-label={t('acRename')} placeholder={t('acRename')} value={name} maxLength={16} onChange={(e) => { setName(e.target.value); setSaved(false) }} />
           <button className="primary" disabled={!name || name === me.name}>{t('acSave')}</button>
         </form>
         {err && <p className="acerr" role="alert">{err}</p>}
+        {saved && <p className="acok" role="status">{t('acNameSaved')}</p>}
         {me.username && <PasswordForm />}
         <h3>{t('acHistory')}</h3>
         {hist === null ? null : hist.length === 0 ? <p className="muted small">{t('acNoHistory')}</p> : (
-          <ul className="achist">{hist.map((h) => (
+          <ul className="achist">{(all ? hist : hist.slice(0, 8)).map((h) => (
             <li key={h.id}><span>{new Date(h.at).toLocaleDateString()}</span><span>{h.rule}</span><span>{h.ranked ? t('acRanked') : t('acCasual')}</span><span>{t('acPlace', { n: h.place })}</span>
               <span className={h.chips >= 0 ? 'kg-up' : 'kg-down'}>{h.ranked ? fmt(h.chips) : ''}</span></li>
           ))}</ul>
         )}
+        {hist && hist.length > 8 && !all && <button className="ghost" onClick={() => setAll(true)}>{t('acMore')}</button>}
         <div className="acrow">
           {me.admin && <a className="ghost" href="/admin">{t('acAdmin')}</a>}
-          <button className="ghost" onClick={() => { void signOut(); onClose() }}>{t('acSignOut')}</button>
+          {confirmOut
+            ? <><span className="muted small">{t('acConfirmOut')}</span><button className="ghost" onClick={() => setConfirmOut(false)}>{t('acCancel')}</button><button className="ghost danger" onClick={() => { void signOut(); onClose() }}>{t('acYesOut')}</button></>
+            : <button className="ghost" onClick={() => setConfirmOut(true)}>{t('acSignOut')}</button>}
           <button className="primary" onClick={onClose}>{t('acClose')}</button>
         </div>
       </div>
@@ -79,7 +85,7 @@ export function AccountChip() {
   return (
     <>
       {me
-        ? <button className="kg-acct" onClick={() => setOpen(true)}>{me.name}<small>{me.balance.toLocaleString()}</small></button>
+        ? <button className="kg-acct" onClick={() => setOpen(true)}><Avatar name={me.name} size={20} />{me.name}<small>{me.balance.toLocaleString()}</small></button>
         : <button className="kg-acct" onClick={openSignIn}>{t('acSignIn')}</button>}
       {open && <Profile onClose={() => setOpen(false)} />}
     </>
@@ -98,9 +104,10 @@ function PasswordForm() {
       e.preventDefault(); setMsg(''); setDone(false)
       try { await api('/me/password', { current: cur, next }); setDone(true); setCur(''); setNext('') } catch (x) { setMsg(t(x instanceof ApiError ? x.code : 'offline')) }
     }}>
-      <input type="password" autoComplete="current-password" placeholder={t('acCurrentPw')} aria-label={t('acCurrentPw')} maxLength={72} value={cur} onChange={(e) => setCur(e.target.value)} />
-      <input type="password" autoComplete="new-password" placeholder={t('acNewPw')} aria-label={t('acNewPw')} maxLength={72} value={next} onChange={(e) => setNext(e.target.value)} />
-      <button className="primary" disabled={!cur || next.length < 8}>{t('acSave')}</button>
+      <PasswordInput autoFocus value={cur} onChange={setCur} placeholder={t('acCurrentPw')} autoComplete="current-password" />
+      <PasswordInput value={next} onChange={setNext} placeholder={t('acNewPw')} autoComplete="new-password" />
+      <span className="achint">{t('acNewPwHint')}</span>
+      <div className="acrow"><button type="button" className="ghost" onClick={() => setOpen(false)}>{t('acCancel')}</button><button className="primary" disabled={!cur || next.length < 8}>{t('acSave')}</button></div>
       {done && <p className="acok">{t('acPwChanged')}</p>}
       {msg && <p className="acerr" role="alert">{msg}</p>}
     </form>

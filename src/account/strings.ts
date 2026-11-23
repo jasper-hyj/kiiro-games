@@ -29,6 +29,13 @@ export const ACCOUNT_STRINGS: Record<string, [string, string]> = {
   offline: ['Cannot reach the server. Check your connection.', '無法連線到伺服器，請檢查網路。'],
   accounts_not_configured: ['Accounts are not available on this server yet.', '此伺服器尚未啟用帳號功能。'], bad_name: ['Names need 2–16 characters and no links.', '名稱需 2–16 字，且不可含連結。'],
   acHome: ['All games', '所有遊戲'],
+  acShow: ['Show', '顯示'], acHide: ['Hide', '隱藏'], acCaps: ['Caps Lock is on', '大寫鎖定已開啟'], acWorking: ['One moment…', '請稍候…'],
+  acWelcomeBack: ['Welcome back. Sign in to pick up your chips and record.', '歡迎回來，登入以繼續你的籌碼與戰績。'],
+  acUserHint: ['3–20 letters, numbers, _ . or -. Upper or lower case both work.', '3–20 個英數字或 _ . -，大小寫皆可。'],
+  acPwHint: ['At least 8 characters.', '至少 8 個字元。'],
+  acConfirmOut: ['Sign out of this device?', '要登出這個裝置嗎？'], acYesOut: ['Yes, sign out', '是，登出'], acCancel: ['Cancel', '取消'],
+  acNameSaved: ['Name saved.', '名稱已儲存。'], acNewPwHint: ['Changing it signs out your other devices.', '更改後，其他裝置會被登出。'],
+  acAccount: ['Account', '帳號'], acYouAre: ['Signed in as', '登入身分'], acLoading: ['Loading…', '載入中…'], acMore: ['Show more', '顯示更多'],
 }
 registerStrings(ACCOUNT_STRINGS)
 
@@ -42,6 +49,12 @@ registerStrings({}, {
   bad_username: 'ユーザー名は英数字と _ . - で3〜20文字です（空白や @ は使えません）。', bad_password: 'パスワードは8〜72文字にしてください。', username_taken: 'そのユーザー名は使われています。',
   bad_login: 'ユーザー名またはパスワードが違います。', no_password: 'このアカウントはGoogleでログインします。',
   acGuest: 'ゲストのまま続ける',
+  acShow: '表示', acHide: '隠す', acCaps: 'Caps Lock がオンです', acWorking: '少々お待ちください…',
+  acWelcomeBack: 'おかえりなさい。ログインしてチップと記録を引き継ぎましょう。',
+  acUserHint: '英数字と _ . - で3〜20文字。大文字小文字は区別しません。', acPwHint: '8文字以上。',
+  acConfirmOut: 'この端末からログアウトしますか？', acYesOut: 'ログアウトする', acCancel: 'キャンセル',
+  acNameSaved: '名前を保存しました。', acNewPwHint: '変更すると他の端末はログアウトされます。',
+  acAccount: 'アカウント', acYouAre: 'ログイン中', acLoading: '読み込み中…', acMore: 'もっと見る',
   acNoChips: 'ゲストはすべてのカジュアルゲームで遊べますが、結果とチップは保存されません。',
   acChips: 'チップ', acProfit: '今季の収支', acLevel: 'レベル', acGames: '試合', acSeason: '{s} シーズン', acBoard: 'ランキング',
   acBoardNote: '今季の収支で順位が決まるので、新しい人もすぐに上位を狙えます。チップは遊び用で現金価値はありません。',
