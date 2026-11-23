@@ -24,7 +24,19 @@ const fmt = (n: number) => n.toLocaleString()
 /** where each seat sits on the table, as % of its box: you are always at the bottom */
 const SPOTS: [number, number][] = [[50, 90], [13, 68], [16, 22], [50, 9], [84, 22], [87, 68]]
 /** on phones the side seats move out of the way of the board cards */
-const PHONE_SPOTS: [number, number][] = [[50, 92], [13, 76], [16, 21], [50, 8], [84, 21], [87, 76]]
+const PHONE_SPOTS: [number, number][] = [[50, 92], [13, 76], [14, 19], [50, 8], [86, 19], [87, 76]]
+/** The felt's height in pixels, so seats can be kept inside it on a short phone. */
+function useHeight<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [h, setH] = useState(520)
+  useEffect(() => {
+    const el = ref.current; if (!el) return
+    const on = () => setH(el.clientHeight || 520)
+    on(); const ro = new ResizeObserver(on); ro.observe(el)
+    return () => ro.disconnect()
+  })
+  return [ref, h] as const
+}
 function useNarrow() {
   const [n, setN] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches)
   useEffect(() => { const m = matchMedia('(max-width: 640px)'); const f = () => setN(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f) }, [])
@@ -61,6 +73,7 @@ export default function HoldemApp() {
     onError: (m: string) => {
       if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
       if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
+      if (m.startsWith('wrong_game:') && fromRoom()) { setError('rmCodeClash'); return } // from a room: never jump into another game's table
       if (m.startsWith('wrong_game:')) { location.href = `/mahjong?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
@@ -103,6 +116,7 @@ interface TableProps {
 function Table({ view, status, room, error, send, talk, say, leave, me, openSignIn, buyin, setBuyin, refreshMe }: TableProps) {
   const { t } = useLang()
   const narrow = useNarrow()
+  const [feltRef, feltH] = useHeight<HTMLDivElement>()
   const spots = narrow ? PHONE_SPOTS : SPOTS
   const [copied, setCopied] = useState(false)
   const [raise, setRaise] = useState(0)
@@ -152,10 +166,10 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
         <Hotkeys enabled={!!turn} keys={{ f: doFold, c: doCall, r: doRaise, a: doAllIn, arrowup: () => stepRaise(1), arrowdown: () => stepRaise(-1) }} />
         <Bar />
         <TableHeader title={`${t('hdRoom')} ${room}`} sub={`${v.config.sb}/${v.config.bb} · ${v.config.casual ? t('hdCasual') : t('hdCash')}`} watching={v.spectators}
-          copied={copied} onCopy={copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} />
+          copied={copied} onCopy={copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'hdHow', lines: ['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5'] }} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
 
-        <div className="hdfelt k-felt" role="group" aria-label={t('hdRoom')}>
+        <div ref={feltRef} className="hdfelt k-felt" role="group" aria-label={t('hdRoom')}>
           <div className="hdcenter">
             <div className="hdpot">{t('hdPotLabel')} <b>{fmt(potNow)}</b></div>
             <div className="hdboard">{[0, 1, 2, 3, 4].map((i) => v.board[i] !== undefined ? <Card key={i} c={v.board[i]} /> : <span key={i} className="pkslot" />)}</div>
@@ -171,9 +185,12 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
             </div>
           </div>
           {v.seats.map((s) => {
-            const [x, y] = spots[rel(s.seat) % spots.length]
+            const [x, y0] = spots[rel(s.seat) % spots.length]
+            // on a short felt keep every seat (with the cards above it) inside the table
+            const low = !s.me && y0 > 50 // the lower side seats sit level with you, clear of the board cards
+            const y = feltH < 440 ? (low ? 100 - (44 / feltH) * 100 : Math.max(((s.me ? 112 : 40) / feltH) * 100, Math.min(100 - (40 / feltH) * 100, y0))) : y0
             const bx = x + (50 - x) * 0.32, by = y + (50 - y) * 0.32
-            const showCards = s.dealt && !s.folded
+            const showCards = s.dealt && !s.folded && (s.me || feltH >= 440) // on a short table other players' card backs only take room
             const isTurn = v.toAct === s.seat && v.street !== 'showdown' && v.street !== 'wait'
             const won = v.result?.won[s.seat] ?? 0
             return (

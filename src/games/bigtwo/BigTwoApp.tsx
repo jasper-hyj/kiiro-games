@@ -53,6 +53,7 @@ export default function BigTwoApp() {
     onError: (m: string) => {
       if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
       if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
+      if (m.startsWith('wrong_game:') && fromRoom()) { setError('rmCodeClash'); return } // from a room: never jump into another game's table
       if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
       setError(m)
       if (m === 'room_not_found' || m === 'code_taken' || m === 'room_full') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }

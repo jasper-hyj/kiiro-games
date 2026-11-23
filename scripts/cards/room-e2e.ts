@@ -8,7 +8,7 @@ let fails = 0
 const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const page = async () => { const p = await (await b.createBrowserContext()).newPage(); await p.setViewport({ width: 1100, height: 800 }); await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en')); p.on('pageerror', (e: unknown) => { fails++; console.log('pageerror', (e as Error).message) }); return p }
-const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, t: string) => { const el = Array.from(document.querySelectorAll(s)).find((e) => (e.textContent || '').trim().startsWith(t)) as HTMLElement | undefined; el?.click(); return !!el }, sel, text)
+const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, t: string) => { const el = Array.from(document.querySelectorAll(s)).find((e) => (e.textContent || '').trim().includes(t)) as HTMLElement | undefined; el?.click(); return !!el }, sel, text)
 
 for (const [game, label, rules, expectPath, readySel] of [
   ['holdem', "Texas Hold'em", async (p: any) => { await p.select('.rmrules select', '50/100') }, '/holdem', '.hdfelt'],

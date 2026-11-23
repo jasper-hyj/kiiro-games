@@ -12,8 +12,22 @@ const FADE_MS = 7000
  * the last few lines are always visible and dim when nothing new has arrived; Enter jumps to the input, Escape leaves it.
  * Clicks pass through the feed, so it never blocks the table.
  */
+/** True on a small phone screen, where a permanent chat block would sit on the table. */
+function useCompact() {
+  const q = '(max-width: 640px) and (max-height: 760px)'
+  const [c, setC] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(q).matches)
+  useEffect(() => { const m = matchMedia(q); const on = () => setC(m.matches); m.addEventListener('change', on); return () => m.removeEventListener('change', on) }, [])
+  return c
+}
+
 export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) => void }) {
   const { t } = useLang()
+  const compact = useCompact()
+  const [open, setOpen] = useState(false)
+  const [seenN, setSeenN] = useState(0)
+  const lastN = lines.length ? lines[lines.length - 1].n : 0
+  useEffect(() => { if (open) setSeenN(lastN) }, [open, lastN])
+  const unread = compact && !open ? lines.filter((l) => l.n > seenN).length : 0
   const [text, setText] = useState('')
   const [focus, setFocus] = useState(false)
   const [, tick] = useState(0)
@@ -33,12 +47,15 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
       const r0 = c.getBoundingClientRect()
       const w = r0.width || 330, h = r0.height || 60
       const base = Math.max(10, parseFloat(getComputedStyle(c).getPropertyValue('--base')) || 10)
+      const els = Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .bt-me, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat')).map((e) => e.getBoundingClientRect())
+        .filter((r) => r.height > 0 && r.right >= 0 && r.left <= w + 22)
+      // lift above whatever is under the chat, and keep lifting while the new spot is covered too
       let need = 0
-      for (const el of Array.from(document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .bt-me, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'))) {
-        const r = el.getBoundingClientRect()
-        if (r.height <= 0 || r.right < 0 || r.left > w + 12 + 10) continue
-        // would the chat (at the bottom, lifted by nothing) cover it?
-        if (r.bottom > innerHeight - base - h - 6 && r.top < innerHeight) need = Math.max(need, innerHeight - r.top + 8 - base)
+      for (let i = 0; i < 8; i++) {
+        const top = innerHeight - base - need - h - 6, bottom = innerHeight - base - need
+        const hit = els.filter((r) => r.bottom > top && r.top < bottom)
+        if (!hit.length) break
+        need = innerHeight - Math.min(...hit.map((r) => r.top)) + 8 - base
       }
       c.style.setProperty('--lift', Math.max(0, need) + 'px')
     }
@@ -61,7 +78,9 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
   const recent = lines.slice(-6)
   const fresh = (n: number) => now - (arrived.current.get(n) ?? 0) < FADE_MS
   return (
-    <div ref={box} className={'kgchat' + (focus ? ' on' : '')} role="log" aria-live="polite" aria-label={t('talkTitle')}>
+    <div ref={box} className={'kgchat' + (focus ? ' on' : '') + (compact ? (open ? ' compact open' : ' compact') : '')} role="log" aria-live="polite" aria-label={t('talkTitle')}>
+      {compact && !open && <button className="kgchat-pill" onClick={() => setOpen(true)} aria-label={t('talkTitle')}><span aria-hidden="true">💬</span>{unread > 0 && <b>{unread}</b>}</button>}
+      <div className="kgchat-body">
       <div className="kgfeed">
         {recent.map((l) => (
           <div key={l.n} className={'kgline' + (fresh(l.n) || focus ? '' : ' old')}>
@@ -75,6 +94,8 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
           onChange={(e) => setText(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           onKeyDown={(e) => { if (e.key === 'Escape') input.current?.blur() }} />
       </form>
+      {compact && open && <button className="kgchat-close" onClick={() => setOpen(false)} aria-label={t('acClose')}>×</button>}
+      </div>
     </div>
   )
 }

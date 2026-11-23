@@ -108,6 +108,7 @@ export default function MahjongApp() {
       },
       onError: (m: string) => {
         if (m === 'room_not_found' && fromRoom() && !create && roomTries.current++ < 12) { setTimeout(() => joinRoom(c), 800); return } // opened from a room: the host's table may not exist yet
+        if (m.startsWith('wrong_game:') && fromRoom()) { handlers.onError('rmCodeClash'); return }
         if (m.startsWith('wrong_game:')) { // this code belongs to another game in the shared room-code space
           if (create && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return }
           location.href = `/${m.split(':')[1]}?room=${c}`; return

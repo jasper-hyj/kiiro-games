@@ -49,6 +49,12 @@ export class Main extends Server<Env> {
   private envv: Env
   constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) { super(ctx, env); this.envv = env; this.store = (ctx as unknown as { storage: Main['store'] }).storage }
 
+  /** Plain HTTP to a table (used by the room code check): is this code taken by a game? */
+  onRequest(request: Request): Response {
+    if (new URL(request.url).pathname.endsWith('/status')) return Response.json({ kind: this.kind, taken: this.kind !== null })
+    return new Response('Not found', { status: 404 })
+  }
+
   async onStart() {
     this.table.turnTimerMs = 30000
     // a restart or redeploy evicts this object from memory: bring the room back from storage

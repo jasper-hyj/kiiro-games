@@ -54,10 +54,12 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
   const legal = !!chosen && beats(chosen, curCombo) && (!v.mustOpen || sel.includes(THREE_DIAMONDS))
   const secs = deadline.current ? Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)) : null
   const hand = useMemo(() => [...v.hand].sort((a, b) => power(a) - power(b)), [v.hand])
+  // can I answer at all? If not, the only move is to pass, and the screen says so
+  const hasPlay = useMemo(() => !(myTurn && v.canPass) || !!chooseMove(v.hand, curCombo, v.mustOpen), [myTurn, v.canPass, v.hand, curCombo, v.mustOpen])
 
   // why a play is not possible, in plain words (shown right under the hand)
   const reason = !myTurn ? '' : sel.length === 0
-    ? (v.mustOpen ? t('btOpen') : !v.current ? t('btLead') : t('btBeatPrompt', { play: curName }))
+    ? (!hasPlay ? t('btNoPlay') : v.mustOpen ? t('btOpen') : !v.current ? t('btLead') : t('btBeatPrompt', { play: curName }))
     : !chosen ? t('btInvalid')
       : v.mustOpen && !sel.includes(THREE_DIAMONDS) ? t('btNeed3')
         : !beats(chosen, curCombo) ? (curCombo && chosen.size !== curCombo.size ? t('btSameCount', { n: curCombo.size, play: curName }) : t('btTooLow', { play: curName })) : ''
@@ -76,7 +78,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
     <>
       <Bar />
       <TableHeader title={room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`} sub={room === 'practice' ? t('btCasual') : v.config.ranked ? t('btRanked') : t('btCasual')}
-        watching={v.watching} copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} />
+        watching={v.watching} copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'btHow', lines: ['btR1', 'btR2', 'btR3', 'btR4', 'btR5'] }} />
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
     </>
   )
@@ -145,10 +147,10 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
           <div className="bt-reason" aria-live="polite">{v.status === 'playing' ? reason : ''}</div>
           <div className="hdbar">
             <div className="hdactions bt-actions">
-              <button className="hdbtn" disabled={!myTurn || !v.canPass} onClick={pass}>{t('btPassBtn')}<Kbd k="P" /></button>
-              <button className="hdbtn" disabled={!myTurn} onClick={hint}>{t('btHint')}<Kbd k="H" /></button>
+              <button className={'hdbtn' + (myTurn && !hasPlay ? ' primary' : '')} disabled={!myTurn || !v.canPass} onClick={pass}>{t('btPassBtn')}<Kbd k="P" /></button>
+              <button className="hdbtn" disabled={!myTurn || !hasPlay} onClick={hint}>{t('btHint')}<Kbd k="H" /></button>
               {sel.length > 0 && <button className="hdbtn quiet" onClick={() => setSel([])} aria-label={t('btClear')}>{t('btClear')}<Kbd k="Esc" /></button>}
-              <button className="hdbtn primary bt-play" disabled={!myTurn || !legal} onClick={play}>{t('btPlayBtn')}{chosen ? ` · ${t('btt.' + chosen.type)}` : ''}<Kbd k="↵" /></button>
+              <button className={'hdbtn bt-play' + (hasPlay ? ' primary' : '')} disabled={!myTurn || !legal} onClick={play}>{t('btPlayBtn')}{chosen ? ` · ${t('btt.' + chosen.type)}` : ''}<Kbd k="↵" /></button>
             </div>
           </div>
         </>
@@ -176,7 +178,8 @@ function Hand({ cards, sel, setSel, active, label }: { cards: number[]; sel: num
   const fit = (n: number) => w / (1 + STEP * Math.max(0, n - 1))
   const two = cards.length > 8 && fit(cards.length) < 54
   const rows = two ? [cards.slice(0, Math.ceil(cards.length / 2)), cards.slice(Math.ceil(cards.length / 2))] : [cards]
-  const cw = Math.max(34, Math.min(74, Math.floor(fit(Math.max(...rows.map((r) => r.length))))))
+  const cap = typeof innerHeight !== 'undefined' && innerHeight < 620 ? 48 : 74 // a very short screen needs a smaller hand so the buttons stay on screen
+  const cw = Math.max(34, Math.min(cap, Math.floor(fit(Math.max(...rows.map((r) => r.length))))))
   const set = (c: number, on: boolean) => setSel((s) => (on ? (s.includes(c) || s.length >= 5 ? s : [...s, c]) : s.filter((x) => x !== c)))
   const move = (e: React.KeyboardEvent<HTMLButtonElement>, c: number) => {
     if (e.key === ' ') { e.preventDefault(); set(c, !sel.includes(c)); return }

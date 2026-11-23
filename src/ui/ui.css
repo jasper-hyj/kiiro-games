@@ -57,7 +57,9 @@
    Touch: 44px targets, no double-tap zoom, no text selection or long-press menus on game surfaces.
    Mouse: hover states only where hover exists. Keyboard: visible focus everywhere, shortcut hints on desktop. */
 .hd, .kgt-surface, .bttable, .bthand, .hdfelt, .bjtable { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.hd button, .hd a, .hd input[type=range], .bthand, .bjchips { touch-action: manipulation; }
+.hd button, .hd a, .hd input[type=range], .bjchips { touch-action: manipulation; }
+/* the hand is dragged across to select cards: the page must not take that gesture over as a pan */
+.hd .bthand, .hd .bthand * { touch-action: none; }
 button:focus-visible, a:focus-visible, [role=button]:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
 .k-kbd { display: none; margin-left: 8px; padding: 1px 6px; border-radius: 6px; font: 600 11px var(--k-sans); background: rgba(0,0,0,.18); color: inherit; opacity: .75; }
 @media (hover: hover) and (pointer: fine) { .k-kbd { display: inline-block; } }
@@ -113,3 +115,8 @@ button:focus-visible, a:focus-visible, [role=button]:focus-visible { outline: 2p
 
 .k-empty { padding: 72px 0 40px; display: grid; gap: 14px; justify-items: start; } .k-empty h1 { margin: 0; }
 :root:root a.k-linkbtn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.k-help { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--k-ink); font-size: 14px; line-height: 1.5; }
+:root:root .k-help-btn, :root:root .k-help { text-align: left; }
+:root:root .k-ghost.k-help { width: 40px; padding: 0; font-weight: 700; font-size: 16px; }
+.k-short { display: none; }
+@media (max-width: 400px) { .k-long { display: none; } .k-short { display: inline; } .k-sub { display: none; } }

@@ -27,11 +27,11 @@
 .bthand-row { display: flex; justify-content: center; }
 .bthand-row { position: relative; }
 .bthand-row + .bthand-row { margin-top: calc(var(--cw) * -.6); z-index: 2; } /* the second row overlaps the bottom of the first, so every rank corner stays visible */
-:root:root .btcard { background: none; border: 0; padding: 0; margin: 0 0 0 calc(var(--cw) * -.44); cursor: pointer; transition: transform .14s ease-out, filter .14s; min-height: 0; min-width: 0; border-radius: 9px; flex: none; -webkit-tap-highlight-color: transparent; }
+:root:root .btcard { position: relative; background: none; border: 0; padding: 0; margin: 0 0 0 calc(var(--cw) * -.44); cursor: pointer; transition: transform .14s ease-out, filter .14s; min-height: 0; min-width: 0; border-radius: 9px; flex: none; -webkit-tap-highlight-color: transparent; }
 :root:root .btcard:first-child { margin-left: 0; }
 :root:root .btcard .pkcard { --cw: inherit; }
 .btcard .pkcard { width: var(--cw); height: calc(var(--cw) * 1.4); }
-:root:root .btcard.sel { transform: translateY(calc(var(--cw) * -.28)); filter: drop-shadow(0 0 8px rgba(232,182,106,.7)); z-index: 3; }
+:root:root .btcard.sel { transform: translateY(calc(var(--cw) * -.28)); filter: drop-shadow(0 0 8px rgba(232,182,106,.7)); }
 :root:root .btcard.sel .pkcard { box-shadow: 0 0 0 2.5px var(--k-accent), 0 4px 10px rgba(3,6,16,.4); }
 @media (hover: hover) { :root:root .btcard:not(:disabled):not(.sel):hover { transform: translateY(calc(var(--cw) * -.1)); } }
 :root:root .btcard:disabled { cursor: default; opacity: 1; }
@@ -61,3 +61,34 @@
   .btplay .pkcard { --cw: 30px; } .btplay { gap: 3px; min-height: 0; } .btcenter { gap: 2px; }
   .bt-me { display: none; } .bthand { padding-top: 14px; } .bt-reason { display: none; }
 }
+
+/* short phones: everything must fit above the fold, so the table gives up height first */
+@media (max-width: 640px) and (max-height: 700px) {
+  .bttable { min-height: 200px; padding-top: 62px; padding-bottom: 10px; }
+  .bt-me { display: none; }
+  .bthand { padding-top: 14px; }
+  .bt-reason { min-height: 16px; margin-top: 2px; font-size: 12px; }
+  .hd .hdbar { padding-top: 6px; }
+}
+@media (max-width: 640px) { .bt .hdbar { position: static; } }
+/* the very smallest phones (320 wide): tighter seats and cards so nothing overlaps or scrolls sideways */
+@media (max-width: 340px) {
+  .btseat { min-width: 52px; padding: 4px 4px; } .btseat .k-seatname { font-size: 11px; max-width: 56px; }
+  .btseat.pos1 { left: 4px; } .btseat.pos3 { right: 4px; }
+  .btplay .pkcard { --cw: 26px; }
+  .bttable { padding-left: 2px; padding-right: 2px; }
+  .btlobby { gap: 8px; } .hdseg button { padding: 0 8px; font-size: 13px; }
+}
+@media (max-width: 640px) and (max-height: 600px) { .bttable { min-height: 170px; padding-top: 58px; } .bthand { padding-top: 10px; } }
+.btlobby li { min-width: 0; } .btlobby .k-seat { min-width: 0; width: 100%; box-sizing: border-box; } .btlobby .k-seatname span:last-child { white-space: normal; text-align: center; overflow: visible; }
+@media (max-width: 640px) and (max-height: 700px) { .bttable { padding-top: 76px; } .btseat .k-av { width: 18px !important; height: 18px !important; font-size: 9px !important; } }
+@media (max-width: 640px) and (max-height: 600px) { .bttable { padding-top: 66px; } .btseat .k-av { display: none; } }
+/* landscape phones: compact seats (no avatar) so the top seat clears the played cards */
+@media (max-height: 520px) and (orientation: landscape) {
+  .btseat .k-av { display: none; } .btseat { padding: 4px 10px; min-width: 70px; } .btseat .k-seatname { font-size: 12px; }
+  .bttable { padding-top: 40px; }
+}
+@media (max-height: 520px) and (orientation: landscape) { .btcenter .muted.small { display: none; } .btcenter { gap: 2px; } .bttable { padding-top: 46px; } }
+@media (max-height: 520px) and (orientation: landscape) { .btplay { min-height: 42px; } }
+@media (max-height: 380px) and (orientation: landscape) { .bttable { padding-top: 56px; } }
+@media (max-height: 420px) and (orientation: landscape) { .btseat { grid-auto-flow: column; align-items: center; gap: 8px; padding: 3px 12px; } .btseat .btpass { display: none; } .bttable { padding-top: 46px; } }

@@ -14,7 +14,8 @@ const SIZES: [number, number][] = [
 ]
 const only = (process.env.ONLY ?? '').split(',').filter(Boolean)
 const SELECTED = only.length ? SIZES.filter(([w, h]) => only.includes(`${w}x${h}`)) : SIZES
-const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
+const launch = () => puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] })
+let b = await launch()
 let screens = 0, problems = 0
 const report = (where: string, msgs: string[]) => { screens++; for (const m of msgs) { problems++; console.log('PROBLEM', where, '-', m) } }
 
@@ -26,17 +27,17 @@ async function inspect(p: Page): Promise<string[]> {
     if (document.documentElement.scrollWidth > W + 1) out.push(`horizontal overflow (${document.documentElement.scrollWidth} > ${W})`)
     const scroller = document.querySelector('.kg') as HTMLElement | null
     if (scroller && scroller.scrollWidth > scroller.clientWidth + 1) out.push('page scrolls sideways')
-    for (const el of Array.from(document.querySelectorAll('button, a.kg-game, input, select'))) {
+    for (const el of Array.from(document.querySelectorAll('button, a.kg-go, a.kg-practice, a.kg-create, input, select'))) {
       const r = (el as HTMLElement).getBoundingClientRect()
       if (r.width === 0 || r.height === 0) continue
       const cs = getComputedStyle(el as HTMLElement)
       if (cs.visibility === 'hidden' || cs.display === 'none') continue
       if (r.right > W + 1 || r.left < -1) out.push(`control off-screen: ${(el.textContent || (el as HTMLInputElement).placeholder || el.tagName).trim().slice(0, 24)}`)
-      const small = el.matches('.hdpresets button, .hdlink, .kg-lang button, .kg-acct, .acchip, input[type=range]')
+      const small = el.matches('.kgin input, .hdpresets button, .hdlink, .k-ghost, .kg-lang button, .kg-acct, .acchip, input[type=range], .kg-practice, .kg-go')
       if (!small && r.height < 36 && !el.closest('.kg-lang')) out.push(`tap target only ${Math.round(r.height)}px: ${(el.textContent || el.tagName).trim().slice(0, 24)}`)
     }
     // text that does not fit its box
-    for (const el of Array.from(document.querySelectorAll('.hdname, .bjname, .bttag, .hdstack, .btcount, .hdlast, .hdmsg, .kg-game b'))) {
+    for (const el of Array.from(document.querySelectorAll('.k-seatname span:last-child, .k-seatsub, .hdlast, .hdmsg, .kg-game b'))) {
       const e = el as HTMLElement
       if (e.scrollWidth > e.clientWidth + 2 && getComputedStyle(e).textOverflow !== 'ellipsis') out.push(`text clipped: ${e.textContent?.slice(0, 24)}`)
     }
@@ -53,7 +54,7 @@ async function inspect(p: Page): Promise<string[]> {
     const centre = document.querySelector('.hdboard, .btplay, .bjdealer') as HTMLElement | null
     if (centre) {
       const c = centre.getBoundingClientRect()
-      for (const s of Array.from(document.querySelectorAll('.hdseat:not(.empty), .btseat'))) { const r = s.getBoundingClientRect(); if (c.width && r.left < c.right - 2 && c.left < r.right - 2 && r.top < c.bottom - 2 && c.top < r.bottom - 2) out.push('a seat covers the cards in the middle') }
+      for (const s of Array.from(document.querySelectorAll('.hdseat:not(.empty), .btseat'))) { const r = s.getBoundingClientRect(); if (c.width && r.left < c.right - 2 && c.left < r.right - 2 && r.top < c.bottom - 2 && c.top < r.bottom - 2) out.push(`a seat covers the cards in the middle (seat ${[r.left, r.top, r.right, r.bottom].map(Math.round)} cards ${[c.left, c.top, c.right, c.bottom].map(Math.round)})`) }
     }
     // the bottom-left chat overlay must not sit on top of buttons, hand cards or seats
     const chat = document.querySelector('.kgchat') as HTMLElement | null
@@ -79,8 +80,10 @@ const mk = async (w: number, h: number) => {
 const closeAll = async (...ps: Page[]) => { for (const p of ps) await p.browserContext().close() }
 
 for (const [w, h] of SELECTED) {
+  if (!b.connected) b = await launch() // a crashed browser must not sink every later size
+  else if (screens > 0 && screens % 24 === 0) { await b.close().catch(() => {}); b = await launch() } // a fresh browser now and then keeps memory down
   const tag = `${w}x${h}`
-  const section = async (name: string, fn: () => Promise<void>) => { try { await fn() } catch (e) { problems++; console.log('PROBLEM', name, tag, '- could not run:', String((e as Error).message).split('\n')[0]) } }
+  const section = async (name: string, fn: () => Promise<void>) => { try { await fn() } catch { try { await fn() } catch (e) { problems++; console.log('PROBLEM', name, tag, '- could not run:', String((e as Error).message).split('\n')[0]) } } }
   await section('hub+menus', async () => {
     const p = await mk(w, h)
     // hub

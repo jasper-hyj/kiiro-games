@@ -11,6 +11,7 @@ export interface D1 {
 }
 export interface Env {
   Room?: unknown
+  Main?: unknown
   DB?: D1
   GOOGLE_CLIENT_ID?: string
   APP_URL?: string

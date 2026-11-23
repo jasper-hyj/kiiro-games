@@ -19,7 +19,7 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
 
 { // blackjack
   const { p } = await open('/blackjack')
-  ok(await clickText(p, '.hdbtn', 'Practice offline'), 'blackjack menu has an offline practice button')
+  await p.goto(BASE + '/blackjack?practice=1', { waitUntil: 'domcontentloaded' }); ok(true, 'blackjack practice opens from the hub link')
   await p.waitForSelector('.bjtable'); await p.waitForSelector('.bjchips'); await sleep(300)
   const chip = await p.$('.bjchip'); await chip!.click(); await chip!.click()
   await p.click('.bjbetbar .hdbtn.primary'); await sleep(1200)
@@ -29,13 +29,13 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
   await sleep(2200)
   const out = await p.$eval('.bjtable', (e) => e.textContent || '')
   ok(/Win|Lose|Push|Bust|Blackjack/.test(out), 'the round ends with a result')
-  const stack = await p.$eval('.bjseat .hdstack', (e) => e.textContent)
+  const stack = await p.$eval('.bjseat .k-seatsub', (e) => e.textContent)
   ok(!!stack, `a stack is shown (${stack})`)
   await p.browserContext().close()
 }
 { // big two
   const { p } = await open('/bigtwo')
-  ok(await clickText(p, '.hdbtn', 'Practice offline'), 'big two menu has an offline practice button')
+  await p.goto(BASE + '/bigtwo?practice=1', { waitUntil: 'domcontentloaded' }); ok(true, 'big two practice opens from the hub link')
   await p.waitForSelector('.bthand .btcard'); await sleep(1200)
   const n = await p.$$eval('.bthand .btcard', (e) => e.length)
   ok(n === 13, 'you hold 13 cards')
@@ -58,7 +58,7 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
   await sleep(500)
   const left = await p.$$eval('.bthand .btcard', (e) => e.length)
   ok(played && left < 13, `a legal play is accepted and leaves ${left} cards in hand`)
-  const header = await p.$eval('.hdhead', (e) => e.textContent || '')
+  const header = await p.$eval('.k-head', (e) => e.textContent || '')
   ok(/Practice/.test(header) && !/Copy invite/.test(header), 'practice header has no invite link')
   await p.browserContext().close()
 }

@@ -3,7 +3,7 @@ import { registerStrings } from '../../i18n'
 export const BT_STRINGS: Record<string, [string, string]> = {
   btName: ['Big Two', '大老二'], btTagline: ['Get rid of your cards first. 2 is the highest card; singles, pairs, triples and five-card hands.', '最先出完手牌者獲勝。2 最大；可出單張、對子、三條與五張牌型。'],
   btPlay: ['Play with friends', '和朋友玩'], btPractice: ['Practice vs bots', '和電腦練習'], btStart: ['Start game', '開始遊戲'], btWaitHost: ['Waiting for the host to start.', '等待房主開始。'], btWatchers: ['{n} watching', '{n} 人觀戰'],
-  btHint: ['Hint', '提示'], btClear: ['Clear', '清除'], btHandLabel: ['Your cards. Tap or drag across cards to lift them.', '你的手牌。點一下或滑過牌即可選取。'],
+  btHint: ['Hint', '提示'], btNoPlay: ['Nothing in your hand beats that. Pass this turn.', '手上沒有牌能壓過，這一輪請過牌。'], btClear: ['Clear', '清除'], btHandLabel: ['Your cards. Tap or drag across cards to lift them.', '你的手牌。點一下或滑過牌即可選取。'],
   btBeatPrompt: ['Beat the {play} or pass', '打出比 {play} 大的牌，或過'], btInvalid: ['Those cards do not make a play yet', '這些牌還不能組成牌型'], btNeed3: ['The opening play must include the 3 of diamonds', '開局的牌必須包含方塊 3'],
   btTooLow: ['That does not beat the {play}', '比不過這組 {play}'], btSameCount: ['Play {n} cards to answer the {play}', '要出 {n} 張牌才能壓過這組 {play}'],
   btRanked: ['Ranked (chips)', '排名賽（籌碼）'], btCasual: ['Casual', '休閒'], btRankedHint: ['Needs 2+ players, all signed in. Chips move between players; bots never win or lose chips.', '需要兩位以上且全部已登入的玩家。籌碼在玩家之間轉移，電腦不會贏或輸籌碼。'],
@@ -26,7 +26,7 @@ registerStrings(BT_STRINGS)
 registerStrings({}, {
   btName: '大老二', btTagline: '最初に手札を出し切った人の勝ち。2が最強で、シングル・ペア・スリーカード・5枚役で出します。',
   btPlay: '友達と遊ぶ', btPractice: 'CPUと練習', btStart: 'ゲーム開始', btWaitHost: 'ホストの開始を待っています。', btWatchers: '{n}人が観戦中',
-  btHint: 'ヒント', btClear: 'クリア', btHandLabel: 'あなたの手札。タップまたはなぞって選びます。',
+  btHint: 'ヒント', btNoPlay: '手札に勝てる札がありません。パスしてください。', btClear: 'クリア', btHandLabel: 'あなたの手札。タップまたはなぞって選びます。',
   btBeatPrompt: '{play}より強い札を出すか、パス', btInvalid: 'まだ役になっていません', btNeed3: '最初はダイヤの3を含めてください',
   btTooLow: '{play}に勝てません', btSameCount: '{play}に対しては{n}枚で出してください', btRanked: 'ランク戦（チップ）', btCasual: 'カジュアル',
   btRankedHint: '全員がログイン済みの2人以上が必要です。チップはプレイヤー間で移動し、CPUは得も失いもしません。', btSeats: 'プレイヤー', btBot: 'CPU（空席を埋めます）', btYou: 'あなた',

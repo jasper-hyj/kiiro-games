@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLang } from '../i18n'
 import '../room/strings'
 
@@ -49,10 +49,13 @@ export function Hotkeys({ keys, enabled = true }: { keys: Record<string, (() => 
 
 /* ------------------------------------------------------------------ table header */
 /** The one header every table uses: back, room name, who is here, invite. */
-export function TableHeader({ title, sub, watching, copied, onCopy, onLeave, leaveLabel, status }: {
+export function TableHeader({ title, sub, watching, copied, onCopy, onLeave, leaveLabel, status, help }: {
   title: ReactNode; sub?: ReactNode; watching?: number; copied?: boolean; onCopy?: () => void; onLeave: () => void; leaveLabel: string; status?: 'connecting' | 'open' | 'closed'
+  /** a how-to-play panel: its title key and the keys of its lines */
+  help?: { title: string; lines: string[] }
 }) {
   const { t } = useLang()
+  const [helpOpen, setHelpOpen] = useState(false)
   return (
     <div className="k-head">
       <button className="k-back" onClick={onLeave} aria-label={leaveLabel} title={leaveLabel}><span aria-hidden="true">←</span><span className="k-backlabel">{leaveLabel}</span></button>
@@ -60,8 +63,10 @@ export function TableHeader({ title, sub, watching, copied, onCopy, onLeave, lea
       <div className="k-tools">
         {watching != null && watching > 0 && <span className="k-pill" title={t('rmWatching')}>👁 {watching}</span>}
         {status && status !== 'open' && <span className="k-pill warn">{status === 'closed' ? t('rmLost') : t('rmConnecting')}</span>}
-        {onCopy && <button className="k-ghost" onClick={onCopy}>{copied ? t('rmCopied') : t('rmCopy')}</button>}
+        {help && <button className="k-ghost k-help" onClick={() => setHelpOpen(true)} aria-label={t(help.title)} title={t(help.title)}>?</button>}
+        {onCopy && <button className="k-ghost" onClick={onCopy}>{copied ? t('rmCopied') : <><span className="k-long">{t('rmCopy')}</span><span className="k-short">{t('rmInvite')}</span></>}</button>}
       </div>
+      {helpOpen && help && <HelpModal title={t(help.title)} lines={help.lines.map((k) => t(k))} onClose={() => setHelpOpen(false)} />}
     </div>
   )
 }
@@ -118,6 +123,21 @@ export function NoRoom({ game, error }: { game: string; error?: string }) {
             <a className="hdbtn k-linkbtn" href="/">{t('acHome')}</a>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** A how-to-play panel over the table. Escape or a tap outside closes it. */
+export function HelpModal({ title, lines, onClose }: { title: string; lines: string[]; onClose: () => void }) {
+  const { t } = useLang()
+  useEffect(() => { const on = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }; addEventListener('keydown', on); return () => removeEventListener('keydown', on) }, [onClose])
+  return (
+    <div className="acmodal" onClick={onClose}>
+      <div className="acbox" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
+        <h2>{title}</h2>
+        <ul className="k-help">{lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        <button className="primary" onClick={onClose}>{t('acClose')}</button>
       </div>
     </div>
   )

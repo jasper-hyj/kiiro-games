@@ -3,10 +3,12 @@ import { readName, writeName } from '../games/shared/name'
 import { useLang } from '../i18n'
 import { Bar } from '../hub/Hub'
 import { useAccount } from '../account/Account'
+import { api } from '../account/api'
 import { BLINDS } from '../games/holdem/engine/table'
 import { MIN_BETS } from '../games/blackjack/engine/table'
 import { TalkBox } from '../games/shared/TalkBox'
 import { TableHeader } from '../ui/components'
+import { Rules as HowTo } from '../games/shared/Rules'
 import { getClientId } from '../games/shared/cashClient'
 import { connectRoom, gameUrl, type RoomCfg, type RoomConn, type RoomGame, type RoomView, type TalkLine } from './roomClient'
 import '../games/holdem/strings'
@@ -21,6 +23,9 @@ import './room.css'
 const GAMES: { id: RoomGame; name: string }[] = [
   { id: 'mahjong', name: 'rmMahjong' }, { id: 'holdem', name: 'rmHoldem' }, { id: 'blackjack', name: 'rmBlackjack' }, { id: 'bigtwo', name: 'rmBigtwo' },
 ]
+const HOW: Record<'holdem' | 'blackjack' | 'bigtwo', { title: string; lines: string[] }> = {
+  holdem: { title: 'hdHow', lines: ['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5'] }, blackjack: { title: 'bjHow', lines: ['bjR1', 'bjR2', 'bjR3', 'bjR4', 'bjR5'] }, bigtwo: { title: 'btHow', lines: ['btR1', 'btR2', 'btR3', 'btR4', 'btR5'] },
+}
 const RULESETS = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
 const DEFAULTS: Record<RoomGame, RoomCfg> = { mahjong: { rule: 'taiwan' }, holdem: { sb: 25, bb: 50, casual: true }, blackjack: { bb: MIN_BETS[0], casual: true }, bigtwo: {} }
 const newCode = () => String(1000 + Math.floor(Math.random() * 9000))
@@ -68,7 +73,17 @@ export default function RoomApp() {
     history.replaceState(null, '', `${location.pathname}?room=${rm}`)
     conn.current = connectRoom(rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
   }, [name, me?.name, handlers])
-  const create = () => { writeName(name); let n = 0; const go = () => { retry.current = n++ < 8 ? go : null; open(newCode(), true) }; go() }
+  const create = () => {
+    writeName(name); let n = 0
+    const go = async () => {
+      retry.current = n++ < 8 ? () => { void go() } : null
+      let code = newCode()
+      // skip codes a game table already uses (a room and a table on the same digits would send people into the wrong game)
+      for (let i = 0; i < 6; i++) { try { const r = await api<{ free: boolean }>('/code/' + code); if (r.free) break } catch { break } code = newCode() }
+      open(code, true)
+    }
+    void go()
+  }
   const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) join(urlRoom); else if (q.get('create') === '1' && !urlRoom && !conn.current) create() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
@@ -159,6 +174,7 @@ export default function RoomApp() {
                 ) : <p className="kg-note">{t('rmNoGame')}</p>}
               </>
             )}
+            {view.game && view.game !== 'mahjong' && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
             {view.launched && view.game && (
               <div className="rmrunning">
                 <p className="kg-note">{t('rmRunning')}</p>

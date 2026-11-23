@@ -1,3 +1,4 @@
+import { getServerByName } from 'partyserver'
 import type { Env } from './d1'
 import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, login, passwordOk, register, setPassword, userFromToken, type User } from './auth'
 import { ensureAccount, FLOOR_CHIPS, leaderboard, level, seasonOf, START_CHIPS } from './economy'
@@ -22,6 +23,17 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   const path = url.pathname.slice(4)
   const token = bearer(req)
 
+  // is a four-digit code free to open a new room on? A table of any game on that code would clash with the room's table.
+  if (req.method === 'GET' && path.startsWith('/code/')) {
+    const code = path.slice(6).toLowerCase()
+    if (!/^\d{4}$/.test(code) || !env.Main) return json({ free: false })
+    try {
+      const stub = await getServerByName(env.Main as never, code)
+      const r = await stub.fetch(new Request(`https://table/parties/main/${code}/status`))
+      const j = (await r.json()) as { taken?: boolean }
+      return json({ free: !j.taken })
+    } catch { return json({ free: true }) } // if the check itself fails, do not block room creation
+  }
   if (req.method === 'GET' && path === '/config') return json({ google: env.GOOGLE_CLIENT_ID || null, season: seasonOf(), start: START_CHIPS, floor: FLOOR_CHIPS })
 
   if (req.method === 'POST' && (path === '/auth/register' || path === '/auth/login')) {
