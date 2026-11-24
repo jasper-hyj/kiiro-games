@@ -65,7 +65,9 @@ export class Play extends Server<Env> {
     if (request.method === 'POST' && path.endsWith('/__prepare')) {
       const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string }
       if (!b.game || !isGeneric(b.game) || typeof b.host !== 'string') return Response.json({ error: 'bad_request' }, { status: 400 })
-      if (this.game?.hasPlayers()) return Response.json(this.kind === b.game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === b.game ? 200 : 409 })
+      const here = [...this.getConnections()].length > 0 // seats that only wait out the reconnect grace do not hold the table
+      if (this.game?.hasPlayers() && here) return Response.json(this.kind === b.game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === b.game ? 200 : 409 })
+      if (this.game) { this.game.dispose(); void this.store.delete('game'); void this.store.delete('kind') }
       this.game = null; this.kind = null
       this.pending = { game: b.game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3 }
       void this.store.put('pending', this.pending)

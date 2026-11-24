@@ -66,9 +66,15 @@ export class Main extends Server<Env> {
       const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string }
       const game = (['mahjong', 'holdem', 'blackjack', 'bigtwo'] as Kind[]).find((g) => g === b.game)
       if (!game || typeof b.host !== 'string') return Response.json({ error: 'bad_request' }, { status: 400 })
-      if (this.kind && this.occupied()) return Response.json(this.kind === game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === game ? 200 : 409 })
-      // an old table nobody is in any more: start from scratch
-      if (this.kind) { this.kind = null; this.game = null; this.bt = null; void this.store.delete('kind'); void this.store.delete('cash'); void this.store.delete('bt') }
+      // somebody is really here (an open connection): keep the table, or refuse if it is another game. A table whose players have all left (their seats only wait
+      // out the reconnect grace) is simply replaced, so going back to the room and starting a different game works at once.
+      const here = [...this.getConnections()].length > 0
+      if (this.kind && this.occupied() && here) return Response.json(this.kind === game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === game ? 200 : 409 })
+      if (this.kind) {
+        this.kind = null; this.game = null; this.bt = null
+        void this.store.delete('kind'); void this.store.delete('cash'); void this.store.delete('bt'); void this.store.delete('table'); void this.store.delete('psess')
+        this.table = new Table(); this.table.turnTimerMs = 30000; this.wireTable()
+      }
       this.pending = { game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3, applied: false }
       void this.store.put('pending', this.pending)
       return Response.json({ ok: true })
@@ -100,8 +106,10 @@ export class Main extends Server<Env> {
       if (acc) this.accounts = new Map(acc)
       this.recorded = (await this.store.get<string>('recorded')) ?? null
     } catch (e) { console.error('restore failed', e) }
-    this.table.onChange(() => { if (!this.isCash() && this.kind !== 'bigtwo') { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } })
+    this.wireTable()
   }
+
+  private wireTable() { this.table.onChange(() => { if (!this.isCash() && this.kind !== 'bigtwo') { this.broadcastViews(); this.persistSoon(); void this.recordIfOver() } }) }
 
   private persistSoon() {
     if (this.persistTimer) return
