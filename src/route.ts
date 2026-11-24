@@ -7,6 +7,7 @@
  *   /room/1234             a room: the invite link
  *   /<game>/1234           that room's table (?watch=1 to only watch)        game = mahjong | holdem | blackjack | bigtwo
  *   /<game>/practice       play against bots in the browser
+ *   /<game>/local          two people on one device (games without hidden information)
  *   /mahjong/tutorial      the guided Mahjong game
  *   /admin  /admin/users   admin (tab in the path)
  *
@@ -26,7 +27,7 @@ export type Route =
   | { page: 'hub' }
   | { page: 'room'; code: string | null; fresh: boolean; game: GameKey | null }
   | { page: 'table'; game: GameKey; code: string; watch: boolean }
-  | { page: 'practice'; game: GameKey; tutorial: boolean }
+  | { page: 'practice'; game: GameKey; tutorial: boolean; local?: boolean }
   | { page: 'gameStart'; game: GameKey } // /<game> with nothing else: go to a new room for it
   | { page: 'admin'; tab: string }
   | { page: 'tiles' } // the Mahjong tile gallery (dev)
@@ -34,6 +35,9 @@ export type Route =
 export const tableUrl = (game: GameKey, code: string, watch = false) => `/${game}/${code}${watch ? '?watch=1' : ''}`
 export const roomUrl = (code?: string) => (code ? `/room/${code}` : '/room')
 export const newRoomUrl = (game?: GameKey, rule?: string) => `/room/new${game ? `?game=${game}${rule ? `&rule=${rule}` : ''}` : ''}`
+/** the games two people can play on one device: everything is on the table for both to see (no hidden hands) */
+export const LOCAL_GAMES: readonly string[] = ['gomoku', 'chess', 'xiangqi', 'checkers', 'reversi', 'go', 'chinesecheckers', 'yahtzee']
+export const localUrl = (game: GameKey) => `/${game}/local`
 export const practiceUrl = (game: GameKey) => `/${game}/practice`
 
 /** Where the current address means something else in the old scheme (null if it is already a current address). */
@@ -77,6 +81,7 @@ export function route(): Route {
   else if (isGame(first)) {
     if (isCode(second)) r = { page: 'table', game: first, code: second, watch: q.get('watch') === '1' }
     else if (second === 'practice' || second === 'tutorial') r = q.has('tiles') ? { page: 'tiles' } : { page: 'practice', game: first, tutorial: second === 'tutorial' }
+    else if (second === 'local' && LOCAL_GAMES.includes(first)) r = { page: 'practice', game: first, tutorial: false, local: true }
     else r = { page: 'gameStart', game: first }
   }
   cached = r

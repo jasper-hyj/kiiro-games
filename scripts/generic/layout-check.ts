@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core'
 // Run: npx tsx scripts/generic/layout-check.ts   (vite :5200) Every turn-based game's practice screen at phone, landscape-phone and desktop sizes: no sideways scrolling, nothing wider than the screen.
-const GAMES = ['gomoku', 'crazyeights', 'yahtzee', 'liarsdice', 'chess', 'xiangqi', 'doudizhu', 'bridge']
+const GAMES = ['gomoku', 'crazyeights', 'yahtzee', 'liarsdice', 'chess', 'xiangqi', 'doudizhu', 'bridge', 'chinesecheckers', 'go', 'hearts', 'spades', 'checkers', 'reversi']
 const SIZES: [number, number][] = [[320, 568], [390, 844], [667, 375], [820, 1180], [1280, 720]]
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 let problems = 0
@@ -11,7 +11,7 @@ for (const game of GAMES) {
     await p.setViewport({ width: w, height: h, hasTouch: w < 700, isMobile: w < 700 })
     await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
     const errors: string[] = []; p.on('pageerror', (e: unknown) => errors.push((e as Error).message))
-    await p.goto(`http://localhost:5200/${game}/practice`, { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.play', { timeout: 15000 }).catch(() => {})
+    await p.goto(`http://localhost:${process.env.PORT ?? 5200}/${game}/practice`, { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.play', { timeout: 15000 }).catch(() => {})
     await sleep(1800)
     const r = (await p.evaluate(`(() => {
       const out = []

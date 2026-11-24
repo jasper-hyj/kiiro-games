@@ -19,6 +19,7 @@ import '../../src/games/generic/chessStrings'
 import '../../src/games/generic/xqStrings'
 import '../../src/games/generic/ddStrings'
 import '../../src/games/generic/bridgeStrings'
+import '../../src/games/generic/moreStrings'
 
 const { D, JA } = allStrings()
 const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : [] })

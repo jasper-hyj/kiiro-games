@@ -11,6 +11,8 @@ import './chessStrings'
 import './xqStrings'
 import './ddStrings'
 import './bridgeStrings'
+import './moreStrings'
+import { ChineseCheckersBoard, CheckersBoard, GoBoard, HeartsBoard, ReversiBoard, SpadesBoard } from './ui2'
 import { classify as ddClassify, beats as ddBeats, rankOf as ddRank } from './doudizhu'
 import { name as sqName, parseSq } from './chessrules'
 import { CATS } from './yahtzee'
@@ -505,6 +507,12 @@ function BridgeBoard({ v, send, name }: BoardProps) {
 }
 
 export const GAME_UI: Record<GenericGame, GameUI> = {
+  reversi: { name: 'reversi', blurb: 'reversiBlurb', settings: (c, t) => [t(c.level === 'easy' ? 'chEasy' : c.level === 'hard' ? 'chHard' : 'chNormal')], help: { title: 'rvHow', lines: ['rvR1', 'rvR2', 'rvR3', 'rvR4'] }, Board: ReversiBoard },
+  checkers: { name: 'checkers', blurb: 'checkersBlurb', settings: (c, t) => [t(c.level === 'easy' ? 'chEasy' : c.level === 'hard' ? 'chHard' : 'chNormal')], help: { title: 'ckHow', lines: ['ckR1', 'ckR2', 'ckR3', 'ckR4'] }, Board: CheckersBoard },
+  go: { name: 'go', blurb: 'goBlurb', settings: (c) => [`${c.size} × ${c.size}`], help: { title: 'goHow', lines: ['goR1', 'goR2', 'goR3', 'goR4'] }, Board: GoBoard },
+  chinesecheckers: { name: 'chinesecheckers', blurb: 'chinesecheckersBlurb', settings: (c) => [`${c.players}`], help: { title: 'ccHow', lines: ['ccR1', 'ccR2', 'ccR3', 'ccR4'] }, Board: ChineseCheckersBoard },
+  hearts: { name: 'hearts', blurb: 'heartsBlurb', settings: () => [], help: { title: 'htHow', lines: ['htR1', 'htR2', 'htR3', 'htR4'] }, Board: HeartsBoard },
+  spades: { name: 'spades', blurb: 'spadesBlurb', settings: () => [], help: { title: 'spHow', lines: ['spR1', 'spR2', 'spR3', 'spR4'] }, Board: SpadesBoard },
   bridge: { name: 'bridge', blurb: 'bridgeBlurb', settings: () => [], help: { title: 'brHow', lines: ['brR1', 'brR2', 'brR3', 'brR4', 'brR5'] }, Board: BridgeBoard },
   doudizhu: { name: 'doudizhu', blurb: 'doudizhuBlurb', settings: () => [], help: { title: 'ddHow', lines: ['ddR1', 'ddR2', 'ddR3', 'ddR4', 'ddR5'] }, Board: DouBoard },
   xiangqi: { name: 'xiangqi', blurb: 'xiangqiBlurb', settings: (c, t) => [t(c.level === 'easy' ? 'chEasy' : c.level === 'hard' ? 'chHard' : 'chNormal')], help: { title: 'xqHow', lines: ['xqR1', 'xqR2', 'xqR3', 'xqR4'] }, Board: XiangqiBoard },

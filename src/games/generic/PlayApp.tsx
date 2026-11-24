@@ -52,7 +52,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
   const open = useCallback(() => {
     conn.current?.close(); setView(null); setTalk([])
     const name = (me?.name || nameOrGuest()).slice(0, 16)
-    conn.current = practice ? connectLocalPlay(game, getClientId(), name, handlers) : connectPlay(game, code!, getClientId(), name, handlers, { watch: watchOnly })
+    conn.current = practice ? connectLocalPlay(game, getClientId(), name, handlers, game === 'yahtzee' ? { players: 2 } : {}, { local: where.page === 'practice' && !!where.local }) : connectPlay(game, code!, getClientId(), name, handlers, { watch: watchOnly })
   }, [game, practice, code, watchOnly, me?.name, handlers])
   useEffect(() => { if (!conn.current && (practice || code)) open() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
@@ -69,7 +69,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
   if (!practice && !code) return <NoRoom game={game} />
   const head = (v?: PlayViewX | null) => (
     <>
-      <TableHeader title={practice ? t('plPractice') : `${t('hdRoom')} ${code}`} sub={t(ui.name)} watching={v?.watching} copied={copied} onCopy={practice ? undefined : copy} onLeave={leave}
+      <TableHeader title={practice ? (where.page === 'practice' && where.local ? t('plLocal') : t('plPractice')) : `${t('hdRoom')} ${code}`} sub={t(ui.name)} watching={v?.watching} copied={copied} onCopy={practice ? undefined : copy} onLeave={leave}
         leaveLabel={practice ? t('hdLeave') : t('rmBack')} status={status} help={ui.help} />
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
     </>

@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 // Run: npx tsx scripts/cards/room-e2e.ts   (needs wrangler dev on :8787 and vite on :5200)
 // Two browsers: one creates a room from the hub and picks a game with rules, the other joins by code and chooses to watch or play; the host starts.
-setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 170000)
+setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 900000)
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const BASE = process.env.BASE ?? 'http://localhost:5200'
 let fails = 0
@@ -20,6 +20,12 @@ for (const [game, label, rules, expectPath, readySel] of [
   ['doudizhu', 'Dou Dizhu', async () => {}, '/doudizhu', '.plseats'],
   ['xiangqi', 'Xiangqi', async () => {}, '/xiangqi', '.plseats'],
   ['chess', 'Chess', async () => {}, '/chess', '.plseats'],
+  ['hearts', 'Hearts', async () => {}, '/hearts', '.plseats'],
+  ['spades', 'Spades', async () => {}, '/spades', '.plseats'],
+  ['go', 'Go', async () => {}, '/go', '.plseats'],
+  ['checkers', 'Checkers', async () => {}, '/checkers', '.plseats'],
+  ['reversi', 'Reversi', async () => {}, '/reversi', '.plseats'],
+  ['chinesecheckers', 'Chinese Checkers', async () => {}, '/chinesecheckers', '.plseats'],
   ['yahtzee', 'Yahtzee', async () => {}, '/yahtzee', '.plseats'],
   ['liarsdice', "Liar's Dice", async () => {}, '/liarsdice', '.plseats'],
   ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.click('.rmrulecard[data-rule=riichi]'); await p.waitForSelector('.rmrulecard.on[data-rule=riichi]') }, '/mahjong', '.board, .roomtag, .seatcard, .lobby, .page'],
@@ -36,7 +42,7 @@ for (const [game, label, rules, expectPath, readySel] of [
   await sleep(500)
   ok((await host.$$eval('.rmpeople li', (e) => e.length)) === 2, `${game}: both people appear in the room`)
   ok(await guest.$('.rmgames') === null, `${game}: only the host sees the game chooser`)
-  await clickText(host, '.rmgame', label); await sleep(500)
+  await host.evaluate((t: string) => { const els = Array.from(document.querySelectorAll('.rmgame')) as HTMLElement[]; (els.find((e) => (e.textContent || '').trim() === t) ?? els.find((e) => (e.textContent || '').includes(t)))?.click() }, label); await sleep(500)
   await rules(host); await sleep(500)
   const summary = await guest.$eval('.rm', (e) => e.textContent || '')
   ok(summary.includes(label), `${game}: the guest sees the chosen game live`)

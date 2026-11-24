@@ -19,6 +19,7 @@ import '../../src/games/generic/chessStrings'
 import '../../src/games/generic/xqStrings'
 import '../../src/games/generic/ddStrings'
 import '../../src/games/generic/bridgeStrings'
+import '../../src/games/generic/moreStrings'
 
 // the converter's own table (Traditional -> Simplified) gives every Simplified character that differs from its Traditional form
 const src = readFileSync('src/simplify.ts', 'utf8')

@@ -26,7 +26,8 @@ export function connectPlay(kind: string, room: string, id: string, name: string
 }
 
 /** Practice: the same engine runs in the browser, bots in every other seat, no server and no account. */
-export function connectLocalPlay(kind: string, id: string, name: string, h: PlayHandlers, config: Record<string, unknown> = {}): PlayConn {
+export function connectLocalPlay(kind: string, id: string, name: string, h: PlayHandlers, config: Record<string, unknown> = {}, opts: { local?: boolean } = {}): PlayConn {
+  if (opts.local) return connectSameDevice(kind, h, config)
   const g = ENGINES[kind]()
   g.turnTimerMs = 0
   g.join(id, name)
@@ -38,6 +39,28 @@ export function connectLocalPlay(kind: string, id: string, name: string, h: Play
   push()
   return {
     send(m) { const e = g.message(id, m); if (e) h.onError(e) },
+    close() { g.dispose() },
+  }
+}
+
+/**
+ * Two people on one device: both seats are people. The screen always shows the table from the seat that is on turn, so "hand over the phone"
+ * is all it takes; nothing is hidden in these games. Messages that are moves go to the seat on turn, everything else to the host.
+ */
+function connectSameDevice(kind: string, h: PlayHandlers, config: Record<string, unknown>): PlayConn {
+  const g = ENGINES[kind]()
+  g.turnTimerMs = 0
+  const host = 'p1', second = 'p2'
+  g.join(host, 'Player 1'); g.join(second, 'Player 2')
+  g.setConfig(host, { ...g.config, ...config, ranked: false })
+  const viewer = () => (g.status === 'playing' && g.turn() >= 0 ? g.seats[g.turn()].id ?? host : host)
+  const push = () => h.onView({ ...g.view(viewer()), signedIn: false, watching: 0 })
+  g.onChange(push)
+  h.onStatus('open')
+  g.start(host)
+  push()
+  return {
+    send(m) { const e = g.message(m.k === 'act' ? viewer() : host, m); if (e) h.onError(e) },
     close() { g.dispose() },
   }
 }

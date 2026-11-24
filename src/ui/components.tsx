@@ -219,6 +219,7 @@ export function CodeBoxes({ id, label, onDone, autoFocus }: { id?: string; label
             else if (e.key === 'ArrowRight' && i < 3) refs.current[i + 1]?.focus()
           }}
           onPaste={(e) => { const digits = e.clipboardData.getData('text').replace(/\D/g, ''); if (digits) { e.preventDefault(); fill(0, digits) } }}
+          onPointerDown={(e) => { const at = d.findIndex((x) => !x); const to = at < 0 ? 0 : at; if (to !== i) { e.preventDefault(); refs.current[to]?.focus() } }}
           onFocus={(e) => e.target.select()} />
       ))}
     </div>

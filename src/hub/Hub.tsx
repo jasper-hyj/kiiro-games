@@ -1,6 +1,6 @@
 import { useLang } from '../i18n'
 import { useState } from 'react'
-import { newRoomUrl, practiceUrl, roomUrl, type GameKey } from '../route'
+import { LOCAL_GAMES, localUrl, newRoomUrl, practiceUrl, roomUrl, type GameKey } from '../route'
 import { AccountChip, Leaderboard } from '../account/Panels'
 import { CodeBoxes } from '../ui/components'
 import './hub.css'
@@ -16,6 +16,7 @@ import '../games/generic/chessStrings'
 import '../games/generic/xqStrings'
 import '../games/generic/ddStrings'
 import '../games/generic/bridgeStrings'
+import '../games/generic/moreStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -61,6 +62,12 @@ export const ART: Record<string, JSX.Element> = {
   xiangqi: <svg viewBox="0 0 64 48" aria-hidden><circle cx="32" cy="24" r="18" fill="#fbf6ea"/><circle cx="32" cy="24" r="14.500"/><text x="32" y="31.500" textAnchor="middle" fontSize="20" fontWeight="700" fontFamily="'LXGW WenKai TC','Songti TC','Noto Serif TC',serif" fill="#a9552f" stroke="none">帥</text></svg>,
   doudizhu: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-12 18 44)"><rect x="7" y="8" width="20" height="30" rx="4" fill="#fbf6ea"/><path d="M14 20l3-4 3 4 3-4v8H14z"/></g><g transform="rotate(0 32 44)"><rect x="22" y="5" width="20" height="32" rx="4" fill="#fbf6ea"/><path d="M27 17l5-6 5 6M32 11v10" strokeWidth="1.4"/><circle cx="32" cy="27" r="3.4"/></g><g transform="rotate(12 46 44)"><rect x="37" y="8" width="20" height="30" rx="4" fill="#fbf6ea"/><path d="M47 14v14M42 19h10" /></g></svg>,
   bridge: <svg viewBox="0 0 64 48" aria-hidden><rect x="22" y="3" width="20" height="14" rx="3" fill="#fbf6ea"/><rect x="22" y="31" width="20" height="14" rx="3" fill="#fbf6ea"/><rect x="3" y="14" width="14" height="20" rx="3" fill="#fbf6ea"/><rect x="47" y="14" width="14" height="20" rx="3" fill="#fbf6ea"/><path transform="translate(18.4 5) scale(.8)" d="M17 17.5c-3.400 3.200-5.600 4.500-5.600 7a2.600 2.600 0 0 0 4.500 1.600L15.200 30h3.600l-.7-3.900a2.600 2.600 0 0 0 4.500-1.600c0-2.500-2.200-3.800-5.600-7z" fill="#a9552f"/></svg>,
+  hearts: <svg viewBox="0 0 64 48" aria-hidden><rect x="14" y="3" width="36" height="42" rx="5" fill="#fbf6ea"/><path d="M32 36C20 28 18 22 18 18.500c0-3.300 2.600-5.500 5.500-5.500 3.200 0 6 1.800 8.500 5.200C34.500 14.800 37.300 13 40.500 13c2.900 0 5.500 2.200 5.500 5.500 0 3.500-2 9.500-14 17.500z" fill="#a9552f"/></svg>,
+  spades: <svg viewBox="0 0 64 48" aria-hidden><rect x="14" y="3" width="36" height="42" rx="5" fill="#fbf6ea"/><path d="M32 11C21 20 18 24 18 28.500c0 3.200 2.500 5.500 5.600 5.500 2.200 0 3.800-.9 5-2.600L27.600 38h8.800l-1-6.600c1.200 1.700 2.800 2.600 5 2.600 3.100 0 5.600-2.300 5.600-5.500C46 24 43 20 32 11z" fill="#a9552f"/></svg>,
+  go: <svg viewBox="0 0 64 48" aria-hidden><path d="M12 6v36M28 6v36M44 6v36M6 12h46M6 24h46M6 36h46" opacity=".4" strokeWidth="1.200"/><circle cx="28" cy="24" r="7.500" fill="#3a3025"/><circle cx="44" cy="24" r="7.500" fill="#fbf6ea"/><circle cx="28" cy="36" r="7.500" fill="#fbf6ea"/><circle cx="44" cy="12" r="7.500" fill="#3a3025"/></svg>,
+  checkers: <svg viewBox="0 0 64 48" aria-hidden><circle cx="21" cy="26" r="14" fill="#a9552f"/><circle cx="21" cy="26" r="9" stroke="#fbf6ea"/><circle cx="43" cy="22" r="14" fill="#fbf6ea"/><circle cx="43" cy="22" r="9"/><path d="M38 24l1.500-5 3.500 3 3.500-3 1.500 5z" strokeWidth="1.300"/></svg>,
+  reversi: <svg viewBox="0 0 64 48" aria-hidden><rect x="6" y="4" width="52" height="40" rx="6" fill="#fbf6ea"/><circle cx="22" cy="24" r="11" fill="#3a3025"/><circle cx="42" cy="24" r="11" fill="#fbf6ea"/><path d="M30 11c4 2 4 24 0 26" strokeWidth="1.300" opacity=".6"/></svg>,
+  chinesecheckers: <svg viewBox="0 0 64 48" aria-hidden><path d="M32 3L58 36H6zM32 45L6 12h52z" fill="#fbf6ea"/><circle cx="32" cy="12" r="2.200" fill="#a9552f"/><circle cx="28" cy="18" r="2.200" fill="#a9552f"/><circle cx="36" cy="18" r="2.200" fill="#a9552f"/><circle cx="32" cy="36" r="2.200" fill="#3a3025"/><circle cx="28" cy="30" r="2.200" fill="#3a3025"/><circle cx="36" cy="30" r="2.200" fill="#3a3025"/><circle cx="32" cy="24" r="2.200"/></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -76,6 +83,12 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'xiangqi', name: 'xiangqi', blurb: 'xiangqiBlurb', practice: practiceUrl('xiangqi') },
   { key: 'doudizhu', name: 'doudizhu', blurb: 'doudizhuBlurb', practice: practiceUrl('doudizhu') },
   { key: 'bridge', name: 'bridge', blurb: 'bridgeBlurb', practice: practiceUrl('bridge') },
+  { key: 'hearts', name: 'hearts', blurb: 'heartsBlurb', practice: practiceUrl('hearts') },
+  { key: 'spades', name: 'spades', blurb: 'spadesBlurb', practice: practiceUrl('spades') },
+  { key: 'go', name: 'go', blurb: 'goBlurb', practice: practiceUrl('go') },
+  { key: 'checkers', name: 'checkers', blurb: 'checkersBlurb', practice: practiceUrl('checkers') },
+  { key: 'reversi', name: 'reversi', blurb: 'reversiBlurb', practice: practiceUrl('reversi') },
+  { key: 'chinesecheckers', name: 'chinesecheckers', blurb: 'chinesecheckersBlurb', practice: practiceUrl('chinesecheckers') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
@@ -100,6 +113,7 @@ export function Hub() {
                 <span className="kg-acts">
                   <a className="kg-create" href={newRoomUrl(chosen.key)}>{t('hubPlayFriends')}</a>
                   {chosen.practice && <a className="kg-practice" href={chosen.practice}>{t('hubPractice')}</a>}
+                  {LOCAL_GAMES.includes(chosen.key) && <a className="kg-practice" href={localUrl(chosen.key)}>{t('hubLocal')}</a>}
                 </span>
                 <button className="kg-close" onClick={() => setPick(null)}>← {t('acAll')}</button>
               </>
