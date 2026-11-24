@@ -4,7 +4,7 @@ import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, login
 import { ensureAccount, FLOOR_CHIPS, leaderboard, MIN_BOARD_GAMES, level, seasonOf, START_CHIPS } from './economy'
 import { trimReplays } from './matches'
 
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS' }
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } })
 const bearer = (req: Request) => (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '') || null
 
@@ -23,9 +23,15 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   const path = url.pathname.slice(4)
   const token = bearer(req)
 
+  // The API, in one place (the older names in brackets still answer, for browser tabs opened before the rename):
+  //   POST /auth/register  /auth/login  /auth/google  /auth/logout        GET /config  /leaderboard?game=&season=
+  //   GET /rooms/:code (is the code free?)   [/code/:code]
+  //   GET /me   PATCH /me {name}   [POST /me/name]   PUT /me/password   [POST]   GET /me/matches   GET /matches/:id   [/match/:id]
+  //   GET /admin/overview|users|matches|ledger|audit   POST /admin/users/:id/ban|rename|grant|resetpw   [POST /admin/ban {user}...]
+  //   POST /admin/maintenance/trim   [/admin/trim]
   // is a four-digit code free to open a new room on? A table of any game on that code would clash with the room's table.
-  if (req.method === 'GET' && path.startsWith('/code/')) {
-    const code = path.slice(6).toLowerCase()
+  if (req.method === 'GET' && (path.startsWith('/rooms/') || path.startsWith('/code/'))) {
+    const code = path.slice(path.startsWith('/rooms/') ? 7 : 6).toLowerCase()
     if (!/^\d{4}$/.test(code) || !env.Main) return json({ free: false })
     try {
       const stub = await getServerByName(env.Main as never, code)
@@ -64,7 +70,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
     const acct = await ensureAccount(db, user.id)
     return json({ id: user.id, name: user.name, username: user.email.startsWith('u:') ? user.email.slice(2) : null, admin: isAdmin(env, user.email), ...acct, level: level(user.games) })
   }
-  if (req.method === 'POST' && path === '/me/password') {
+  if ((req.method === 'PUT' || req.method === 'POST') && path === '/me/password') {
     if (!user.email.startsWith('u:')) return json({ error: 'no_password' }, 400)
     if (!(await allow(db, 'pw:' + user.id, 5, 900))) return json({ error: 'slow_down' }, 429)
     const b = await body(req)
@@ -73,7 +79,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
     await setPassword(db, user.id, String(b.next), token)
     return json({ ok: true })
   }
-  if (req.method === 'POST' && path === '/me/name') {
+  if ((req.method === 'PATCH' && path === '/me') || (req.method === 'POST' && path === '/me/name')) {
     if (!(await allow(db, 'rename:' + user.id, 5, 3600))) return json({ error: 'slow_down' }, 429)
     const b = await body(req)
     const name = cleanName(String(b.name ?? ''), '')
@@ -87,8 +93,8 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
         WHERE p.user_id=? ORDER BY m.ended_at DESC LIMIT 50`).bind(user.id).all()
     return json({ matches: results })
   }
-  if (req.method === 'GET' && path.startsWith('/match/')) {
-    const id = decodeURIComponent(path.slice(7))
+  if (req.method === 'GET' && (path.startsWith('/matches/') || path.startsWith('/match/'))) {
+    const id = decodeURIComponent(path.slice(path.startsWith('/matches/') ? 9 : 7))
     const mine = await db.prepare('SELECT 1 AS x FROM match_players WHERE match_id=? AND user_id=?').bind(id, user.id).first()
     if (!mine && !isAdmin(env, user.email)) return json({ error: 'forbidden' }, 403)
     return json(await matchDetail(env, id))
@@ -171,23 +177,27 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
   }
   if (req.method === 'POST') {
     const b = await body(req)
-    const id = String(b.user ?? '')
+    // /users/:id/<action> (current) or /<action> with the user in the body (older)
+    const m = /^\/users\/([^/]+)\/(ban|rename|grant|resetpw)$/.exec(path)
+    const id = m ? decodeURIComponent(m[1]) : String(b.user ?? '')
+    const action = m ? `/${m[2]}` : path
+    if (action === '/maintenance/trim' || action === '/trim') { await trimReplays(db); return json({ ok: true }) }
     const target = await db.prepare('SELECT id,name FROM users WHERE id=?').bind(id).first<{ id: string; name: string }>()
     if (!target) return json({ error: 'no_user' }, 404)
-    if (path === '/ban') {
+    if (action === '/ban') {
       if (target.id === me.id) return json({ error: 'not_yourself' }, 400)
       const ban = b.banned === true ? 1 : 0
       await db.prepare('UPDATE users SET banned=? WHERE id=?').bind(ban, id).run()
       if (ban) await db.prepare('DELETE FROM sessions WHERE user_id=?').bind(id).run()
       return json({ ok: true })
     }
-    if (path === '/rename') {
+    if (action === '/rename') {
       const name = cleanName(String(b.name ?? ''), '')
       if (!name) return json({ error: 'bad_name' }, 400)
       await db.prepare('UPDATE users SET name=? WHERE id=?').bind(name, id).run()
       return json({ ok: true })
     }
-    if (path === '/grant') {
+    if (action === '/grant') {
       const amount = Math.trunc(Number(b.amount))
       if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100000) return json({ error: 'bad_amount' }, 400)
       const acct = await ensureAccount(db, id)
@@ -199,14 +209,13 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
       ])
       return json({ ok: true, delta })
     }
-    if (path === '/resetpw') {
+    if (action === '/resetpw') {
       // for a player who forgot their password: set a temporary one and tell them in person; this signs them out everywhere
       const pw = String(b.password ?? '')
       if (badPassword(pw)) return json({ error: 'bad_password' }, 400)
       await setPassword(db, id, pw)
       return json({ ok: true })
     }
-    if (path === '/trim') { await trimReplays(db); return json({ ok: true }) }
   }
   return json({ error: 'not_found' }, 404)
 }

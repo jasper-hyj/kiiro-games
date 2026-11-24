@@ -3,7 +3,7 @@ import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { Card } from '../holdem/ui/Cards'
 import { TalkBox } from '../shared/TalkBox'
-import { fromRoom } from '../shared/fromRoom'
+import { roomUrl } from '../../route'
 import { Kbd, ResultPanel, SeatChip, TableHeader, useHotkeys, useShownName } from '../../ui/components'
 import { beats, evalCombo, power, THREE_DIAMONDS } from './engine/combos'
 import { chooseMove } from './engine/table'
@@ -47,7 +47,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
   // never count a card that is no longer in my hand (a play just removed it)
   const sel = useMemo(() => selRaw.filter((c) => v.hand.includes(c)), [selRaw, v.hand])
 
-  const copy = async () => { try { await navigator.clipboard.writeText(`${location.origin}/room?room=${room}`); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
+  const copy = async () => { try { await navigator.clipboard.writeText(`${location.origin}${roomUrl(room)}`); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
   const watcher = v.you < 0
   const ref = Math.max(0, v.you)
   const rel = (seat: number) => (seat - ref + 4) % 4 // 0 me, 1 left, 2 top, 3 right
@@ -82,7 +82,7 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
     <>
       <Bar />
       <TableHeader title={room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`} sub={room === 'practice' ? t('btCasual') : v.config.ranked ? t('btRanked') : t('btCasual')}
-        watching={v.watching} copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'btHow', lines: ['btR1', 'btR2', 'btR3', 'btR4', 'btR5'] }} />
+        watching={v.watching} copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={room === 'practice' ? t('hdLeave') : t('rmBack')} status={status} help={{ title: 'btHow', lines: ['btR1', 'btR2', 'btR3', 'btR4', 'btR5'] }} />
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
     </>
   )

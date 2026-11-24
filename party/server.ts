@@ -49,9 +49,29 @@ export class Main extends Server<Env> {
   private envv: Env
   constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) { super(ctx, env); this.envv = env; this.store = (ctx as unknown as { storage: Main['store'] }).storage }
 
-  /** Plain HTTP to a table (used by the room code check): is this code taken by a game? */
-  onRequest(request: Request): Response {
-    if (new URL(request.url).pathname.endsWith('/status')) return Response.json({ kind: this.kind, taken: this.kind !== null })
+  /**
+   * A table prepared by its room: the room's host pressed Start, the room asked this table (over the internal route below) to
+   * expect that game with those rules and that host. Whoever joins first creates it; nobody needs to carry settings in a URL.
+   */
+  private pending: { game: Kind; cfg: Record<string, unknown>; host: string; until: number; applied: boolean } | null = null
+  private livePending() { if (this.pending && this.pending.until < Date.now()) { this.pending = null; void this.store.delete('pending') } return this.pending }
+  private occupied(): boolean { return this.kind === 'bigtwo' ? !!this.bt?.hasPlayers() : this.isCash() ? !!this.game?.hasPlayers() : this.table.slots.some((s) => s.id) }
+
+  /** Plain HTTP to a table. `status` is public (is this code taken by a game?); `__prepare` is only reachable from a room (the Worker entry refuses it from outside). */
+  async onRequest(request: Request): Promise<Response> {
+    const path = new URL(request.url).pathname
+    if (path.endsWith('/status')) return Response.json({ kind: this.kind, taken: this.kind !== null && this.occupied() })
+    if (request.method === 'POST' && path.endsWith('/__prepare')) {
+      const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string }
+      const game = (['mahjong', 'holdem', 'blackjack', 'bigtwo'] as Kind[]).find((g) => g === b.game)
+      if (!game || typeof b.host !== 'string') return Response.json({ error: 'bad_request' }, { status: 400 })
+      if (this.kind && this.occupied()) return Response.json(this.kind === game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === game ? 200 : 409 })
+      // an old table nobody is in any more: start from scratch
+      if (this.kind) { this.kind = null; this.game = null; this.bt = null; void this.store.delete('kind'); void this.store.delete('cash'); void this.store.delete('bt') }
+      this.pending = { game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3, applied: false }
+      void this.store.put('pending', this.pending)
+      return Response.json({ ok: true })
+    }
     return new Response('Not found', { status: 404 })
   }
 
@@ -74,6 +94,7 @@ export class Main extends Server<Env> {
         if (bs) { this.startBigTwo(); this.bt!.restore(bs) }
         this.btRecorded = (await this.store.get<string>('btRecorded')) ?? null
       } else if (saved) this.table.restore(saved)
+      this.pending = (await this.store.get<Main['pending']>('pending')) ?? null
       const acc = await this.store.get<[string, { userId: string; name: string }][]>('accounts')
       if (acc) this.accounts = new Map(acc)
       this.recorded = (await this.store.get<string>('recorded')) ?? null
@@ -225,16 +246,21 @@ export class Main extends Server<Env> {
       if (typeof m.id !== 'string' || !m.id || m.id.length > 64) return this.send(sender, { t: 'error', message: 'bad_id' })
       const id = m.id
       const want: Kind = m.game === 'holdem' || m.game === 'blackjack' || m.game === 'bigtwo' ? m.game : 'mahjong'
+      const pend = this.livePending()
+      if (pend && pend.game !== want) return this.send(sender, { t: 'error', message: 'wrong_game:' + pend.game })
+      let create = m.create === true
       if (!this.kind) {
-        if (m.create !== true) return this.send(sender, { t: 'error', message: 'room_not_found' })
+        if (!create && !pend) return this.send(sender, { t: 'error', message: 'room_not_found' })
         this.kind = want
         void this.store.put('kind', want)
-        if (CASH_KINDS.includes(want)) this.startCash(want, m.pcfg)
+        if (CASH_KINDS.includes(want)) this.startCash(want, pend ? (pend.cfg as { sb?: number; bb?: number; casual?: boolean }) : m.pcfg)
         if (want === 'bigtwo') this.startBigTwo()
+        create = true
       } else if (this.kind !== want) return this.send(sender, { t: 'error', message: 'wrong_game:' + this.kind })
-      if (this.isCash()) return this.joinCash(m, sender)
-      if (this.kind === 'bigtwo') return this.joinBigTwo(m, sender)
-      const verdict = this.table.admit(id, m.create === true)
+      else if (pend && !this.occupied()) create = true // two people arriving together: both may be "first"
+      if (this.isCash()) return this.joinCash(m, sender, create)
+      if (this.kind === 'bigtwo') return this.joinBigTwo(m, sender, create)
+      const verdict = this.table.admit(id, create)
       if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
       // a valid account session turns this player into a signed-in one (named after the account); anything else plays as a guest
       let name = typeof m.name === 'string' ? m.name : 'Player'
@@ -250,6 +276,7 @@ export class Main extends Server<Env> {
       const seat = m.watch === true ? -1 : this.table.join(id, name)
       if (seat < 0) { this.watchers.add(id); this.guestNames.set(id, name) } else this.watchers.delete(id)
       sender.setState({ id })
+      this.applyPending(id)
       this.broadcastViews()
       this.sendTalkLog(sender)
       return
@@ -305,9 +332,9 @@ export class Main extends Server<Env> {
     for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) c.send(JSON.stringify({ t: 'talk', msg }))
   }
   private sendTalkLog(conn: Connection) { if (this.talkLog.length) conn.send(JSON.stringify({ t: 'talklog', msgs: this.talkLog })) }
-  private async joinBigTwo(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
+  private async joinBigTwo(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>, create: boolean) {
     const b = this.bt!, id = m.id
-    const verdict = b.admit(id, m.create === true)
+    const verdict = b.admit(id, create)
     if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
     let name = typeof m.name === 'string' ? m.name : 'Player'
     if (typeof m.token === 'string' && m.token && this.envv.DB) {
@@ -322,6 +349,7 @@ export class Main extends Server<Env> {
     if (m.watch === true || b.join(id, name) < 0) this.watchers.add(id); else this.watchers.delete(id)
     sender.setState({ id })
     this.guestNames.set(id, name)
+    this.applyPending(id)
     this.broadcastViews()
     this.sendTalkLog(sender)
   }
@@ -350,9 +378,9 @@ export class Main extends Server<Env> {
     }
     if (m.k === 'lobby') { b.backToLobby(id); return }
   }
-  private async joinCash(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>) {
+  private async joinCash(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>, create: boolean) {
     const p = this.game!, id = m.id
-    const verdict = p.admit(id, m.create === true)
+    const verdict = p.admit(id, create)
     if (verdict !== 'ok') return this.send(sender, { t: 'error', message: verdict })
     if (typeof m.token === 'string' && m.token && this.envv.DB) {
       const u = await userFromToken(this.envv.DB, m.token)
@@ -366,10 +394,24 @@ export class Main extends Server<Env> {
     const name = this.accounts.get(id)?.name ?? (typeof m.name === 'string' ? m.name : 'Player')
     this.guestNames.set(id, name)
     p.join(id)
+    this.applyPending(id)
     this.sendPoker(sender, id)
     this.sendTalkLog(sender)
   }
   private guestNames = new Map<string, string>()
+  /** The room's settings go onto the table the moment someone sits at it, and the room's host becomes the table's host as soon as they arrive. */
+  private applyPending(id: string) {
+    const pend = this.livePending()
+    if (!pend || this.kind !== pend.game) return
+    if (this.kind === 'mahjong') {
+      if (!pend.applied && this.table.hostId) { this.table.setConfig(this.table.hostId, pend.cfg as never); pend.applied = true }
+      if (id === pend.host && this.table.seatOf(id) >= 0) { this.table.hostId = id; if (pend.applied) this.table.setConfig(id, pend.cfg as never); this.pending = null; void this.store.delete('pending'); return }
+    } else if (this.kind === 'bigtwo' && this.bt) {
+      if (!pend.applied && this.bt.hostId) { this.bt.setConfig(this.bt.hostId, pend.cfg as never); pend.applied = true }
+      if (id === pend.host && this.bt.seatOf(id) >= 0) { this.bt.hostId = id; this.bt.setConfig(id, pend.cfg as never); this.pending = null; void this.store.delete('pending'); return }
+    } else { this.pending = null; void this.store.delete('pending'); return } // chip tables take their settings when they are created
+    void this.store.put('pending', pend)
+  }
 
   private async cashMsg(id: string, sender: Connection<{ id?: string }>, m: PokerMsg) {
     const p = this.game!
@@ -426,6 +468,7 @@ export default {
   /** daily: drop replay logs older than 90 days (summaries stay) */
   async scheduled(_e: unknown, env: Env): Promise<void> { if (env.DB) await trimReplays(env.DB) },
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (new URL(request.url).pathname.endsWith('/__prepare')) return new Response('Not found', { status: 404 }) // only a room may prepare a table
     const api = await handleApi(request, env)
     if (api) return api
     return (await routePartykitRequest(request, env as never)) || new Response('Kiiro Games server', { status: 200 })

@@ -1,5 +1,6 @@
 import puppeteer, { type Page } from 'puppeteer-core'
-const MK = (g: string, cfg: object) => `${process.env.BASE ?? 'http://localhost:5200'}/${g}?room=${1000 + Math.floor(Math.random() * 9000)}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}` // tables are made from a room now; this opens one directly
+import { tableUrl } from '../lib/table'
+const MK = (g: string, cfg: object, room?: string) => tableUrl(g, cfg, room) // a real table, made through its room (see scripts/lib/table.ts)
 // Run: npx tsx scripts/cards/layout-audit.ts   (needs wrangler dev on :8787 and vite on :5200)
 // Walks the new screens (hub, hold'em, blackjack, big two, admin) across phone and tablet sizes and reports overflow,
 // off-screen or tiny buttons, clipped text and overlapping seats.
@@ -96,9 +97,9 @@ for (const [w, h] of SELECTED) {
   await section('room', async () => {
     // the room page: host with the game chooser and rules, a guest watching the host's choice
     const [A, B] = [await mk(w, h), await mk(w, h)]
-    await A.goto(`${BASE}/room?create=1&pick=holdem`, { waitUntil: 'networkidle0' }); await A.waitForSelector('.rmpeople')
-    const room = new URL(A.url()).searchParams.get('room')
-    await B.goto(`${BASE}/room?room=${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.rmpeople'); await sleep(700)
+    await A.goto(`${BASE}/room/new?game=holdem`, { waitUntil: 'networkidle0' }); await A.waitForSelector('.rmpeople')
+    const room = new URL(A.url()).pathname.split('/')[2]
+    await B.goto(`${BASE}/room/${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.rmpeople'); await sleep(700)
     report(`room host ${tag}`, await inspect(A)); report(`room guest ${tag}`, await inspect(B))
     await A.goto(`${BASE}/room`, { waitUntil: 'networkidle0' }); report(`room menu ${tag}`, await inspect(A))
     await closeAll(A, B)
@@ -106,7 +107,7 @@ for (const [w, h] of SELECTED) {
   await section('holdem practice', async () => {
     // offline Hold'em against bots: the table and the action bar once it is my turn
     const p = await mk(w, h)
-    await p.goto(`${BASE}/holdem?practice=1`, { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.hd-actions', { timeout: 20000 }); await sleep(500)
+    await p.goto(`${BASE}/holdem/practice`, { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.hd-actions', { timeout: 20000 }); await sleep(500)
     report(`holdem practice ${tag}`, await inspect(p))
     await closeAll(p)
   })
@@ -114,9 +115,9 @@ for (const [w, h] of SELECTED) {
     // hold'em with three players (casual): preflop with action, then after a flop
     const [A, B, C] = [await mk(w, h), await mk(w, h), await mk(w, h)]
     await A.goto(BASE + '/holdem', { waitUntil: 'networkidle0' })
-    await A.goto(MK('holdem', { sb: 25, bb: 50, casual: true })); await A.waitForSelector('.hdfelt')
-    const room = new URL(A.url()).searchParams.get('room')
-    for (const x of [B, C]) { await x.goto(`${BASE}/holdem?room=${room}`, { waitUntil: 'networkidle0' }); await x.waitForSelector('.hdfelt') }
+    await A.goto(await MK('holdem', { sb: 25, bb: 50, casual: true })); await A.waitForSelector('.hdfelt')
+    const room = new URL(A.url()).pathname.split('/')[2]
+    for (const x of [B, C]) { await x.goto(`${BASE}/holdem/${room}`, { waitUntil: 'networkidle0' }); await x.waitForSelector('.hdfelt') }
     report(`holdem not seated ${tag}`, await inspect(A))
     for (const x of [A, B, C]) { await x.click('.hdsit .hdbtn.primary'); await sleep(200) }
     await sleep(900)
@@ -131,7 +132,7 @@ for (const [w, h] of SELECTED) {
     const p = await mk(w, h)
     // blackjack solo: bet bar, play bar, result
     await p.goto(BASE + '/blackjack', { waitUntil: 'networkidle0' })
-    await p.goto(MK('blackjack', { bb: 10, casual: true })); await p.waitForSelector('.bjtable')
+    await p.goto(await MK('blackjack', { bb: 10, casual: true })); await p.waitForSelector('.bjtable')
     await p.click('.hdsit .hdbtn.primary'); await p.waitForSelector('.bjchips'); await sleep(300)
     report(`blackjack betting ${tag}`, await inspect(p))
     const chip = await p.$('.bjchip'); if (chip) { await chip.click(); await chip.click() }
@@ -146,7 +147,7 @@ for (const [w, h] of SELECTED) {
     const p = await mk(w, h)
     // big two: lobby, table, a selection
     await p.goto(BASE + '/bigtwo', { waitUntil: 'networkidle0' })
-    await p.goto(MK('bigtwo', {})); await p.waitForSelector('.btlobby')
+    await p.goto(await MK('bigtwo', {})); await p.waitForSelector('.btlobby')
     report(`bigtwo lobby ${tag}`, await inspect(p))
     await p.$eval('.hdform .hdbtn.primary', (e) => e.scrollIntoView({ block: 'center' })) // a player scrolls the page clear of the chat first
     await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard'); await sleep(1500)

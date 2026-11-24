@@ -7,7 +7,7 @@ import { RULESETS, type RuleId } from '../engine/rules'
 import type { ClientMsg } from '../net/protocol'
 import { useLang } from '../../../i18n'
 import { onlineConfigured } from '../net/client'
-import { MAHJONG_PATH } from '../../../route'
+import { roomUrl } from '../../../route'
 import { Tile } from './Tile'
 import { useAccount } from '../../../account/Account'
 
@@ -214,7 +214,7 @@ function summary(c: RoomConfig, t: (k: string) => string): string {
 
 export function RoomLobby({ view, room, send, onLeave }: { view: TableView; room: string; send: (m: ClientMsg) => void; onLeave: () => void }) {
   const { t, lang } = useLang()
-  const link = `${location.origin}${MAHJONG_PATH}?room=${room}`
+  const link = `${location.origin}${roomUrl(room)}`
   const [copied, setCopied] = useState(false)
   const humans = view.seats.filter((s) => s.human).length
   const copy = () => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }

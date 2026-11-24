@@ -1,6 +1,6 @@
 import { startSimplify, stopSimplify } from './simplify'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { isRoomPage, isAdminPage, isBigTwo, isBlackjack, isHoldem, isHub } from './route'
+import { legacyTarget, route } from './route'
 
 export type Lang = 'en' | 'zh' | 'ja'
 
@@ -37,7 +37,8 @@ const TITLES = {
   admin: ['Admin · Kiiro Games', '管理 · Kiiro 遊戲', '管理 · Kiiro 游戏', '管理 · Kiiro ゲームズ'],
 } as const
 function pageTitle(lang: string, simplified: boolean): string {
-  const page = isAdminPage() ? 'admin' : isRoomPage() ? 'room' : isHoldem() ? 'holdem' : isBlackjack() ? 'blackjack' : isBigTwo() ? 'bigtwo' : isHub() ? 'hub' : 'mahjong'
+  const r = legacyTarget() ? null : route() // an old-style address is about to be rewritten: the hub title will do
+  const page = !r ? 'hub' : r.page === 'admin' ? 'admin' : r.page === 'room' ? 'room' : r.page === 'hub' ? 'hub' : r.page === 'tiles' ? 'mahjong' : r.game
   const row = TITLES[page]
   return lang === 'zh' ? row[simplified ? 2 : 1] : lang === 'ja' ? row[3] : row[0]
 }

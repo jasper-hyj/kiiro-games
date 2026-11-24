@@ -19,7 +19,7 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
 
 { // blackjack
   const { p } = await open('/blackjack')
-  await p.goto(BASE + '/blackjack?practice=1', { waitUntil: 'domcontentloaded' }); ok(true, 'blackjack practice opens from the hub link')
+  await p.goto(BASE + '/blackjack/practice', { waitUntil: 'domcontentloaded' }); ok(true, 'blackjack practice opens from the hub link')
   await p.waitForSelector('.bjtable'); await p.waitForSelector('.bjchips'); await sleep(300)
   const chip = await p.$('.bjchip'); await chip!.click(); await chip!.click()
   await p.click('.bjbetbar .hdbtn.primary'); await sleep(1200)
@@ -35,7 +35,7 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
 }
 { // big two
   const { p } = await open('/bigtwo')
-  await p.goto(BASE + '/bigtwo?practice=1', { waitUntil: 'domcontentloaded' }); ok(true, 'big two practice opens from the hub link')
+  await p.goto(BASE + '/bigtwo/practice', { waitUntil: 'domcontentloaded' }); ok(true, 'big two practice opens from the hub link')
   await p.waitForSelector('.bthand .btcard'); await sleep(1200)
   const n = await p.$$eval('.bthand .btcard', (e) => e.length)
   ok(n === 13, 'you hold 13 cards')
@@ -47,7 +47,7 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
       const cards = await p.$$('.bthand .btcard')
       for (const c of cards) {
         await c.click(); await sleep(60)
-        const play = await p.$('.hdactions .hdbtn.primary:not(:disabled)')
+        const play = await p.$('.bt-play:not(:disabled)')
         if (play) { await play.click(); played = true; break }
         await c.click()
       }

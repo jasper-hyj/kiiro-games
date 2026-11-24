@@ -8,7 +8,7 @@ for (const [w, h, t] of [[390, 844, 'phone'], [1280, 780, 'desk']] as const) {
   const p = await (await b.createBrowserContext()).newPage()
   await p.setViewport({ width: w, height: h, hasTouch: t === 'phone', isMobile: t === 'phone' })
   await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
-  await p.goto('http://localhost:5200/holdem?practice=1', { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.hd-actions', { timeout: 20000 })
+  await p.goto('http://localhost:5200/holdem/practice', { waitUntil: 'domcontentloaded' }); await p.waitForSelector('.hd-actions', { timeout: 20000 })
   await p.click('.hd-actions .hdbtn.primary'); await sleep(5500)
   await p.screenshot({ path: `${out}/hd-practice-${t}.png` }); await p.browserContext().close()
 }

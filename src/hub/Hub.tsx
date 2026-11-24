@@ -1,6 +1,6 @@
 import { useLang } from '../i18n'
 import { useState } from 'react'
-import { BIGTWO_PATH, BLACKJACK_PATH, MAHJONG_PATH } from '../route'
+import { newRoomUrl, practiceUrl, roomUrl, type GameKey } from '../route'
 import { AccountChip, Leaderboard } from '../account/Panels'
 import './hub.css'
 import './strings'
@@ -31,7 +31,7 @@ function JoinCode() {
   const { t } = useLang()
   const [c, setC] = useState('')
   return (
-    <form className="kg-join" onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(c)) location.href = `/room?room=${c}` }}>
+    <form className="kg-join" onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(c)) location.href = roomUrl(c) }}>
       <label htmlFor="kgcode">{t('hubHaveCode')}</label>
       <div><input id="kgcode" inputMode="numeric" maxLength={4} value={c} onChange={(e) => setC(e.target.value.replace(/\D/g, ''))} placeholder="1234" /><button disabled={!/^\d{4}$/.test(c)}>{t('hubJoin')}</button></div>
     </form>
@@ -46,11 +46,11 @@ const ART: Record<string, JSX.Element> = {
   bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="17" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(-18 27 45)"/><rect x="27" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(18 37 45)"/><rect x="22" y="6" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27.5 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 2.2-1.8 3.6-4.5 6L27.5 24h9"/><path d="M32 27l3 3.5-3 3.5-3-3.5z"/></svg>,
 }
 
-const GAMES: { key: keyof typeof ART; name: string; blurb: string; practice?: string }[] = [
-  { key: 'mahjong', name: 'hubMahjong', blurb: 'hubMahjongBlurb', practice: `${MAHJONG_PATH}?solo=1` },
-  { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb', practice: '/holdem?practice=1' },
-  { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: `${BLACKJACK_PATH}?practice=1` },
-  { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: `${BIGTWO_PATH}?practice=1` },
+const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
+  { key: 'mahjong', name: 'hubMahjong', blurb: 'hubMahjongBlurb', practice: practiceUrl('mahjong') },
+  { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb', practice: practiceUrl('holdem') },
+  { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: practiceUrl('blackjack') },
+  { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: practiceUrl('bigtwo') },
 ]
 
 /** The front page: a short statement, a 2x2 grid of games, and the season board under it. Mahjong needs no sign-in. */
@@ -66,7 +66,7 @@ export function Hub() {
             <p className="kg-lead">{t('hubTagline')}</p>
           </div>
           <div className="kg-heroside">
-            <a className="kg-create" href="/room?create=1">{t('hubCreateRoom')}</a>
+            <a className="kg-create" href={newRoomUrl()}>{t('hubCreateRoom')}</a>
             <JoinCode />
           </div>
         </header>
@@ -79,7 +79,7 @@ export function Hub() {
                 <b>{t(g.name)}</b>
                 <p>{t(g.blurb)}</p>
                 <span className="kg-acts">
-                  <a className="kg-go" href={`/room?create=1&pick=${g.key}`}>{t('hubPlayFriends')} →</a>
+                  <a className="kg-go" href={newRoomUrl(g.key)}>{t('hubPlayFriends')} →</a>
                   {g.practice && <a className="kg-practice" href={g.practice}>{t('hubPractice')}</a>}
                 </span>
               </div></li>

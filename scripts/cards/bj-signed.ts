@@ -10,7 +10,7 @@ const p = await b.newPage(); await p.setViewport({ width: 390, height: 844, hasT
 p.on('pageerror', (e) => console.log('ERR', (e as Error).message))
 p.on('console', (m) => { if (m.type() === 'error') console.log('console:', m.text().slice(0, 150)) })
 await p.evaluateOnNewDocument((t: string) => { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-token', t) }, token)
-await p.goto('http://localhost:5200/room?create=1&pick=blackjack', { waitUntil: 'networkidle0' })
+await p.goto('http://localhost:5200/room/new?game=blackjack', { waitUntil: 'networkidle0' })
 await p.waitForSelector('.rmstart button', { timeout: 15000 })
 await sleep(800)
 await p.click('.rmstart button'); await sleep(5000)

@@ -1,4 +1,5 @@
 import puppeteer, { type Page } from 'puppeteer-core'
+import { tableUrl } from '../lib/table'
 // Run: npx tsx scripts/cards/playthrough.ts   (needs wrangler dev on :8787 and vite on :5200)
 // Real browsers play the card games through the UI: a whole Big Two game and a second one, Hold'em and Blackjack hands with two people,
 // and a page reload in the middle of each (the seat and the hand must come back).
@@ -7,7 +8,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const BASE = process.env.BASE ?? 'http://localhost:5200'
 let fails = 0
 const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
-const MK = (g: string, cfg: object, room = String(1000 + Math.floor(Math.random() * 9000))) => `${BASE}/${g}?room=${room}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}`
+const MK = (g: string, cfg: object, room?: string) => tableUrl(g, cfg, room) // a real table, made through its room (see scripts/lib/table.ts)
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const page = async (w = 1100, h = 800) => {
   const p = await (await b.createBrowserContext()).newPage()
@@ -37,7 +38,7 @@ async function bigTwoMove(p: Page): Promise<boolean> {
 
 { // ---- Big Two: a whole game, play again, a reload in the middle
   const p = await page()
-  await p.goto(MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.btlobby')
+  await p.goto(await MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.btlobby')
   const url = p.url()
   for (let game = 1; game <= 2; game++) {
     await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard'); await sleep(800)
@@ -73,9 +74,9 @@ async function bigTwoMove(p: Page): Promise<boolean> {
 
 { // ---- Hold'em: two browsers play hands; one reloads mid-hand
   const A = await page(), B = await page()
-  const room = String(1000 + Math.floor(Math.random() * 9000))
-  await A.goto(MK('holdem', { sb: 25, bb: 50, casual: true }, room), { waitUntil: 'networkidle0' }); await A.waitForSelector('.hdfelt')
-  await B.goto(`${BASE}/holdem?room=${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.hdfelt')
+  const A_url = await MK('holdem', { sb: 25, bb: 50, casual: true }); const room = A_url.split('/').pop()!
+  await A.goto(A_url, { waitUntil: 'networkidle0' }); await A.waitForSelector('.hdfelt')
+  await B.goto(`${BASE}/holdem/${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.hdfelt')
   for (const x of [A, B]) { await x.click('.hdsit .hdbtn.primary'); await sleep(300) }
   let hands = 0, reloaded = false
   const seen = new Set<string>()
@@ -100,9 +101,9 @@ async function bigTwoMove(p: Page): Promise<boolean> {
 
 { // ---- Blackjack: two browsers bet and stand; one reloads mid-round
   const A = await page(), B = await page()
-  const room = String(1000 + Math.floor(Math.random() * 9000))
-  await A.goto(MK('blackjack', { bb: 10, casual: true }, room), { waitUntil: 'networkidle0' }); await A.waitForSelector('.bjtable')
-  await B.goto(`${BASE}/blackjack?room=${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.bjtable')
+  const A_url = await MK('blackjack', { bb: 10, casual: true }); const room = A_url.split('/').pop()!
+  await A.goto(A_url, { waitUntil: 'networkidle0' }); await A.waitForSelector('.bjtable')
+  await B.goto(`${BASE}/blackjack/${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.bjtable')
   for (const x of [A, B]) { await x.click('.hdsit .hdbtn.primary'); await sleep(400) }
   let rounds = 0, reloaded = false
   for (let i = 0; i < 300 && rounds < 5; i++) {

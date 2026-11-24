@@ -1,4 +1,5 @@
 import puppeteer, { type Page } from 'puppeteer-core'
+import { tableUrl } from '../lib/table'
 // Run: npx tsx scripts/cards/bt-stale.ts   (local wrangler :8787 + vite :5200)
 // Regression: after my own play, the next turn starts with nothing selected, and one tap on a card that beats the trick is playable without pressing Clear.
 setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 240000)
@@ -10,8 +11,7 @@ const p: Page = await (await b.createBrowserContext()).newPage()
 await p.setViewport({ width: 1100, height: 800 })
 await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
 p.on('pageerror', (e: unknown) => { fails++; console.log('PAGEERROR', (e as Error).message) })
-const room = String(1000 + Math.floor(Math.random() * 9000))
-await p.goto(`http://localhost:5200/bigtwo?room=${room}&make=1&cfg=${encodeURIComponent('{}')}`, { waitUntil: 'networkidle0' })
+await p.goto(await tableUrl('bigtwo', {}), { waitUntil: 'networkidle0' })
 await p.waitForSelector('.hdform .hdbtn.primary'); await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard')
 const myTurn = async () => { const t0 = Date.now(); while (Date.now() - t0 < 60000) { if (await p.$('.bt-play:not([disabled]), .hdactions .hdbtn.primary')) { const r = await p.$eval('.bt-reason', (e) => e.textContent || ''); if (r) return true } await sleep(250) } return false }
 let plays = 0

@@ -1,4 +1,4 @@
-import { Server, type Connection, type WSMessage } from 'partyserver'
+import { getServerByName, Server, type Connection, type WSMessage } from 'partyserver'
 import type { Env } from './d1'
 import { userFromToken } from './auth'
 import { BLINDS } from '../src/games/holdem/engine/table'
@@ -128,6 +128,15 @@ export class Room extends Server<Env> {
       case 'launch': {
         if (id !== this.hostId) return this.err(c, 'host_only')
         if (!this.game) return this.err(c, 'pick_first')
+        // the table is made here, on the server, with these settings and this host: nobody carries them in a URL, and nobody arrives before it exists
+        if (this.envv.Main) {
+          try {
+            const stub = await getServerByName(this.envv.Main as never, this.name)
+            const r = await stub.fetch(new Request(`https://table/parties/main/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id }) }))
+            if (r.status === 409) return this.err(c, 'rmCodeClash')
+            if (!r.ok) return this.err(c, 'rmTableFailed')
+          } catch { return this.err(c, 'rmTableFailed') }
+        }
         this.launched = true; this.save(); this.pushViews()
         for (const conn of this.getConnections<{ id?: string }>()) {
           const cid = conn.state?.id; if (!cid) continue

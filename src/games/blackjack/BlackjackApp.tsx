@@ -9,7 +9,7 @@ import { connectLocalBlackjack } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '../../ui/components'
-import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import { roomUrl, route } from '../../route'
 import { NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { MIN_BETS } from './engine/table'
@@ -32,54 +32,45 @@ export default function BlackjackApp() {
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')
   const [room, setRoom] = useState<string | null>(null)
-  const [minBet, setMinBet] = useState(() => Number(load('kiiro-bj-min', '10')))
-  const [casual, setCasual] = useState(() => load('kiiro-bj-casual', '1') === '1')
-  const [code, setCode] = useState('')
   const [buyin, setBuyin] = useState(0)
   const [talk, setTalk] = useState<TalkMsg[]>([])
   const conn = useRef<CashConn<BjMsg> | null>(null)
   const startedFor = useRef<string | null>(null)
-  const retry = useRef<(() => void) | null>(null)
-  /** opened from a room: the host's table may not exist yet, so a join that finds nothing tries again for a few seconds */
-  const again = useRef<(() => void) | null>(null)
-  const tries = useRef(0)
-  const urlRoom = useMemo(() => new URLSearchParams(location.search).get('room'), [])
+  const where = route()
+  const [minBet] = useState(10) // the stake of a practice table; a room's table has the stake its host chose
 
   const handlers = useMemo(() => ({
-    onView: (v: BlackjackView) => { retry.current = null; setView(v); setError('') },
+    onView: (v: BlackjackView) => { setView(v); setError('') },
     onStatus: setStatus,
     onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
     onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
     onError: (m: string) => {
-      if (m === 'room_not_found' && fromRoom() && !makeCfg() && again.current && tries.current++ < 12) { setTimeout(() => again.current?.(), 800); return }
-      if ((m === 'code_taken' || m.startsWith('wrong_game:')) && retry.current) { retry.current(); return } // a code that another room or game already uses: pick a new one
-      if (m.startsWith('wrong_game:') && fromRoom()) { setError('rmCodeClash'); return } // from a room: never jump into another game's table
-      if (m.startsWith('wrong_game:')) { location.href = `/${m.split(':')[1]}?room=${startedFor.current}`; return }
+      if (m.startsWith('wrong_game:')) { setError('rmCodeClash'); return } // this code is another game's table: never jump into it
       setError(m)
-      if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
+      if (m === 'room_not_found') { conn.current?.close(); conn.current = null; setRoom(null); setView(null) }
       setTimeout(() => setError((e) => (e === m ? '' : e)), 5000)
     },
   }), [])
-  const open = useCallback((rm: string, create?: { bb: number; casual: boolean }) => {
+  /** the table already exists (its room made it, with its stake): just connect */
+  const open = useCallback((rm: string) => {
     conn.current?.close()
     startedFor.current = rm
     setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}${roomSuffix()}`)
-    again.current = create ? null : () => open(rm)
-    conn.current = connectCash<BlackjackView, BjMsg>('blackjack', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
+    conn.current = connectCash<BlackjackView, BjMsg>('blackjack', rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers)
   }, [name, me?.name, handlers])
   const practice = () => {
     conn.current?.close(); startedFor.current = null; setRoom('practice'); setView(null)
     conn.current = connectLocalBlackjack(getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), minBet, handlers)
   }
-  const create = () => { writeName(name); location.href = '/room?create=1&pick=blackjack' }
-  const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
-  useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) open(urlRoom, { bb: Number(mk.bb) || 10, casual: mk.casual !== false }); else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (conn.current) return
+    if (where.page === 'practice') practice()
+    else if (where.page === 'table') open(where.code)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   const first = useRef(getToken()) // the token the connection was made with
   useEffect(() => { if (getToken() === first.current) return; first.current = getToken(); if (room && room !== 'practice') open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (new URLSearchParams(location.search).get('practice') === '1' && !conn.current) practice() }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
+  const leave = () => { conn.current?.close(); const rm = startedFor.current; location.href = room === 'practice' || !rm ? '/' : roomUrl(rm) }
 
   if (!room) return <NoRoom game="blackjack" error={error} />
   return <BjTable view={view} status={status} room={room} error={error} send={(m) => conn.current?.send(m)} talk={talk} say={(x) => conn.current?.say?.(x)} room_={room} leave={leave} me={me} openSignIn={openSignIn} buyin={buyin} setBuyin={setBuyin} refreshMe={refresh} />
@@ -112,7 +103,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   const myPending = you?.pending ?? 0
   const nextS = nextAt.current ? Math.max(0, Math.ceil((nextAt.current - Date.now()) / 1000)) : null
   const secs = deadline.current ? Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)) : null
-  const link = `${location.origin}${location.pathname}?room=${room}`
+  const link = `${location.origin}${roomUrl(room)}`
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
   const toActName = v.toAct ? v.seats[v.toAct.seat].name : ''
   const room_ = v.betLimits.max
@@ -139,7 +130,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
         <Bar />
         <TableHeader title={room === 'practice' ? t('practiceTitle') : `${t('hdRoom')} ${room}`}
           sub={`${t('bjMinMax', { min: fmt(v.config.bet), max: fmt(room_ > 0 ? v.config.bet * 50 : 0) })} · ${v.config.casual ? t('hdCasual') : t('hdCash')}`}
-          copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={fromRoom() ? t('rmBack') : t('hdLeave')} status={status} help={{ title: 'bjHow', lines: ['bjR1', 'bjR2', 'bjR3', 'bjR4', 'bjR5'] }} />
+          copied={copied} onCopy={room === 'practice' ? undefined : copy} onLeave={leave} leaveLabel={room === 'practice' ? t('hdLeave') : t('rmBack')} status={status} help={{ title: 'bjHow', lines: ['bjR1', 'bjR2', 'bjR3', 'bjR4', 'bjR5'] }} />
         {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
 
         <div className="bjtable k-felt">

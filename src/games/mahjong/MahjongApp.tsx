@@ -5,7 +5,7 @@ import { nameOrGuest } from '../shared/name'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
 import type { ClientMsg } from './net/protocol'
-import { Menu, RoomLobby } from './ui/Lobby'
+import { RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
 import { AkaCtx } from './ui/Tile'
 import { useLang } from '../../i18n'
@@ -16,13 +16,13 @@ import { RulesHelp } from './ui/RulesHelp'
 import { Guide } from './ui/Guide'
 import { ConnBadge } from './ui/ConnBadge'
 import { TalkBox } from '../shared/TalkBox'
-import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
+import { backToRoom, watchOnly as isWatchOnly } from '../shared/fromRoom'
+import { route } from '../../route'
 import '../../room/strings'
 import '../holdem/strings'
 
 const load = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d } catch { return d } }
 const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
-const makeCode = () => String(Math.floor(Math.random() * 9000) + 1000) // four digits, never starts with 0
 
 export default function MahjongApp() {
   const { lang, setLang, simplified, setSimplified, t } = useLang()
@@ -33,7 +33,7 @@ export default function MahjongApp() {
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const [talk, setTalk] = useState<{ n: number; name: string; text: string }[]>([])
-  const watchOnly = new URLSearchParams(location.search).get('watch') === '1'
+  const watchOnly = isWatchOnly()
   const stress = new URLSearchParams(location.search).get('stress')
   const [view, setView] = useState<TableView | null>(() => (stress ? stressView(stress, Number(new URLSearchParams(location.search).get('players') ?? 4), new URLSearchParams(location.search).get('rule') ?? 'taiwan') : null))
   // bots are named "Bot 1…" by the engine; show them in the player's language
@@ -60,20 +60,18 @@ export default function MahjongApp() {
   useEffect(() => save('kiiro-config', config), [config])
   useEffect(() => save('kiiro-hints', hints), [hints])
 
-  const pendingCfg = useRef<RoomConfig | null>(null) // the rules picked in the menu, sent to a room the moment it is created
+  const joined = useRef<string | null>(null) // the room this table belongs to ("Back to room" goes there)
   const failTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const leave = useCallback(() => {
-    seq.current++; pendingCfg.current = null; if (failTimer.current) { clearTimeout(failTimer.current); failTimer.current = null }
+    seq.current++; if (failTimer.current) { clearTimeout(failTimer.current); failTimer.current = null }
     try { conn.current?.send({ t: 'bye' }) } catch { /* ignore */ } // a deliberate leave: a bot takes the seat straight away
     conn.current?.close(); conn.current = null
     setView(null); setRoom(null); setActive(false); setStatus('closed'); setJoinError('')
     try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
-    const back = fromRoom() ? new URLSearchParams(location.search).get('room') : null
-    history.replaceState(null, '', location.pathname)
+    const back = joined.current
     if (back) backToRoom(back); else location.href = '/'
   }, [])
 
-  const roomTries = useRef(0)
   const seq = useRef(0) // every connection gets a number; once the player leaves or starts another one, the old one can no longer touch the UI
   const guard = <H extends Handlers>(h: H, mine: number): H => ({ ...h, onView: (v: TableView) => { if (seq.current === mine) h.onView(v) }, onStatus: (st: Status) => { if (seq.current === mine) h.onStatus(st) }, onError: (m: string) => { if (seq.current === mine) h.onError(m) }, onLatency: (ms: number) => { if (seq.current === mine) h.onLatency?.(ms) } })
   const handlers = { onView: setView, onStatus: (st: Status) => { setStatus(st); if (st !== 'open') setLatency(null) }, onLatency: setLatency, onError: (m: string) => { setError(m); setJoinError(m); setTimeout(() => setError(''), 4000) } }
@@ -84,49 +82,28 @@ export default function MahjongApp() {
   }
   const tutorial = () => {
     // a guided practice game: easy bots, the coach switched on, tips that explain each moment
-    history.replaceState(null, '', '?tutorial=1')
     setActive(true)
     conn.current = connectLocal(id.current, name || 'Player', { ...config, botLevel: 'easy', rounds: 1 }, guard(handlers, ++seq.current))
   }
-  const joinRoom = useCallback((code: string, create = false, attempt = 0) => {
+  /** the table already exists (its room made it, with its rules and host): just connect */
+  const joinRoom = useCallback((code: string) => {
     const c = code.toUpperCase()
     conn.current?.close(); conn.current = null // never two connections at once
-    setView(null); setJoinError('')
-    try { localStorage.setItem('kiiro-last-room', c) } catch { /* ignore */ }
+    setView(null); setJoinError(''); setTalk([])
+    joined.current = c
     setRoom(c); setActive(true)
     const dbg = new URLSearchParams(location.search).has('debug')
-    history.replaceState(null, '', `?room=${c}${roomSuffix()}${dbg ? '&debug=1' : ''}`)
-    if (!create) pendingCfg.current = null
-    if (!create) setTalk([])
     const roomHandlers = {
       ...handlers,
       onTalk: (m: { n: number; name: string; text: string }) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
       onTalkLog: (ms: { n: number; name: string; text: string }[]) => setTalk(ms),
-      onView: (v: TableView) => {
-        if (pendingCfg.current && v.host && v.status === 'lobby') { // a freshly created room starts with the default rules: apply what the player chose
-          const { rule, rounds, aka, minFan, players, botLevel, swap, ranked } = pendingCfg.current
-          pendingCfg.current = null
-          conn.current?.send({ t: 'config', config: { rule, rounds, aka, minFan, players, botLevel, swap, ...(ranked ? { ranked } : {}) } })
-        }
-        handlers.onView(v)
-      },
       onError: (m: string) => {
-        if (m === 'room_not_found' && fromRoom() && !create && roomTries.current++ < 12) { setTimeout(() => joinRoom(c), 800); return } // opened from a room: the host's table may not exist yet
-        if (m.startsWith('wrong_game:') && fromRoom()) { handlers.onError('rmCodeClash'); return }
-        if (m.startsWith('wrong_game:')) { // this code belongs to another game in the shared room-code space
-          if (create && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return }
-          location.href = `/${m.split(':')[1]}?room=${c}`; return
-        }
-        if (create && m === 'code_taken' && attempt < 8) { conn.current?.close(); joinRoom(makeCode(), true, attempt + 1); return } // that code is already in use: pick another
-        if (m === 'room_not_found' || m === 'room_full' || m === 'code_taken') { // forget the stale room so a refresh does not try it again
-          try { localStorage.removeItem('kiiro-last-room') } catch { /* ignore */ }
-          history.replaceState(null, '', location.pathname)
-        }
+        if (m.startsWith('wrong_game:')) { handlers.onError('rmCodeClash'); return } // this code is another game's table: never jump into it
         handlers.onError(m)
       },
     }
     const mine = ++seq.current
-    conn.current = connectRemote(c, id.current, name || 'Player', guard(roomHandlers, mine), create, watchOnly)
+    conn.current = connectRemote(c, id.current, name || 'Player', guard(roomHandlers, mine), false, watchOnly)
     if (dbg) (window as unknown as { __kiiroConn?: Conn }).__kiiroConn = conn.current // test hook
     // give up with a clear message if the server never answers
     if (failTimer.current) clearTimeout(failTimer.current)
@@ -138,26 +115,15 @@ export default function MahjongApp() {
     conn.current?.send(m)
   }
 
+  const where = route()
   useEffect(() => {
-    const r = new URLSearchParams(location.search).get('room')
-    if (r && fromRoom()) { // sent here by a room: the host makes the table with the chosen rules, everyone else joins it (or watches)
-      const mk = makeCfg()
-      if (mk) pendingCfg.current = { ...config, ...(mk.rule ? { rule: mk.rule as RoomConfig['rule'] } : {}), ranked: mk.ranked === true }
-      joinRoom(r, !!mk)
-      return
-    }
-    if (r) {
-      setRoom(r.toUpperCase())
-      // page refresh inside a room: rejoin automatically (same client id => same seat)
-      try { if (localStorage.getItem('kiiro-last-room') === r.toUpperCase() && !new URLSearchParams(location.search).has('solo')) joinRoom(r) } catch { /* ignore */ }
-    }
-  }, [])
+    if (conn.current) return
+    if (where.page === 'table') joinRoom(where.code)
+    else if (where.page === 'practice') { if (where.tutorial) tutorial(); else solo() }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
-  useEffect(() => { if (new URLSearchParams(location.search).has('solo') && !conn.current) solo() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [urlGone, setUrlGone] = useState(false)
   if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('tiles')) return <TileGallery />
-  const urlRoom = !active && !urlGone && !new URLSearchParams(location.search).has('solo') ? new URLSearchParams(location.search).get('room') : null
   const playing = view?.status === 'playing' && view.game
   const aka = (view?.config.aka ?? false) && view?.config.rule === 'riichi'
 
@@ -180,24 +146,9 @@ export default function MahjongApp() {
         )}
         {room && active && view && (stress ? new URLSearchParams(location.search).has('ping') : true) && <ConnBadge status={stress ? 'open' : status} latency={stress ? 42 : latency} />}
         {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
-        {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={tutorial} />}
+        {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={() => { if (joined.current) window.open('/mahjong/tutorial', '_blank'); else tutorial() }} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
-        {!active && urlRoom && (
-          <div className="page joinpage">
-            <h1>{t('joinRoomTitle')} <span style={{ color: 'var(--accent)' }}>{urlRoom.toUpperCase()}</span></h1>
-            <p className="muted">{t('invited')}</p>
-            <form className="card joincard" onSubmit={(e) => { e.preventDefault(); joinRoom(urlRoom) }}>
-              <p className="muted">{name}</p>
-              <button className="btn gold big" type="submit">{t('joinRoom')}</button>
-              <button className="btn alt" type="button" onClick={() => { history.replaceState(null, '', location.pathname); setRoom(null); setUrlGone(true) }}>{t('backMenu')}</button>
-            </form>
-          </div>
-        )}
-        {!active && !urlRoom && (
-          <>
-            <Menu name={name} setName={setName} config={config} setConfig={setConfig} onSolo={solo} onTutorial={tutorial} onCreate={() => { save('kiiro-name', name); location.href = `/room?create=1&pick=mahjong&rule=${config.rule}` }} onJoin={joinRoom} />
-          </>
-        )}
+        {!active && <div className="page joinpage"><p className="muted">{t('connecting')}</p></div>}
         {active && !view && joinError && (
           <div className="page joinpage">
             <h1>{t('cantJoin')}</h1>

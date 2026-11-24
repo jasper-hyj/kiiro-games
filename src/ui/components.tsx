@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLang } from '../i18n'
+import { newRoomUrl, type GameKey } from '../route'
 import '../room/strings'
 
 /* ------------------------------------------------------------------ avatars */
@@ -127,7 +128,7 @@ export function NoRoom({ game, error }: { game: string; error?: string }) {
           <h1>{t('rmNoTableTitle')}</h1>
           <p className="kg-lead">{error ? t(error) : t('rmNoTableBody')}</p>
           <div className="hdrow">
-            <a className="hdbtn primary k-linkbtn" href={`/room?create=1&pick=${game}`}>{t('rmCreateBtn')}</a>
+            <a className="hdbtn primary k-linkbtn" href={newRoomUrl(game as GameKey)}>{t('rmCreateBtn')}</a>
             <a className="hdbtn k-linkbtn" href="/">{t('acHome')}</a>
           </div>
         </div>

@@ -11,6 +11,7 @@ import { TalkBox } from '../games/shared/TalkBox'
 import { TableHeader } from '../ui/components'
 import { Rules as HowTo } from '../games/shared/Rules'
 import { getClientId } from '../games/shared/cashClient'
+import { roomUrl, route } from '../route'
 import { connectRoom, gameUrl, type RoomCfg, type RoomConn, type RoomGame, type RoomView, type TalkLine } from './roomClient'
 import '../games/holdem/strings'
 import '../games/holdem/holdem.css'
@@ -36,7 +37,8 @@ export default function RoomApp() {
   const { t } = useLang()
   const { me } = useAccount()
   const q = useMemo(() => new URLSearchParams(location.search), [])
-  const urlRoom = q.get('room')
+  const where = route()
+  const urlRoom = where.page === 'room' ? where.code : null
   // a guest gets a distinct default name, kept for the games that follow
   const [name, setName] = useState(nameOrGuest)
   useEffect(() => { if (me?.name) setName(me.name) }, [me?.name])
@@ -50,7 +52,7 @@ export default function RoomApp() {
   const conn = useRef<RoomConn | null>(null)
   const retry = useRef<(() => void) | null>(null)
   const roomRef = useRef<string | null>(null)
-  const pickOnce = useRef(q.get('pick') as RoomGame | null)
+  const pickOnce = useRef<RoomGame | null>(where.page === 'room' ? where.game : null)
 
   const handlers = useMemo(() => ({
     onView: (v: RoomView) => {
@@ -63,16 +65,15 @@ export default function RoomApp() {
     onGo: (g: Parameters<typeof gameUrl>[1]) => { location.href = gameUrl(roomRef.current!, g) },
     onError: (m: string) => {
       if (m === 'code_taken' && retry.current) { retry.current(); return }
-      if (m === 'room_not_found' && !q.get('create')) { location.href = `/mahjong?room=${roomRef.current}`; return } // not a room: maybe a direct game table, whose page finds the right game
       setError(m)
-      if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname) }
+      if (m === 'room_not_found' || m === 'code_taken') { conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', roomUrl()) }
       setTimeout(() => setError((e) => (e === m ? '' : e)), 5000)
     },
   }), [q])
 
   const open = useCallback((rm: string, create = false) => {
     conn.current?.close(); roomRef.current = rm; setRoom(rm); setView(null); setTalk([])
-    history.replaceState(null, '', `${location.pathname}?room=${rm}`)
+    history.replaceState(null, '', roomUrl(rm))
     conn.current = connectRoom(rm, getClientId(), (name.trim() || me?.name || 'Player').slice(0, 16), handlers, create)
   }, [name, me?.name, handlers])
   const create = () => {
@@ -81,13 +82,13 @@ export default function RoomApp() {
       retry.current = n++ < 8 ? () => { void go() } : null
       let code = newCode()
       // skip codes a game table already uses (a room and a table on the same digits would send people into the wrong game)
-      for (let i = 0; i < 6; i++) { try { const r = await api<{ free: boolean }>('/code/' + code); if (r.free) break } catch { break } code = newCode() }
+      for (let i = 0; i < 6; i++) { try { const r = await api<{ free: boolean }>('/rooms/' + code); if (r.free) break } catch { break } code = newCode() }
       open(code, true)
     }
     void go()
   }
   const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
-  useEffect(() => { if (urlRoom && !conn.current) join(urlRoom); else if (q.get('create') === '1' && !urlRoom && !conn.current) create() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (urlRoom && !conn.current) join(urlRoom); else if (where.page === 'room' && where.fresh && !conn.current) create() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // signing in while in the room: reconnect so the room knows who you are
   const first = useRef(getToken()) // the token the connection was made with
@@ -117,7 +118,7 @@ export default function RoomApp() {
   }
   if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('rmLost') : t('rmConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
 
-  const link = `${location.origin}/room?room=${room}`
+  const link = `${location.origin}${roomUrl(room)}`
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
   const meNow = view.members.find((m) => m.me)
   const gameName = (g: RoomGame) => t(GAMES.find((x) => x.id === g)!.name)

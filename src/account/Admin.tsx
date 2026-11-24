@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
 import { useAccount } from './Account'
 import { Bar } from '../hub/Hub'
+import { route } from '../route'
 
 type Tab = 'overview' | 'users' | 'matches' | 'ledger' | 'audit'
 const ago = (ms: number) => (ms ? new Date(ms).toLocaleString() : '—')
@@ -19,7 +20,8 @@ const Shell = ({ children }: { children?: React.ReactNode }) => <div className="
 
 export default function Admin() {
   const { me, ready, available, openSignIn } = useAccount()
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTabState] = useState<Tab>(() => { const r = route(); return r.page === 'admin' && (['overview', 'users', 'matches', 'ledger', 'audit'] as string[]).includes(r.tab) ? (r.tab as Tab) : 'overview' })
+  const setTab = (t: Tab) => { setTabState(t); history.replaceState(null, '', `/admin/${t}`) } // the tab is part of the address, so a refresh or a shared link opens the same one
   const [data, setData] = useState<any>(null)
   const [q, setQ] = useState('')
   const [err, setErr] = useState('')
@@ -35,12 +37,12 @@ export default function Admin() {
     } catch (e) { if (mine !== seq.current) return; setData(null); setErr(e instanceof ApiError ? e.code : 'offline') }
   }
   useEffect(() => { if (me?.admin) void load() }, [tab, me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const act = async (path: string, body: object) => { try { await api('/admin/' + path, body); await load() } catch (e) { setErr(e instanceof ApiError ? e.code : 'offline') } }
+  const act = async (action: string, body: { user?: string; [k: string]: unknown }) => { try { await api(body.user ? `/admin/users/${encodeURIComponent(body.user)}/${action}` : `/admin/maintenance/${action}`, body); await load() } catch (e) { setErr(e instanceof ApiError ? e.code : 'offline') } }
 
   if (!available) return <Shell><h1>Admin</h1><p className="kg-note">Accounts are not configured on this site.</p></Shell>
   if (!ready) return null
   if (!me) return <Shell><h1>Admin</h1><div><button className="primary" onClick={openSignIn}>Sign in</button></div></Shell>
-  if (!me.admin) return <Shell><h1>Admin</h1><p className="kg-note">This account is not an admin.</p></Shell>
+  if (!me.admin) return <Shell><h1>Admin</h1><p className="kg-note">{`This account (${me.username ? '@' + me.username : me.name}) is not an admin. Admins are the usernames listed in the Worker's ADMIN_USERS setting (Cloudflare, not Vercel), written in lower case and separated by commas.`}</p></Shell>
 
   return (
     <Shell>
@@ -80,7 +82,7 @@ export default function Admin() {
           <h3>Negative balances</h3><Table rows={data.negativeBalances} cols={[['User', (r) => r.user_id], ['Balance', (r) => r.balance]]} />
           <h3>Games whose chips do not net to zero</h3><Table rows={data.unbalancedMatches} cols={[['Match', (r) => r.match_id], ['Net', (r) => r.net]]} />
           <h3>Pairs to review (ranked games, chips flow mostly one way)</h3><Table rows={data.suspiciousPairs} cols={[['Player A', (r) => r.a_name], ['Player B', (r) => r.b_name], ['Games together', (r) => r.n_games], ['A won', (r) => `${r.a_wins} of ${r.n_games}`], ['A net chips', (r) => r.a_net]]} />
-          <button className="ghost" onClick={() => void act('trim', { user: me.id })}>Trim replay logs older than 90 days</button>
+          <button className="ghost" onClick={() => void act('trim', {})}>Trim replay logs older than 90 days</button>
         </>
       )}
     </Shell>

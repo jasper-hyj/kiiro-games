@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer-core'
+import { tableUrl } from '../lib/table'
 // Run: npx tsx scripts/cards/bust-test.ts [outDir]   (local wrangler :8787 + vite :5200)
 // A signed-in player at a ranked Blackjack table bets everything until the chips run out: the screen must say so and offer a buy-back.
 setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 280000)
@@ -13,8 +14,7 @@ const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.
 const p = await b.newPage(); await p.setViewport({ width: 390, height: 844, hasTouch: true, isMobile: true })
 p.on('pageerror', (e) => { fails++; console.log('PAGEERROR', (e as Error).message) })
 await p.evaluateOnNewDocument((t: string) => { localStorage.setItem('kiiro-lang', 'en'); localStorage.setItem('kiiro-token', t) }, token)
-const room = String(1000 + Math.floor(Math.random() * 9000))
-await p.goto(`http://localhost:5200/blackjack?room=${room}&make=1&cfg=${encodeURIComponent(JSON.stringify({ bb: 10, casual: false }))}`, { waitUntil: 'networkidle0' })
+await p.goto(await tableUrl('blackjack', { bb: 10, casual: false }), { waitUntil: 'networkidle0' })
 await p.waitForSelector('.hdsit .hdbtn.primary'); await sleep(600)
 // the smallest buy-in: drag the slider to its minimum
 await p.$eval('.hdbuy input', (e) => { const i = e as HTMLInputElement; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!; set.call(i, i.min); i.dispatchEvent(new Event('input', { bubbles: true })) })

@@ -7,7 +7,17 @@ Small browser games for friends and clubs, free to play.
 | **Kiiro Mahjong** | `/mahjong` | playable by anyone, no sign-in: Taiwanese, Hong Kong, Japanese Riichi (4 and 3 players), Chinese Official, Sichuan; English, 繁中, 简中, 日本語 |
 | Texas Hold'em | – | planned |
 
-`/` is the hub (game picker). Old Mahjong links such as `/?room=1234` and `/?solo=1` still open the game.
+`/` is the hub (game picker). Every address is described in `src/route.ts`:
+
+| Address | Page |
+| --- | --- |
+| `/` | hub |
+| `/room`, `/room/new?game=holdem`, `/room/1234` | create or join, a new room, a room (the invite link) |
+| `/<game>/1234`, `/<game>/1234?watch=1` | that room's table (play, or only watch); game = `mahjong` `holdem` `blackjack` `bigtwo` |
+| `/<game>/practice`, `/mahjong/tutorial` | against bots in the browser |
+| `/admin`, `/admin/users` | admin (the tab is in the path) |
+
+Older addresses (`/holdem?room=1234&from=room`, `/?solo=1`, `/room?create=1&pick=bigtwo`, ...) are rewritten to these. The API is listed at the top of `party/api.ts` (REST-style; the older route names still answer).
 
 ## Mahjong in short
 - **Play** online with an invite link / 4-digit room code; empty seats are bots. Without a game server the same Play button runs a game against bots in the browser.
@@ -59,8 +69,8 @@ For local work put `ADMIN_USERS=yourname` in `.dev.vars` (gitignored). Local dat
 
 ## Rooms, observers and chat
 
-- **Rooms first:** "Create a room" on the hub opens `/room?room=1234`. The host chooses the game and its rules (Mahjong ruleset and ranked, Hold'em blinds and mode, Blackjack minimum bet and mode, Big Two casual or ranked); everyone in the room sees the choice live. Each person says whether they will play or watch. Starting sends everyone to `/<game>?room=1234&from=room`: the host's page creates the table with the chosen rules (`make=1&cfg=...`), the others join it (watchers with `watch=1`). "Back to room" returns to the room, which stays findable for 12 hours.
-- **Server:** a room is its own Durable Object (`party/room.ts`, party name `room`); game tables stay in `Main`. The two code spaces are separate, so a room and a table may share digits (the host then sees "code taken" when the table is made). A room code that is not a room falls back to a direct game table, so older links still work.
+- **Rooms first:** "Create a room" on the hub opens `/room/1234`. The host chooses the game and its rules (Mahjong ruleset and ranked, Hold'em blinds and mode, Blackjack minimum bet and mode, Big Two casual or ranked); everyone in the room sees the choice live. Each person says whether they will play or watch. When the host presses Start, the room's server prepares the table (game, rules and host) and sends everyone to `/<game>/1234` (watchers get `?watch=1`); nobody carries settings in an address. "Back to room" returns to `/room/1234`, which stays findable for 12 hours.
+- **Server:** a room is its own Durable Object (`party/room.ts`, party name `room`); game tables stay in `Main`. The two code spaces are separate, so a room and a table may share digits (the host then sees "code taken" when the table is made). If the code is already used by another game's table, Start says so and the host makes a new room. Tables are prepared through an internal route (`__prepare`) that the Worker refuses from outside.
 - **Observers:** in every game a person can watch without a seat: Hold'em and Blackjack show the table until you sit; Big Two and Mahjong let anyone join with `watch` (or when the table is full) and take a seat later. Watchers see only what the table shows publicly (never a hand), can read and write chat, and are counted ("2 watching").
 - **Chat:** one overlay in the bottom-left corner of every table and the room (`src/games/shared/TalkBox.tsx`): translucent, older lines fade, Enter focuses it, it sits above the action bar and your hand, and steps aside on screens under 400 px tall.
 

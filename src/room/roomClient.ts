@@ -1,3 +1,4 @@
+import { tableUrl } from '../route'
 import PartySocket from 'partysocket'
 import { PARTY_HOST } from '../games/mahjong/net/client'
 import { getToken } from '../account/api'
@@ -49,9 +50,7 @@ export function connectRoom(room: string, id: string, name: string, h: RoomHandl
   }
 }
 
-/** Where each person goes when the host starts: the host creates the table, others join it (or watch it). */
+/** Where each person goes when the host starts: the table already exists (the room's server made it), so everyone just opens it. */
 export function gameUrl(room: string, go: RoomGo): string {
-  const base = `/${go.game}?room=${room}&from=room`
-  if (go.role === 'host') return `${base}&make=1&cfg=${encodeURIComponent(JSON.stringify(go.cfg))}`
-  return go.role === 'watch' ? `${base}&watch=1` : base
+  return tableUrl(go.game, room, go.role === 'watch')
 }

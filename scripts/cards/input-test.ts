@@ -1,4 +1,5 @@
 import puppeteer, { type Page } from 'puppeteer-core'
+import { tableUrl } from '../lib/table'
 // Run: npx tsx scripts/cards/input-test.ts   (needs wrangler dev on :8787 and vite on :5200)
 // Can a player do what they want with a mouse, with a finger, and with the keyboard alone? Each game, real input events, real tasks.
 setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 420000)
@@ -6,7 +7,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const BASE = process.env.BASE ?? 'http://localhost:5200'
 let fails = 0
 const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
-const MK = (g: string, cfg: object, room = String(1000 + Math.floor(Math.random() * 9000))) => `${BASE}/${g}?room=${room}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}`
+const MK = (g: string, cfg: object, room?: string) => tableUrl(g, cfg, room) // a real table, made through its room (see scripts/lib/table.ts)
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const page = async (touch = false) => {
   const p = await (await b.createBrowserContext()).newPage()
@@ -24,7 +25,7 @@ const cardPoint = async (p: Page, i: number) => p.evaluate((n: number) => { cons
 // ------------------------------------------------------------------ Big Two
 for (const kind of ['mouse', 'touch'] as const) {
   const p = await page(kind === 'touch')
-  await p.goto(MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.hdform .hdbtn.primary')
+  await p.goto(await MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.hdform .hdbtn.primary')
   await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard')
   const mine = await waitMyTurn(p)
   ok(mine, `bigtwo (${kind}): my turn arrives`)
@@ -56,7 +57,7 @@ for (const kind of ['mouse', 'touch'] as const) {
 }
 { // keyboard only
   const p = await page()
-  await p.goto(MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.hdform .hdbtn.primary')
+  await p.goto(await MK('bigtwo', {}), { waitUntil: 'networkidle0' }); await p.waitForSelector('.hdform .hdbtn.primary')
   await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard')
   ok(await waitMyTurn(p), 'bigtwo (keyboard): my turn arrives')
   const n0 = await count(p, '.bthand .btcard')
@@ -80,9 +81,9 @@ for (const kind of ['mouse', 'touch'] as const) {
 // ------------------------------------------------------------------ Hold'em: call, then raise with the stepper and the keyboard
 {
   const A = await page(), B = await page(true)
-  const room = String(1000 + Math.floor(Math.random() * 9000))
-  await A.goto(MK('holdem', { sb: 25, bb: 50, casual: true }, room), { waitUntil: 'networkidle0' }); await A.waitForSelector('.hdfelt')
-  await B.goto(`${BASE}/holdem?room=${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.hdfelt')
+  const A_url = await MK('holdem', { sb: 25, bb: 50, casual: true }); const room = A_url.split('/').pop()!
+  await A.goto(A_url, { waitUntil: 'networkidle0' }); await A.waitForSelector('.hdfelt')
+  await B.goto(`${BASE}/holdem/${room}`, { waitUntil: 'networkidle0' }); await B.waitForSelector('.hdfelt')
   for (const x of [A, B]) { await x.click('.hdsit .hdbtn.primary'); await sleep(300) }
   await sleep(1200)
   const who = async () => { for (const x of [A, B]) if (await x.$('.hd-actions')) return x; return null }
@@ -107,7 +108,7 @@ for (const kind of ['mouse', 'touch'] as const) {
 // ------------------------------------------------------------------ Blackjack: chips by key and click, bet, hit/stand by key
 {
   const p = await page()
-  await p.goto(MK('blackjack', { bb: 10, casual: true }), { waitUntil: 'networkidle0' }); await p.waitForSelector('.bjtable')
+  await p.goto(await MK('blackjack', { bb: 10, casual: true }), { waitUntil: 'networkidle0' }); await p.waitForSelector('.bjtable')
   await p.click('.hdsit .hdbtn.primary'); await p.waitForSelector('.bjchips')
   await p.keyboard.press('2'); await sleep(150)
   ok((await text(p, '.bjstake')).includes('20'), 'blackjack: key 2 adds the second chip (20)')

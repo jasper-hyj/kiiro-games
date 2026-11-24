@@ -45,7 +45,7 @@ export function Profile({ onClose }: { onClose(): void }) {
   useEscape(onClose)
   useEffect(() => { api<{ matches: Hist[] }>('/me/matches').then((r) => setHist(r.matches)).catch(() => setHist([])) }, [])
   if (!me) return null
-  const save = async () => { setErr(''); setSaved(false); try { await api('/me/name', { name }); await refresh(); setSaved(true) } catch (e) { setErr(t(e instanceof ApiError ? e.code : 'offline')) } }
+  const save = async () => { setErr(''); setSaved(false); try { await api('/me', { name }, 'PATCH'); await refresh(); setSaved(true) } catch (e) { setErr(t(e instanceof ApiError ? e.code : 'offline')) } }
   return (
     <div className="acmodal" onClick={onClose}>
       <div className="acbox wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
@@ -109,7 +109,7 @@ function PasswordForm() {
   return (
     <form className="acstack" onSubmit={async (e) => {
       e.preventDefault(); setMsg(''); setDone(false)
-      try { await api('/me/password', { current: cur, next }); setDone(true); setCur(''); setNext('') } catch (x) { setMsg(t(x instanceof ApiError ? x.code : 'offline')) }
+      try { await api('/me/password', { current: cur, next }, 'PUT'); setDone(true); setCur(''); setNext('') } catch (x) { setMsg(t(x instanceof ApiError ? x.code : 'offline')) }
     }}>
       <PasswordInput autoFocus value={cur} onChange={setCur} placeholder={t('acCurrentPw')} autoComplete="current-password" />
       <PasswordInput value={next} onChange={setNext} placeholder={t('acNewPw')} autoComplete="new-password" />

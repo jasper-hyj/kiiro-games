@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core'
-const MK = (g: string, cfg: object) => `${process.env.BASE ?? 'http://localhost:5200'}/${g}?room=${1000 + Math.floor(Math.random() * 9000)}&make=1&cfg=${encodeURIComponent(JSON.stringify(cfg))}` // tables are made from a room now; this opens one directly
+import { tableUrl } from '../lib/table'
+const MK = (g: string, cfg: object, room?: string) => tableUrl(g, cfg, room) // a real table, made through its room (see scripts/lib/table.ts)
 // Run: npx tsx scripts/blackjack/ui-shots.ts <outDir>   (needs wrangler dev on :8787 and vite on :5200)
 const out = process.argv[2] || '.'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -11,7 +12,7 @@ for (const [w, h, tag] of [[1280, 760, 'desk'], [390, 780, 'phone'], [844, 390, 
   await p.evaluateOnNewDocument(() => { localStorage.setItem('kiiro-lang', 'en') })
   p.on('pageerror', (e: unknown) => { bad++; console.log(tag, 'pageerror', (e as Error).message) })
   await p.goto('http://localhost:5200/blackjack', { waitUntil: 'networkidle0' })
-  await p.goto(MK('blackjack', { bb: 10, casual: true })); await p.waitForSelector('.bjtable')
+  await p.goto(await MK('blackjack', { bb: 10, casual: true })); await p.waitForSelector('.bjtable')
   await p.click('.hdsit .hdbtn.primary'); await p.waitForSelector('.bjchips'); await sleep(400)
   await p.screenshot({ path: `${out}/bj-bet-${tag}.png` })
   const chip = await p.$('.bjchip'); if (chip) { await chip.click(); await chip.click() }

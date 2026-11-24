@@ -25,7 +25,7 @@ for (const [label, sel] of [['Texas', '.hdfelt'], ['Big Two', '.btlobby'], ['Bla
   ok(!!(await p.$(sel)), `${label}: starting from the room lands on a working table (${new URL(p.url()).pathname})`)
   await p.screenshot({ path: `${out}/live-${label.replace(' ', '')}.png` })
   await p.evaluate(() => { const el = Array.from(document.querySelectorAll('button')).find((e) => /Back to room/.test(e.textContent || '')) as HTMLElement | undefined; el?.click() }); await sleep(3000)
-  ok(new URL(p.url()).pathname === '/room', `${label}: back to room works`)
+  ok(/^\/room\/\d{4}$/.test(new URL(p.url()).pathname), `${label}: back to room works (${new URL(p.url()).pathname})`)
 }
 ok(errors.length === 0, `no page errors (${errors.slice(0, 2).join(' | ')})`)
 await b.close(); console.log(fails ? `${fails} FAILED` : 'live site ok'); process.exit(fails ? 1 : 0)
