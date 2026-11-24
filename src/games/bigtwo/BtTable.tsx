@@ -34,15 +34,18 @@ function useWidth<T extends HTMLElement>() {
 export function BtTable({ v, status, room, error, send, talk, say, leave, me, openSignIn }: Props) {
   const { t } = useLang()
   const shown = useShownName()
-  const [sel, setSel] = useState<number[]>([])
+  const [selRaw, setSel] = useState<number[]>([])
   const [copied, setCopied] = useState(false)
   const [, tick] = useState(0)
   const deadline = useRef<number | null>(null)
   useEffect(() => { const i = setInterval(() => tick((n) => n + 1), 500); return () => clearInterval(i) }, [])
   useEffect(() => { deadline.current = v.timeLeft != null ? Date.now() + v.timeLeft : null }, [v])
   // a play or a new game clears the selection
-  const key = `${v.game}:${v.last.length}:${v.status}`
+  // (any change of the trick or of my hand: two plays in a row can have the same length, so the length alone is not enough)
+  const key = `${v.game}:${v.status}:${v.hand.length}:${v.current ? v.current.cards.join(',') : '-'}`
   useEffect(() => { setSel([]) }, [key])
+  // never count a card that is no longer in my hand (a play just removed it)
+  const sel = useMemo(() => selRaw.filter((c) => v.hand.includes(c)), [selRaw, v.hand])
 
   const copy = async () => { try { await navigator.clipboard.writeText(`${location.origin}/room?room=${room}`); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
   const watcher = v.you < 0
