@@ -11,6 +11,7 @@ import '../games/generic/gomokuStrings'
 import '../games/generic/crazyStrings'
 import '../games/generic/yahtzeeStrings'
 import '../games/generic/liarsStrings'
+import '../games/generic/chessStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -53,6 +54,7 @@ export const ART: Record<string, JSX.Element> = {
   crazyeights: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-14 24 44)"><rect x="12" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M23 18l5 6-5 6-5-6z"/></g><g transform="rotate(8 40 44)"><rect x="29" y="5" width="22" height="34" rx="4" fill="#1a2240"/><circle cx="40" cy="17" r="4"/><circle cx="40" cy="28" r="5"/><path d="M34 11h0M46 33h0" strokeWidth="2.4"/></g></svg>,
   yahtzee: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-10 22 26)"><rect x="8" y="12" width="24" height="24" rx="5" fill="#1a2240"/><circle cx="15" cy="19" r="2.2" fill="#e8b66a"/><circle cx="20" cy="24" r="2.2" fill="#e8b66a"/><circle cx="25" cy="29" r="2.2" fill="#e8b66a"/></g><g transform="rotate(12 44 24)"><rect x="32" y="8" width="24" height="24" rx="5" fill="#1a2240"/><circle cx="39" cy="15" r="2.2" fill="#e8b66a"/><circle cx="49" cy="15" r="2.2" fill="#e8b66a"/><circle cx="44" cy="20" r="2.2" fill="#e8b66a"/><circle cx="39" cy="25" r="2.2" fill="#e8b66a"/><circle cx="49" cy="25" r="2.2" fill="#e8b66a"/></g></svg>,
   liarsdice: <svg viewBox="0 0 64 48" aria-hidden><path d="M14 40V26a14 14 0 0 1 28 0v14z" fill="#1a2240"/><path d="M10 40h36" strokeWidth="2.2"/><circle cx="28" cy="10" r="2.6" fill="#e8b66a"/><rect x="40" y="22" width="18" height="18" rx="4" fill="#1a2240" transform="rotate(10 49 31)"/><g transform="rotate(10 49 31)"><circle cx="44" cy="27" r="1.8" fill="#e8b66a"/><circle cx="49" cy="31" r="1.8" fill="#e8b66a"/><circle cx="54" cy="35" r="1.8" fill="#e8b66a"/></g></svg>,
+  chess: <svg viewBox="0 0 64 48" aria-hidden><path d="M20 40c0-8 4-11 8-14-4-1-7-3-7-7l5-7V8l4 3c2-2 5-2 8-1 6 2 10 9 10 29z" fill="#1a2240"/><circle cx="31" cy="17" r="1.6" fill="#e8b66a"/><path d="M17 43h32" strokeWidth="2.2"/></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -64,6 +66,7 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'crazyeights', name: 'crazyeights', blurb: 'crazyeightsBlurb', practice: practiceUrl('crazyeights') },
   { key: 'yahtzee', name: 'yahtzee', blurb: 'yahtzeeBlurb', practice: practiceUrl('yahtzee') },
   { key: 'liarsdice', name: 'liarsdice', blurb: 'liarsdiceBlurb', practice: practiceUrl('liarsdice') },
+  { key: 'chess', name: 'chess', blurb: 'chessBlurb', practice: practiceUrl('chess') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
