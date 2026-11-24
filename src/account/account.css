@@ -84,3 +84,14 @@
 :root:root .acgames button.on { background: var(--k-accent-soft); color: var(--k-accent-hi); box-shadow: inset 0 0 0 1.5px rgba(var(--k-accent-rgb),.45); }
 
 .adbadge { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--k-accent-soft); color: var(--k-accent-hi); font: 600 11px var(--sans, system-ui); letter-spacing: .04em; vertical-align: middle; }
+
+/* profile dialog on phones: stats in two columns, history as two short lines per game */
+.acbox { overflow-x: hidden; } .achead > div > h2, .achead .muted { min-width: 0; }
+@media (max-width: 520px) {
+  .acbox { padding: 20px 18px; }
+  .acstats { grid-template-columns: 1fr 1fr; } .acstats > div { padding: 10px 0; } .acstats b { font-size: 20px; overflow-wrap: anywhere; }
+  .achist li { grid-template-columns: 1fr 1fr auto; grid-template-areas: "date place chips" "rule mode mode"; row-gap: 2px; }
+  .achist li > :nth-child(1) { grid-area: date; } .achist li > :nth-child(2) { grid-area: rule; color: var(--k-mute); } .achist li > :nth-child(3) { grid-area: mode; color: var(--k-mute); text-align: right; }
+  .achist li > :nth-child(4) { grid-area: place; } .achist li > :nth-child(5) { grid-area: chips; }
+  .achist li > :nth-child(4) { text-align: left; }
+}

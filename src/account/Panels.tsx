@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLang } from '../i18n'
 import { api, ApiError, type BoardRow } from './api'
 import { fmt, PasswordInput, useAccount, useEscape } from './Account'
@@ -94,7 +95,8 @@ export function AccountChip() {
       {me
         ? <button className="kg-acct" onClick={() => setOpen(true)}><Avatar name={me.name} size={20} />{me.name}<small>{me.balance.toLocaleString()}</small></button>
         : <button className="kg-acct" onClick={openSignIn}>{t('acSignIn')}</button>}
-      {open && <Profile onClose={() => setOpen(false)} />}
+      {/* in the page body: the bar's pill blurs its backdrop, which would otherwise trap a fixed dialog inside the pill */}
+      {open && createPortal(<Profile onClose={() => setOpen(false)} />, document.body)}
     </>
   )
 }
