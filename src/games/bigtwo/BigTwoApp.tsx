@@ -3,6 +3,7 @@ import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
+import { getToken } from '../../account/api'
 import { Card } from '../holdem/ui/Cards'
 import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
@@ -74,8 +75,8 @@ export default function BigTwoApp() {
   const join = (c: string) => { retry.current = null; writeName(name); open(c.trim()) }
   useEffect(() => { if (urlRoom && !conn.current) { const mk = makeCfg(); if (mk) { ranked.current = mk.ranked === true; open(urlRoom, true) } else join(urlRoom) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
-  const first = useRef(true)
-  useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const first = useRef(getToken()) // the token the connection was made with
+  useEffect(() => { if (getToken() === first.current) return; first.current = getToken(); if (room && room !== 'practice') open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (new URLSearchParams(location.search).get('practice') === '1' && !conn.current) practice() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
   const send = (m: BtMsg) => conn.current?.send(m)

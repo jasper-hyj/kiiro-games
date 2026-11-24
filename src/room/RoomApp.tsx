@@ -3,6 +3,7 @@ import { readName, writeName } from '../games/shared/name'
 import { useLang } from '../i18n'
 import { Bar } from '../hub/Hub'
 import { useAccount } from '../account/Account'
+import { getToken } from '../account/api'
 import { api } from '../account/api'
 import { BLINDS } from '../games/holdem/engine/table'
 import { MIN_BETS } from '../games/blackjack/engine/table'
@@ -89,8 +90,8 @@ export default function RoomApp() {
   useEffect(() => { if (urlRoom && !conn.current) join(urlRoom); else if (q.get('create') === '1' && !urlRoom && !conn.current) create() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
   // signing in while in the room: reconnect so the room knows who you are
-  const first = useRef(true)
-  useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const first = useRef(getToken()) // the token the connection was made with
+  useEffect(() => { if (getToken() === first.current) return; first.current = getToken(); if (room && room !== 'practice') open(room) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const leave = () => { conn.current?.close(); conn.current = null; setRoom(null); setView(null); location.href = '/' }
   const send = (m: unknown) => conn.current?.send(m)
 

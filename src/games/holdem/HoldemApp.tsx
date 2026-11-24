@@ -3,6 +3,7 @@ import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
+import { getToken } from '../../account/api'
 import { api } from '../../account/api'
 import { BLINDS } from './engine/table'
 import { Card } from './ui/Cards'
@@ -103,8 +104,8 @@ export default function HoldemApp() {
   useEffect(() => () => conn.current?.close(), [])
   // a sign-in (or sign-out) while at the table: reconnect so the server knows who you are
   const meId = me?.id
-  const first = useRef(true)
-  useEffect(() => { if (first.current) { first.current = false; return } if (room) open(room) }, [meId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const first = useRef(getToken()) // the token the connection was made with
+  useEffect(() => { if (getToken() === first.current) return; first.current = getToken(); if (room && room !== 'practice') open(room) }, [meId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const leave = () => { if (room === 'practice') { conn.current?.close(); location.href = '/'; return } const rm = startedFor.current; if (fromRoom() && rm) { conn.current?.close(); backToRoom(rm); return } conn.current?.close(); conn.current = null; setRoom(null); setView(null); history.replaceState(null, '', location.pathname); void refresh() }
 

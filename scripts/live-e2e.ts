@@ -19,7 +19,7 @@ await p.screenshot({ path: `${out}/live-hub.png` })
 await p.click('a.kg-create'); await p.waitForSelector('.rmpeople', { timeout: 20000 }).catch(() => {})
 ok(!!(await p.$('.rmpeople')), 'Create a room opens a room and connects to the server')
 await sleep(800); await p.screenshot({ path: `${out}/live-room.png` })
-for (const [label, sel] of [['Texas', '.hdfelt'], ['Big Two', '.btlobby']] as const) {
+for (const [label, sel] of [['Texas', '.hdfelt'], ['Big Two', '.btlobby'], ['Blackjack', '.bjtable']] as const) {
   await p.evaluate((l: string) => { const el = Array.from(document.querySelectorAll('.rmgame')).find((e) => (e.textContent || '').includes(l)) as HTMLElement | undefined; el?.click() }, label); await sleep(500)
   await p.evaluate(() => { const el = document.querySelector('.rmstart button') as HTMLElement | null; el?.click() }); await sleep(4000)
   ok(!!(await p.$(sel)), `${label}: starting from the room lands on a working table (${new URL(p.url()).pathname})`)
