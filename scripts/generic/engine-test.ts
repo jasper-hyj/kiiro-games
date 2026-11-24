@@ -10,7 +10,7 @@ const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m
 for (const [kind, make] of Object.entries(ENGINES)) {
   // a whole game, played by bots for every seat, many times
   let finished = 0, bad = 0, zero = 0
-  const N = kind === 'chess' ? 2 : Number(process.env.GAMES ?? 30)
+  const N = kind === 'chess' || kind === 'xiangqi' ? 2 : Number(process.env.GAMES ?? 30)
   for (let n = 0; n < N; n++) {
     const g = make(); g.botDelayMs = 0; g.turnTimerMs = 0
     g.join('h', 'Human'); g.start('h')
