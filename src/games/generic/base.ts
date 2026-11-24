@@ -29,6 +29,8 @@ export interface PlayView {
   kind: string; config: Cfg; status: Status; you: number; host: boolean; game: number
   seats: { seat: number; name: string; bot: boolean; connected: boolean; empty: boolean; me: boolean }[]
   turn: number; timeLeft: number | null
+  /** who makes the move for the seat on turn (the same seat, except when a partner plays for it) */
+  actor: number
   state: any
   result: Outcome | null
 }
@@ -64,6 +66,8 @@ export abstract class TurnGame {
   protected abstract outcome(): Outcome | null
   protected abstract saveState(): any
   protected abstract loadState(s: any): void
+  /** the seat that makes the moves for `turnSeat` (normally itself; in Bridge the declarer plays the dummy's cards) */
+  protected controller(turnSeat: number): number { return turnSeat }
   /** a game may adjust a settings object after it was validated (e.g. rules that depend on each other) */
   protected tweak(c: Cfg): Cfg { return c }
 
@@ -135,7 +139,7 @@ export abstract class TurnGame {
       case 'sit': { if (seat >= 0) return null; if (this.join(id, 'Player') < 0) return 'room_full'; return null }
       case 'act': {
         if (this.status !== 'playing' || seat < 0) return 'not_playing'
-        if (this.turn() !== seat && !this.simultaneous()) return 'not_your_turn'
+        if (this.controller(this.turn()) !== seat && !this.simultaneous()) return 'not_your_turn'
         const err = this.act(seat, m.a)
         if (!err) { this.seats[seat].missed = 0; this.afterAct() }
         return err
@@ -180,14 +184,15 @@ export abstract class TurnGame {
     if (this.status !== 'playing') return
     const i = this.turn()
     if (i < 0) return
-    if (this.botControlled(i)) {
+    const ctrl = this.controller(i)
+    if (this.botControlled(ctrl)) {
       const tick = () => { if (this.status === 'playing' && this.turn() === i) { this.bot(i); this.afterAct() } }
       if (this.botDelayMs === 0) tick(); else this.timer = setTimeout(tick, this.botDelayMs)
       return
     }
     if (this.turnTimerMs > 0) {
       this.deadline = Date.now() + this.turnTimerMs
-      this.timer = setTimeout(() => { if (this.status === 'playing' && this.turn() === i) { this.seats[i].missed++; this.bot(i); this.afterAct() } }, this.turnTimerMs)
+      this.timer = setTimeout(() => { if (this.status === 'playing' && this.turn() === i) { this.seats[ctrl].missed++; this.bot(i); this.afterAct() } }, this.turnTimerMs)
     }
   }
   private clearTimer() { if (this.timer) clearTimeout(this.timer); this.timer = null; this.deadline = null }
@@ -199,7 +204,8 @@ export abstract class TurnGame {
       kind: this.meta.kind, config: this.config, status: this.status, you, host: this.hostId === id, game: this.gameNo,
       seats: this.seats.map((s, i) => ({ seat: i, name: s.name, bot: s.bot, connected: s.connected, empty: !s.id && !s.bot, me: i === you })),
       turn: this.status === 'playing' ? this.turn() : -1,
-      timeLeft: this.deadline && this.status === 'playing' && !this.seats[this.turn()]?.bot ? Math.max(0, this.deadline - Date.now()) : null,
+      actor: this.status === 'playing' && this.turn() >= 0 ? this.controller(this.turn()) : -1,
+      timeLeft: this.deadline && this.status === 'playing' && !this.seats[this.controller(this.turn())]?.bot ? Math.max(0, this.deadline - Date.now()) : null,
       // a copy, so a view never shares arrays with the live game (matters in practice mode, where the engine runs in the page)
       state: this.status === 'lobby' ? null : JSON.parse(JSON.stringify(this.gameView(you))),
       result: this.result ? JSON.parse(JSON.stringify(this.result)) : null,

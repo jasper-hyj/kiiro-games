@@ -78,7 +78,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
 
   const v = view
   const watcher = v.you < 0
-  const myTurn = v.status === 'playing' && v.turn === v.you
+  const myTurn = v.status === 'playing' && (v.actor ?? v.turn) === v.you
   const secs = left.current ? Math.max(0, Math.ceil((left.current - Date.now()) / 1000)) : null
   const line = v.status === 'playing' ? (myTurn ? t('plYourTurn') + (secs != null ? ` · ${secs}s` : '') : v.turn >= 0 ? t('plWaitTurn', { name: shown(v.seats[v.turn].name) }) : '') : ''
   const cfgLine = [v.config.ranked ? t('rmRanked') : t('rmCasual'), ...ui.settings(v.config, t)].join(' · ')

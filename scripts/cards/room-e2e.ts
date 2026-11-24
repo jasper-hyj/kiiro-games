@@ -16,6 +16,7 @@ for (const [game, label, rules, expectPath, readySel] of [
   ['bigtwo', 'Big Two', async () => {}, '/bigtwo', '.btlobby'],
   ['gomoku', 'Gomoku', async () => {}, '/gomoku', '.btlobby'],
   ['crazyeights', 'Crazy Eights', async () => {}, '/crazyeights', '.btlobby'],
+  ['bridge', 'Bridge', async () => {}, '/bridge', '.btlobby'],
   ['doudizhu', 'Dou Dizhu', async () => {}, '/doudizhu', '.btlobby'],
   ['xiangqi', 'Xiangqi', async () => {}, '/xiangqi', '.btlobby'],
   ['chess', 'Chess', async () => {}, '/chess', '.btlobby'],

@@ -33,6 +33,7 @@ const TITLES = {
   holdem: ["Texas Hold'em · Kiiro Games", '德州撲克 · Kiiro 遊戲', '德州扑克 · Kiiro 游戏', 'テキサスホールデム · Kiiro ゲームズ'],
   blackjack: ['Blackjack · Kiiro Games', '二十一點 · Kiiro 遊戲', '二十一点 · Kiiro 游戏', 'ブラックジャック · Kiiro ゲームズ'],
   bigtwo: ['Big Two · Kiiro Games', '大老二 · Kiiro 遊戲', '大老二 · Kiiro 游戏', '大老二 · Kiiro ゲームズ'],
+  bridge: ['Bridge · Kiiro Games', '橋牌 · Kiiro 遊戲', '桥牌 · Kiiro 游戏', 'ブリッジ · Kiiro ゲームズ'],
   doudizhu: ['Dou Dizhu · Kiiro Games', '鬥地主 · Kiiro 遊戲', '斗地主 · Kiiro 游戏', '闘地主 · Kiiro ゲームズ'],
   xiangqi: ['Xiangqi · Kiiro Games', '象棋 · Kiiro 遊戲', '象棋 · Kiiro 游戏', '象棋 · Kiiro ゲームズ'],
   chess: ['Chess · Kiiro Games', '西洋棋 · Kiiro 遊戲', '国际象棋 · Kiiro 游戏', 'チェス · Kiiro ゲームズ'],
