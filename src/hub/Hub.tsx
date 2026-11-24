@@ -89,8 +89,7 @@ export function Hub() {
     <div className="kg kg-scene">
       <Bar />
       <main className="kg-room">
-        <div className="kg-table">
-          <div className="kg-seats kg-left">{GAMES.slice(0, Math.ceil(GAMES.length / 2)).map(seat)}</div>
+        <div className="kg-table kg-hubtable">
           <div className="kg-center" aria-live="polite">
             {chosen ? (
               <>
@@ -111,7 +110,7 @@ export function Hub() {
               </>
             )}
           </div>
-          <div className="kg-seats kg-right">{GAMES.slice(Math.ceil(GAMES.length / 2)).map(seat)}</div>
+          <div className="kg-shelf">{GAMES.map(seat)}</div>
         </div>
         <p className="kg-note">{t('hubNoSignin')}</p>
         <section className="kg-board"><Leaderboard /></section>
