@@ -10,7 +10,7 @@ import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } fr
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '../../ui/components'
 import { roomUrl, route } from '../../route'
-import { NoRoom } from '../../ui/components'
+import { Connecting, NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { MIN_BETS } from './engine/table'
 import { Rules } from '../shared/Rules'
@@ -97,7 +97,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   const minBuy = view?.buyin.min ?? 0, maxBuy = view?.buyin.max ?? 0
   useEffect(() => { if (view && (buyin < minBuy || buyin > maxBuy)) setBuyin(Math.min(maxBuy, Math.max(minBuy, minB * 50))) }, [minB]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
+  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><Connecting status={status} />{error && <p className="acerr">{t(error)}</p>}</div></div>
   const v = view
   const you = v.you >= 0 ? v.seats[v.you] : null
   const myPending = you?.pending ?? 0

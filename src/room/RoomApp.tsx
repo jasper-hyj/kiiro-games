@@ -8,7 +8,7 @@ import { api } from '../account/api'
 import { BLINDS } from '../games/holdem/engine/table'
 import { MIN_BETS } from '../games/blackjack/engine/table'
 import { TalkBox } from '../games/shared/TalkBox'
-import { Avatar, CodeBoxes, TableHeader } from '../ui/components'
+import { Avatar, CodeBoxes, Connecting, TableHeader } from '../ui/components'
 import { Rules as HowTo } from '../games/shared/Rules'
 import { getClientId } from '../games/shared/cashClient'
 import { roomUrl, route } from '../route'
@@ -125,7 +125,7 @@ export default function RoomApp() {
       </div>
     )
   }
-  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('rmLost') : t('rmConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
+  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><Connecting status={status} />{error && <p className="acerr">{t(error)}</p>}</div></div>
 
   const link = `${location.origin}${roomUrl(room)}`
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }

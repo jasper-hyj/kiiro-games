@@ -9,7 +9,7 @@ import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
 import { roomUrl, route } from '../../route'
-import { NoRoom } from '../../ui/components'
+import { Connecting, NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { BtTable } from './BtTable'
 import { Rules } from '../shared/Rules'
@@ -69,6 +69,6 @@ export default function BigTwoApp() {
   const send = (m: BtMsg) => conn.current?.send(m)
 
   if (!room) return <NoRoom game="bigtwo" error={error} />
-  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
+  if (!view) return <div className="kg hd"><div className="kg-wrap"><Bar /><Connecting status={status} />{error && <p className="acerr">{t(error)}</p>}</div></div>
   return <BtTable v={view} status={status} room={room} error={error} send={send} talk={talk} say={(x) => conn.current?.say?.(x)} leave={leave} me={me} openSignIn={openSignIn} />
 }

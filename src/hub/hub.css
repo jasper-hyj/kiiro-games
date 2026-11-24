@@ -83,13 +83,13 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 .kg-bar { position: sticky; top: 0; z-index: 20; border-bottom: 0; padding: max(14px, env(safe-area-inset-top)) 20px 6px; pointer-events: none; }
 .kg-wrap > .kg-bar { margin: 0 -24px; }
 .kg-bar > * { pointer-events: auto; }
-.kg-brand, .kg-tools { background: rgba(246,240,225,.88); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: inset 0 0 0 1px var(--k-line2), 0 3px 10px rgba(70,50,25,.15); border-radius: 999px; }
+.kg-brand, .kg-tools { background: rgba(246,240,225,.88); box-shadow: inset 0 0 0 1px var(--k-line2), 0 3px 10px rgba(70,50,25,.15); border-radius: 999px; }
 .kg-brand { padding: 5px 16px 5px 6px; }
 .kg-tools { padding: 3px 12px 3px 8px; gap: 10px; }
 .kg-scene { background: var(--k-glow), var(--k-grain), radial-gradient(ellipse at 50% 120%, rgba(120,90,50,.18) 0%, transparent 60%), var(--k-bg); }
 .kg-room { width: min(1080px, 100%); margin: 0 auto; padding: 18px 20px 72px; box-sizing: border-box; }
 .kg-table { position: relative; display: grid; grid-template-columns: minmax(130px, 1fr) minmax(300px, 1.55fr) minmax(130px, 1fr); align-items: center; gap: 8px 20px; min-height: 440px; padding: 48px 44px; box-sizing: border-box; border-radius: 240px / 220px;
-  background: var(--k-grain), radial-gradient(ellipse 75% 70% at 50% 38%, #5d7071 0%, var(--k-felt) 52%, var(--k-felt2) 100%);
+  background: radial-gradient(ellipse 75% 70% at 50% 38%, #5d7071 0%, var(--k-felt) 52%, var(--k-felt2) 100%);
   box-shadow: inset 0 0 0 9px #9a7548, inset 0 0 0 10px rgba(40,25,10,.35), inset 0 18px 60px rgba(0,0,0,.22), 0 22px 44px rgba(70,50,25,.3); }
 .kg-seats { display: grid; gap: 30px; justify-items: center; }
 .kg-left > :nth-child(1) { margin-left: 34px; } .kg-left > :nth-child(2) { margin-left: -4px; }
@@ -138,3 +138,6 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
   .kg-tools .kg-acct { max-width: 26vw; }
 }
 @media (max-width: 480px) { .kg-brand { padding: 5px; } .kg-brand .kg-brandname { display: none; } }
+
+/* scrolling: the big shadowed table and the grain stay on their own painted layers so nothing re-draws (and flashes) while the page moves */
+.kg-table, .kg-room .kg-board { transform: translateZ(0); backface-visibility: hidden; }

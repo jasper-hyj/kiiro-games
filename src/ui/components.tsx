@@ -224,3 +224,21 @@ export function CodeBoxes({ id, label, onDone, autoFocus }: { id?: string; label
     </div>
   )
 }
+
+/** The waiting screen: three cards bobbing on a little felt strip, and a line that says more the longer it takes. */
+export function Connecting({ status }: { status: 'connecting' | 'open' | 'closed' }) {
+  const { t } = useLang()
+  const [secs, setSecs] = useState(0)
+  useEffect(() => { const id = setInterval(() => setSecs((s) => s + 1), 1000); return () => clearInterval(id) }, [])
+  const lost = status === 'closed'
+  const line = lost ? t('rmLost') : secs < 4 ? t('kgConn1') : secs < 12 ? t('kgConn2') : t('kgConn3')
+  return (
+    <div className="k-conn" role="status" aria-live="polite">
+      <div className={'k-connfelt' + (lost ? ' lost' : '')} aria-hidden>
+        <i className="k-conncard a" /><i className="k-conncard b" /><i className="k-conncard c" />
+      </div>
+      <p className="k-connline">{line}</p>
+      {secs >= 12 && !lost && <p className="k-connsub">{t('kgConnSub')}</p>}
+    </div>
+  )
+}

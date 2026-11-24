@@ -6,7 +6,7 @@ import { roomUrl, route } from '../../route'
 import { getClientId } from '../shared/cashClient'
 import { nameOrGuest } from '../shared/name'
 import { TalkBox } from '../shared/TalkBox'
-import { Hotkeys, NoRoom, ResultPanel, SeatChip, TableHeader, useShownName } from '../../ui/components'
+import { Connecting, Hotkeys, NoRoom, ResultPanel, SeatChip, TableHeader, useShownName } from '../../ui/components'
 import { connectLocalPlay, connectPlay, type PlayConn, type PlayViewX, type TalkMsg } from './client'
 import { GAME_UI } from './ui'
 import type { GenericGame } from './kinds'
@@ -74,7 +74,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
       {error && <p className="acerr hdbanner" role="alert">{t(error)}</p>}
     </>
   )
-  if (!view) return <div className="kg hd play"><div className="kg-wrap hdwrap">{head()}<p className="kg-lead hdstatus">{status === 'closed' ? t('rmLost') : t('rmConnecting')}</p></div></div>
+  if (!view) return <div className="kg hd play"><div className="kg-wrap hdwrap">{head()}<Connecting status={status} /></div></div>
 
   const v = view
   const watcher = v.you < 0

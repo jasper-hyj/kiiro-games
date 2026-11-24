@@ -14,7 +14,7 @@ import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Statu
 import { TalkBox } from '../shared/TalkBox'
 import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '../../ui/components'
 import { roomUrl, route } from '../../route'
-import { NoRoom } from '../../ui/components'
+import { Connecting, NoRoom } from '../../ui/components'
 import '../../room/strings'
 import type { TalkMsg } from '../shared/cashClient'
 import './strings'
@@ -128,7 +128,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
   useEffect(() => { if (view && (buyin < minBuy || buyin > maxBuy)) setBuyin(Math.min(maxBuy, Math.max(minBuy, view.config.bb * 50))) }, [view?.config.bb]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!view) return (
-    <div className="kg hd"><div className="kg-wrap"><Bar /><p className="kg-lead hdstatus">{status === 'closed' ? t('hdLost') : t('hdConnecting')}</p>{error && <p className="acerr">{t(error)}</p>}</div></div>
+    <div className="kg hd"><div className="kg-wrap"><Bar /><Connecting status={status} />{error && <p className="acerr">{t(error)}</p>}</div></div>
   )
   const v = view
   const youSeat = v.you >= 0 ? v.seats[v.you] : null

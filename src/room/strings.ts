@@ -26,7 +26,8 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
   kgBustBody: ['Buy back in from your account ({n} chips available), or leave the table.', '可從帳戶補碼（可用 {n}），或離開牌桌。'],
   kgBustBuy: ['Buy back in for {n}', '補碼 {n}'], kgBustLeave: ['Leave table', '離開牌桌'],
   kgBustNone: ['Your account has no chips to buy back in. You get a small top-up once a day, and casual tables are always free to play.', '你的帳戶沒有可補的籌碼。每天會補發少量籌碼，休閒桌可隨時免費遊玩。'],
-  rmConnecting: ['Connecting…', '連線中…'], rmLost: ['Connection lost. Reconnecting…', '連線中斷，重新連線中…'],
+  kgConn1: ['Setting the table', '正在擺桌子'], kgConn2: ['Still finding the table, hang on', '還在找牌桌，請稍等'], kgConn3: ['This is taking longer than usual', '比平常久一些'], kgConnSub: ['Check your connection. The page keeps trying and will join on its own.', '請檢查網路連線。頁面會持續嘗試，連上後會自動加入。'],
+  rmConnecting: ['Connecting…', '連線中…'], rmLost: ['Connection lost. Reconnecting', '連線中斷，重新連線中'],
   rmOr: ['Have a direct table code? Joining it works here too.', '有牌桌代碼嗎？也可以在這裡輸入加入。'],
 }
 registerStrings(ROOM_STRINGS)
@@ -56,6 +57,7 @@ registerStrings({}, {
   kgBustTitle: 'チップがなくなりました', kgBustBody: 'アカウントから買い足せます（利用可能 {n}）。またはテーブルを離れます。',
   kgBustBuy: '{n} 買い足す', kgBustLeave: 'テーブルを離れる',
   kgBustNone: 'アカウントに買い足せるチップがありません。1日1回少額が補充され、カジュアルテーブルはいつでも無料で遊べます。',
-  rmConnecting: '接続中…', rmLost: '接続が切れました。再接続中…',
+  kgConn1: 'テーブルを用意しています', kgConn2: 'まだテーブルを探しています。少しお待ちください', kgConn3: 'いつもより時間がかかっています', kgConnSub: '通信環境をご確認ください。ページは接続を試し続け、つながると自動で参加します。',
+  rmConnecting: '接続中…', rmLost: '接続が切れました。再接続中',
   rmOr: 'テーブルのコードをお持ちですか？ここから参加もできます。',
 })

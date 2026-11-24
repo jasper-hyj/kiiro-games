@@ -9,6 +9,7 @@ import type { ClientMsg } from './net/protocol'
 import { RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
 import { AkaCtx } from './ui/Tile'
+import { Connecting } from '../../ui/components'
 import { useLang } from '../../i18n'
 import './strings'
 import { TileGallery } from './ui/TileGallery'
@@ -152,7 +153,7 @@ export default function MahjongApp() {
         {rulesOpen && <RulesHelp initial={config.rule} onClose={() => setRulesOpen(false)} />}
         {guideOpen && <Guide onClose={() => setGuideOpen(false)} onPractice={() => { if (joined.current) window.open('/mahjong/tutorial', '_blank'); else tutorial() }} />}
         {error && !(active && !view) && <div className="toast">{t(error) !== error ? t(error) : error}</div>}
-        {!active && <div className="page joinpage"><p className="muted">{t('connecting')}</p></div>}
+        {!active && <div className="page joinpage"><Connecting status="connecting" /></div>}
         {active && !view && joinError && (
           <div className="page joinpage">
             <h1>{t('cantJoin')}</h1>
@@ -160,7 +161,7 @@ export default function MahjongApp() {
             <button className="btn gold big" onClick={leave}>{t('backMenu')}</button>
           </div>
         )}
-        {active && !view && !joinError && <div className="page joinpage"><p className="muted">{status === 'closed' ? t('connLost') : t('connecting')}</p><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
+        {active && !view && !joinError && <div className="page joinpage"><Connecting status={status} /><button className="btn alt" onClick={leave}>{t('leave')}</button></div>}
         {active && shown && room && shown.you < 0 && (
           <div className="mjwatch" role="status">{t('mjWatching')}{shown.watching ? ` · ${t('mjWatchers', { n: shown.watching })}` : ''}<button className="btn gold" onClick={() => send({ t: 'sit' })}>{t('mjSit')}</button></div>
         )}
