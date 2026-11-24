@@ -88,6 +88,8 @@ export function chooseDiscard(g: Game, seat: number, ids: number[], level: BotLe
     counts[i.k]++
     let score = u * 100 - keepValue(g, seat, i.k, counts, doraSet) * 10 - (hard && redIds.has(i.k) ? 300 : 0)
     if (threats.length) score -= danger(g, i.k, threats, vis, hard) * (fold ? 1000 : 25)
+    // a little human wobble among near-equal discards (hard bots wobble least)
+    if (!fold) score += (Math.random() - 0.5) * (hard ? 40 : level === 'easy' ? 400 : 150)
     return { ...i, score }
   })
   scored.sort((a, b) => b.score - a.score)
@@ -224,6 +226,9 @@ export function botReact(g: Game, seat: number, level: BotLevel = 'normal'): Dec
   }
   if (r.pon) consider({ type: 'pon' }, p.hand.filter((i) => kindOf(i) === k).slice(0, 2))
   for (const c of r.chi) consider({ type: 'chi', use: c }, [...c])
+  // people sometimes let a modest call go to keep the hand closed
+  if (best && level !== 'hard' && !(best as { sh: number }).sh && Math.random() < 0.15) return { type: 'pass' }
+  if (best && Math.random() < (level === 'hard' ? 0.05 : 0.12)) return { type: 'pass' }
   return best ? (best as { d: Decision }).d : { type: 'pass' }
 }
 
