@@ -103,15 +103,13 @@ export default function RoomApp() {
           <h1>{t('rmTitle')}</h1>
           <p className="kg-lead">{t('rmTagline')}</p>
           {error && <p className="acerr" role="alert">{t(error)}</p>}
-          <div className="kg-cols">
-            <section className="hdform"><h2>{t('rmCreate')}</h2><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button></div></section>
-            <section className="hdform"><h2>{t('rmJoin')}</h2>
-              <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
-                <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder={t('hdCode')} aria-label={t('hdCode')} />
-                <button className="hdbtn primary" disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button>
-              </form>
-              <p className="kg-note">{t('rmOr')}</p>
-            </section>
+          <div className="hdform rmentry">
+            <button className="hdbtn primary rmbig" onClick={create}>{t('rmCreateBtn')}</button>
+            <p className="kg-note rmsep">{t('rmJoin')}</p>
+            <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="hdrow">
+              <input inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="1234" aria-label={t('hdCode')} />
+              <button className="hdbtn primary" disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button>
+            </form>
           </div>
         </div>
       </div>

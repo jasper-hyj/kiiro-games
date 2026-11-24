@@ -17,3 +17,8 @@
 .rm .rmpicked { margin: 0 0 4px; font-size: 20px; font-family: var(--serif); }
 .rm .rmrunning { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line, rgba(243,236,221,.1)); }
 .rm .rmrename { display: grid; gap: 6px; max-width: 360px; margin-bottom: 12px; color: var(--mute, var(--k-mute)); font-size: 13px; }
+
+/* the landing: one big Create button, then a code box */
+.rmentry { max-width: 420px; gap: 12px; }
+:root:root .rmentry .rmbig { min-height: 52px; font-size: 17px; justify-content: center; }
+.rmsep { margin: 6px 0 0; }
