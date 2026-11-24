@@ -1,5 +1,6 @@
 import { AccountChip } from '../../account/Panels'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAccount } from '../../account/Account'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
 import type { ClientMsg } from './net/protocol'
@@ -26,6 +27,7 @@ export default function MahjongApp() {
   const { lang, setLang, simplified, setSimplified, t } = useLang()
   const [rulesOpen, setRulesOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
+  const { me } = useAccount()
   const [name, setName] = useState(() => load('kiiro-name', 'Player'))
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
@@ -53,6 +55,7 @@ export default function MahjongApp() {
   const id = useRef(getClientId())
 
   useEffect(() => save('kiiro-name', name), [name])
+  useEffect(() => { if (me?.name) setName(me.name) }, [me?.name]) // a signed-in player is never asked for a name
   useEffect(() => save('kiiro-config', config), [config])
   useEffect(() => save('kiiro-hints', hints), [hints])
 
@@ -183,8 +186,9 @@ export default function MahjongApp() {
             <h1>{t('joinRoomTitle')} <span style={{ color: 'var(--accent)' }}>{urlRoom.toUpperCase()}</span></h1>
             <p className="muted">{t('invited')}</p>
             <form className="card joincard" onSubmit={(e) => { e.preventDefault(); joinRoom(urlRoom) }}>
+              {me ? <p className="muted">{me.name}</p> : <>
               <label className="muted" htmlFor="nick">{t('nickname')}</label>
-              <input id="nick" type="text" autoFocus value={name === 'Player' ? '' : name} placeholder={t('yourName')} maxLength={16} onChange={(e) => setName(e.target.value || 'Player')} />
+              <input id="nick" type="text" autoFocus value={name === 'Player' ? '' : name} placeholder={t('yourName')} maxLength={16} onChange={(e) => setName(e.target.value || 'Player')} /></>}
               <button className="btn gold big" type="submit">{t('joinRoom')}</button>
               <button className="btn alt" type="button" onClick={() => { history.replaceState(null, '', location.pathname); setRoom(null); setUrlGone(true) }}>{t('backMenu')}</button>
             </form>

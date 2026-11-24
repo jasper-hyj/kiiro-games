@@ -43,7 +43,7 @@ const ART: Record<string, JSX.Element> = {
   mahjong: <svg viewBox="0 0 64 48" aria-hidden><rect x="6" y="8" width="22" height="32" rx="4"/><rect x="36" y="8" width="22" height="32" rx="4"/><circle cx="17" cy="24" r="5"/><path d="M47 16v16M41 24h12"/></svg>,
   holdem: <svg viewBox="0 0 64 48" aria-hidden><rect x="8" y="8" width="22" height="32" rx="4" transform="rotate(-8 19 24)"/><rect x="34" y="8" width="22" height="32" rx="4" transform="rotate(8 45 24)"/><path d="M45 18c-3 4-6 5-6 8a3 3 0 0 0 5 2l-1 4h4l-1-4a3 3 0 0 0 5-2c0-3-3-4-6-8z"/></svg>,
   blackjack: <svg viewBox="0 0 64 48" aria-hidden><rect x="8" y="8" width="22" height="32" rx="4"/><rect x="26" y="8" width="22" height="32" rx="4" transform="translate(8 0)"/><path d="M14 18h6M14 22h4M43 30h6M45 26h4"/></svg>,
-  bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="5" y="10" width="20" height="30" rx="4"/><rect x="15" y="8" width="20" height="30" rx="4"/><rect x="25" y="6" width="20" height="30" rx="4"/><rect x="35" y="8" width="20" height="30" rx="4"/><path d="M41 16h8l-8 14h8"/></svg>,
+  bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="17" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(-18 27 45)"/><rect x="27" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(18 37 45)"/><rect x="22" y="6" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27.5 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 2.2-1.8 3.6-4.5 6L27.5 24h9"/><path d="M32 27l3 3.5-3 3.5-3-3.5z"/></svg>,
 }
 
 const GAMES: { key: keyof typeof ART; name: string; blurb: string; practice?: string }[] = [

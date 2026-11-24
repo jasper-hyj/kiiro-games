@@ -106,6 +106,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
   onSolo: () => void; onTutorial: () => void; onCreate: () => void; onJoin: (code: string) => void
 }) {
   const { t } = useLang()
+  const { me } = useAccount()
   const [step, setStep] = useState<Step>('start')
   const [mode, setMode] = useState<Mode>('play')
   const [code, setCode] = useState('')
@@ -113,7 +114,7 @@ export function Menu({ name, setName, config, setConfig, onSolo, onTutorial, onC
   const seq = FLOW[mode]
   const idx = seq.indexOf(step)
   const go = (m: Mode) => { setMode(m); setStep(FLOW[m][0]) }
-  const next = () => { if (idx >= 0 && idx < seq.length - 1) setStep(seq[idx + 1]) }
+  const next = () => { if (idx >= 0 && idx < seq.length - 1) { if (me && seq[idx + 1] === 'name') finish(); else setStep(seq[idx + 1]) } }
   const back = () => setStep(idx > 0 ? seq[idx - 1] : 'start')
   // one Play button: an online room whose empty seats are bots (a room with nobody else is just a game against bots); without a server it runs in the browser
   const finish = () => (mode === 'play' ? (onlineConfigured ? onCreate() : onSolo()) : onJoin(code))

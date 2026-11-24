@@ -38,6 +38,7 @@ export default function RoomApp() {
   const urlRoom = q.get('room')
   // a guest gets a distinct default name, kept for the games that follow
   const [name, setName] = useState(() => { const s = readName(''); if (s) return s; const g = 'Guest ' + (100 + Math.floor(Math.random() * 900)); writeName(g); return g })
+  useEffect(() => { if (me?.name) setName(me.name) }, [me?.name])
   const [room, setRoom] = useState<string | null>(null)
   const [view, setView] = useState<RoomView | null>(null)
   const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>('closed')
@@ -101,7 +102,7 @@ export default function RoomApp() {
           <h1>{t('rmTitle')}</h1>
           <p className="kg-lead">{t('rmTagline')}</p>
           {error && <p className="acerr" role="alert">{t(error)}</p>}
-          <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder={me?.name ?? 'Player'} /></label></div>
+          {!me && <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder="Player" /></label></div>}
           <div className="kg-cols">
             <section className="hdform"><h2>{t('rmCreate')}</h2><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button></div></section>
             <section className="hdform"><h2>{t('rmJoin')}</h2>
