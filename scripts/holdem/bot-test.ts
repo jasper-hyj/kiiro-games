@@ -1,6 +1,6 @@
 // Run: npx tsx scripts/holdem/bot-test.ts   Four practice bots play many hands at a casual table: no illegal action, chips conserved, sensible behaviour.
 import { PokerTable } from '../../src/games/holdem/engine/table'
-import { botDecision, preflopStrength } from '../../src/games/holdem/engine/bot'
+import { botDecision, madeStrength, personaFor, preflopStrength } from '../../src/games/holdem/engine/bot'
 
 let fails = 0
 const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
@@ -21,7 +21,8 @@ const ids = ['b1', 'b2', 'b3', 'b4']
 const seatOf: Record<string, number> = {}
 for (const id of ids) { t.join(id); const r = t.sit(id, id, t.casualStack); if (r.ok) seatOf[id] = r.seat }
 const counts = { fold: 0, check: 0, call: 0, raise: 0, allin: 0 }
-let illegal = 0, hands = 0, acts = 0
+let illegal = 0, hands = 0, acts = 0, bluffs = 0, traps = 0, heroCalls = 0, postflop = 0
+const perBot: Record<string, { raise: number; n: number }> = Object.fromEntries(ids.map((i) => [i, { raise: 0, n: 0 }]))
 const wins: Record<string, number> = { b1: 0, b2: 0, b3: 0, b4: 0 }
 const total0 = ids.length * t.casualStack
 let badSums = 0
@@ -31,7 +32,15 @@ const step = () => {
   const id = t.seats[t.toAct].id!
   const v = t.view(id)
   if (!v.turn) return
-  const a = botDecision(v)
+  const a = botDecision(v, Math.random, personaFor(id))
+  const me = v.seats[v.you]
+  if (v.street !== 'preflop' && me.hole) {
+    const ms = madeStrength(me.hole, v.board); postflop++
+    if ((a.a === 'raise' || a.a === 'allin') && ms < 0.3) bluffs++
+    if (a.a === 'check' && ms > 0.78) traps++
+    if (a.a === 'call' && ms < 0.3 && v.turn!.call > 0) heroCalls++
+  }
+  perBot[id].n++; if (a.a === 'raise' || a.a === 'allin') perBot[id].raise++
   const err = t.act(id, a)
   acts++
   if (err) { illegal++; if (illegal < 4) console.log('illegal', id, JSON.stringify(a), err, JSON.stringify(v.turn)) }
@@ -60,6 +69,13 @@ console.log('action mix:', mix)
 ok(counts.fold > acts * 0.08 && counts.fold < acts * 0.65, 'they fold sometimes but not always')
 ok(counts.raise + counts.allin > acts * 0.03, 'they bet and raise')
 ok(counts.call + counts.check > acts * 0.25, 'they call and check a fair amount')
+const rates = Object.values(perBot).map((x) => x.raise / Math.max(1, x.n))
+console.log('raise rate per bot:', rates.map((x) => Math.round(x * 100) + '%').join(', '), '| personas:', ids.map((i) => personaFor(i).name).join(', '))
+ok(bluffs > 0 && bluffs < postflop * 0.12, `they bluff now and then (${bluffs} bluffs in ${postflop} post-flop decisions)`)
+ok(traps > 0, `they slow-play strong hands sometimes (${traps} checks with a monster)`)
+ok(heroCalls > 0, `they sometimes call out of curiosity (${heroCalls})`)
+ok(Math.max(...rates) - Math.min(...rates) > 0.03, 'the bots have different styles (their raise rates differ)')
+ok(new Set(ids.map((i) => personaFor(i).name)).size >= 2, 'the personalities differ between seats')
 const winRates = Object.values(wins).map((w) => w / Math.max(1, hands))
 ok(Math.max(...winRates) < 0.45 && Math.min(...winRates) > 0.1, `no seat dominates (${winRates.map((x) => Math.round(x * 100) + '%').join(', ')})`)
 void seatOf

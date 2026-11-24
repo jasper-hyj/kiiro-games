@@ -1,7 +1,7 @@
 import { BlackjackTable } from '../blackjack/engine/table'
 import { BigTwoTable } from '../bigtwo/engine/table'
 import { PokerTable } from '../holdem/engine/table'
-import { botDecision } from '../holdem/engine/bot'
+import { botDecision, personaFor } from '../holdem/engine/bot'
 import type { HoldemView } from '../holdem/net/client'
 import type { PokerMsg } from '../holdem/net/protocol'
 import type { BjMsg, BlackjackView } from '../blackjack/net/protocol'
@@ -56,14 +56,19 @@ export function connectLocalHoldem(id: string, name: string, h: CashHandlers<Hol
     const key = `${t.handNo}:${t.street}:${t.toAct}`
     if (key === planned) return // already thinking about this decision
     planned = key
+    // decide now (nothing changes while it is this bot's turn), then think for as long as a person would: quick folds and checks, a longer tank before a big raise
+    const first = t.view(botId)
+    if (!first.turn) return
+    const plan = botDecision(first, Math.random, personaFor(botId))
+    const think = plan.a === 'fold' || plan.a === 'check' ? 650 + Math.random() * 800 : plan.a === 'call' ? 900 + Math.random() * 900 : 1300 + Math.random() * 1900
     const timer = setTimeout(() => {
       timers.delete(timer)
       if (t.seats[t.toAct]?.id !== botId) return
       const v = t.view(botId)
       if (!v.turn) return
-      const err = t.act(botId, botDecision(v))
+      const err = t.act(botId, plan)
       if (err) t.act(botId, v.turn.canCheck ? { a: 'check' } : { a: 'fold' }) // never get stuck on a rejected move
-    }, 900 + Math.random() * 900)
+    }, think)
     timers.add(timer)
   }
   t.onChange(() => { push(); botTurn() })
