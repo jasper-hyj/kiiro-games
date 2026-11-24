@@ -4,7 +4,7 @@ export const HOLDEM_STRINGS: Record<string, [string, string]> = {
   hdName: ["Texas Hold'em", '德州撲克'], hdTagline: ['Friendly tables with play chips. No bots, no cash value.', '使用遊戲籌碼的友誼賽桌。沒有電腦玩家，籌碼沒有現金價值。'],
   hdCreate: ['Create a table', '開桌'], hdJoin: ['Join with a code', '輸入代碼加入'], hdCode: ['4-digit code', '四位數代碼'], hdJoinBtn: ['Join', '加入'], hdCreateBtn: ['Create table', '開桌'],
   hdNick: ['Your name', '你的名字'], hdBlinds: ['Blinds', '盲注'], hdMode: ['Table type', '桌類型'],
-  hdCasual: ['Casual', '休閒'], hdCash: ['Cash (play chips)', '現金桌（遊戲籌碼）'],
+  hdCasual: ['Casual', '休閒'], hdCash: ['Competitive (play chips)', '競技（遊戲籌碼）'],
   hdCasualNote: ['Free temporary chips. Guests welcome. Nothing is saved.', '免費的臨時籌碼，訪客也能玩，不會儲存。'],
   hdCashNote: ['Buy in from your balance, cash out when you leave. Needs an account.', '從你的餘額買入，離桌時兌回。需要帳號。'],
   hdRoom: ['Table', '牌桌'], hdCopy: ['Copy invite link', '複製邀請連結'], hdCopied: ['Copied', '已複製'], hdLeave: ['Leave table', '離開牌桌'],
@@ -37,7 +37,7 @@ registerStrings(HOLDEM_STRINGS)
 registerStrings({}, {
   hdName: 'テキサスホールデム', hdTagline: 'プレイ用チップで遊ぶ気軽なテーブル。CPUはいません。チップに現金価値はありません。',
   hdCreate: 'テーブルを作る', hdJoin: 'コードで参加', hdCode: '4桁のコード', hdJoinBtn: '参加', hdCreateBtn: 'テーブルを作る', hdNick: 'あなたの名前', hdBlinds: 'ブラインド', hdMode: 'テーブルの種類',
-  hdCasual: 'カジュアル', hdCash: 'キャッシュ（プレイ用チップ）', hdCasualNote: '無料の一時チップ。ゲストも参加でき、何も保存されません。', hdCashNote: '残高からバイインし、退席時に換金します。アカウントが必要です。',
+  hdCasual: 'カジュアル', hdCash: '対戦（プレイ用チップ）', hdCasualNote: '無料の一時チップ。ゲストも参加でき、何も保存されません。', hdCashNote: '残高からバイインし、退席時に換金します。アカウントが必要です。',
   hdRoom: 'テーブル', hdCopy: '招待リンクをコピー', hdCopied: 'コピーしました', hdLeave: '退席する', hdSit: '着席する', hdBuyin: 'バイイン', hdSitCash: '{n} で着席', hdSignIn: 'キャッシュテーブルはログインが必要です',
   hdWaiting: '他のプレイヤーを待っています…', hdSpectating: '観戦中です。着席すると参加できます。', hdFold: 'フォールド', hdCheck: 'チェック', hdCall: 'コール {n}', hdRaise: '{n} までレイズ', hdBet: 'ベット {n}', hdAllIn: 'オールイン',
   hdMin: '最小', hdHalf: '½ ポット', hdPot: 'ポット', hdYourTurn: 'あなたの番です', hdWaitTurn: '{name} の番', hdPotLabel: 'ポット', hdWins: '{name} が {n} を獲得', hdSplit: '引き分け', hdNext: '{s} 秒後に次のハンド',
