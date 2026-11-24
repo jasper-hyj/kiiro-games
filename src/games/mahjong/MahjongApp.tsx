@@ -1,6 +1,7 @@
 import { AccountChip } from '../../account/Panels'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount } from '../../account/Account'
+import { nameOrGuest } from '../shared/name'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
 import type { ClientMsg } from './net/protocol'
@@ -28,7 +29,7 @@ export default function MahjongApp() {
   const [rulesOpen, setRulesOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const { me } = useAccount()
-  const [name, setName] = useState(() => load('kiiro-name', 'Player'))
+  const [name, setName] = useState(nameOrGuest)
   const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const [talk, setTalk] = useState<{ n: number; name: string; text: string }[]>([])
@@ -186,9 +187,7 @@ export default function MahjongApp() {
             <h1>{t('joinRoomTitle')} <span style={{ color: 'var(--accent)' }}>{urlRoom.toUpperCase()}</span></h1>
             <p className="muted">{t('invited')}</p>
             <form className="card joincard" onSubmit={(e) => { e.preventDefault(); joinRoom(urlRoom) }}>
-              {me ? <p className="muted">{me.name}</p> : <>
-              <label className="muted" htmlFor="nick">{t('nickname')}</label>
-              <input id="nick" type="text" autoFocus value={name === 'Player' ? '' : name} placeholder={t('yourName')} maxLength={16} onChange={(e) => setName(e.target.value || 'Player')} /></>}
+              <p className="muted">{name}</p>
               <button className="btn gold big" type="submit">{t('joinRoom')}</button>
               <button className="btn alt" type="button" onClick={() => { history.replaceState(null, '', location.pathname); setRoom(null); setUrlGone(true) }}>{t('backMenu')}</button>
             </form>

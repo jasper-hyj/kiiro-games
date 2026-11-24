@@ -39,7 +39,7 @@ export const MAHJONG_STRINGS: Record<string, [string, string]> = {
   nickname: ['Nickname', '暱稱'],
   yourName: ['Your name', '你的名字'],
   joinRoomTitle: ['Join room', '加入房間'],
-  invited: ['You were invited to play mahjong. Pick a nickname to sit down — empty seats are played by bots.', '你被邀請來打麻將。輸入暱稱即可入座，空位由電腦補上。'],
+  invited: ['You were invited to play mahjong. Tap Join to sit down; empty seats are played by bots.', '你被邀請來打麻將。按「加入」即可入座，空位由電腦補上。'],
   joinRoom: ['Join room', '加入房間'],
   backMenu: ['Back to menu', '回主選單'],
   // rule cards

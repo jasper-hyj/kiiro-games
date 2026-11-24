@@ -9,3 +9,6 @@ export function readName(fallback = ''): string {
   } catch { return fallback }
 }
 export function writeName(name: string): void { try { localStorage.setItem(KEY, JSON.stringify(name)) } catch { /* ignore */ } }
+
+/** The saved name, or a new "Guest 482" that is kept for every game that follows: nobody is asked for a name before playing. */
+export function nameOrGuest(): string { const s = readName(''); if (s && s !== 'Player') return s; const g = 'Guest ' + (100 + Math.floor(Math.random() * 900)); writeName(g); return g }

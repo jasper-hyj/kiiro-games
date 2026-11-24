@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { readName, writeName } from '../games/shared/name'
+import { nameOrGuest, writeName } from '../games/shared/name'
 import { useLang } from '../i18n'
 import { Bar } from '../hub/Hub'
 import { useAccount } from '../account/Account'
@@ -38,7 +38,7 @@ export default function RoomApp() {
   const q = useMemo(() => new URLSearchParams(location.search), [])
   const urlRoom = q.get('room')
   // a guest gets a distinct default name, kept for the games that follow
-  const [name, setName] = useState(() => { const s = readName(''); if (s) return s; const g = 'Guest ' + (100 + Math.floor(Math.random() * 900)); writeName(g); return g })
+  const [name, setName] = useState(nameOrGuest)
   useEffect(() => { if (me?.name) setName(me.name) }, [me?.name])
   const [room, setRoom] = useState<string | null>(null)
   const [view, setView] = useState<RoomView | null>(null)
@@ -103,7 +103,6 @@ export default function RoomApp() {
           <h1>{t('rmTitle')}</h1>
           <p className="kg-lead">{t('rmTagline')}</p>
           {error && <p className="acerr" role="alert">{t(error)}</p>}
-          {!me && <div className="hdform"><label>{t('hdNick')}<input value={name} maxLength={16} onChange={(e) => setName(e.target.value)} placeholder="Player" /></label></div>}
           <div className="kg-cols">
             <section className="hdform"><h2>{t('rmCreate')}</h2><div className="hdrow"><button className="hdbtn primary" onClick={create}>{t('rmCreateBtn')}</button></div></section>
             <section className="hdform"><h2>{t('rmJoin')}</h2>

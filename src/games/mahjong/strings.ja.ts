@@ -17,7 +17,7 @@ export const MAHJONG_JA: Record<string, string> = {
   players: '人数', sanma: '3人（三麻）', redFives: '赤ドラ', on: 'オン', off: 'オフ', minFan: '最低番数', tagSlow: '遅い', tagAuto: 'お任せ', idleSlow: 'まだいますか？時間切れのため、牌を自動で切りました。', idleAuto: '離席中のようです。戻るまで、この席は引いた牌を切り、鳴きはすべてパスします。', imBack: '戻りました', idleTitle: 'いますか？', tagSlowTip: '時間切れで自動打牌', tagAutoTip: '離席中：引いた牌を切り、鳴きはパス', casualFan: '0・カジュアル（どんな手でも和了可）', bots: 'CPUの強さ',
   easy: '簡単', normal: '普通', hard: '強い', rulesRef: 'ルール説明', 'ind.open': 'この対局のルールを開く', 'ind.tiles': '{n}枚', 'ind.minFan': '最低{n}飜', 'ind.aka': '赤ドラ', 'ind.noAka': '赤なし', 'ind.sanma': '三人麻雀', 'ind.sichuan': '換三張・定缺', close: '閉じる',
   nickname: 'ニックネーム', yourName: 'あなたの名前', joinRoomTitle: '部屋に参加', joinRoom: '部屋に参加', backMenu: 'メニューへ戻る',
-  invited: '麻雀に招待されました。ニックネームを入力して席に着いてください。空席はCPUが担当します。',
+  invited: '麻雀に招待されました。「参加」を押して席に着いてください。空席はCPUが担当します。',
   'riichi.name': '日本麻雀（リーチ）', 'riichi.blurb': '13枚 · 役が必要 · リーチ・ドラ・赤ドラ · 翻符計算',
   'hk.name': '香港麻雀', 'hk.blurb': '13枚 · 花牌8枚 · 3番縛り · 番数倍増',
   'taiwan.name': '台湾麻雀', 'taiwan.blurb': '16枚 · 花牌8枚 · 台数計算 · 連荘',
