@@ -4,7 +4,7 @@
 .kg a { color: inherit; }
 .kg-wrap { width: min(960px, 100%); margin: 0 auto; padding: 0 24px 64px; }
 .kg-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: max(18px, env(safe-area-inset-top)) 0 18px; border-bottom: 1px solid var(--line); }
-.kg-brand { font: 600 15px var(--serif); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; }
+.kg-brand { display: inline-flex; align-items: center; gap: 10px; font: 600 15px var(--serif); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; }
 .kg-tools { display: flex; align-items: center; gap: 18px; min-width: 0; }
 .kg-lang { display: flex; gap: 2px; }
 .kg-lang button { background: none; border: 0; color: var(--mute); font: 500 13px inherit; padding: 6px 7px; cursor: pointer; border-radius: 6px; }
@@ -75,3 +75,5 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 :root:root .kg a.kg-practice { color: var(--k-mute); font-weight: 600; font-size: 14px; text-decoration: none; padding: 8px 14px; border-radius: 999px; background: rgba(243,236,221,.07); }
 @media (hover: hover) { :root:root .kg a.kg-practice:hover { color: var(--k-ink); background: rgba(243,236,221,.13); } .kg-game:hover { background: var(--k-panel2); transform: translateY(-2px); } }
 .kg h1 { text-wrap: balance; }
+
+.kg-logo { display: block; width: 26px; height: 26px; border-radius: 7px; flex: none; }
