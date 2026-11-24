@@ -1,6 +1,6 @@
 import { getServerByName } from 'partyserver'
 import type { Env } from './d1'
-import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, login, passwordOk, register, setPassword, userFromToken, type User } from './auth'
+import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, isRootAdmin, login, passwordOk, register, setPassword, userFromToken, type User } from './auth'
 import { ensureAccount, FLOOR_CHIPS, leaderboard, MIN_BOARD_GAMES, level, seasonOf, START_CHIPS } from './economy'
 import { trimReplays } from './matches'
 
@@ -27,7 +27,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   //   POST /auth/register  /auth/login  /auth/google  /auth/logout        GET /config  /leaderboard?game=&season=
   //   GET /rooms/:code (is the code free?)   [/code/:code]
   //   GET /me   PATCH /me {name}   [POST /me/name]   PUT /me/password   [POST]   GET /me/matches   GET /matches/:id   [/match/:id]
-  //   GET /admin/overview|users|matches|ledger|audit   POST /admin/users/:id/ban|rename|grant|resetpw   [POST /admin/ban {user}...]
+  //   GET /admin/overview|users|matches|ledger|audit   POST /admin/users/:id/ban|rename|grant|resetpw|role   [POST /admin/ban {user}...]
   //   POST /admin/maintenance/trim   [/admin/trim]
   // is a four-digit code free to open a new room on? A table of any game on that code would clash with the room's table.
   if (req.method === 'GET' && (path.startsWith('/rooms/') || path.startsWith('/code/'))) {
@@ -68,7 +68,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   if (req.method === 'POST' && path === '/auth/logout') { await endSession(db, token!); return json({ ok: true }) }
   if (req.method === 'GET' && path === '/me') {
     const acct = await ensureAccount(db, user.id)
-    return json({ id: user.id, name: user.name, username: user.email.startsWith('u:') ? user.email.slice(2) : null, admin: isAdmin(env, user.email), ...acct, level: level(user.games) })
+    return json({ id: user.id, name: user.name, username: user.email.startsWith('u:') ? user.email.slice(2) : null, admin: isAdmin(env, user.email, user.role), ...acct, level: level(user.games) })
   }
   if ((req.method === 'PUT' || req.method === 'POST') && path === '/me/password') {
     if (!user.email.startsWith('u:')) return json({ error: 'no_password' }, 400)
@@ -96,12 +96,12 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   if (req.method === 'GET' && (path.startsWith('/matches/') || path.startsWith('/match/'))) {
     const id = decodeURIComponent(path.slice(path.startsWith('/matches/') ? 9 : 7))
     const mine = await db.prepare('SELECT 1 AS x FROM match_players WHERE match_id=? AND user_id=?').bind(id, user.id).first()
-    if (!mine && !isAdmin(env, user.email)) return json({ error: 'forbidden' }, 403)
+    if (!mine && !isAdmin(env, user.email, user.role)) return json({ error: 'forbidden' }, 403)
     return json(await matchDetail(env, id))
   }
 
   if (path.startsWith('/admin/')) {
-    if (!isAdmin(env, user.email)) return json({ error: 'forbidden' }, 403)
+    if (!isAdmin(env, user.email, user.role)) return json({ error: 'forbidden' }, 403)
     return admin(req, env, user, path.slice(6), url)
   }
   return json({ error: 'not_found' }, 404)
@@ -139,9 +139,9 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
   if (req.method === 'GET' && path === '/users') {
     const q = '%' + (url.searchParams.get('q') || '').replace(/[%_]/g, '') + '%'
     const { results } = await db.prepare(
-      `SELECT u.id,u.name,u.username,u.email,u.games,u.banned,u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
+      `SELECT u.id,u.name,u.username,u.email,u.games,u.banned,u.role,u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
         WHERE u.name LIKE ? OR u.email LIKE ? OR u.username LIKE ? ORDER BY u.last_seen DESC LIMIT 100`).bind(season, q, q, q).all()
-    return json({ users: results })
+    return json({ users: (results as Record<string, unknown>[]).map((u) => ({ ...u, root: isRootAdmin(env, String(u.email)), admin: u.role === 'admin' || isRootAdmin(env, String(u.email)) })) })
   }
   if (req.method === 'GET' && path === '/matches') {
     const { results } = await db.prepare(
@@ -178,12 +178,19 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
   if (req.method === 'POST') {
     const b = await body(req)
     // /users/:id/<action> (current) or /<action> with the user in the body (older)
-    const m = /^\/users\/([^/]+)\/(ban|rename|grant|resetpw)$/.exec(path)
+    const m = /^\/users\/([^/]+)\/(ban|rename|grant|resetpw|role)$/.exec(path)
     const id = m ? decodeURIComponent(m[1]) : String(b.user ?? '')
     const action = m ? `/${m[2]}` : path
     if (action === '/maintenance/trim' || action === '/trim') { await trimReplays(db); return json({ ok: true }) }
-    const target = await db.prepare('SELECT id,name FROM users WHERE id=?').bind(id).first<{ id: string; name: string }>()
+    const target = await db.prepare('SELECT id,name,email FROM users WHERE id=?').bind(id).first<{ id: string; name: string; email: string }>()
     if (!target) return json({ error: 'no_user' }, 404)
+    if (action === '/role') {
+      // make someone an admin, or take it away. Not for yourself (so the last admin cannot lock everyone out) and not for root admins (those are set in the server settings).
+      if (target.id === me.id) return json({ error: 'not_yourself' }, 400)
+      if (isRootAdmin(env, target.email)) return json({ error: 'root_admin' }, 400)
+      await db.prepare('UPDATE users SET role=? WHERE id=?').bind(b.admin === true ? 'admin' : null, id).run()
+      return json({ ok: true })
+    }
     if (action === '/ban') {
       if (target.id === me.id) return json({ error: 'not_yourself' }, 400)
       const ban = b.banned === true ? 1 : 0

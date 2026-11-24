@@ -12,7 +12,7 @@ function rand(bytes = 32): string {
 
 const SESSION_MS = 90 * 24 * 3600e3
 
-export interface User { id: string; email: string; name: string; banned: number; games: number }
+export interface User { id: string; email: string; name: string; banned: number; games: number; role?: string | null }
 
 /** Allow `max` hits per `windowSec` for a key; returns false when the caller is over the limit. */
 export async function allow(db: D1, key: string, max: number, windowSec: number): Promise<boolean> {
@@ -44,7 +44,7 @@ export async function newSession(db: D1, userId: string): Promise<string> {
 export async function userFromToken(db: D1, token: string | null | undefined): Promise<User | null> {
   if (!token || token.length < 32 || token.length > 200) return null
   const row = await db.prepare(
-    'SELECT u.id,u.email,u.name,u.banned,u.games FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>?').bind(await sha256(token), Date.now()).first<User>()
+    'SELECT u.id,u.email,u.name,u.banned,u.games,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>?').bind(await sha256(token), Date.now()).first<User>()
   if (!row || row.banned) return null
   return row
 }
@@ -144,9 +144,11 @@ export async function finishGoogle(db: D1, env: Env, credential: string): Promis
   return { user, token: await newSession(db, user.id) }
 }
 
-/** Admins are listed in ADMIN_USERS (usernames) and/or ADMIN_EMAILS (Google accounts). Username accounts carry 'u:<name>' in the email column. */
-export function isAdmin(env: Env, email: string): boolean {
+/** Root admins: the usernames in ADMIN_USERS and the Google emails in ADMIN_EMAILS (settings, so they can never be locked out). Username accounts carry 'u:<name>' in the email column. */
+export function isRootAdmin(env: Env, email: string): boolean {
   const split = (v?: string) => String(v || '').toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)
   const e = email.toLowerCase()
   return e.startsWith('u:') ? split(env.ADMIN_USERS).includes(e.slice(2)) : split(env.ADMIN_EMAILS).includes(e)
 }
+/** An admin is a root admin or an account whose role is 'admin' (given from the admin page). */
+export function isAdmin(env: Env, email: string, role?: string | null): boolean { return role === 'admin' || isRootAdmin(env, email) }

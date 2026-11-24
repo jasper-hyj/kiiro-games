@@ -42,7 +42,7 @@ export default function Admin() {
   if (!available) return <Shell><h1>Admin</h1><p className="kg-note">Accounts are not configured on this site.</p></Shell>
   if (!ready) return null
   if (!me) return <Shell><h1>Admin</h1><div><button className="primary" onClick={openSignIn}>Sign in</button></div></Shell>
-  if (!me.admin) return <Shell><h1>Admin</h1><p className="kg-note">{`This account (${me.username ? '@' + me.username : me.name}) is not an admin. Admins are the usernames listed in the Worker's ADMIN_USERS setting (Cloudflare, not Vercel), written in lower case and separated by commas.`}</p></Shell>
+  if (!me.admin) return <Shell><h1>Admin</h1><p className="kg-note">{`This account (${me.username ? '@' + me.username : me.name}) is not an admin. An existing admin can make this account an admin from Admin → Users. The first admin is set once in the database (see the README), or by the Worker's ADMIN_USERS setting (Cloudflare, not Vercel).`}</p></Shell>
 
   return (
     <Shell>
@@ -63,12 +63,13 @@ export default function Admin() {
         <>
           <form className="acform" onSubmit={(e) => { e.preventDefault(); void load() }}><input placeholder="Search name or username" value={q} onChange={(e) => setQ(e.target.value)} /><button className="primary">Search</button></form>
           {data && <Table rows={data.users} cols={[
-            ['Name', (r) => r.name], ['Login', (r) => r.username ?? r.email], ['Games', (r) => r.games], ['Chips', (r) => r.balance ?? '—'], ['Last seen', (r) => ago(r.last_seen)], ['Joined', (r) => ago(r.created_at)],
+            ['Name', (r) => <>{r.name}{r.admin && <span className="adbadge" title={r.root ? 'Root admin (set in the server settings)' : 'Admin'}>admin</span>}</>], ['Login', (r) => r.username ?? r.email], ['Games', (r) => r.games], ['Chips', (r) => r.balance ?? '—'], ['Last seen', (r) => ago(r.last_seen)], ['Joined', (r) => ago(r.created_at)],
             ['Actions', (r) => (<span className="adcells">
               <button className="ghost" onClick={() => { setPick(r.id); setData(null); setTab('ledger') }}>ledger</button>
               <button className="ghost" onClick={() => { const a = prompt(`Chips to add (negative removes) for ${r.name}`, '1000'); if (a) void act('grant', { user: r.id, amount: Number(a) }) }}>chips</button>
               <button className="ghost" onClick={() => { const n = prompt('New display name', r.name); if (n) void act('rename', { user: r.id, name: n }) }}>rename</button>
               {r.username && <button className="ghost" onClick={() => { const n = prompt(`Temporary password for ${r.name} (8+ characters). They are signed out everywhere.`); if (n) void act('resetpw', { user: r.id, password: n }) }}>password</button>}
+              {!r.root && r.id !== me.id && <button className="ghost" onClick={() => { if (confirm(r.admin ? `Remove admin rights from ${r.name}?` : `Make ${r.name} an admin? They will be able to see every account, change chips and ban people.`)) void act('role', { user: r.id, admin: !r.admin }) }}>{r.admin ? 'remove admin' : 'make admin'}</button>}
               <button className="ghost" onClick={() => { if (confirm(`${r.banned ? 'Unban' : 'Ban'} ${r.name}?`)) void act('ban', { user: r.id, banned: !r.banned }) }}>{r.banned ? 'unban' : 'ban'}</button></span>)],
           ]} />}
         </>

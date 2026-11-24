@@ -22,7 +22,7 @@
 .achist li > :last-child { text-align: right; }
 
 /* buttons and fields in the account screens */
-:root:root .acbox button, :root:root .adpage button, :root:root .adpage .btn, :root:root .acrow a { font: 500 14px var(--sans, system-ui); padding: 0 16px; min-height: 40px; border-radius: 8px; border: 0; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+:root:root .acbox button, :root:root .adpage button, :root:root .adpage .btn, :root:root .acrow a { font: 500 14px var(--sans, system-ui); padding: 0 16px; min-height: 40px; border-radius: 8px; border: 0; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 :root:root .acbox .primary, :root:root .adpage .primary { background: var(--k-accent); color: var(--k-accent-ink); font-weight: 600; }
 :root:root .acbox .primary:disabled { opacity: .4; cursor: default; }
 :root:root .acbox .ghost, :root:root .adpage .ghost, :root:root .acrow .ghost { background: none; color: var(--mute, var(--k-mute)); padding: 0 8px; }
@@ -82,3 +82,5 @@
 .acgames { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; }
 :root:root .acgames button { min-height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: rgba(255,255,255,.06); color: var(--k-mute); font: 500 13px var(--sans, system-ui); cursor: pointer; }
 :root:root .acgames button.on { background: var(--k-accent-soft); color: var(--k-accent-hi); box-shadow: inset 0 0 0 1.5px rgba(232,182,106,.45); }
+
+.adbadge { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--k-accent-soft); color: var(--k-accent-hi); font: 600 11px var(--sans, system-ui); letter-spacing: .04em; vertical-align: middle; }

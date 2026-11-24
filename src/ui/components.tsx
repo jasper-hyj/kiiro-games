@@ -70,7 +70,7 @@ export function TableHeader({ title, sub, watching, copied, onCopy, onLeave, lea
       <div className="k-tools">
         {watching != null && watching > 0 && <span className="k-pill" title={t('rmWatching')}>👁 {watching}</span>}
         {status && status !== 'open' && <span className="k-pill warn">{status === 'closed' ? t('rmLost') : t('rmConnecting')}</span>}
-        {help && <button className="k-ghost k-help" onClick={() => setHelpOpen(true)} aria-label={t(help.title)} title={t(help.title)}>?</button>}
+        {help && <button className="k-ghost k-helpbtn" onClick={() => setHelpOpen(true)} aria-label={t(help.title)} title={t(help.title)}>?</button>}
         {onCopy && <button className="k-ghost" onClick={onCopy}>{copied ? t('rmCopied') : <><span className="k-long">{t('rmCopy')}</span><span className="k-short">{t('rmInvite')}</span></>}</button>}
       </div>
       {helpOpen && help && <HelpModal title={t(help.title)} lines={help.lines.map((k) => t(k))} onClose={() => setHelpOpen(false)} />}
