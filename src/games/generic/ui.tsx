@@ -178,7 +178,7 @@ function YahtzeeBoard({ v, send, name }: BoardProps) {
 
 /* ---------------------------------------------------------------- Liar's Dice */
 function MiniDie({ n, size = 34 }: { n: number; size?: number }) {
-  return <span className="ldmini" style={{ width: size, height: size }} aria-label={String(n)}>{Array.from({ length: 9 }, (_, i) => <i key={i} className={PIPS[n]?.includes(i) ? 'on' : ''} />)}</span>
+  return <span className="ldmini" style={{ width: size, height: size, ['--s' as string]: `${size}px` }} aria-label={String(n)}>{Array.from({ length: 9 }, (_, i) => <i key={i} className={PIPS[n]?.includes(i) ? 'on' : ''} />)}</span>
 }
 function LiarsBoard({ v, send, name }: BoardProps) {
   const { t } = useLang()

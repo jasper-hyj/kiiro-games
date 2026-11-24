@@ -132,3 +132,9 @@ The Worker is named `kiiro-games` (`wrangler.jsonc`). Renaming a Worker creates 
 2. Environment variable `VITE_PARTYKIT_HOST` = your Worker host without `https://`, e.g. `kiiro-games.<you>.workers.dev`.
 3. Add the domain (for example `games.<your-domain>`) in the Vercel project and point its DNS record at Vercel.
 4. Optional: make the old address redirect to `https://games.<your-domain>/mahjong` (Vercel → Domains → Redirect) so existing links keep working.
+
+### Turn-based games on the shared frame
+
+Besides Mahjong, Hold'em, Blackjack and Big Two (each with its own server code), eight games run on one shared frame, `src/games/generic/base.ts`: **Gomoku, Crazy Eights, Yahtzee, Liar's Dice, Chess, Xiangqi, Dou Dizhu and Bridge**. The frame gives a game seats with bots, a host, a lobby, spectators, turn timers, reconnect grace, a rematch and a zero-sum result for the leaderboards; a game only writes its rules (`gomoku.ts` is the smallest example). Chess and Xiangqi have their own rules engines (`chessrules.ts`, `xqrules.ts`) checked against the published perft node counts. They run in the `Play` Durable Object (`party/play.ts`, party name `play`), the browser page is `src/games/generic/PlayApp.tsx` and each game's board is in `src/games/generic/ui.tsx`. To add a game: write the engine, add its id to `kinds.ts`, `registry.ts` and `ui.tsx`, add strings (en, zh, ja), a hub icon, and tests. Practice mode runs the same engine in the browser.
+
+Tests: `scripts/generic/engine-test.ts` (rules and full bot games for every game), `chess-test.ts`, `xq-test.ts`, `dd-test.ts`, `bridge-test.ts`, `play-test.ts` (server over sockets) and a `*-ui-test.ts` per game; `layout-check.ts` checks all eight on five screen sizes.
