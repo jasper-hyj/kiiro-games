@@ -53,42 +53,47 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: practiceUrl('bigtwo') },
 ]
 
-/** The front page: a short statement, a 2x2 grid of games, and the season board under it. Mahjong needs no sign-in. */
+/** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
 export function Hub() {
   const { t } = useLang()
+  const [pick, setPick] = useState<GameKey | null>(null)
+  const chosen = GAMES.find((g) => g.key === pick)
+  const seat = (g: (typeof GAMES)[number]) => (
+    <button key={g.key} className={'kg-obj' + (pick === g.key ? ' on' : '')} aria-pressed={pick === g.key} onClick={() => setPick(pick === g.key ? null : g.key)}>
+      <span className="kg-medal">{ART[g.key]}</span><b>{t(g.name)}</b>
+    </button>
+  )
   return (
-    <div className="kg">
-      <div className="kg-wrap">
-        <Bar />
-        <header className="kg-hero">
-          <div>
-            <h1>{t('hubHeadline')}</h1>
-            <p className="kg-lead">{t('hubTagline')}</p>
-          </div>
-          <div className="kg-heroside">
-            <a className="kg-create" href={newRoomUrl()}>{t('hubCreateRoom')}</a>
-            <JoinCode />
-          </div>
-        </header>
-        <section>
-          <h2>{t('hubGames')}</h2>
-          <ul className="kg-grid">
-            {GAMES.map((g) => (
-              <li key={g.key}><div className="kg-game">
-                <span className="kg-art">{ART[g.key]}</span>
-                <b>{t(g.name)}</b>
-                <p>{t(g.blurb)}</p>
+    <div className="kg kg-scene">
+      <Bar />
+      <main className="kg-room">
+        <div className="kg-table">
+          <div className="kg-seats kg-left">{GAMES.slice(0, 2).map(seat)}</div>
+          <div className="kg-center" aria-live="polite">
+            {chosen ? (
+              <>
+                <h1>{t(chosen.name)}</h1>
+                <p className="kg-lead">{t(chosen.blurb)}</p>
                 <span className="kg-acts">
-                  <a className="kg-go" href={newRoomUrl(g.key)}>{t('hubPlayFriends')} →</a>
-                  {g.practice && <a className="kg-practice" href={g.practice}>{t('hubPractice')}</a>}
+                  <a className="kg-create" href={newRoomUrl(chosen.key)}>{t('hubPlayFriends')}</a>
+                  {chosen.practice && <a className="kg-practice" href={chosen.practice}>{t('hubPractice')}</a>}
                 </span>
-              </div></li>
-            ))}
-          </ul>
-          <p className="kg-note">{t('hubNoSignin')}</p>
-        </section>
+                <button className="kg-close" onClick={() => setPick(null)}>← {t('acAll')}</button>
+              </>
+            ) : (
+              <>
+                <h1>{t('hubHeadline')}</h1>
+                <p className="kg-lead">{t('hubTagline')}</p>
+                <a className="kg-create" href={newRoomUrl()}>{t('hubCreateRoom')}</a>
+                <JoinCode />
+              </>
+            )}
+          </div>
+          <div className="kg-seats kg-right">{GAMES.slice(2).map(seat)}</div>
+        </div>
+        <p className="kg-note">{t('hubNoSignin')}</p>
         <section className="kg-board"><Leaderboard /></section>
-      </div>
+      </main>
     </div>
   )
 }

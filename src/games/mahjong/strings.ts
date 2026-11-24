@@ -212,7 +212,7 @@ export const MAHJONG_STRINGS: Record<string, [string, string]> = {
   'coachwhy.kan': ["Kan takes the discard for a set of four and gives you an extra draw.", "槓：拿走這張牌湊成四張，並多摸一張。"],
   'coachplan.yakuhaiDragon': ["You hold a pair of dragons: a triplet of them is a yaku (a scoring pattern), so keep the pair.", "你有一對三元牌：湊成刻子就有役，留著這一對。"],
   'coachplan.yakuhaiWind': ["You hold a pair of a scoring wind (your seat or the round wind): a triplet of it is a yaku, so keep it.", "你有一對役牌風（自風或場風）：湊成刻子就有役，留著。"],
-  'coachplan.tanyao': ["Your hand has no 1, 9 or honors: Tanyao (all simples) is within reach, so avoid keeping terminals.", "手牌沒有 1、9 和字牌：可以做斷么九，盡量不要留么九牌。"],
+  'coachplan.tanyao': ["Your hand has no 1, 9 or honors: Tanyao (all simples) is within reach, so avoid keeping terminals.", "手牌沒有 1、9 和字牌：可以做斷幺九，盡量不要留幺九牌。"],
   'coachplan.honitsu': ["Most of your tiles are one suit plus honors: Honitsu (half flush) is a big hand worth aiming for.", "手牌大多是同一種花色加字牌：可以朝混一色（半清）努力，番數高。"],
   'coachplan.chinitsu': ["All your tiles are one suit: Chinitsu (full flush) is a very big hand.", "手牌全是同一種花色：清一色番數很高。"],
   'coachplan.flush': ["Your tiles are mostly one suit: a flush scores extra fan.", "手牌大多是同一花色：清一色有加番。"],

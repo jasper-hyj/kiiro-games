@@ -18,7 +18,7 @@ for (const [game, label, rules, expectPath, readySel] of [
 ] as const) {
   const host = await page(); const guest = await page()
   await host.goto(BASE + '/', { waitUntil: 'networkidle0' })
-  await host.click('a.kg-create'); await host.waitForSelector('.rm, .hdform', { timeout: 15000 })
+  await host.click('a.kg-create'); await host.waitForSelector('.rmpeople', { timeout: 15000 })
   ok(/^\/room\/\d{4}$/.test(new URL(host.url()).pathname), `${game}: "Create a room" on the hub opens a room at /room/<code> (${new URL(host.url()).pathname})`)
   await host.waitForSelector('.rmpeople', { timeout: 15000 })
   const code = new URL(host.url()).pathname.split('/')[2]

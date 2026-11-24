@@ -29,7 +29,7 @@ const check = async (label: string, path: string, wait: string, expect: string |
 }
 
 // current addresses
-await check('hub', '/', '.kg-grid', '/', /Kiiro Games$/)
+await check('hub', '/', '.kg-table', '/', /Kiiro Games$/)
 await check('room landing', '/room', '.rmentry', '/room', /Room/)
 await check('new room', '/room/new?game=holdem', '.rmpeople', /^\/room\/\d{4}$/, /Room/)
 await check('holdem practice', '/holdem/practice', '.hd-actions', '/holdem/practice', /Hold/)
