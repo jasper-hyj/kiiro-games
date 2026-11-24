@@ -132,3 +132,8 @@ button:focus-visible, a:focus-visible, [role=button]:focus-visible { outline: 2p
 /* keyboard focus is always visible, on the Mahjong page too; the chat line lights its top edge while you type */
 :root:root .app button:focus-visible, :root:root .app a:focus-visible, :root:root .app [role=button]:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
 .kgin:focus-within { opacity: 1; border-top-color: var(--k-accent); }
+
+/* the account button in a table header: your name (or Sign in) on every screen, so signing in never means leaving the page */
+.k-acctslot .kg-acct { color: var(--k-ink); font: 600 13px var(--k-sans); background: rgba(243,236,221,.08); border-radius: 999px; padding: 0 14px; min-height: 40px; max-width: 34vw; }
+.k-acctslot .kg-acct small { display: none; }
+@media (max-width: 420px) { .k-acctslot .kg-acct { max-width: 26vw; padding: 0 10px; } }

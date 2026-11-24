@@ -1,4 +1,4 @@
-import PartySocket from 'partysocket'
+import { liveSocket } from '../../net/live'
 import { PARTY_HOST } from '../mahjong/net/client'
 import { getToken } from '../../account/api'
 
@@ -19,30 +19,20 @@ export function getClientId(): string {
 
 /** Connects to a chip-table room (same socket and room-code space as every other game: the first player to create a code decides its game). */
 export function connectCash<V, M>(game: CashGameName, room: string, id: string, name: string, h: CashHandlers<V>, create?: CashCreate, opts?: { watch?: boolean }): CashConn<M> {
-  const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
-  h.onStatus('connecting')
-  let closed = false
-  let beat: ReturnType<typeof setInterval> | null = null
-  ws.addEventListener('open', () => {
-    h.onStatus('open')
-    ws.send(JSON.stringify({ t: 'join', id, name, game, ...(opts?.watch ? { watch: true } : {}), ...(create ? { create: true, pcfg: create } : {}), ...(getToken() ? { token: getToken() } : {}) }))
-    if (beat) clearInterval(beat)
-    beat = setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'ping', ts: Date.now() })) }, 15000)
+  const live = liveSocket({
+    host: PARTY_HOST, room: room.toLowerCase(),
+    onStatus: h.onStatus,
+    onOpen: (send) => send({ t: 'join', id, name, game, ...(opts?.watch ? { watch: true } : {}), ...(create ? { create: true, pcfg: create } : {}), ...(getToken() ? { token: getToken() } : {}) }),
+    onMessage: (m: { t: string; view?: V; message?: string; msg?: TalkMsg; msgs?: TalkMsg[] }) => {
+      if (m.t === 'pview') h.onView(m.view as V)
+      else if (m.t === 'talk' && m.msg) h.onTalk?.(m.msg)
+      else if (m.t === 'talklog' && m.msgs) h.onTalkLog?.(m.msgs)
+      else if (m.t === 'error') h.onError(m.message ?? 'error')
+    },
   })
-  ws.addEventListener('close', () => { if (!closed) h.onStatus('closed') })
-  ws.addEventListener('message', (e) => {
-    if (closed) return
-    const m = JSON.parse(e.data as string) as { t: string; view?: V; message?: string; msg?: TalkMsg; msgs?: TalkMsg[] }
-    if (m.t === 'pview') h.onView(m.view as V)
-    else if (m.t === 'talk' && m.msg) h.onTalk?.(m.msg)
-    else if (m.t === 'talklog' && m.msgs) h.onTalkLog?.(m.msgs)
-    else if (m.t === 'error') h.onError(m.message ?? 'error')
-  })
-  const wake = () => { if (!closed && document.visibilityState === 'visible' && ws.readyState !== 1) ws.reconnect() }
-  document.addEventListener('visibilitychange', wake)
   return {
-    send: (m) => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'p', m })) },
-    say: (text) => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'talk', text })) },
-    close: () => { closed = true; if (beat) clearInterval(beat); document.removeEventListener('visibilitychange', wake); try { ws.send(JSON.stringify({ t: 'bye' })) } catch { /* ignore */ } ws.close() },
+    send: (m) => live.send({ t: 'p', m }),
+    say: (text) => live.send({ t: 'talk', text }),
+    close: () => live.close(),
   }
 }

@@ -146,7 +146,7 @@ export class Table {
   private emit() { this.renameBots(); this.runAudit(); this.listeners.forEach((f) => f()) }
   isHuman(seat: number) { return this.slots[seat].id !== null }
   /** A dropped player keeps their seat for `graceMs` (short network blips don't hand the game to a bot). */
-  graceMs = 8000
+  graceMs = 25000
   /** a human seat that nobody is playing right now (gone or idle): it only throws what it drew and passes */
   isAutopilot(seat: number) { return this.slots[seat].id !== null && this.isBotControlled(seat) }
   isBotControlled(seat: number) { const s = this.slots[seat]; return !s.id || (s.afk ?? 0) >= 2 || (!s.connected && Date.now() - (s.dcAt ?? 0) >= this.graceMs) }

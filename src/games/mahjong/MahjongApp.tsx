@@ -1,6 +1,7 @@
 import { AccountChip } from '../../account/Panels'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount } from '../../account/Account'
+import { getToken } from '../../account/api'
 import { nameOrGuest } from '../shared/name'
 import { DEFAULT_CONFIG, type RoomConfig, type TableView } from './engine/table'
 import { connectLocal, connectRemote, getClientId, type Conn, type Handlers, type Status } from './net/client'
@@ -122,6 +123,9 @@ export default function MahjongApp() {
     else if (where.page === 'practice') { if (where.tutorial) tutorial(); else solo() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => conn.current?.close(), [])
+  // signing in (or out) at a table: connect again so the server knows who you are
+  const tok = useRef(getToken())
+  useEffect(() => { if (getToken() === tok.current) return; tok.current = getToken(); if (joined.current && where.page === 'table') joinRoom(joined.current) }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('tiles')) return <TileGallery />
   const playing = view?.status === 'playing' && view.game

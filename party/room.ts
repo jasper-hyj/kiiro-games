@@ -3,6 +3,7 @@ import type { Env } from './d1'
 import { userFromToken } from './auth'
 import { BLINDS } from '../src/games/holdem/engine/table'
 import { MIN_BETS } from '../src/games/blackjack/engine/table'
+import { DEFAULT_CONFIG } from '../src/games/mahjong/engine/table'
 
 export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
 const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo']
@@ -60,7 +61,17 @@ export class Room extends Server<Env> {
     let error: string | undefined
     const ranked = r.ranked === true
     if (game === 'mahjong') {
-      cfg.rule = MJ_RULES.includes(String(r.rule)) ? String(r.rule) : 'taiwan'
+      const rule = MJ_RULES.includes(String(r.rule)) ? String(r.rule) : 'taiwan'
+      cfg.rule = rule
+      // every Mahjong setting is chosen here, in the room (the table's lobby only shows them): validated the way the table itself does
+      const rounds = Number(r.rounds)
+      cfg.rounds = rule === 'taiwan' ? (rounds === 4 ? 4 : 1) : (rounds === 2 ? 2 : 1)
+      cfg.players = (rule === 'riichi' || rule === 'hk') && Number(r.players) === 3 ? 3 : 4
+      cfg.botLevel = r.botLevel === 'easy' || r.botLevel === 'hard' ? String(r.botLevel) : 'normal'
+      cfg.coach = r.coach !== false
+      if (rule === 'riichi') cfg.aka = r.aka !== false
+      if (rule === 'sichuan') cfg.swap = r.swap !== false
+      if (rule === 'hk' || rule === 'mcr') { const f = Number(r.minFan); cfg.minFan = Number.isInteger(f) && f >= 0 && f <= 13 ? f : rule === 'mcr' ? 8 : DEFAULT_CONFIG.minFan }
       if (ranked && host?.signedIn) cfg.ranked = true; else if (ranked) error = 'ranked_needs_signin'
     } else if (game === 'bigtwo') {
       if (ranked && host?.signedIn) cfg.ranked = true; else if (ranked) error = 'ranked_needs_signin'

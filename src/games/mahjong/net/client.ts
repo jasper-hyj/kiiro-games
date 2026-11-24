@@ -64,6 +64,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
   const ws = new PartySocket({ host: PARTY_HOST, room: room.toLowerCase() })
   h.onStatus('connecting')
   let lastPong = 0
+  let lastSeen = Date.now() // any message from the server proves the link is alive
   let closed = false // set by close(): from then on nothing this connection does may reach the app (no retries, no views)
   let beatTimer: ReturnType<typeof setInterval> | null = null
   let watchdog: ReturnType<typeof setTimeout> | null = null
@@ -72,8 +73,8 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     const sent = Date.now()
     try { ws.send(JSON.stringify({ t: 'ping', ts: sent } satisfies ClientMsg)) } catch { return }
     if (watchdog) clearTimeout(watchdog)
-    // no answer within 5 s: the connection is dead even if the browser still says "open" (phone slept, wifi changed)
-    watchdog = setTimeout(() => { if (!closed && lastPong < sent) { h.onStatus('closed'); ws.reconnect(); startRetry() } }, 5000)
+    // no answer within 15 s: the connection is dead even if the browser still says "open" (phone slept, wifi changed). One slow answer is not a dead link.
+    watchdog = setTimeout(() => { if (!closed && lastPong < sent && Date.now() - lastSeen > 15000) { h.onStatus('closed'); ws.reconnect(); startRetry() } }, 15000)
   }
   // automatic recovery: while the connection is down, keep trying every few seconds (the socket also backs off on its own)
   let retryTimer: ReturnType<typeof setInterval> | null = null
@@ -93,9 +94,10 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
     if (beatTimer) clearInterval(beatTimer)
     beatTimer = setInterval(beat, 10000)
   })
-  ws.addEventListener('close', () => { if (closed) return; h.onStatus('closed'); if (beatTimer) clearInterval(beatTimer); beatTimer = null; startRetry() })
+  ws.addEventListener('close', () => { if (closed) return; setTimeout(() => { if (!closed && ws.readyState !== 1) h.onStatus('closed') }, 2500); if (beatTimer) clearInterval(beatTimer); beatTimer = null; startRetry() })
   ws.addEventListener('message', (e) => {
     if (closed) return
+    lastSeen = Date.now()
     const m = JSON.parse(e.data as string) as ServerMsg
     if (m.t === 'view') h.onView(m.view)
     else if (m.t === 'pong') { lastPong = Date.now(); if (watchdog) clearTimeout(watchdog); h.onLatency?.(Date.now() - m.ts) }

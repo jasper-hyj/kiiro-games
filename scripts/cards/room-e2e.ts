@@ -14,7 +14,7 @@ for (const [game, label, rules, expectPath, readySel] of [
   ['holdem', "Texas Hold'em", async (p: any) => { await p.select('.rmrules select', '50/100') }, '/holdem', '.hdfelt'],
   ['blackjack', 'Blackjack', async (p: any) => { await p.select('.rmrules select', '20') }, '/blackjack', '.bjtable'],
   ['bigtwo', 'Big Two', async () => {}, '/bigtwo', '.btlobby'],
-  ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.select('.rmrules select', 'riichi') }, '/mahjong', '.roomtag, .seatcard, .lobby, .page'],
+  ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.click('.rmrulecard[data-rule=riichi]'); await p.waitForSelector('.rmrulecard.on[data-rule=riichi]') }, '/mahjong', '.roomtag, .seatcard, .lobby, .page'],
 ] as const) {
   const host = await page(); const guest = await page()
   await host.goto(BASE + '/', { waitUntil: 'networkidle0' })

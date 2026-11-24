@@ -8,10 +8,16 @@ interface Ctx { me: Me | null; ready: boolean; available: boolean; refresh(): Pr
 const C = createContext<Ctx>({ me: null, ready: true, available: false, refresh: async () => {}, signOut: async () => {}, openSignIn: () => {} })
 export const useAccount = () => useContext(C)
 
+/** Where to return after a sign-in that was asked for with ?signin=1&next=/somewhere (only paths on this site). */
+function safeNext(): string | null { try { const n = new URLSearchParams(location.search).get('next'); return n && n.startsWith('/') && !n.startsWith('//') ? n : null } catch { return null } }
+function dropSigninParams() { try { const u = new URL(location.href); if (u.searchParams.has('signin')) { u.searchParams.delete('signin'); u.searchParams.delete('next'); history.replaceState(null, '', u.pathname + u.search) } } catch { /* ignore */ } }
+function goBack() { const n = safeNext(); if (n) location.replace(n); else dropSigninParams() }
+
 export function AccountProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null)
   const [ready, setReady] = useState(!accountsAvailable || !getToken())
-  const [open, setOpen] = useState(false)
+  // an address like /?signin=1&next=/room/1234 opens the sign-in dialog, and afterwards returns to the page the person came from
+  const [open, setOpen] = useState(() => { try { return new URLSearchParams(location.search).get('signin') === '1' } catch { return false } })
 
   const refresh = useCallback(async () => {
     if (!accountsAvailable || !getToken()) { setMe(null); setReady(true); return }
@@ -25,7 +31,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   return (
     <C.Provider value={{ me, ready, available: accountsAvailable, refresh, signOut, openSignIn: () => setOpen(true) }}>
       {children}
-      {open && <SignIn onClose={() => setOpen(false)} onDone={async () => { setOpen(false); await refresh() }} />}
+      {open && <SignIn onClose={() => { setOpen(false); dropSigninParams() }} onDone={async () => { setOpen(false); await refresh(); goBack() }} />}
     </C.Provider>
   )
 }

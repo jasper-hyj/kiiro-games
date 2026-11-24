@@ -30,7 +30,7 @@ const check = async (label: string, path: string, wait: string, expect: string |
 
 // current addresses
 await check('hub', '/', '.kg-table', '/', /Kiiro Games$/)
-await check('room landing', '/room', '.rmentry', '/room', /Room/)
+await check('room landing', '/room', '.kg-solo', '/room', /Room/)
 await check('new room', '/room/new?game=holdem', '.rmpeople', /^\/room\/\d{4}$/, /Room/)
 await check('holdem practice', '/holdem/practice', '.hd-actions', '/holdem/practice', /Hold/)
 await check('blackjack practice', '/blackjack/practice', '.bjtable', '/blackjack/practice', /Blackjack/)
@@ -48,8 +48,8 @@ await check('admin tab in the path', '/admin/users', '.adwrap', '/admin/users')
 
 // old addresses are rewritten
 await check('old: bare game page', '/holdem', '.rmpeople', /^\/room\/\d{4}$/)
-await check('old: hub with a room', '/?room=1234', '.rm, .hdform, .kg-wrap', /^\/room(\/1234)?$/) // no such room: the address is rewritten, then the room page says so
-await check('old: room with a code', '/room?room=1234', '.rm, .hdform, .kg-wrap', /^\/room(\/1234)?$/) // no such room: the address is rewritten, then the room page says so
+await check('old: hub with a room', '/?room=1234', '.kg-solo, .rmtable', /^\/room(\/1234)?$/) // no such room: the address is rewritten, then the room page says so
+await check('old: room with a code', '/room?room=1234', '.kg-solo, .rmtable', /^\/room(\/1234)?$/) // no such room: the address is rewritten, then the room page says so
 await check('old: create with a pick', '/room?create=1&pick=bigtwo', '.rmpeople', /^\/room\/\d{4}$/)
 await check('old: practice flag', '/holdem?practice=1', '.hd-actions', '/holdem/practice')
 await check('old: solo mahjong', '/?solo=1&rule=taiwan&speed=0.02', '.handrow .tile', /^\/mahjong\/practice\?/)

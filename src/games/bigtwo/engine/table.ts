@@ -41,7 +41,7 @@ export class BigTwoTable {
   /** per-turn limit in ms (0 = off) */
   turnTimerMs = 45000
   botDelayMs = 900
-  graceMs = 8000
+  graceMs = 25000
   /** random seat order at the start of every game (tests switch this off) */
   shuffleSeats = true
   /** tests: deal exactly these four hands */
