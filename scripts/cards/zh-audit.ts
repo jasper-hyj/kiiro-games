@@ -10,6 +10,8 @@ import '../../src/games/holdem/strings'
 import '../../src/games/blackjack/strings'
 import '../../src/games/bigtwo/strings'
 import '../../src/room/strings'
+import '../../src/games/generic/strings'
+import '../../src/games/generic/gomokuStrings'
 
 // the converter's own table (Traditional -> Simplified) gives every Simplified character that differs from its Traditional form
 const src = readFileSync('src/simplify.ts', 'utf8')

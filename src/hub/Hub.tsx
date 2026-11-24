@@ -6,6 +6,8 @@ import './hub.css'
 import './strings'
 import '../games/blackjack/strings'
 import '../games/bigtwo/strings'
+import '../games/generic/strings'
+import '../games/generic/gomokuStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -44,6 +46,7 @@ export const ART: Record<string, JSX.Element> = {
   holdem: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-9 20 24)"><rect x="9" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M12.5 17l2.5-6 2.5 6M13.5 15h3" stroke-width="1.3"/><path d="M20 18.5c-4.2 4-7 5.6-7 8.6a3.2 3.2 0 0 0 5.6 2L17.7 34h4.6l-.9-4.9a3.2 3.2 0 0 0 5.6-2c0-3-2.8-4.6-7-8.6z" transform="translate(0 2)"/></g><g transform="rotate(9 45 24)"><rect x="34" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M38 11v6M38 14l4-3M38 14l4 3" stroke-width="1.3"/><path d="M45 33c-5-3.6-7.6-6.2-7.6-9.2a3.7 3.7 0 0 1 7.6-1.1 3.7 3.7 0 0 1 7.6 1.1c0 3-2.6 5.6-7.6 9.2z" transform="translate(0 -1)"/></g></svg>,
   blackjack: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-8 22 26)"><rect x="6" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M9.5 17l2.5-6 2.5 6M10.5 15h3" stroke-width="1.3"/><path d="M17 17.5c-3.4 3.2-5.6 4.5-5.6 7a2.6 2.6 0 0 0 4.5 1.6L15.2 30h3.6l-.7-3.9a2.6 2.6 0 0 0 4.5-1.6c0-2.5-2.2-3.8-5.6-7z"/></g><g transform="rotate(5 32 26)"><rect x="19" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M23 11v6M23 14l4-3M23 14l4 3" stroke-width="1.3"/><path d="M30 18l5 5-5 5-5-5z"/></g><circle cx="50" cy="33" r="9" fill="#1a2240"/><circle cx="50" cy="33" r="9" stroke-dasharray="4 3.3"/><circle cx="50" cy="33" r="4.6"/></svg>,
   bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="17" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(-18 27 45)"/><rect x="27" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(18 37 45)"/><rect x="22" y="6" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27.5 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 2.2-1.8 3.6-4.5 6L27.5 24h9"/><path d="M32 27l3 3.5-3 3.5-3-3.5z"/></svg>,
+  gomoku: <svg viewBox="0 0 64 48" aria-hidden><path d="M10 6v36M22 6v36M34 6v36M46 6v36M6 12h44M6 24h44M6 36h44" opacity=".4" strokeWidth="1.2"/><circle cx="22" cy="12" r="5" fill="#e8b66a"/><circle cx="34" cy="24" r="5" fill="#e8b66a"/><circle cx="46" cy="36" r="5" fill="#e8b66a"/><circle cx="34" cy="12" r="5" fill="#1a2240"/><circle cx="22" cy="24" r="5" fill="#1a2240"/><circle cx="22" cy="36" r="5" fill="#1a2240"/></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -51,6 +54,7 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'holdem', name: 'hubHoldem', blurb: 'hubHoldemBlurb', practice: practiceUrl('holdem') },
   { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: practiceUrl('blackjack') },
   { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: practiceUrl('bigtwo') },
+  { key: 'gomoku', name: 'gomoku', blurb: 'gomokuBlurb', practice: practiceUrl('gomoku') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
@@ -68,7 +72,7 @@ export function Hub() {
       <Bar />
       <main className="kg-room">
         <div className="kg-table">
-          <div className="kg-seats kg-left">{GAMES.slice(0, 2).map(seat)}</div>
+          <div className="kg-seats kg-left">{GAMES.slice(0, Math.ceil(GAMES.length / 2)).map(seat)}</div>
           <div className="kg-center" aria-live="polite">
             {chosen ? (
               <>
@@ -89,7 +93,7 @@ export function Hub() {
               </>
             )}
           </div>
-          <div className="kg-seats kg-right">{GAMES.slice(2).map(seat)}</div>
+          <div className="kg-seats kg-right">{GAMES.slice(Math.ceil(GAMES.length / 2)).map(seat)}</div>
         </div>
         <p className="kg-note">{t('hubNoSignin')}</p>
         <section className="kg-board"><Leaderboard /></section>

@@ -15,6 +15,9 @@ import { roomUrl, route } from '../route'
 import { connectRoom, gameUrl, type RoomCfg, type RoomConn, type RoomGame, type RoomView, type TalkLine } from './roomClient'
 import { RULESETS as MJ_RULESETS } from '../games/mahjong/engine/rules'
 import { RULE_COLOR, RULE_GLYPH, RULE_IDS, RULE_TAGS } from '../games/mahjong/ruleMeta'
+import { GENERIC_GAMES, type GenericGame } from '../games/generic/kinds'
+import { GAME_UI, METAS } from '../games/generic/ui'
+import '../games/generic/strings'
 import '../games/holdem/strings'
 import '../games/holdem/holdem.css'
 import '../games/mahjong/strings'
@@ -26,11 +29,15 @@ import './room.css'
 
 const GAMES: { id: RoomGame; name: string }[] = [
   { id: 'mahjong', name: 'rmMahjong' }, { id: 'holdem', name: 'rmHoldem' }, { id: 'blackjack', name: 'rmBlackjack' }, { id: 'bigtwo', name: 'rmBigtwo' },
+  ...GENERIC_GAMES.map((g) => ({ id: g as RoomGame, name: GAME_UI[g].name })),
 ]
-const HOW: Record<'holdem' | 'blackjack' | 'bigtwo', { title: string; lines: string[] }> = {
+const HOW: Record<string, { title: string; lines: string[] }> = {
   holdem: { title: 'hdHow', lines: ['hdR1', 'hdR2', 'hdR3', 'hdR4', 'hdR5'] }, blackjack: { title: 'bjHow', lines: ['bjR1', 'bjR2', 'bjR3', 'bjR4', 'bjR5'] }, bigtwo: { title: 'btHow', lines: ['btR1', 'btR2', 'btR3', 'btR4', 'btR5'] },
+  ...Object.fromEntries(GENERIC_GAMES.map((g) => [g, GAME_UI[g].help])),
 }
-const DEFAULTS: Record<RoomGame, RoomCfg> = { mahjong: { rule: 'taiwan', rounds: 1, players: 4, botLevel: 'normal', coach: true, aka: true, minFan: 3 }, holdem: { sb: 25, bb: 50, casual: true }, blackjack: { bb: MIN_BETS[0], casual: true }, bigtwo: {} }
+const DEFAULTS: Record<string, RoomCfg> = { mahjong: { rule: 'taiwan', rounds: 1, players: 4, botLevel: 'normal', coach: true, aka: true, minFan: 3 }, holdem: { sb: 25, bb: 50, casual: true }, blackjack: { bb: MIN_BETS[0], casual: true }, bigtwo: {},
+  ...Object.fromEntries(GENERIC_GAMES.map((g) => [g, { ...METAS[g].defaults }])) }
+const isGen = (g: string): g is GenericGame => (GENERIC_GAMES as readonly string[]).includes(g)
 const newCode = () => String(1000 + Math.floor(Math.random() * 9000))
 
 /** The room: gather first, then choose the game and its rules together. Starting sends everyone to the table under this code. */
@@ -176,7 +183,7 @@ export default function RoomApp() {
                 ) : <p className="kg-note">{t('rmNoGame')}</p>}
               </>
             )}
-            {view.game && view.game !== 'mahjong' && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
+            {view.game && view.game !== 'mahjong' && HOW[view.game] && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
             {view.launched && view.game && (
               <div className="rmrunning">
                 <p className="kg-note">{t('rmRunning')}</p>
@@ -197,7 +204,7 @@ function Summary({ game, cfg }: { game: RoomGame; cfg: RoomCfg }) {
   const parts = game === 'mahjong' ? [t(`${cfg.rule}.name`), Number(cfg.rounds) === 4 || Number(cfg.rounds) === 2 ? (cfg.rule === 'taiwan' ? t('fullGame') : t('eastSouth')) : (cfg.rule === 'taiwan' ? t('eastRound') : t('eastOnly')), ...(cfg.players === 3 ? [t('sanma')] : []), ...(cfg.rule === 'riichi' && cfg.aka !== false ? [t('redFives')] : []), ...(cfg.rule === 'hk' || cfg.rule === 'mcr' ? [`${t('minFan')} ${cfg.minFan}`] : []), `${t('bots')}: ${t(String(cfg.botLevel ?? 'normal'))}`, cfg.ranked ? t('rmRanked') : t('rmCasual')]
     : game === 'holdem' ? [`${cfg.sb}/${cfg.bb}`, mode(cfg.casual !== false)]
       : game === 'blackjack' ? [`${t('rmMinBet')} ${cfg.bb}`, mode(cfg.casual !== false)]
-        : [cfg.ranked ? t('rmRanked') : t('rmCasual')]
+        : isGen(game) ? [...GAME_UI[game].settings(cfg, t), cfg.ranked ? t('rmRanked') : t('rmCasual')] : [cfg.ranked ? t('rmRanked') : t('rmCasual')]
   return <p className="kg-note">{parts.join(' · ')}</p>
 }
 
@@ -253,11 +260,12 @@ function Rules({ game, cfg, set, signedIn }: { game: RoomGame; cfg: RoomCfg; set
     <div className="hdform rmrules">
       <h3>{t('rmRules')}</h3>
       {game === 'mahjong' && <MahjongRules cfg={cfg} set={set} />}
+      {isGen(game) && METAS[game].fields.map((f) => <Pick key={f.key} label={t(f.label)} value={cfg[f.key] as string | number | boolean} onPick={(v) => set({ [f.key]: v })} items={f.options.map(([v, l]) => [v, l.startsWith('gm') || l.startsWith('pl') ? t(l) : l] as [string | number | boolean, string])} />)}
       {game === 'holdem' && <label>{t('rmBlinds')}<select value={`${cfg.sb}/${cfg.bb}`} onChange={(e) => { const [sb, bb] = e.target.value.split('/').map(Number); set({ sb, bb }) }}>{BLINDS.map(([sb, bb]) => <option key={sb} value={`${sb}/${bb}`}>{sb}/{bb}</option>)}</select></label>}
       {game === 'blackjack' && <label>{t('rmMinBet')}<select value={Number(cfg.bb)} onChange={(e) => set({ bb: Number(e.target.value) })}>{MIN_BETS.map((b) => <option key={b} value={b}>{b}</option>)}</select></label>}
-      {(game === 'mahjong' || game === 'bigtwo') ? modeSeg() : cashSeg}
+      {(game === 'mahjong' || game === 'bigtwo' || isGen(game)) ? modeSeg() : cashSeg}
       <p className="kg-note rmmodehelp">{t('rmModeHelp')}</p>
-      {(game === 'mahjong' || game === 'bigtwo') && !signedIn && <p className="kg-note">{t('acRankedLocked')}</p>}
+      {(game === 'mahjong' || game === 'bigtwo' || isGen(game)) && !signedIn && <p className="kg-note">{t('acRankedLocked')}</p>}
     </div>
   )
 }

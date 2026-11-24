@@ -5,8 +5,9 @@ import { BLINDS } from '../src/games/holdem/engine/table'
 import { MIN_BETS } from '../src/games/blackjack/engine/table'
 import { DEFAULT_CONFIG } from '../src/games/mahjong/engine/table'
 
-export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
-const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo']
+import { ENGINES, isGeneric } from '../src/games/generic/registry'
+export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo' | (string & {})
+const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...Object.keys(ENGINES)]
 const MJ_RULES = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
 const KEEP_MS = 12 * 3600e3 // a room stays findable this long after its last visitor, so people can come back to it after a game
 
@@ -78,6 +79,9 @@ export class Room extends Server<Env> {
     } else if (game === 'holdem') {
       const b = BLINDS.find(([sb, bb]) => sb === Number(r.sb) && bb === Number(r.bb)) ?? BLINDS[2]
       cfg.sb = b[0]; cfg.bb = b[1]; cfg.casual = r.casual !== false
+    } else if (isGeneric(game)) {
+      Object.assign(cfg, ENGINES[game]().sanitize(r))
+      if (cfg.ranked === true && !host?.signedIn) { delete cfg.ranked; error = 'ranked_needs_signin' }
     } else {
       cfg.bb = MIN_BETS.includes(Number(r.bb)) ? Number(r.bb) : MIN_BETS[0]; cfg.casual = r.casual !== false
     }
@@ -140,10 +144,12 @@ export class Room extends Server<Env> {
         if (id !== this.hostId) return this.err(c, 'host_only')
         if (!this.game) return this.err(c, 'pick_first')
         // the table is made here, on the server, with these settings and this host: nobody carries them in a URL, and nobody arrives before it exists
-        if (this.envv.Main) {
+        const ns = isGeneric(this.game) ? this.envv.Play : this.envv.Main
+        const party = isGeneric(this.game) ? 'play' : 'main'
+        if (ns) {
           try {
-            const stub = await getServerByName(this.envv.Main as never, this.name)
-            const r = await stub.fetch(new Request(`https://table/parties/main/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id }) }))
+            const stub = await getServerByName(ns as never, this.name)
+            const r = await stub.fetch(new Request(`https://table/parties/${party}/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id }) }))
             if (r.status === 409) return this.err(c, 'rmCodeClash')
             if (!r.ok) return this.err(c, 'rmTableFailed')
           } catch { return this.err(c, 'rmTableFailed') }

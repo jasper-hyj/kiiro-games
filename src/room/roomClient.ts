@@ -3,7 +3,8 @@ import { liveSocket } from '../net/live'
 import { PARTY_HOST } from '../games/mahjong/net/client'
 import { getToken } from '../account/api'
 
-export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
+import type { GameKey } from '../route'
+export type RoomGame = GameKey
 export type RoomCfg = Record<string, string | number | boolean>
 export interface RoomMember { name: string; host: boolean; watching: boolean; signedIn: boolean; me: boolean }
 export interface RoomView { you: string; host: boolean; game: RoomGame | null; cfg: RoomCfg; launched: boolean; members: RoomMember[] }

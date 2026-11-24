@@ -4,10 +4,10 @@
   "compatibility_date": "2025-06-01",
   "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {
-    "bindings": [{ "name": "Main", "class_name": "Main" }, { "name": "Room", "class_name": "Room" }]
+    "bindings": [{ "name": "Main", "class_name": "Main" }, { "name": "Room", "class_name": "Room" }, { "name": "Play", "class_name": "Play" }]
   },
   "d1_databases": [{ "binding": "DB", "database_name": "kiiro-games", "database_id": "a3a16074-8adb-4fcb-87e7-2cb5492b7ff8", "migrations_dir": "migrations" }],
   "triggers": { "crons": ["17 4 * * *"] },
   "vars": { "APP_URL": "https://games.jasperhuang.me" },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Main"] }, { "tag": "v2", "new_sqlite_classes": ["Room"] }]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Main"] }, { "tag": "v2", "new_sqlite_classes": ["Room"] }, { "tag": "v3", "new_sqlite_classes": ["Play"] }]
 }

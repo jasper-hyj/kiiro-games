@@ -6,6 +6,7 @@ import HoldemApp from './games/holdem/HoldemApp'
 import BlackjackApp from './games/blackjack/BlackjackApp'
 import BigTwoApp from './games/bigtwo/BigTwoApp'
 import RoomApp from './room/RoomApp'
+import PlayApp from './games/generic/PlayApp'
 import { legacyTarget, newRoomUrl, route } from './route'
 
 /**
@@ -26,7 +27,7 @@ export default function App() {
       case 'gameStart': return <Redirect to={newRoomUrl(r.game)} />
       case 'tiles': return <MahjongApp />
       default: // a table, or practice against bots
-        return r.game === 'holdem' ? <HoldemApp /> : r.game === 'blackjack' ? <BlackjackApp /> : r.game === 'bigtwo' ? <BigTwoApp /> : <MahjongApp />
+        return r.game === 'holdem' ? <HoldemApp /> : r.game === 'blackjack' ? <BlackjackApp /> : r.game === 'bigtwo' ? <BigTwoApp /> : r.game === 'mahjong' ? <MahjongApp /> : <PlayApp game={r.game} />
     }
   })()
   return <AccountProvider>{page}</AccountProvider>

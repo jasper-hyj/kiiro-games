@@ -35,9 +35,10 @@ await check('new room', '/room/new?game=holdem', '.rmpeople', /^\/room\/\d{4}$/,
 await check('holdem practice', '/holdem/practice', '.hd-actions', '/holdem/practice', /Hold/)
 await check('blackjack practice', '/blackjack/practice', '.bjtable', '/blackjack/practice', /Blackjack/)
 await check('bigtwo practice', '/bigtwo/practice', '.bthand .btcard', '/bigtwo/practice', /Big Two/)
+await check('gomoku practice', '/gomoku/practice', '.gmboard', '/gomoku/practice', /Gomoku/)
 await check('mahjong practice', '/mahjong/practice', '.handrow .tile', '/mahjong/practice', /Mahjong/)
 { // a table made by a room opens at /<game>/<code>
-  for (const [game, cfg, sel] of [['holdem', { sb: 25, bb: 50, casual: true }, '.hdfelt'], ['blackjack', { bb: 10, casual: true }, '.bjtable'], ['bigtwo', {}, '.btlobby'], ['mahjong', { rule: 'taiwan' }, '.roomtag, .seatcard, .lobby']] as const) {
+  for (const [game, cfg, sel] of [['holdem', { sb: 25, bb: 50, casual: true }, '.hdfelt'], ['blackjack', { bb: 10, casual: true }, '.bjtable'], ['bigtwo', {}, '.btlobby'], ['mahjong', { rule: 'taiwan' }, '.roomtag, .seatcard, .lobby'], ['gomoku', { size: 15 }, '.btlobby']] as const) {
     const url = await tableUrl(game, cfg)
     await check(`${game} table`, url.replace(BASE, ''), sel, url.replace(BASE, ''))
   }
