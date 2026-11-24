@@ -200,8 +200,9 @@ export abstract class TurnGame {
       seats: this.seats.map((s, i) => ({ seat: i, name: s.name, bot: s.bot, connected: s.connected, empty: !s.id && !s.bot, me: i === you })),
       turn: this.status === 'playing' ? this.turn() : -1,
       timeLeft: this.deadline && this.status === 'playing' && !this.seats[this.turn()]?.bot ? Math.max(0, this.deadline - Date.now()) : null,
-      state: this.status === 'lobby' ? null : this.gameView(you),
-      result: this.result,
+      // a copy, so a view never shares arrays with the live game (matters in practice mode, where the engine runs in the page)
+      state: this.status === 'lobby' ? null : JSON.parse(JSON.stringify(this.gameView(you))),
+      result: this.result ? JSON.parse(JSON.stringify(this.result)) : null,
     }
   }
   onChange(fn: () => void) { this.listeners.add(fn); return () => this.listeners.delete(fn) }

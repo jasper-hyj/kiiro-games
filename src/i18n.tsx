@@ -33,6 +33,7 @@ const TITLES = {
   holdem: ["Texas Hold'em · Kiiro Games", '德州撲克 · Kiiro 遊戲', '德州扑克 · Kiiro 游戏', 'テキサスホールデム · Kiiro ゲームズ'],
   blackjack: ['Blackjack · Kiiro Games', '二十一點 · Kiiro 遊戲', '二十一点 · Kiiro 游戏', 'ブラックジャック · Kiiro ゲームズ'],
   bigtwo: ['Big Two · Kiiro Games', '大老二 · Kiiro 遊戲', '大老二 · Kiiro 游戏', '大老二 · Kiiro ゲームズ'],
+  crazyeights: ['Crazy Eights · Kiiro Games', '瘋狂八 · Kiiro 遊戲', '疯狂八 · Kiiro 游戏', 'クレイジーエイト · Kiiro ゲームズ'],
   gomoku: ['Gomoku · Kiiro Games', '五子棋 · Kiiro 遊戲', '五子棋 · Kiiro 游戏', '五目並べ · Kiiro ゲームズ'],
   room: ['Room · Kiiro Games', '房間 · Kiiro 遊戲', '房间 · Kiiro 游戏', 'ルーム · Kiiro ゲームズ'],
   admin: ['Admin · Kiiro Games', '管理 · Kiiro 遊戲', '管理 · Kiiro 游戏', '管理 · Kiiro ゲームズ'],
@@ -40,7 +41,7 @@ const TITLES = {
 function pageTitle(lang: string, simplified: boolean): string {
   const r = legacyTarget() ? null : route() // an old-style address is about to be rewritten: the hub title will do
   const page = !r ? 'hub' : r.page === 'admin' ? 'admin' : r.page === 'room' ? 'room' : r.page === 'hub' ? 'hub' : r.page === 'tiles' ? 'mahjong' : (r.game in TITLES ? r.game : 'hub')
-  const row = TITLES[page]
+  const row = (TITLES as Record<string, readonly string[]>)[page]
   return lang === 'zh' ? row[simplified ? 2 : 1] : lang === 'ja' ? row[3] : row[0]
 }
 

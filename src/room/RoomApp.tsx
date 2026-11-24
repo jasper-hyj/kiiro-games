@@ -260,7 +260,7 @@ function Rules({ game, cfg, set, signedIn }: { game: RoomGame; cfg: RoomCfg; set
     <div className="hdform rmrules">
       <h3>{t('rmRules')}</h3>
       {game === 'mahjong' && <MahjongRules cfg={cfg} set={set} />}
-      {isGen(game) && METAS[game].fields.map((f) => <Pick key={f.key} label={t(f.label)} value={cfg[f.key] as string | number | boolean} onPick={(v) => set({ [f.key]: v })} items={f.options.map(([v, l]) => [v, l.startsWith('gm') || l.startsWith('pl') ? t(l) : l] as [string | number | boolean, string])} />)}
+      {isGen(game) && METAS[game].fields.map((f) => <Pick key={f.key} label={t(f.label)} value={cfg[f.key] as string | number | boolean} onPick={(v) => set({ [f.key]: v })} items={f.options.map(([v, l]) => [v, /^[a-z][A-Za-z0-9_]*$/.test(l) ? t(l) : l] as [string | number | boolean, string])} />)}
       {game === 'holdem' && <label>{t('rmBlinds')}<select value={`${cfg.sb}/${cfg.bb}`} onChange={(e) => { const [sb, bb] = e.target.value.split('/').map(Number); set({ sb, bb }) }}>{BLINDS.map(([sb, bb]) => <option key={sb} value={`${sb}/${bb}`}>{sb}/{bb}</option>)}</select></label>}
       {game === 'blackjack' && <label>{t('rmMinBet')}<select value={Number(cfg.bb)} onChange={(e) => set({ bb: Number(e.target.value) })}>{MIN_BETS.map((b) => <option key={b} value={b}>{b}</option>)}</select></label>}
       {(game === 'mahjong' || game === 'bigtwo' || isGen(game)) ? modeSeg() : cashSeg}

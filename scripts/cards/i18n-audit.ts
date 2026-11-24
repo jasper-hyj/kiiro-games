@@ -12,6 +12,7 @@ import '../../src/games/bigtwo/strings'
 import '../../src/room/strings'
 import '../../src/games/generic/strings'
 import '../../src/games/generic/gomokuStrings'
+import '../../src/games/generic/crazyStrings'
 
 const { D, JA } = allStrings()
 const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : [] })

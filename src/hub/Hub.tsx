@@ -8,6 +8,7 @@ import '../games/blackjack/strings'
 import '../games/bigtwo/strings'
 import '../games/generic/strings'
 import '../games/generic/gomokuStrings'
+import '../games/generic/crazyStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -47,6 +48,7 @@ export const ART: Record<string, JSX.Element> = {
   blackjack: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-8 22 26)"><rect x="6" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M9.5 17l2.5-6 2.5 6M10.5 15h3" stroke-width="1.3"/><path d="M17 17.5c-3.4 3.2-5.6 4.5-5.6 7a2.6 2.6 0 0 0 4.5 1.6L15.2 30h3.6l-.7-3.9a2.6 2.6 0 0 0 4.5-1.6c0-2.5-2.2-3.8-5.6-7z"/></g><g transform="rotate(5 32 26)"><rect x="19" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M23 11v6M23 14l4-3M23 14l4 3" stroke-width="1.3"/><path d="M30 18l5 5-5 5-5-5z"/></g><circle cx="50" cy="33" r="9" fill="#1a2240"/><circle cx="50" cy="33" r="9" stroke-dasharray="4 3.3"/><circle cx="50" cy="33" r="4.6"/></svg>,
   bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="17" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(-18 27 45)"/><rect x="27" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(18 37 45)"/><rect x="22" y="6" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27.5 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 2.2-1.8 3.6-4.5 6L27.5 24h9"/><path d="M32 27l3 3.5-3 3.5-3-3.5z"/></svg>,
   gomoku: <svg viewBox="0 0 64 48" aria-hidden><path d="M10 6v36M22 6v36M34 6v36M46 6v36M6 12h44M6 24h44M6 36h44" opacity=".4" strokeWidth="1.2"/><circle cx="22" cy="12" r="5" fill="#e8b66a"/><circle cx="34" cy="24" r="5" fill="#e8b66a"/><circle cx="46" cy="36" r="5" fill="#e8b66a"/><circle cx="34" cy="12" r="5" fill="#1a2240"/><circle cx="22" cy="24" r="5" fill="#1a2240"/><circle cx="22" cy="36" r="5" fill="#1a2240"/></svg>,
+  crazyeights: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-14 24 44)"><rect x="12" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M23 18l5 6-5 6-5-6z"/></g><g transform="rotate(8 40 44)"><rect x="29" y="5" width="22" height="34" rx="4" fill="#1a2240"/><circle cx="40" cy="17" r="4"/><circle cx="40" cy="28" r="5"/><path d="M34 11h0M46 33h0" strokeWidth="2.4"/></g></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -55,6 +57,7 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'blackjack', name: 'bjName', blurb: 'hubBjBlurb', practice: practiceUrl('blackjack') },
   { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: practiceUrl('bigtwo') },
   { key: 'gomoku', name: 'gomoku', blurb: 'gomokuBlurb', practice: practiceUrl('gomoku') },
+  { key: 'crazyeights', name: 'crazyeights', blurb: 'crazyeightsBlurb', practice: practiceUrl('crazyeights') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
