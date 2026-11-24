@@ -13,7 +13,7 @@ const client = async (code: string, id: string, name: string, game: string, extr
   return { ws, got, view: () => got.filter((m) => m.t === 'pview').at(-1)?.view, send: (m: unknown) => ws.send(JSON.stringify({ t: 'p', m })), say: (text: string) => ws.send(JSON.stringify({ t: 'talk', text })), errors: () => got.filter((m) => m.t === 'error').map((m) => m.message) }
 }
 for (const [game, cfg] of [['gomoku', { size: 15 }]] as const) {
-  const code = await makeTable(game, cfg)
+  const code = await makeTable(game, cfg, undefined, 2)
   const a = await client(code, 'pa' + code, 'Ann', game)
   ok(a.view()?.kind === game && a.view().you >= 0, `${game}: the first person to open the table sits at it`)
   ok(a.view()?.host === true, `${game}: and is its host (the room's host)`)
@@ -22,10 +22,8 @@ for (const [game, cfg] of [['gomoku', { size: 15 }]] as const) {
   ok(b.view()?.you >= 0 && b.view().host === false, `${game}: a second person sits down as a guest`)
   const w = await client(code, 'pw' + code, 'Wat', game, { watch: true })
   ok(w.view()?.you === -1 && w.view().watching === 1, `${game}: a spectator joins without a seat`)
-  b.send({ k: 'start' }); await sleep(300)
-  ok(a.view().status === 'lobby', `${game}: a guest cannot start the game`)
-  a.send({ k: 'start' }); await sleep(500)
-  ok(a.view().status === 'playing', `${game}: the host starts it`)
+  await sleep(500)
+  ok(a.view().status === 'playing', `${game}: a table made from a room starts by itself once every seat is taken by the room's players`)
   const first = a.view().turn === a.view().you ? a : b
   const second = first === a ? b : a
   first.send({ k: 'act', a: { x: 7, y: 7 } }); await sleep(300)

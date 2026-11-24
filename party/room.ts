@@ -149,7 +149,7 @@ export class Room extends Server<Env> {
         if (ns) {
           try {
             const stub = await getServerByName(ns as never, this.name)
-            const r = await stub.fetch(new Request(`https://table/parties/${party}/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id }) }))
+            const r = await stub.fetch(new Request(`https://table/parties/${party}/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id, expect: [...this.members.values()].filter((m) => !m.watching).length }) }))
             if (r.status === 409) return this.err(c, 'rmCodeClash')
             if (!r.ok) return this.err(c, 'rmTableFailed')
           } catch { return this.err(c, 'rmTableFailed') }

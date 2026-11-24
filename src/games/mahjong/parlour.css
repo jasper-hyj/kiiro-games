@@ -1433,3 +1433,16 @@ input, textarea, input *, .selectable { -webkit-user-select: text; user-select: 
 :root:root .btn { border-radius: 999px; font-family: var(--k-sans); font-weight: 700; }
 :root:root .btn.gold { background: var(--k-accent); color: var(--k-accent-ink); box-shadow: 0 4px 14px rgba(232,182,106,.22); }
 @media (hover: hover) { :root:root .btn.gold:hover { background: var(--k-accent-hi); } }
+
+/* Mahjong's waiting lobby and join screens sit on paper like the rest of the site: dark ink on cream for everything that is not on the felt */
+.app:not(.game) { color: var(--k-ink); }
+.app:not(.game) .floatbar .rulesfab { background: var(--k-panel); color: var(--k-ink); border: 1px solid var(--k-line2); box-shadow: var(--k-shadow-sm); }
+.app:not(.game) .floatbar .seg { background: var(--k-panel); border: 1px solid var(--k-line2); }
+:root:root:root .app:not(.game) .floatbar .seg button { color: var(--k-mute); background: none; }
+:root:root:root .app:not(.game) .floatbar .seg button.on { background: var(--k-accent); color: var(--k-accent-ink); }
+.app:not(.game) .floatbar .roomtag { background: var(--k-panel); color: var(--k-ink); border-color: var(--k-line2); }
+.app:not(.game) .page.lobby > .k-head .k-title, .app:not(.game) .page.lobby > .k-head .k-title b { color: var(--k-ink); }
+.app:not(.game) .page.lobby > .k-head .k-sub, .app:not(.game) .page.lobby > .k-head .k-ghost { color: var(--k-mute); }
+.app:not(.game) .page.lobby > .k-head .k-back { color: var(--k-ink); background: rgba(var(--k-ink-rgb),.08); }
+.app:not(.game) .page.lobby .kg-table a { color: #f1c885; text-decoration-color: rgba(241,200,133,.6); }
+.app:not(.game) .joinpage .btn.alt { color: var(--k-ink); border-color: var(--k-line2); }

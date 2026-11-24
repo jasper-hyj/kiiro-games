@@ -38,12 +38,12 @@ await check('bigtwo practice', '/bigtwo/practice', '.bthand .btcard', '/bigtwo/p
 await check('gomoku practice', '/gomoku/practice', '.gmboard', '/gomoku/practice', /Gomoku/)
 await check('mahjong practice', '/mahjong/practice', '.handrow .tile', '/mahjong/practice', /Mahjong/)
 { // a table made by a room opens at /<game>/<code>
-  for (const [game, cfg, sel] of [['holdem', { sb: 25, bb: 50, casual: true }, '.hdfelt'], ['blackjack', { bb: 10, casual: true }, '.bjtable'], ['bigtwo', {}, '.btlobby'], ['mahjong', { rule: 'taiwan' }, '.roomtag, .seatcard, .lobby'], ['gomoku', { size: 15 }, '.btlobby']] as const) {
+  for (const [game, cfg, sel] of [['holdem', { sb: 25, bb: 50, casual: true }, '.hdfelt'], ['blackjack', { bb: 10, casual: true }, '.bjtable'], ['bigtwo', {}, '.btlobby, .bttable, .plseats'], ['mahjong', { rule: 'taiwan' }, '.board, .roomtag, .seatcard, .lobby'], ['gomoku', { size: 15 }, '.btlobby, .bttable, .plseats']] as const) {
     const url = await tableUrl(game, cfg)
     await check(`${game} table`, url.replace(BASE, ''), sel, url.replace(BASE, ''))
   }
 }
-{ const url = await tableUrl('bigtwo', {}); await check('watch link', url.replace(BASE, '') + '?watch=1', '.btlobby', /\?watch=1$/) }
+{ const url = await tableUrl('bigtwo', {}); await check('watch link', url.replace(BASE, '') + '?watch=1', '.btlobby, .bttable, .plseats', /\?watch=1$/) }
 await check('a code nobody has', '/holdem/9999', '.k-empty', '/holdem/9999')
 await check('admin tab in the path', '/admin/users', '.adwrap', '/admin/users')
 
@@ -54,5 +54,5 @@ await check('old: room with a code', '/room?room=1234', '.kg-solo, .rmtable', /^
 await check('old: create with a pick', '/room?create=1&pick=bigtwo', '.rmpeople', /^\/room\/\d{4}$/)
 await check('old: practice flag', '/holdem?practice=1', '.hd-actions', '/holdem/practice')
 await check('old: solo mahjong', '/?solo=1&rule=taiwan&speed=0.02', '.handrow .tile', /^\/mahjong\/practice\?/)
-{ const url = await tableUrl('bigtwo', {}); const code = url.split('/').pop(); await check('old: table with a room flag', `/bigtwo?room=${code}&from=room&watch=1`, '.btlobby', `/bigtwo/${code}?watch=1`) }
+{ const url = await tableUrl('bigtwo', {}); const code = url.split('/').pop(); await check('old: table with a room flag', `/bigtwo?room=${code}&from=room&watch=1`, '.btlobby, .bttable, .plseats', `/bigtwo/${code}?watch=1`) }
 await b.close(); console.log(fails ? `${fails} FAILED` : 'all passed'); process.exit(fails ? 1 : 0)

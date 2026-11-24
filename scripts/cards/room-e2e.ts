@@ -13,16 +13,16 @@ const clickText = (p: any, sel: string, text: string) => p.evaluate((s: string, 
 for (const [game, label, rules, expectPath, readySel] of [
   ['holdem', "Texas Hold'em", async (p: any) => { await p.select('.rmrules select', '50/100') }, '/holdem', '.hdfelt'],
   ['blackjack', 'Blackjack', async (p: any) => { await p.select('.rmrules select', '20') }, '/blackjack', '.bjtable'],
-  ['bigtwo', 'Big Two', async () => {}, '/bigtwo', '.btlobby'],
-  ['gomoku', 'Gomoku', async () => {}, '/gomoku', '.btlobby'],
-  ['crazyeights', 'Crazy Eights', async () => {}, '/crazyeights', '.btlobby'],
-  ['bridge', 'Bridge', async () => {}, '/bridge', '.btlobby'],
-  ['doudizhu', 'Dou Dizhu', async () => {}, '/doudizhu', '.btlobby'],
-  ['xiangqi', 'Xiangqi', async () => {}, '/xiangqi', '.btlobby'],
-  ['chess', 'Chess', async () => {}, '/chess', '.btlobby'],
-  ['yahtzee', 'Yahtzee', async () => {}, '/yahtzee', '.btlobby'],
-  ['liarsdice', "Liar's Dice", async () => {}, '/liarsdice', '.btlobby'],
-  ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.click('.rmrulecard[data-rule=riichi]'); await p.waitForSelector('.rmrulecard.on[data-rule=riichi]') }, '/mahjong', '.roomtag, .seatcard, .lobby, .page'],
+  ['bigtwo', 'Big Two', async () => {}, '/bigtwo', '.bttable'],
+  ['gomoku', 'Gomoku', async () => {}, '/gomoku', '.plseats'],
+  ['crazyeights', 'Crazy Eights', async () => {}, '/crazyeights', '.plseats'],
+  ['bridge', 'Bridge', async () => {}, '/bridge', '.plseats'],
+  ['doudizhu', 'Dou Dizhu', async () => {}, '/doudizhu', '.plseats'],
+  ['xiangqi', 'Xiangqi', async () => {}, '/xiangqi', '.plseats'],
+  ['chess', 'Chess', async () => {}, '/chess', '.plseats'],
+  ['yahtzee', 'Yahtzee', async () => {}, '/yahtzee', '.plseats'],
+  ['liarsdice', "Liar's Dice", async () => {}, '/liarsdice', '.plseats'],
+  ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.click('.rmrulecard[data-rule=riichi]'); await p.waitForSelector('.rmrulecard.on[data-rule=riichi]') }, '/mahjong', '.board, .roomtag, .seatcard, .lobby, .page'],
 ] as const) {
   const host = await page(); const guest = await page()
   await host.goto(BASE + '/', { waitUntil: 'networkidle0' })
@@ -32,7 +32,7 @@ for (const [game, label, rules, expectPath, readySel] of [
   const code = new URL(host.url()).pathname.split('/')[2]
   // the guest joins from the hub's code box
   await guest.goto(BASE + '/', { waitUntil: 'networkidle0' })
-  await guest.type('#kgcode', code); await guest.click('.kg-join button'); await guest.waitForSelector('.rmpeople', { timeout: 15000 })
+  await guest.click('.k-codebox'); await guest.keyboard.type(code); await guest.waitForSelector('.rmpeople', { timeout: 15000 })
   await sleep(500)
   ok((await host.$$eval('.rmpeople li', (e) => e.length)) === 2, `${game}: both people appear in the room`)
   ok(await guest.$('.rmgames') === null, `${game}: only the host sees the game chooser`)

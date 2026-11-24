@@ -54,6 +54,21 @@ export class Main extends Server<Env> {
    * A table prepared by its room: the room's host pressed Start, the room asked this table (over the internal route below) to
    * expect that game with those rules and that host. Whoever joins first creates it; nobody needs to carry settings in a URL.
    */
+  private auto: { expect: number; timer: ReturnType<typeof setTimeout> | null } | null = null
+  /** Start a room-made Mahjong / Big Two table when everyone from the room has sat down, or 6 seconds after the first of them did. */
+  private maybeAutoStart() {
+    const a = this.auto
+    if (!a) return
+    const go = () => {
+      if (a.timer) clearTimeout(a.timer)
+      this.auto = null
+      if (this.kind === 'mahjong' && this.table.status === 'lobby' && this.table.hostId && !this.table.config.ranked) { this.table.start(this.table.hostId); this.broadcastViews() }
+      else if (this.kind === 'bigtwo' && this.bt && this.bt.status === 'lobby' && this.bt.hostId && !this.bt.config.ranked) { this.bt.start(this.bt.hostId); this.broadcastViews() }
+    }
+    const humans = this.kind === 'mahjong' ? this.table.slots.filter((s) => s.id).length : this.kind === 'bigtwo' && this.bt ? this.bt.seats.filter((s) => s.id).length : 0
+    if (humans >= a.expect) return go()
+    if (humans > 0 && !a.timer) a.timer = setTimeout(go, 6000)
+  }
   private pending: { game: Kind; cfg: Record<string, unknown>; host: string; until: number; applied: boolean } | null = null
   private livePending() { if (this.pending && this.pending.until < Date.now()) { this.pending = null; void this.store.delete('pending') } return this.pending }
   private occupied(): boolean { return this.kind === 'bigtwo' ? !!this.bt?.hasPlayers() : this.isCash() ? !!this.game?.hasPlayers() : this.table.slots.some((s) => s.id) }
@@ -63,7 +78,7 @@ export class Main extends Server<Env> {
     const path = new URL(request.url).pathname
     if (path.endsWith('/status')) return Response.json({ kind: this.kind, taken: this.kind !== null && this.occupied() })
     if (request.method === 'POST' && path.endsWith('/__prepare')) {
-      const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string }
+      const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string; expect?: number }
       const game = (['mahjong', 'holdem', 'blackjack', 'bigtwo'] as Kind[]).find((g) => g === b.game)
       if (!game || typeof b.host !== 'string') return Response.json({ error: 'bad_request' }, { status: 400 })
       // somebody is really here (an open connection): keep the table, or refuse if it is another game. A table whose players have all left (their seats only wait
@@ -77,6 +92,8 @@ export class Main extends Server<Env> {
       }
       this.pending = { game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3, applied: false }
       void this.store.put('pending', this.pending)
+      // a table made from a room starts by itself once the room's players are seated (or after a short wait for stragglers): no second "start" step
+      this.auto = game === 'mahjong' || game === 'bigtwo' ? { expect: Math.max(1, Math.min(4, Math.floor(b.expect ?? 1))), timer: null } : null
       return Response.json({ ok: true })
     }
     return new Response('Not found', { status: 404 })
@@ -286,6 +303,7 @@ export class Main extends Server<Env> {
       if (seat < 0) { this.watchers.add(id); this.guestNames.set(id, name) } else this.watchers.delete(id)
       sender.setState({ id })
       this.applyPending(id)
+      this.maybeAutoStart()
       this.broadcastViews()
       this.sendTalkLog(sender)
       return
@@ -359,6 +377,7 @@ export class Main extends Server<Env> {
     sender.setState({ id })
     this.guestNames.set(id, name)
     this.applyPending(id)
+    this.maybeAutoStart()
     this.broadcastViews()
     this.sendTalkLog(sender)
   }

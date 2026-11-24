@@ -23,7 +23,7 @@ await p.evaluateOnNewDocument(() => { // remember every WebSocket the page opens
   ;(window as any).WebSocket = class extends W { constructor(u: string | URL, pr?: string | string[]) { super(u, pr); (window as any).__sockets.push(this) } }
 })
 await p.goto(await tableUrl('bigtwo', {}), { waitUntil: 'networkidle0' })
-await p.waitForSelector('.hdform .hdbtn.primary'); await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard')
+await p.waitForSelector('.hdform .hdbtn.primary, .bthand .btcard'); if (await p.$('.hdform .hdbtn.primary')) await p.click('.hdform .hdbtn.primary'); await p.waitForSelector('.bthand .btcard')
 const cards = async () => p.$$eval('.bthand .btcard', (e) => e.length)
 const lost = async () => p.$$eval('.k-pill.warn', (e) => e.map((x) => x.textContent || '').join('|'))
 const n0 = await cards()

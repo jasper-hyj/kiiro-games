@@ -104,8 +104,8 @@
 
 /* table chat */
 /* table chat: one dark translucent block in the bottom-left corner, small type, tag in amber, names coloured (an in-game chat, always there) */
-.kgchat { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--lift, 0px)); width: min(330px, calc(100vw - 20px)); z-index: 40; display: grid; font: 400 12px/1.4 var(--sans, system-ui, sans-serif); color: #f1f3f8; pointer-events: none; background: rgba(26,33,31,.5); transition: background .2s; }
-.kgchat.on { background: rgba(26,33,31,.78); }
+.kgchat { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--lift, 0px)); width: min(330px, calc(100vw - 20px)); z-index: 40; display: grid; font: 400 12px/1.4 var(--sans, system-ui, sans-serif); color: #f1f3f8; pointer-events: none; background: rgba(38,48,45,.86); transition: background .2s; }
+.kgchat.on { background: rgba(38,48,45,.95); }
 .kgfeed { display: grid; gap: 1px; padding: 6px 9px 4px; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 .kgfeed:empty { display: none; }
 .kgline { transition: opacity .8s; } .kgline.old { opacity: .5; }
@@ -114,7 +114,7 @@
 .kgin { pointer-events: auto; display: flex; align-items: center; gap: 7px; padding: 0 9px; height: 28px; border-top: 1px solid rgba(255,255,255,.07); opacity: .7; transition: opacity .2s; }
 .kgin:hover, .kgchat.on .kgin { opacity: 1; }
 :root:root:root .kgchat .kgin input { border-radius: 0; box-shadow: none; min-height: 0; margin: 0; flex: 1; min-width: 0; height: 100%; background: none; border: 0; outline: 0; color: #f1f3f8; font: 400 12px var(--sans, system-ui, sans-serif); padding: 0; user-select: text; -webkit-user-select: text; }
-:root:root:root .kgchat .kgin input::placeholder { color: rgba(241,243,248,.42); }
+:root:root:root .kgchat .kgin input::placeholder { color: rgba(241,243,248,.62); }
 @media (max-width: 640px) { .kgchat { width: min(270px, calc(100vw - 20px)); } .kgfeed .kgline:nth-last-child(n+4) { display: none; } }
 /* short screens: fewer lines; landscape phones under 400px tall have no free corner, so the chat steps aside there */
 @media (max-height: 520px) { .kgchat { width: 250px; } .kgfeed .kgline:nth-last-child(n+3) { display: none; } }

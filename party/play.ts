@@ -22,6 +22,20 @@ export class Play extends Server<Env> {
   private talkLog: { n: number; name: string; text: string }[] = []
   private talkN = 0
   private lastTalk = new Map<string, number>()
+  private auto: { expect: number; timer: ReturnType<typeof setTimeout> | null } | null = null
+  /** A table made from a room starts by itself once the room's players are seated, or 6 seconds after the first of them sat: no second "start" step. */
+  private maybeAutoStart() {
+    const a = this.auto, g = this.game
+    if (!a || !g) return
+    const go = () => {
+      if (a.timer) clearTimeout(a.timer)
+      this.auto = null
+      if (g.status === 'lobby' && g.hostId && !g.config.ranked) { g.start(g.hostId); this.pushViews() }
+    }
+    const humans = g.seats.filter((s) => s.id).length
+    if (humans >= Math.min(a.expect, g.seats.length)) return go()
+    if (humans > 0 && !a.timer) a.timer = setTimeout(go, 6000)
+  }
   private pending: { game: string; cfg: Record<string, unknown>; host: string; until: number } | null = null
   private recorded: string | null = null
   private persistTimer: ReturnType<typeof setTimeout> | null = null
@@ -63,7 +77,7 @@ export class Play extends Server<Env> {
     const path = new URL(request.url).pathname
     if (path.endsWith('/status')) return Response.json({ kind: this.kind, taken: !!this.game?.hasPlayers() })
     if (request.method === 'POST' && path.endsWith('/__prepare')) {
-      const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string }
+      const b = (await request.json().catch(() => ({}))) as { game?: string; cfg?: Record<string, unknown>; host?: string; expect?: number }
       if (!b.game || !isGeneric(b.game) || typeof b.host !== 'string') return Response.json({ error: 'bad_request' }, { status: 400 })
       const here = [...this.getConnections()].length > 0 // seats that only wait out the reconnect grace do not hold the table
       if (this.game?.hasPlayers() && here) return Response.json(this.kind === b.game ? { ok: true, existing: true } : { error: 'code_taken', kind: this.kind }, { status: this.kind === b.game ? 200 : 409 })
@@ -71,6 +85,7 @@ export class Play extends Server<Env> {
       this.game = null; this.kind = null
       this.pending = { game: b.game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3 }
       void this.store.put('pending', this.pending)
+      this.auto = { expect: Math.max(1, Math.min(8, Math.floor(b.expect ?? 1))), timer: null }
       return Response.json({ ok: true })
     }
     return new Response('Not found', { status: 404 })
@@ -124,6 +139,7 @@ export class Play extends Server<Env> {
       // asked to watch, or no seat is free: watch instead of being turned away
       if (m.watch === true || g.join(id, name) < 0) this.watchers.add(id); else this.watchers.delete(id)
       this.applyPending(id)
+      this.maybeAutoStart()
       this.pushViews()
       if (this.talkLog.length) this.send(sender, { t: 'talklog', msgs: this.talkLog })
       return
