@@ -104,8 +104,8 @@
 
 /* table chat */
 /* table chat: one dark translucent block in the bottom-left corner, small type, tag in amber, names coloured (an in-game chat, always there) */
-.kgchat { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--lift, 0px)); width: min(330px, calc(100vw - 20px)); z-index: 40; display: grid; font: 400 12px/1.4 var(--sans, system-ui, sans-serif); color: #f1f3f8; pointer-events: none; background: rgba(6,9,18,.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: background .2s; }
-.kgchat.on { background: rgba(6,9,18,.78); }
+.kgchat { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--lift, 0px)); width: min(330px, calc(100vw - 20px)); z-index: 40; display: grid; font: 400 12px/1.4 var(--sans, system-ui, sans-serif); color: #f1f3f8; pointer-events: none; background: rgba(26,33,31,.5); transition: background .2s; }
+.kgchat.on { background: rgba(26,33,31,.78); }
 .kgfeed { display: grid; gap: 1px; padding: 6px 9px 4px; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 .kgfeed:empty { display: none; }
 .kgline { transition: opacity .8s; } .kgline.old { opacity: .5; }
@@ -139,7 +139,7 @@ body.has-kgchat .kg.hd .kg-wrap { padding-bottom: 150px; }
 /* small phones: the chat is a round button; opening it shows the feed over the table */
 .kgchat.compact { width: auto; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .kgchat.compact:not(.open) .kgchat-body { display: none; }
-.kgchat.compact.open { width: min(300px, calc(100vw - 20px)); background: rgba(6,9,18,.82); }
+.kgchat.compact.open { width: min(300px, calc(100vw - 20px)); background: rgba(26,33,31,.82); }
 .kgchat-pill { pointer-events: auto; position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(26,33,31,.85); box-shadow: 0 4px 12px rgba(3,6,16,.45), inset 0 0 0 1px rgba(var(--k-ink-rgb),.14); font-size: 20px; cursor: pointer; }
 .kgchat-pill b { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--k-accent); color: var(--k-accent-ink); font: 700 11px/18px var(--k-sans); }
 .kgchat-close { pointer-events: auto; position: absolute; top: 2px; right: 4px; width: 32px; height: 32px; border: 0; background: none; color: var(--k-mute); font-size: 20px; cursor: pointer; }
@@ -170,3 +170,8 @@ body.has-kgchat .kg.hd .kg-wrap { padding-bottom: 150px; }
 @media (max-width: 340px) { .hd .hdseat { width: 80px; } .hd .hdcenter { width: 96%; } .hdboard { gap: 4px; } .hd { --cw: 22px; } .hdhole { --cw: 22px; } .hdseat.me .hdhole { --cw: 30px; } }
 /* landscape phones: the action bar stays on screen at the bottom */
 @media (max-height: 520px) and (orientation: landscape) { .hd .hdbar { position: sticky; bottom: 0; background: linear-gradient(to bottom, rgba(15,20,36,0), var(--k-bg) 30%); } .hd .kg-wrap.hdwrap { display: block; } }
+
+/* the chat corner: soft rounded corners all round (the input row is clipped to them) */
+.kgchat, .kgchat.compact.open { border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(50,38,22,.3); }
+.kgchat.compact:not(.open) { border-radius: 0; box-shadow: none; overflow: visible; }
+.kgchat .kgfeed { padding-top: 8px; }
