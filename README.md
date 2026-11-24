@@ -15,6 +15,7 @@ Small browser games for friends and clubs, free to play.
 | `/room`, `/room/new?game=holdem`, `/room/1234` | create or join, a new room, a room (the invite link) |
 | `/<game>/1234`, `/<game>/1234?watch=1` | that room's table (play, or only watch); game = `mahjong` `holdem` `blackjack` `bigtwo` |
 | `/<game>/practice`, `/mahjong/tutorial` | against bots in the browser |
+| `/<game>/local` | two people on one device (Gomoku, Chess, Xiangqi, Checkers, Reversi, Go, Chinese Checkers, Yahtzee: games with no hidden information); the table is shown from the seat on turn |
 | `/admin`, `/admin/users` | admin (the tab is in the path) |
 
 Older addresses (`/holdem?room=1234&from=room`, `/?solo=1`, `/room?create=1&pick=bigtwo`, ...) are rewritten to these. The API is listed at the top of `party/api.ts` (REST-style; the older route names still answer).
@@ -97,6 +98,7 @@ All chip games share one room-code space; `src/games/shared/cash.ts` is the cont
 
 - `npm run check` runs the type check plus the Mahjong, Hold'em, Blackjack and Big Two engine tests.
 - `npm run test:cards` runs the statistical checks (shuffle uniformity, seven-card hand frequencies against the exact values, pocket aces equity, blackjack basic strategy against the known house edge of about -0.5%, even seat wins at Hold'em, fair Big Two deals) and the disconnect/timeout tests.
+- `scripts/generic/more-test.ts` (rules of Reversi, Checkers, Go, Chinese Checkers, Hearts, Spades), `scripts/generic/local-test.ts` (same-device mode), `scripts/generic/engine-test.ts` (every turn-based game plays whole bot games).
 - With `wrangler dev` (:8787) and `vite --port 5200` running: `scripts/cards/layout-audit.ts` (244 screens over 19 phone, tablet and desktop sizes; `ONLY=390x844 ...` narrows it), `scripts/cards/talk-test.ts` (chat), `scripts/holdem/bot-test.ts` (the Hold'em practice bots: hundreds of hands, no illegal action, chips add up), `scripts/holdem/practice-test.ts` and `scripts/mahjong/playthrough.ts` (a whole Mahjong practice game through the UI), `scripts/cards/input-test.ts` (mouse, touch and keyboard, task by task), `scripts/cards/playthrough.ts` (real browsers playing every card game), `scripts/live-e2e.ts` (smoke test of the deployed site), `scripts/cards/room-test.ts` (rooms over WebSockets), `scripts/cards/room-e2e.ts` (two browsers: create a room, choose game and rules, watch, chat, start, back to the room), `scripts/cards/watch-test.ts` (observers in every game), `scripts/cards/practice-test.ts` (offline practice, needs only vite), and the `ws-test.ts` in each game's folder (real tables over WebSockets, with the ledger audit).
 - `scripts/cards/i18n-audit.ts` checks every text key exists in English, Chinese and Japanese.
 

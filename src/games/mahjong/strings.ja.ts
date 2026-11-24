@@ -57,7 +57,7 @@ export const MAHJONG_JA: Record<string, string> = {
   streakShort: '連荘 {n}', sticksShort: '供託 {n}', honbaShort: '{n}本場', swapOpt: '牌の交換（換三張）',
   scNone: '誰も和了せず、牌山が尽きました',
   inviteLink: '招待リンクをコピー', copied: 'コピーしました', seatsNote: '人',
-  you: 'あなた', human: 'プレイヤー', botSeat: 'CPU · 友達が参加できます', hostDecides: '',
+  you: 'あなた', human: 'プレイヤー', botSeat: 'CPU · 友達が参加できます', hostDecides: ' ',
   startGame: '対局開始', waitHost: 'ホストの開始を待っています…',
   tsumo: 'ツモ', ron: 'ロン', pon: 'ポン', kan: 'カン', chi: 'チー', pass: 'パス', riichi: 'リーチ', cancelRiichi: 'リーチ取消', addKan: '加槓', nuki: '北抜き',
   abortDraw: '九種九牌で流局',

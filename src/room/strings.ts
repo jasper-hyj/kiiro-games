@@ -51,7 +51,7 @@ registerStrings({}, {
   rmNoTableTitle: 'このテーブルは開いていません', rmNoTableBody: 'テーブルはルームから開きます。ルームを作り、ゲームを選んで友達を招待しましょう。',
   rmCodeClash: 'このルームコードは別のテーブルで使われています。戻って新しいルームを作ってください。',
   kgBot: 'CPU',
-  rulesInRoomHost: '',
+  rulesInRoomHost: ' ',
   rmTableFailed: 'テーブルを用意できませんでした。もう一度「開始」を押してください。',
   kgRefilled: 'チップがなくなったので、テーブルが {n} まで補充しました。カジュアルテーブルではチップ切れになりません。',
   kgBustTitle: 'チップがなくなりました', kgBustBody: 'アカウントから買い足せます（利用可能 {n}）。またはテーブルを離れます。',
