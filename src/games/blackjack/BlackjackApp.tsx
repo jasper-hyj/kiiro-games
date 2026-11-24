@@ -8,7 +8,7 @@ import { Card } from '../holdem/ui/Cards'
 import { connectLocalBlackjack } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
 import { TalkBox } from '../shared/TalkBox'
-import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
+import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
 import { NoRoom } from '../../ui/components'
 import '../../room/strings'
@@ -118,6 +118,7 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
   const room_ = v.betLimits.max
   const cap = Math.min(v.betLimits.max, you ? you.stack + you.pending : 0)
   const addChip = (n: number) => setBet((b) => Math.min(cap, b + n))
+  const bust = !v.config.casual && !!you && v.phase !== 'play' && v.phase !== 'dealer' && you.stack + you.pending < minB
   const betOk = bet >= minB && bet % 2 === 0 && bet <= cap
   const placeBet = () => { if (v.canBet && betOk) { setLastBet(bet); send({ k: 'act', a: { a: 'bet', amount: bet } }) } }
   const act = (a: 'hit' | 'stand' | 'double' | 'split') => { if (v.options && (a === 'stand' || v.options[a])) send({ k: 'act', a: { a } }) }
@@ -168,9 +169,11 @@ function BjTable({ view, status, room, error, send, talk, say, leave, me, openSi
           </div>
         </div>
 
+        <RefillNotice stack={you ? you.stack : undefined} casual={v.config.casual} minStack={minB} />
         <div className="hdbar">
           {you ? (
-            v.options ? (
+            bust ? <OutOfChips balance={me?.balance ?? 0} min={minB} max={Math.max(0, v.buyin.max - you.stack - you.pending)} step={minB} onBuy={(n) => { send({ k: 'rebuy', amount: n }); setTimeout(() => void refreshMe(), 900) }} onLeave={leave} />
+            : v.options ? (
               <div className="hdactions bj-actions">
                 <button className="hdbtn primary" disabled={!v.options.hit} onClick={() => act('hit')}>{t('bjHit')}<Kbd k="H" /></button>
                 <button className="hdbtn" onClick={() => act('stand')}>{t('bjStand')}<Kbd k="S" /></button>

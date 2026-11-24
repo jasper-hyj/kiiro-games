@@ -12,7 +12,7 @@ import { best, categoryOf } from './engine/eval'
 import { connectLocalHoldem } from '../shared/localCash'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
 import { TalkBox } from '../shared/TalkBox'
-import { Hotkeys, Kbd, SeatChip, TableHeader } from '../../ui/components'
+import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '../../ui/components'
 import { backToRoom, fromRoom, makeCfg, roomSuffix } from '../shared/fromRoom'
 import { NoRoom } from '../../ui/components'
 import '../../room/strings'
@@ -157,6 +157,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
   const link = `${location.origin}${location.pathname}?room=${room}`
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* ignore */ } }
   const canSitCash = !v.config.casual
+  const bust = canSitCash && !!youSeat && youSeat.stack === 0 && v.street === 'wait'
   const raiseLabel = turn && v.pot > 0 && turn.canRaise ? (v.seats.some((s) => s.bet > 0) ? t('hdRaise', { n: fmt(raise) }) : t('hdBet', { n: fmt(raise) })) : ''
 
   const raiseStep = Math.max(5, v.config.bb)
@@ -216,6 +217,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
           })}
         </div>
 
+        <RefillNotice stack={youSeat ? youSeat.stack : undefined} casual={v.config.casual} minStack={v.config.bb} />
         <div className="hdbar">
           {youSeat ? (
             turn ? (
@@ -241,6 +243,8 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
                 )}
                 {!turn.canRaise && turn.maxRaiseTo > 0 && <button className="hdbtn" onClick={() => send({ k: 'act', a: { a: 'allin' } })}>{t('hdAllIn')}<Kbd k="A" /></button>}
               </div>
+            ) : bust ? (
+              <OutOfChips balance={me?.balance ?? 0} min={v.buyin.min} max={Math.max(0, v.buyin.max - youSeat.stack)} step={v.config.bb} onBuy={(n) => { send({ k: 'rebuy', amount: n }); setTimeout(() => void refreshMe(), 900) }} onLeave={leave} />
             ) : (
               <div className="hdactions idle">
                 {youSeat.out ? <><span className="muted">{t('hdOutNote')}</span><button className="hdbtn primary" onClick={() => send({ k: 'out', out: false })}>{t('hdBack')}</button></>

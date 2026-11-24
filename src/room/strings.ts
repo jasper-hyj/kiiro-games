@@ -18,6 +18,11 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
   rmNoTableTitle: ['This table is not open', '這張牌桌未開放'], rmNoTableBody: ['Tables are opened from a room: create one, pick the game and invite friends.', '牌桌從房間開啟：開一個房間、選擇遊戲並邀請朋友。'],
   rmCodeClash: ['This room code is already used by another table. Go back and create a new room.', '這個房間代碼已被其他牌桌使用，請回去重新開一個房間。'],
   kgBot: ['Bot', '電腦'],
+  kgRefilled: ['You ran out, so the table topped you up to {n} chips. Casual tables never run dry.', '籌碼用完了，牌桌已為你補到 {n}。休閒桌不會讓你沒籌碼玩。'],
+  kgBustTitle: ["You're out of chips", '你的籌碼用完了'],
+  kgBustBody: ['Buy back in from your account ({n} chips available), or leave the table.', '可從帳戶補碼（可用 {n}），或離開牌桌。'],
+  kgBustBuy: ['Buy back in for {n}', '補碼 {n}'], kgBustLeave: ['Leave table', '離開牌桌'],
+  kgBustNone: ['Your account has no chips to buy back in. You get a small top-up once a day, and casual tables are always free to play.', '你的帳戶沒有可補的籌碼。每天會補發少量籌碼，休閒桌可隨時免費遊玩。'],
   rmConnecting: ['Connecting…', '連線中…'], rmLost: ['Connection lost. Reconnecting…', '連線中斷，重新連線中…'],
   rmOr: ['Have a direct table code? Joining it works here too.', '有牌桌代碼嗎？也可以在這裡輸入加入。'],
 }
@@ -41,6 +46,10 @@ registerStrings({}, {
   rmNoTableTitle: 'このテーブルは開いていません', rmNoTableBody: 'テーブルはルームから開きます。ルームを作り、ゲームを選んで友達を招待しましょう。',
   rmCodeClash: 'このルームコードは別のテーブルで使われています。戻って新しいルームを作ってください。',
   kgBot: 'CPU',
+  kgRefilled: 'チップがなくなったので、テーブルが {n} まで補充しました。カジュアルテーブルではチップ切れになりません。',
+  kgBustTitle: 'チップがなくなりました', kgBustBody: 'アカウントから買い足せます（利用可能 {n}）。またはテーブルを離れます。',
+  kgBustBuy: '{n} 買い足す', kgBustLeave: 'テーブルを離れる',
+  kgBustNone: 'アカウントに買い足せるチップがありません。1日1回少額が補充され、カジュアルテーブルはいつでも無料で遊べます。',
   rmConnecting: '接続中…', rmLost: '接続が切れました。再接続中…',
   rmOr: 'テーブルのコードをお持ちですか？ここから参加もできます。',
 })

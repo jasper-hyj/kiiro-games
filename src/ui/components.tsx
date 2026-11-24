@@ -150,3 +150,47 @@ export function HelpModal({ title, lines, onClose }: { title: string; lines: str
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ out of chips */
+/** Casual tables top a broken stack up for free: say so, so the new chips are not a surprise. */
+export function RefillNotice({ stack, casual, minStack }: { stack: number | undefined; casual: boolean; minStack: number }) {
+  const { t } = useLang()
+  const prev = useRef<number | undefined>(undefined)
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const before = prev.current
+    prev.current = stack
+    if (casual && before !== undefined && stack !== undefined && before < minStack && stack > before) {
+      setShow(true)
+      const id = setTimeout(() => setShow(false), 6000)
+      return () => clearTimeout(id)
+    }
+  }, [stack]) // eslint-disable-line react-hooks/exhaustive-deps
+  return show ? <div className="k-notice" role="status">{t('kgRefilled', { n: (stack ?? 0).toLocaleString() })}</div> : null
+}
+
+/** A ranked table with no chips left in front of you: buy back in from your account, or leave. Says plainly when the account is empty too. */
+export function OutOfChips({ balance, min, max, step, onBuy, onLeave }: { balance: number; min: number; max: number; step: number; onBuy(n: number): void; onLeave(): void }) {
+  const { t } = useLang()
+  const cap = Math.min(max, balance)
+  const can = cap >= min
+  const [n, setN] = useState(Math.min(cap, min * 20))
+  useEffect(() => { setN((x) => Math.min(cap, Math.max(min, x))) }, [cap, min])
+  return (
+    <div className="k-bust" role="status">
+      <b>{t('kgBustTitle')}</b>
+      {can ? (
+        <>
+          <p>{t('kgBustBody', { n: balance.toLocaleString() })}</p>
+          <label className="hdbuy"><input type="range" min={min} max={cap} step={Math.min(step, cap)} value={n} onChange={(e) => setN(Number(e.target.value))} aria-label={t('kgBustBuy', { n: n.toLocaleString() })} /></label>
+          <div className="hdactions"><button className="hdbtn" onClick={onLeave}>{t('kgBustLeave')}</button><button className="hdbtn primary" onClick={() => onBuy(n)}>{t('kgBustBuy', { n: n.toLocaleString() })}</button></div>
+        </>
+      ) : (
+        <>
+          <p>{t('kgBustNone')}</p>
+          <div className="hdactions"><button className="hdbtn primary" onClick={onLeave}>{t('kgBustLeave')}</button></div>
+        </>
+      )}
+    </div>
+  )
+}
