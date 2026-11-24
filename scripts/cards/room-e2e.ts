@@ -16,6 +16,8 @@ for (const [game, label, rules, expectPath, readySel] of [
   ['bigtwo', 'Big Two', async () => {}, '/bigtwo', '.btlobby'],
   ['gomoku', 'Gomoku', async () => {}, '/gomoku', '.btlobby'],
   ['crazyeights', 'Crazy Eights', async () => {}, '/crazyeights', '.btlobby'],
+  ['yahtzee', 'Yahtzee', async () => {}, '/yahtzee', '.btlobby'],
+  ['liarsdice', "Liar's Dice", async () => {}, '/liarsdice', '.btlobby'],
   ['mahjong', 'Kiiro Mahjong', async (p: any) => { await p.click('.rmrulecard[data-rule=riichi]'); await p.waitForSelector('.rmrulecard.on[data-rule=riichi]') }, '/mahjong', '.roomtag, .seatcard, .lobby, .page'],
 ] as const) {
   const host = await page(); const guest = await page()

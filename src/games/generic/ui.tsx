@@ -5,6 +5,9 @@ import type { PlayViewX } from './client'
 import type { GenericGame } from './kinds'
 import './gomokuStrings'
 import './crazyStrings'
+import './yahtzeeStrings'
+import './liarsStrings'
+import { CATS } from './yahtzee'
 import { Card } from '../holdem/ui/Cards'
 import { rankOf, suitOf, SUITS } from '../holdem/engine/cards'
 
@@ -105,7 +108,125 @@ function CrazyBoard({ v, send, name }: BoardProps) {
   )
 }
 
+
+/* ---------------------------------------------------------------- Yahtzee */
+const PIPS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }
+function Die({ n, held, live, onClick }: { n: number; held: boolean; live: boolean; onClick(): void }) {
+  return (
+    <button className={'yzdie' + (held ? ' held' : '') + (live ? ' live' : '')} disabled={!live} onClick={onClick} aria-pressed={held} aria-label={String(n)}>
+      {n > 0 && Array.from({ length: 9 }, (_, i) => <i key={i} className={PIPS[n].includes(i) ? 'on' : ''} />)}
+    </button>
+  )
+}
+function YahtzeeBoard({ v, send, name }: BoardProps) {
+  const { t } = useLang()
+  const s = v.state as { dice: number[]; rolls: number; round: number; sheets: (number | null)[][]; totals: { upper: number; bonus: number; yahtzeeBonus: number; total: number }[]; options: Record<string, number>; last: { seat: number; cat: string; points: number } | null; joker: boolean }
+  const myTurn = v.status === 'playing' && v.turn === v.you
+  const [held, setHeld] = useState<boolean[]>([false, false, false, false, false])
+  useEffect(() => { setHeld([false, false, false, false, false]) }, [v.turn, s.rolls === 0, v.game])
+  const dice = s.dice.length === 5 ? s.dice : [0, 0, 0, 0, 0]
+  const canRoll = myTurn && s.rolls < 3
+  const roll = () => { if (canRoll) send({ k: 'act', a: { roll: true, held } }) }
+  const toggle = (i: number) => { if (myTurn && s.rolls > 0 && s.rolls < 3) setHeld((h) => h.map((x, k) => (k === i ? !x : x))) }
+  const score = (cat: string) => { if (myTurn && s.rolls > 0 && cat in s.options) send({ k: 'act', a: { score: cat } }) }
+  const keys: Record<string, (() => void) | undefined> = { r: roll, enter: roll }
+  for (let i = 0; i < 5; i++) keys[String(i + 1)] = () => toggle(i)
+  const upper = CATS.slice(0, 6), lower = CATS.slice(6)
+  const cell = (seat: number, cat: string, idx: number) => {
+    const val = s.sheets[seat]?.[idx]
+    if (val !== null && val !== undefined) return <td key={seat} className={'yzv' + (seat === v.you ? ' me' : '')}>{val}</td>
+    if (seat === v.you && myTurn && cat in s.options) return <td key={seat} className="yzv me opt"><button onClick={() => score(cat)} aria-label={`${t('yz.' + cat)} ${s.options[cat]}`}>{s.options[cat]}</button></td>
+    return <td key={seat} className={'yzv' + (seat === v.you ? ' me' : '')} />
+  }
+  const row = (cat: string, idx: number) => <tr key={cat}><th>{t('yz.' + cat)}</th>{v.seats.map((x) => cell(x.seat, cat, idx))}</tr>
+  const last = s.last ? t('yzLast', { name: name(v.seats[s.last.seat].name), n: s.last.points, cat: t('yz.' + s.last.cat) }) : ''
+  return (
+    <div className="yz">
+      <Hotkeys enabled={myTurn} keys={keys} />
+      <div className="muted small">{t('yzRound', { n: s.round })}{last ? ` · ${last}` : ''}</div>
+      <div className="yzdice k-felt">
+        <div className="yzrow">{dice.map((d, i) => <Die key={i} n={d} held={held[i] && s.rolls > 0} live={myTurn && s.rolls > 0 && s.rolls < 3} onClick={() => toggle(i)} />)}</div>
+        {v.you >= 0 && (
+          <div className="yzctl">
+            <button className="hdbtn primary" disabled={!canRoll} onClick={roll}>{t('yzRoll')}<Kbd k="R" /></button>
+            <span className="muted small">{myTurn ? (s.rolls === 0 ? t('yzFirst') : s.rolls < 3 ? `${t('yzRollsLeft', { n: 3 - s.rolls })} · ${t('yzHold')}` : t('yzScoreIt')) : ''}</span>
+          </div>
+        )}
+        {myTurn && s.joker && <p className="muted small">{t('yzJoker')}</p>}
+      </div>
+      <div className="yzsheet"><table>
+        <thead><tr><th />{v.seats.map((x) => <th key={x.seat} className={x.me ? 'me' : v.turn === x.seat ? 'turn' : ''}>{name(x.name)}</th>)}</tr></thead>
+        <tbody>
+          {upper.map((c, i) => row(c, i))}
+          <tr className="sub"><th>{t('yzUpper')}</th>{v.seats.map((x) => <td key={x.seat}>{s.totals[x.seat].upper}</td>)}</tr>
+          <tr className="sub"><th>{t('yzBonus')}</th>{v.seats.map((x) => <td key={x.seat}>{s.totals[x.seat].bonus || ''}</td>)}</tr>
+          {lower.map((c, i) => row(c, i + 6))}
+          <tr className="sub"><th>{t('yzYBonus')}</th>{v.seats.map((x) => <td key={x.seat}>{s.totals[x.seat].yahtzeeBonus || ''}</td>)}</tr>
+          <tr className="tot"><th>{t('yzTotal')}</th>{v.seats.map((x) => <td key={x.seat}>{s.totals[x.seat].total}</td>)}</tr>
+        </tbody>
+      </table></div>
+    </div>
+  )
+}
+
+
+/* ---------------------------------------------------------------- Liar's Dice */
+function MiniDie({ n, size = 34 }: { n: number; size?: number }) {
+  return <span className="ldmini" style={{ width: size, height: size }} aria-label={String(n)}>{Array.from({ length: 9 }, (_, i) => <i key={i} className={PIPS[n]?.includes(i) ? 'on' : ''} />)}</span>
+}
+function LiarsBoard({ v, send, name }: BoardProps) {
+  const { t } = useLang()
+  const s = v.state as { left: number[]; mine: number[]; bid: { seat: number; qty: number; face: number } | null; round: number; reveal: { bid: { seat: number; qty: number; face: number }; caller: number; dice: number[][]; total: number; liar: boolean; loser: number } | null; out: number[]; wild: boolean; total: number; dice: number[][] | null }
+  const myTurn = v.status === 'playing' && v.turn === v.you
+  const minQty = (face: number) => (!s.bid ? 1 : face > s.bid.face ? s.bid.qty : s.bid.qty + 1)
+  const [face, setFace] = useState(2)
+  const [qty, setQty] = useState(1)
+  const bidKey = s.bid ? `${s.bid.qty}-${s.bid.face}` : 'none'
+  // after every bid, offer the smallest raise: the next face up, or one more die when the face is already a six
+  useEffect(() => { if (!s.bid) { setFace(2); setQty(1) } else if (s.bid.face < 6) { setFace(s.bid.face + 1); setQty(s.bid.qty) } else { setFace(6); setQty(s.bid.qty + 1) } }, [bidKey, v.game])
+  const q = Math.min(s.total, Math.max(qty, minQty(face)))
+  const bid = () => { if (myTurn) send({ k: 'act', a: { qty: q, face } }) }
+  const liar = () => { if (myTurn && s.bid) send({ k: 'act', a: { liar: true } }) }
+  const nm = (seat: number) => name(v.seats[seat].name)
+  const rv = s.reveal
+  return (
+    <div className="ld">
+      <Hotkeys enabled={myTurn} keys={{ l: liar, enter: bid, arrowup: () => setQty(q + 1), arrowdown: () => setQty(Math.max(minQty(face), q - 1)) }} />
+      <div className="ldplayers">
+        {v.seats.map((x) => (
+          <div key={x.seat} className={'ldp' + (v.turn === x.seat ? ' turn' : '') + (s.left[x.seat] === 0 ? ' out' : '') + (x.me ? ' me' : '')}>
+            <b>{name(x.name)}</b>
+            <span className="ldcup">{s.left[x.seat] === 0 ? t('ldOutTag') : Array.from({ length: s.left[x.seat] }, (_, i) => <i key={i} />)}</span>
+            <span className="muted small">{t('ldLeft', { n: s.left[x.seat] })}</span>
+          </div>
+        ))}
+      </div>
+      <div className="ldbid k-felt" aria-live="polite">
+        <span className="muted small">{t('ldRound', { n: s.round })}{s.wild ? ` · ${t('ldWildNote')}` : ''}</span>
+        {s.bid ? <div className="ldbidline"><span>{nm(s.bid.seat)}</span><b>{s.bid.qty} ×</b><MiniDie n={s.bid.face} size={44} /></div> : v.status === 'playing' ? <span>{t('ldNoBid')}</span> : null}
+      </div>
+      {rv && (
+        <div className="ldreveal">
+          <b>{t('ldRevealTitle')}</b>
+          <p className="small">{t('ldReveal', { caller: nm(rv.caller), bidder: nm(rv.bid.seat), qty: rv.bid.qty, face: rv.bid.face, total: rv.total, loser: nm(rv.loser) })}</p>
+          <div className="ldrows">{rv.dice.map((d, i) => d.length ? <div key={i} className="ldrow"><span className="small">{nm(i)}</span><span>{d.map((x, k) => <i key={k} className={'ldr' + (x === rv.bid.face || (s.wild && rv.bid.face !== 1 && x === 1) ? ' hit' : '')}><MiniDie n={x} size={26} /></i>)}</span></div> : null)}</div>
+        </div>
+      )}
+      {v.you >= 0 && s.mine.length > 0 && <div className="ldmine"><span className="muted small">{t('ldYourDice')}</span><div className="yzrow">{s.mine.map((d, i) => <MiniDie key={i} n={d} size={46} />)}</div></div>}
+      {myTurn && (
+        <div className="ldctl">
+          <div className="ldqty"><button onClick={() => setQty(Math.max(minQty(face), q - 1))} aria-label="−">−</button><b>{q}</b><button onClick={() => setQty(Math.min(s.total, q + 1))} aria-label="+">+</button></div>
+          <div className="ldfaces" role="group" aria-label={t('ldFace')}>{[1, 2, 3, 4, 5, 6].map((f) => <button key={f} className={f === face ? 'on' : ''} onClick={() => { setFace(f); setQty(Math.max(minQty(f), q)) }} aria-pressed={f === face}><MiniDie n={f} size={36} /></button>)}</div>
+          <div className="ldbtns"><button className="hdbtn primary" onClick={bid}>{t('ldBid')} {q} × {face}<Kbd k="↵" /></button>{s.bid && <button className="hdbtn" onClick={liar}>{t('ldLiar')}<Kbd k="L" /></button>}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export const GAME_UI: Record<GenericGame, GameUI> = {
+  liarsdice: { name: 'liarsdice', blurb: 'liarsdiceBlurb', settings: (c, t) => [`${c.players}`, c.wild ? t('ldWildOn') : t('ldWildOff')], help: { title: 'ldHow', lines: ['ldR1', 'ldR2', 'ldR3', 'ldR4', 'ldR5'] }, Board: LiarsBoard },
+  yahtzee: { name: 'yahtzee', blurb: 'yahtzeeBlurb', settings: (c) => [`${c.players}`], help: { title: 'yzHow', lines: ['yzR1', 'yzR2', 'yzR3', 'yzR4', 'yzR5'] }, Board: YahtzeeBoard },
   crazyeights: { name: 'crazyeights', blurb: 'crazyeightsBlurb', settings: (c, t) => [`${c.players}`, c.action ? t('c8Actions') : t('c8Classic')], help: { title: 'c8How', lines: ['c8R1', 'c8R2', 'c8R3', 'c8R4', 'c8R5'] }, Board: CrazyBoard },
   gomoku: { name: 'gomoku', blurb: 'gomokuBlurb', settings: (c) => [`${c.size} × ${c.size}`], help: { title: 'gmHow', lines: ['gmR1', 'gmR2', 'gmR3', 'gmR4'] }, Board: GomokuBoard },
 }

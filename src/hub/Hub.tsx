@@ -9,6 +9,8 @@ import '../games/bigtwo/strings'
 import '../games/generic/strings'
 import '../games/generic/gomokuStrings'
 import '../games/generic/crazyStrings'
+import '../games/generic/yahtzeeStrings'
+import '../games/generic/liarsStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -49,6 +51,8 @@ export const ART: Record<string, JSX.Element> = {
   bigtwo: <svg viewBox="0 0 64 48" aria-hidden><rect x="17" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(-18 27 45)"/><rect x="27" y="9" width="20" height="30" rx="4" fill="#1a2240" transform="rotate(18 37 45)"/><rect x="22" y="6" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27.5 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4c0 2.2-1.8 3.6-4.5 6L27.5 24h9"/><path d="M32 27l3 3.5-3 3.5-3-3.5z"/></svg>,
   gomoku: <svg viewBox="0 0 64 48" aria-hidden><path d="M10 6v36M22 6v36M34 6v36M46 6v36M6 12h44M6 24h44M6 36h44" opacity=".4" strokeWidth="1.2"/><circle cx="22" cy="12" r="5" fill="#e8b66a"/><circle cx="34" cy="24" r="5" fill="#e8b66a"/><circle cx="46" cy="36" r="5" fill="#e8b66a"/><circle cx="34" cy="12" r="5" fill="#1a2240"/><circle cx="22" cy="24" r="5" fill="#1a2240"/><circle cx="22" cy="36" r="5" fill="#1a2240"/></svg>,
   crazyeights: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-14 24 44)"><rect x="12" y="7" width="22" height="32" rx="4" fill="#1a2240"/><path d="M23 18l5 6-5 6-5-6z"/></g><g transform="rotate(8 40 44)"><rect x="29" y="5" width="22" height="34" rx="4" fill="#1a2240"/><circle cx="40" cy="17" r="4"/><circle cx="40" cy="28" r="5"/><path d="M34 11h0M46 33h0" strokeWidth="2.4"/></g></svg>,
+  yahtzee: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-10 22 26)"><rect x="8" y="12" width="24" height="24" rx="5" fill="#1a2240"/><circle cx="15" cy="19" r="2.2" fill="#e8b66a"/><circle cx="20" cy="24" r="2.2" fill="#e8b66a"/><circle cx="25" cy="29" r="2.2" fill="#e8b66a"/></g><g transform="rotate(12 44 24)"><rect x="32" y="8" width="24" height="24" rx="5" fill="#1a2240"/><circle cx="39" cy="15" r="2.2" fill="#e8b66a"/><circle cx="49" cy="15" r="2.2" fill="#e8b66a"/><circle cx="44" cy="20" r="2.2" fill="#e8b66a"/><circle cx="39" cy="25" r="2.2" fill="#e8b66a"/><circle cx="49" cy="25" r="2.2" fill="#e8b66a"/></g></svg>,
+  liarsdice: <svg viewBox="0 0 64 48" aria-hidden><path d="M14 40V26a14 14 0 0 1 28 0v14z" fill="#1a2240"/><path d="M10 40h36" strokeWidth="2.2"/><circle cx="28" cy="10" r="2.6" fill="#e8b66a"/><rect x="40" y="22" width="18" height="18" rx="4" fill="#1a2240" transform="rotate(10 49 31)"/><g transform="rotate(10 49 31)"><circle cx="44" cy="27" r="1.8" fill="#e8b66a"/><circle cx="49" cy="31" r="1.8" fill="#e8b66a"/><circle cx="54" cy="35" r="1.8" fill="#e8b66a"/></g></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -58,6 +62,8 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'bigtwo', name: 'btName', blurb: 'hubBtBlurb', practice: practiceUrl('bigtwo') },
   { key: 'gomoku', name: 'gomoku', blurb: 'gomokuBlurb', practice: practiceUrl('gomoku') },
   { key: 'crazyeights', name: 'crazyeights', blurb: 'crazyeightsBlurb', practice: practiceUrl('crazyeights') },
+  { key: 'yahtzee', name: 'yahtzee', blurb: 'yahtzeeBlurb', practice: practiceUrl('yahtzee') },
+  { key: 'liarsdice', name: 'liarsdice', blurb: 'liarsdiceBlurb', practice: practiceUrl('liarsdice') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */

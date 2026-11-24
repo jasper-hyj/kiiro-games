@@ -4,7 +4,7 @@ import { api, ApiError, type BoardRow } from './api'
 import { fmt, PasswordInput, useAccount, useEscape } from './Account'
 import { Avatar } from '../ui/components'
 
-const GAMES: [string, string][] = [['all', 'acAll'], ['mahjong', 'hubMahjong'], ['holdem', 'hubHoldem'], ['blackjack', 'bjName'], ['bigtwo', 'btName'], ['gomoku', 'gomoku'], ['crazyeights', 'crazyeights']]
+const GAMES: [string, string][] = [['all', 'acAll'], ['mahjong', 'hubMahjong'], ['holdem', 'hubHoldem'], ['blackjack', 'bjName'], ['bigtwo', 'btName'], ['gomoku', 'gomoku'], ['crazyeights', 'crazyeights'], ['yahtzee', 'yahtzee'], ['liarsdice', 'liarsdice']]
 
 export function Leaderboard() {
   const { t } = useLang()
