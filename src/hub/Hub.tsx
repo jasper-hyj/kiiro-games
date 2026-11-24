@@ -13,6 +13,7 @@ import '../games/generic/yahtzeeStrings'
 import '../games/generic/liarsStrings'
 import '../games/generic/chessStrings'
 import '../games/generic/xqStrings'
+import '../games/generic/ddStrings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
@@ -57,6 +58,7 @@ export const ART: Record<string, JSX.Element> = {
   liarsdice: <svg viewBox="0 0 64 48" aria-hidden><path d="M14 40V26a14 14 0 0 1 28 0v14z" fill="#1a2240"/><path d="M10 40h36" strokeWidth="2.2"/><circle cx="28" cy="10" r="2.6" fill="#e8b66a"/><rect x="40" y="22" width="18" height="18" rx="4" fill="#1a2240" transform="rotate(10 49 31)"/><g transform="rotate(10 49 31)"><circle cx="44" cy="27" r="1.8" fill="#e8b66a"/><circle cx="49" cy="31" r="1.8" fill="#e8b66a"/><circle cx="54" cy="35" r="1.8" fill="#e8b66a"/></g></svg>,
   chess: <svg viewBox="0 0 64 48" aria-hidden><path d="M20 40c0-8 4-11 8-14-4-1-7-3-7-7l5-7V8l4 3c2-2 5-2 8-1 6 2 10 9 10 29z" fill="#1a2240"/><circle cx="31" cy="17" r="1.6" fill="#e8b66a"/><path d="M17 43h32" strokeWidth="2.2"/></svg>,
   xiangqi: <svg viewBox="0 0 64 48" aria-hidden><circle cx="32" cy="24" r="18" fill="#1a2240"/><circle cx="32" cy="24" r="14.5"/><path d="M24 17h16M32 17v16M25 25h14M23 33h18" strokeWidth="2.2"/></svg>,
+  doudizhu: <svg viewBox="0 0 64 48" aria-hidden><g transform="rotate(-12 18 44)"><rect x="7" y="8" width="20" height="30" rx="4" fill="#1a2240"/><path d="M14 20l3-4 3 4 3-4v8H14z"/></g><g transform="rotate(0 32 44)"><rect x="22" y="5" width="20" height="32" rx="4" fill="#1a2240"/><path d="M27 17l5-6 5 6M32 11v10" strokeWidth="1.4"/><circle cx="32" cy="27" r="3.4"/></g><g transform="rotate(12 46 44)"><rect x="37" y="8" width="20" height="30" rx="4" fill="#1a2240"/><path d="M47 14v14M42 19h10" /></g></svg>,
 }
 
 const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] = [
@@ -70,6 +72,7 @@ const GAMES: { key: GameKey; name: string; blurb: string; practice?: string }[] 
   { key: 'liarsdice', name: 'liarsdice', blurb: 'liarsdiceBlurb', practice: practiceUrl('liarsdice') },
   { key: 'chess', name: 'chess', blurb: 'chessBlurb', practice: practiceUrl('chess') },
   { key: 'xiangqi', name: 'xiangqi', blurb: 'xiangqiBlurb', practice: practiceUrl('xiangqi') },
+  { key: 'doudizhu', name: 'doudizhu', blurb: 'doudizhuBlurb', practice: practiceUrl('doudizhu') },
 ]
 
 /** The front page is a room you walk into: a lamplit table, the games sit around it like seats, and the middle of the table says what to do next. */
