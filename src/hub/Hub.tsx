@@ -97,7 +97,6 @@ export function Hub() {
             {chosen ? (
               <>
                 <h1>{t(chosen.name)}</h1>
-                <p className="kg-lead">{t(chosen.blurb)}</p>
                 <span className="kg-acts">
                   <a className="kg-create" href={newRoomUrl(chosen.key)}>{t('hubPlayFriends')}</a>
                   {chosen.practice && <a className="kg-practice" href={chosen.practice}>{t('hubPractice')}</a>}
@@ -107,7 +106,6 @@ export function Hub() {
             ) : (
               <>
                 <h1>{t('hubHeadline')}</h1>
-                <p className="kg-lead">{t('hubTagline')}</p>
                 <a className="kg-create" href={newRoomUrl()}>{t('hubCreateRoom')}</a>
                 <JoinCode />
               </>
@@ -115,7 +113,6 @@ export function Hub() {
           </div>
           <div className="kg-shelf">{GAMES.map(seat)}</div>
         </div>
-        <p className="kg-note">{t('hubNoSignin')}</p>
         <section className="kg-board"><Leaderboard /></section>
       </main>
     </div>

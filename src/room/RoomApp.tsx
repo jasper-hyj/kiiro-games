@@ -104,6 +104,9 @@ export default function RoomApp() {
   const leave = () => { conn.current?.close(); conn.current = null; setRoom(null); setView(null); location.href = '/' }
   const send = (m: unknown) => conn.current?.send(m)
 
+  // arriving through "Create a room" or a room link: the room is being opened, so show the waiting screen instead of flashing the join form
+  const entering = !room && !error && (urlRoom !== null || (where.page === 'room' && where.fresh))
+  if (entering) return <div className="kg hd"><div className="kg-wrap"><Bar /><Connecting status="connecting" /></div></div>
   if (!room) {
     return (
       <div className="kg kg-scene hd">
@@ -112,7 +115,6 @@ export default function RoomApp() {
           <div className="kg-table kg-solo">
             <div className="kg-center">
               <h1>{t('rmTitle')}</h1>
-              <p className="kg-lead">{t('rmTagline')}</p>
               {error && <p className="acerr" role="alert">{t(error)}</p>}
               <button className="hdbtn primary rmbig" onClick={create}>{t('rmCreateBtn')}</button>
               <div className="kg-join rmjoin">

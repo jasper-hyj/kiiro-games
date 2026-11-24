@@ -1,9 +1,9 @@
 import { registerStrings } from '../i18n'
 
 export const ROOM_STRINGS: Record<string, [string, string]> = {
-  rmName: ['Room', '房間'], rmTitle: ['Play together', '一起玩'],
+  rmName: ['Room', '房間'], rmTitle: ['Room', '房間'],
   rmTagline: ['Make a room, invite friends, then pick the game and its rules together. Everyone can play or just watch, and chat.', '開一個房間邀請朋友，再一起選遊戲和規則。每個人都可以參戰或只觀戰，也能聊天。'],
-  rmCreate: ['Create a room', '開房間'], rmCreateBtn: ['Create room', '開房間'], rmJoin: ['Join with a code', '輸入代碼加入'],
+  rmCreate: ['Create a room', '開房間'], rmCreateBtn: ['Create room', '開房間'], rmJoin: ['Room code', '房間代碼'],
   rmPeople: ['In this room', '房間內'], rmHost: ['Host', '房主'], rmYou: ['you', '你'], rmPlaying: ['Playing', '參戰'], rmWatching: ['Watching', '觀戰'],
   rmIPlay: ['I will play', '我要參戰'], rmIWatch: ['I will watch', '我要觀戰'],
   rmChoose: ['Choose a game', '選擇遊戲'], rmRules: ['Rules', '規則'], rmNoGame: ['The host is choosing a game.', '房主正在選擇遊戲。'],
@@ -18,7 +18,7 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
   rmCreateNote: ['Tables start from a room: gather your friends first, then choose the game and rules together.', '牌桌從房間開始：先集合朋友，再一起選擇遊戲和規則。'],
   rmNoTableTitle: ['This table is not open', '這張牌桌未開放'], rmNoTableBody: ['Tables are opened from a room: create one, pick the game and invite friends.', '牌桌從房間開啟：開一個房間、選擇遊戲並邀請朋友。'],
   rmCodeClash: ['This room code is already used by another table. Go back and create a new room.', '這個房間代碼已被其他牌桌使用，請回去重新開一個房間。'],
-  rulesInRoomHost: ['To change the rules, go back to the room.', '要更改規則，請回到房間。'],
+  rulesInRoomHost: ['', ''],
   rmTableFailed: ['Could not set up the table. Try Start again.', '無法建立牌桌，請再按一次開始。'],
   kgBot: ['Bot', '電腦'],
   kgRefilled: ['You ran out, so the table topped you up to {n} chips. Casual tables never run dry.', '籌碼用完了，牌桌已為你補到 {n}。休閒桌不會讓你沒籌碼玩。'],
@@ -33,9 +33,9 @@ export const ROOM_STRINGS: Record<string, [string, string]> = {
 registerStrings(ROOM_STRINGS)
 
 registerStrings({}, {
-  rmName: 'ルーム', rmTitle: 'みんなで遊ぶ',
+  rmName: 'ルーム', rmTitle: 'ルーム',
   rmTagline: 'ルームを作って友達を招待し、一緒にゲームとルールを選びます。誰でもプレイも観戦もチャットもできます。',
-  rmCreate: 'ルームを作る', rmCreateBtn: 'ルームを作る', rmJoin: 'コードで参加',
+  rmCreate: 'ルームを作る', rmCreateBtn: 'ルームを作る', rmJoin: 'ルームコード',
   rmPeople: 'ルームにいる人', rmHost: 'ホスト', rmYou: 'あなた', rmPlaying: 'プレイ', rmWatching: '観戦',
   rmIPlay: 'プレイする', rmIWatch: '観戦する',
   rmChoose: 'ゲームを選ぶ', rmRules: 'ルール', rmNoGame: 'ホストがゲームを選んでいます。',
@@ -51,7 +51,7 @@ registerStrings({}, {
   rmNoTableTitle: 'このテーブルは開いていません', rmNoTableBody: 'テーブルはルームから開きます。ルームを作り、ゲームを選んで友達を招待しましょう。',
   rmCodeClash: 'このルームコードは別のテーブルで使われています。戻って新しいルームを作ってください。',
   kgBot: 'CPU',
-  rulesInRoomHost: 'ルールを変えるにはルームに戻ってください。',
+  rulesInRoomHost: '',
   rmTableFailed: 'テーブルを用意できませんでした。もう一度「開始」を押してください。',
   kgRefilled: 'チップがなくなったので、テーブルが {n} まで補充しました。カジュアルテーブルではチップ切れになりません。',
   kgBustTitle: 'チップがなくなりました', kgBustBody: 'アカウントから買い足せます（利用可能 {n}）。またはテーブルを離れます。',

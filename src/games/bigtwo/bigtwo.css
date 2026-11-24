@@ -93,3 +93,7 @@
 @media (max-height: 380px) and (orientation: landscape) { .bttable { padding-top: 56px; } }
 @media (max-height: 420px) and (orientation: landscape) { .btseat { grid-auto-flow: column; align-items: center; gap: 8px; padding: 3px 12px; } .btseat .btpass { display: none; } .bttable { padding-top: 46px; } }
 @media (max-height: 520px) and (orientation: landscape) { .bt .hdbar { position: sticky; bottom: 0; } }
+
+/* cards in an overlapping hand: the rank and suit sit in the top-left corner, in the strip a neighbour never covers */
+.btcard .pkcard, .c8card .pkcard { align-items: flex-start; justify-content: flex-start; padding: calc(var(--cw, 46px) * .08) 0 0 calc(var(--cw, 46px) * .1); box-sizing: border-box; gap: 0; line-height: 1.05; }
+.btcard .pkcard b, .c8card .pkcard b { line-height: 1; } .btcard .pkcard i, .c8card .pkcard i { line-height: 1; }

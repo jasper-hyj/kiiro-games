@@ -76,7 +76,7 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 @media (hover: hover) { :root:root .kg a.kg-practice:hover { color: var(--k-ink); background: rgba(var(--k-ink-rgb),.13); } .kg-game:hover { background: var(--k-panel2); transform: translateY(-2px); } }
 .kg h1 { text-wrap: balance; }
 
-.kg-logo { display: block; width: 26px; height: 26px; border-radius: 7px; flex: none; }
+.kg-logo { display: block; width: 26px; height: 26px; border-radius: 9px; flex: none; }
 
 
 /* ---- the hub as a room: floating pills instead of a top bar, a lamplit table, games as seats around it ---- */
@@ -84,7 +84,7 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 .kg-wrap > .kg-bar { margin: 0 -24px; }
 .kg-bar > * { pointer-events: auto; }
 .kg-brand, .kg-tools { background: rgba(246,240,225,.88); box-shadow: inset 0 0 0 1px var(--k-line2), 0 3px 10px rgba(70,50,25,.15); border-radius: 999px; }
-.kg-brand { padding: 5px 16px 5px 6px; }
+.kg-brand { padding: 5px 16px 5px 5px; border-radius: 14px; } /* the pill's corner = the logo's corner + its padding, so the two curves run parallel */
 .kg-tools { padding: 3px 12px 3px 8px; gap: 10px; }
 .kg-scene { background: var(--k-glow), var(--k-grain), radial-gradient(ellipse at 50% 120%, rgba(120,90,50,.18) 0%, transparent 60%), var(--k-bg); }
 .kg-room { width: min(1080px, 100%); margin: 0 auto; padding: 18px 20px 72px; box-sizing: border-box; }
@@ -137,7 +137,13 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
   .kg-brand { flex: none; } .kg-tools { flex: 0 1 auto; min-width: 0; gap: 4px; }
   .kg-tools .kg-acct { max-width: 26vw; }
 }
-@media (max-width: 480px) { .kg-brand { padding: 5px; } .kg-brand .kg-brandname { display: none; } }
+@media (max-width: 480px) { .kg-brand { padding: 5px; border-radius: 14px; } .kg-brand .kg-brandname { display: none; } }
 
 /* scrolling: the big shadowed table and the grain stay on their own painted layers so nothing re-draws (and flashes) while the page moves */
 .kg-table, .kg-room .kg-board { transform: translateZ(0); backface-visibility: hidden; }
+
+/* language switch: rounded highlight */
+.kg-lang { gap: 3px; }
+.kg-lang button { border-radius: 999px; padding: 6px 11px; transition: background .15s, color .15s; }
+.kg-lang button.on { background: var(--k-accent); color: var(--k-accent-ink); }
+@media (max-width: 560px) { .kg-lang button { padding: 6px 9px; } }

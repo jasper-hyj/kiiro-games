@@ -122,11 +122,11 @@ export const MAHJONG_STRINGS: Record<string, [string, string]> = {
   // room lobby
   inviteLink: ['Copy invite link', '複製邀請連結'],
   copied: ['Copied!', '已複製！'],
-  seatsNote: ['players · empty seats are filled by bots automatically', '位玩家 · 空位自動由電腦補上'],
+  seatsNote: ['players', '位玩家'],
   you: ['you', '你'],
   human: ['Human', '玩家'],
   botSeat: ['Bot · a friend can take this seat', '電腦 · 朋友可加入此座位'],
-  hostDecides: ['(host decides)', '（由房主決定）'],
+  hostDecides: ['', ''],
   startGame: ['Start game', '開始遊戲'],
   waitHost: ['Waiting for the host to start…', '等待房主開始…'],
   // table
