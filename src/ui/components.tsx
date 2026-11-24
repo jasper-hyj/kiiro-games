@@ -197,3 +197,30 @@ export function OutOfChips({ balance, min, max, step, onBuy, onLeave }: { balanc
     </div>
   )
 }
+
+/** The room code as four boxes, like a one-time-code field: type or paste digits, focus moves along, and the fourth digit submits. */
+export function CodeBoxes({ id, label, onDone, autoFocus }: { id?: string; label: string; onDone: (code: string) => void; autoFocus?: boolean }) {
+  const [d, setD] = useState(['', '', '', ''])
+  const refs = useRef<(HTMLInputElement | null)[]>([])
+  const set = (next: string[]) => { setD(next); const code = next.join(''); if (/^\d{4}$/.test(code)) onDone(code) }
+  const fill = (from: number, digits: string) => {
+    const next = d.slice(); let i = from
+    for (const ch of digits.slice(0, 4 - from)) next[i++] = ch
+    set(next); refs.current[Math.min(i, 3)]?.focus()
+  }
+  return (
+    <div className="k-code" role="group" aria-label={label}>
+      {d.map((v, i) => (
+        <input key={i} id={i === 0 ? id : undefined} ref={(el) => { refs.current[i] = el }} className="k-codebox" value={v} inputMode="numeric" autoComplete={i === 0 ? 'one-time-code' : 'off'} autoFocus={autoFocus && i === 0} aria-label={`${label} ${i + 1}`}
+          onChange={(e) => { const digits = e.target.value.replace(/\D/g, ''); if (digits) fill(i, digits); else { const n = d.slice(); n[i] = ''; setD(n) } }}
+          onKeyDown={(e) => {
+            if (e.key === 'Backspace' && !d[i] && i > 0) { const n = d.slice(); n[i - 1] = ''; setD(n); refs.current[i - 1]?.focus(); e.preventDefault() }
+            else if (e.key === 'ArrowLeft' && i > 0) refs.current[i - 1]?.focus()
+            else if (e.key === 'ArrowRight' && i < 3) refs.current[i + 1]?.focus()
+          }}
+          onPaste={(e) => { const digits = e.clipboardData.getData('text').replace(/\D/g, ''); if (digits) { e.preventDefault(); fill(0, digits) } }}
+          onFocus={(e) => e.target.select()} />
+      ))}
+    </div>
+  )
+}

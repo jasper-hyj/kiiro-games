@@ -8,7 +8,7 @@ import { api } from '../account/api'
 import { BLINDS } from '../games/holdem/engine/table'
 import { MIN_BETS } from '../games/blackjack/engine/table'
 import { TalkBox } from '../games/shared/TalkBox'
-import { Avatar, TableHeader } from '../ui/components'
+import { Avatar, CodeBoxes, TableHeader } from '../ui/components'
 import { Rules as HowTo } from '../games/shared/Rules'
 import { getClientId } from '../games/shared/cashClient'
 import { roomUrl, route } from '../route'
@@ -115,10 +115,10 @@ export default function RoomApp() {
               <p className="kg-lead">{t('rmTagline')}</p>
               {error && <p className="acerr" role="alert">{t(error)}</p>}
               <button className="hdbtn primary rmbig" onClick={create}>{t('rmCreateBtn')}</button>
-              <form onSubmit={(e) => { e.preventDefault(); if (/^\d{4}$/.test(code)) join(code) }} className="kg-join rmjoin">
-                <label htmlFor="rmcode">{t('rmJoin')}</label>
-                <div><input id="rmcode" inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="1234" aria-label={t('hdCode')} /><button disabled={!/^\d{4}$/.test(code)}>{t('hdJoinBtn')}</button></div>
-              </form>
+              <div className="kg-join rmjoin">
+                <label>{t('rmJoin')}</label>
+                <CodeBoxes label={t('hdCode')} onDone={(c) => join(c)} />
+              </div>
             </div>
           </div>
         </main>

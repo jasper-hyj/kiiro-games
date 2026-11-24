@@ -4,7 +4,7 @@
 .hdform { display: grid; gap: 12px; margin-bottom: 20px; align-content: start; }
 .hdform label, .hdbuy { display: grid; gap: 6px; font-size: 13px; color: var(--mute); }
 .hdrow { display: flex; gap: 8px; }
-:root:root .hd input[type=text], :root:root .hd input:not([type]), :root:root .hd input[inputmode], :root:root .hd select { background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid rgba(243,236,221,.14); border-radius: 8px; padding: 0 12px; min-height: 40px; font: 400 15px var(--sans, system-ui); user-select: text; -webkit-user-select: text; }
+:root:root .hd input[type=text], :root:root .hd input:not([type]), :root:root .hd input[inputmode], :root:root .hd select { background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid rgba(var(--k-ink-rgb),.14); border-radius: 8px; padding: 0 12px; min-height: 40px; font: 400 15px var(--sans, system-ui); user-select: text; -webkit-user-select: text; }
 :root:root .hd select { appearance: none; }
 :root:root .hd input[type=range] { accent-color: var(--k-silver); width: 100%; padding: 0; min-height: 28px; background: none; border: 0; }
 :root:root .hdbtn, :root:root .hdseg button, :root:root .hdpresets button { font: 500 14px var(--sans, system-ui); min-height: 42px; padding: 0 18px; border: 0; border-radius: 8px; background: rgba(255,255,255,.09); color: var(--ink); cursor: pointer; }
@@ -14,7 +14,7 @@
 :root:root .hdlink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
 .hdseg { display: flex; gap: 4px; }
 :root:root .hdseg button { flex: 1; background: rgba(255,255,255,.05); color: var(--mute); }
-:root:root .hdseg button.on { background: rgba(232,182,106,.18); color: var(--ink); }
+:root:root .hdseg button.on { background: rgba(var(--k-accent-rgb),.18); color: var(--ink); }
 .hdhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; flex-wrap: wrap; font-size: 14px; }
 .hdtools { display: flex; gap: 4px; }
 .hdbanner { margin: 6px 0; }
@@ -26,7 +26,7 @@
 .hdcenter { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; gap: 10px; justify-items: center; width: min(70%, 460px); text-align: center; }
 .hdpot { color: var(--mute); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; } .hdpot b { color: var(--ink); font: 600 18px var(--sans, system-ui); letter-spacing: 0; margin-left: 6px; }
 .hdboard { display: flex; gap: 6px; justify-content: center; }
-.pkslot { width: var(--cw, 46px); height: calc(var(--cw, 46px) * 1.4); border-radius: 6px; border: 1px dashed rgba(243,236,221,.14); }
+.pkslot { width: var(--cw, 46px); height: calc(var(--cw, 46px) * 1.4); border-radius: 6px; border: 1px dashed rgba(var(--k-ink-rgb),.14); }
 .hdmsg { min-height: 20px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; }
 .hdwin { color: var(--k-accent); font-weight: 600; }
 .hd { --cw: 46px; }
@@ -40,16 +40,16 @@
 .hd .hdseat { position: absolute; transform: translate(-50%, -50%); width: 124px; padding-top: 30px; }
 /* the avatar sits on the chip's top edge; hole cards fan above it */
 .hdseat.empty { visibility: hidden; }
-.hdseat > .k-av { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 0 3px rgba(15,20,36,.9); }
-.hdseat.away .hdname { text-decoration: line-through; text-decoration-color: rgba(243,236,221,.3); }
+.hdseat > .k-av { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 0 3px rgba(26,33,31,.9); }
+.hdseat.away .hdname { text-decoration: line-through; text-decoration-color: rgba(var(--k-ink-rgb),.3); }
 .hdhole { position: absolute; top: calc(var(--cw) * -1.4 - 18px); left: 50%; transform: translateX(-50%); display: flex; gap: 3px; }
 .hdseat.me .hdhole { --cw: 44px; }
 .hdname { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; gap: 5px; align-items: center; justify-content: center; }
 .hdbtn-d { font-style: normal; font-size: 10px; font-weight: 800; background: var(--k-accent); color: var(--k-accent-ink); border-radius: 999px; min-width: 16px; height: 16px; display: inline-grid; place-items: center; padding: 0 3px; }
 .hdstack { font: 600 14px var(--sans, system-ui); font-variant-numeric: tabular-nums; }
 .hdlast { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
-.hdbet { position: absolute; transform: translate(-50%, -50%); font: 600 13px var(--sans, system-ui); font-variant-numeric: tabular-nums; background: rgba(232,182,106,.14); color: var(--k-accent); padding: 2px 8px; border-radius: 999px; }
-.hdtimer { width: 100%; height: 3px; background: rgba(243,236,221,.12); border-radius: 2px; overflow: hidden; } .hdtimer span { display: block; height: 100%; background: var(--k-accent); transition: width .5s linear; }
+.hdbet { position: absolute; transform: translate(-50%, -50%); font: 600 13px var(--sans, system-ui); font-variant-numeric: tabular-nums; background: rgba(var(--k-accent-rgb),.14); color: var(--k-accent); padding: 2px 8px; border-radius: 999px; }
+.hdtimer { width: 100%; height: 3px; background: rgba(var(--k-ink-rgb),.12); border-radius: 2px; overflow: hidden; } .hdtimer span { display: block; height: 100%; background: var(--k-accent); transition: width .5s linear; }
 
 /* actions */
 .hdbar { position: sticky; bottom: 0; z-index: 5; padding: 14px 0 max(12px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, rgba(15,20,36,0), var(--bg) 22%); }
@@ -128,8 +128,8 @@ body.has-kgchat .kg.hd .kg-wrap { padding-bottom: 150px; }
 /* raise controls: a stepper for fingers, a slider for fine control, presets for the usual sizes */
 .hd-actions { align-items: flex-end; }
 .hd-stepper { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.hd-stepper button { width: 48px; min-width: 48px; height: 48px; padding: 0; border-radius: 50%; font: 600 22px var(--k-sans); line-height: 1; border: 0; background: rgba(243,236,221,.1); color: var(--k-ink); cursor: pointer; touch-action: manipulation; }
-@media (hover: hover) { .hd-stepper button:hover { background: rgba(243,236,221,.18); } }
+.hd-stepper button { width: 48px; min-width: 48px; height: 48px; padding: 0; border-radius: 50%; font: 600 22px var(--k-sans); line-height: 1; border: 0; background: rgba(var(--k-ink-rgb),.1); color: var(--k-ink); cursor: pointer; touch-action: manipulation; }
+@media (hover: hover) { .hd-stepper button:hover { background: rgba(var(--k-ink-rgb),.18); } }
 .hd-amount { font: 700 26px var(--k-serif); color: var(--k-accent-hi); font-variant-numeric: tabular-nums; min-width: 4ch; text-align: center; }
 
 @media (max-width: 640px) { .hd .hdseat { width: 98px; padding-top: 28px; } .hd .hdseat .k-seatname { font-size: 12px; } .hdhole { --cw: 28px; } .hdseat.me .hdhole { --cw: 38px; } }
@@ -140,7 +140,7 @@ body.has-kgchat .kg.hd .kg-wrap { padding-bottom: 150px; }
 .kgchat.compact { width: auto; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .kgchat.compact:not(.open) .kgchat-body { display: none; }
 .kgchat.compact.open { width: min(300px, calc(100vw - 20px)); background: rgba(6,9,18,.82); }
-.kgchat-pill { pointer-events: auto; position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(15,20,36,.85); box-shadow: 0 4px 12px rgba(3,6,16,.45), inset 0 0 0 1px rgba(243,236,221,.14); font-size: 20px; cursor: pointer; }
+.kgchat-pill { pointer-events: auto; position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(26,33,31,.85); box-shadow: 0 4px 12px rgba(3,6,16,.45), inset 0 0 0 1px rgba(var(--k-ink-rgb),.14); font-size: 20px; cursor: pointer; }
 .kgchat-pill b { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--k-accent); color: var(--k-accent-ink); font: 700 11px/18px var(--k-sans); }
 .kgchat-close { pointer-events: auto; position: absolute; top: 2px; right: 4px; width: 32px; height: 32px; border: 0; background: none; color: var(--k-mute); font-size: 20px; cursor: pointer; }
 .kgchat.compact.open { position: fixed; }
