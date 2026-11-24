@@ -304,8 +304,8 @@ button:focus-visible, a:focus-visible, [role=button]:focus-visible { outline: 2p
 
 /* room code: four boxes */
 .k-code { display: flex; gap: 10px; justify-content: center; }
-:root:root .k-codebox, :root:root .kg-join input.k-codebox { width: 52px; min-width: 0; flex: none; height: 62px; min-height: 62px; padding: 0; text-align: center; letter-spacing: 0; font: 600 28px var(--k-serif); border-radius: 12px; background: var(--k-panel); color: var(--k-ink); border: 1.5px solid var(--k-line2); box-shadow: inset 0 -2px 0 rgba(var(--k-ink-rgb),.06); caret-color: var(--k-accent); }
-:root:root .k-codebox:focus { outline: none; border-color: var(--k-accent); box-shadow: 0 0 0 3px var(--k-accent-soft); }
+:root:root .k-codebox, :root:root .kg-join input.k-codebox { width: 52px; min-width: 0; flex: none; height: 62px; min-height: 62px; padding: 0; text-align: center; letter-spacing: 0; font: 700 32px var(--k-serif); border-radius: 12px; background: #fbf6ea; color: #3a3025; border: 1.5px solid rgba(58,48,37,.3); box-shadow: inset 0 -2px 0 rgba(58,48,37,.08); caret-color: #a9552f; }
+:root:root .k-codebox:focus { outline: none; border-color: #e8b66a; box-shadow: 0 0 0 3px rgba(232,182,106,.45); }
 @media (max-width: 360px) { :root:root .k-codebox { width: 46px; height: 56px; min-height: 56px; } .k-code { gap: 8px; } }
 
 /* seats and panels that sit on the felt stay dark and light-texted */

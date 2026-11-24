@@ -130,3 +130,11 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
   .kg-shelf { grid-template-columns: repeat(3, 1fr); gap: 16px 6px; } .kg-shelf .kg-medal { width: 76px; height: 76px; } .kg-shelf .kg-medal svg { width: 52px; height: 39px; }
   :root:root .kg-shelf .kg-obj { font-size: 12.5px; }
 }
+
+/* phones: the logo pill and the tools pill always share one row (the name beside the logo gives way first) */
+@media (max-width: 560px) {
+  .kg-bar { flex-wrap: nowrap; gap: 8px; }
+  .kg-brand { flex: none; } .kg-tools { flex: 0 1 auto; min-width: 0; gap: 4px; }
+  .kg-tools .kg-acct { max-width: 26vw; }
+}
+@media (max-width: 480px) { .kg-brand { padding: 5px; } .kg-brand .kg-brandname { display: none; } }

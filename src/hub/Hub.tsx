@@ -22,7 +22,7 @@ export function Bar() {
   const { lang, setLang, simplified, setSimplified } = useLang()
   return (
     <div className="kg-bar">
-      <a className="kg-brand" href="/"><img className="kg-logo" src="/favicon.svg" alt="" width="26" height="26" /><span>Kiiro Games</span></a>
+      <a className="kg-brand" href="/"><img className="kg-logo" src="/favicon.svg" alt="" width="26" height="26" /><span className="kg-brandname">Kiiro Games</span></a>
       <div className="kg-tools">
         <div className="kg-lang" role="group" aria-label="Language">
           <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
