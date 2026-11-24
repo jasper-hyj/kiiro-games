@@ -138,9 +138,9 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
   }
   if (req.method === 'GET' && path === '/users') {
     const q = '%' + (url.searchParams.get('q') || '').replace(/[%_]/g, '') + '%'
-    const { results } = await db.prepare(
-      `SELECT u.id,u.name,u.username,u.email,u.games,u.banned,u.role,u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
-        WHERE u.name LIKE ? OR u.email LIKE ? OR u.username LIKE ? ORDER BY u.last_seen DESC LIMIT 100`).bind(season, q, q, q).all()
+    const sql = (role: string) => `SELECT u.id,u.name,u.username,u.email,u.games,u.banned,${role}u.created_at,u.last_seen,a.balance FROM users u LEFT JOIN season_accounts a ON a.user_id=u.id AND a.season=?
+        WHERE u.name LIKE ? OR u.email LIKE ? OR u.username LIKE ? ORDER BY u.last_seen DESC LIMIT 100`
+    const { results } = await db.prepare(sql('u.role,')).bind(season, q, q, q).all().catch(() => db.prepare(sql('')).bind(season, q, q, q).all()) // without the role column (migration 0003 not applied yet)
     return json({ users: (results as Record<string, unknown>[]).map((u) => ({ ...u, root: isRootAdmin(env, String(u.email)), admin: u.role === 'admin' || isRootAdmin(env, String(u.email)) })) })
   }
   if (req.method === 'GET' && path === '/matches') {

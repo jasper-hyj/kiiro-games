@@ -43,8 +43,14 @@ export async function newSession(db: D1, userId: string): Promise<string> {
 
 export async function userFromToken(db: D1, token: string | null | undefined): Promise<User | null> {
   if (!token || token.length < 32 || token.length > 200) return null
-  const row = await db.prepare(
-    'SELECT u.id,u.email,u.name,u.banned,u.games,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>?').bind(await sha256(token), Date.now()).first<User>()
+  const hash = await sha256(token)
+  let row: User | null
+  try {
+    row = await db.prepare('SELECT u.id,u.email,u.name,u.banned,u.games,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>?').bind(hash, Date.now()).first<User>()
+  } catch {
+    // the "role" column comes from migration 0003: until it is applied, sign-in must keep working (just without admin roles)
+    row = await db.prepare('SELECT u.id,u.email,u.name,u.banned,u.games FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>?').bind(hash, Date.now()).first<User>()
+  }
   if (!row || row.banned) return null
   return row
 }
