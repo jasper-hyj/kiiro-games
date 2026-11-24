@@ -25,4 +25,4 @@ export async function api<T = any>(path: string, body?: unknown, method = body =
 }
 
 export interface Me { id: string; name: string; username: string | null; email: string; admin: boolean; season: string; balance: number; profit: number; level: number; games: number }
-export interface BoardRow { rank: number; name: string; level: number; profit: number; games: number; me?: boolean }
+export interface BoardRow { rank: number; name: string; level: number; profit: number; games: number; score?: number; me?: boolean }

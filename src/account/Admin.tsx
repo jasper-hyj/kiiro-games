@@ -79,6 +79,7 @@ export default function Admin() {
           <h3>Balances that differ from the ledger</h3><Table rows={data.balanceDrift} cols={[['User', (r) => r.user_id], ['Balance', (r) => r.balance], ['Ledger', (r) => r.ledger]]} />
           <h3>Negative balances</h3><Table rows={data.negativeBalances} cols={[['User', (r) => r.user_id], ['Balance', (r) => r.balance]]} />
           <h3>Games whose chips do not net to zero</h3><Table rows={data.unbalancedMatches} cols={[['Match', (r) => r.match_id], ['Net', (r) => r.net]]} />
+          <h3>Pairs to review (ranked games, chips flow mostly one way)</h3><Table rows={data.suspiciousPairs} cols={[['Player A', (r) => r.a_name], ['Player B', (r) => r.b_name], ['Games together', (r) => r.n_games], ['A won', (r) => `${r.a_wins} of ${r.n_games}`], ['A net chips', (r) => r.a_net]]} />
           <button className="ghost" onClick={() => void act('trim', { user: me.id })}>Trim replay logs older than 90 days</button>
         </>
       )}

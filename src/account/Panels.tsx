@@ -4,25 +4,32 @@ import { api, ApiError, type BoardRow } from './api'
 import { fmt, PasswordInput, useAccount, useEscape } from './Account'
 import { Avatar } from '../ui/components'
 
+const GAMES: [string, string][] = [['all', 'acAll'], ['mahjong', 'hubMahjong'], ['holdem', 'hubHoldem'], ['blackjack', 'bjName'], ['bigtwo', 'btName']]
+
 export function Leaderboard() {
   const { t } = useLang()
   const { me } = useAccount()
+  const [game, setGame] = useState('all')
   const [rows, setRows] = useState<BoardRow[] | null>(null)
   const [season, setSeason] = useState('')
-  useEffect(() => { api<{ season: string; rows: BoardRow[] }>('/leaderboard').then((r) => { setRows(r.rows); setSeason(r.season) }).catch(() => setRows([])) }, [me?.id, me?.profit])
+  const [minGames, setMinGames] = useState(3)
+  useEffect(() => { api<{ season: string; rows: BoardRow[]; minGames?: number }>(`/leaderboard?game=${game}`).then((r) => { setRows(r.rows); setSeason(r.season); if (r.minGames) setMinGames(r.minGames) }).catch(() => setRows([])) }, [me?.id, me?.profit, game])
   if (rows === null) return null
+  const overall = game === 'all'
   return (
     <section>
       <h2>{t('acBoard')} <span>{t('acSeason', { s: season })}</span></h2>
-      {rows.length === 0 ? <p className="kg-empty">{t('acEmpty')}</p> : (
+      <div className="acgames" role="tablist">{GAMES.map(([g, label]) => <button key={g} role="tab" aria-selected={game === g} className={game === g ? 'on' : ''} onClick={() => setGame(g)}>{t(label)}</button>)}</div>
+      {rows.length === 0 ? <p className="kg-empty">{t('acEmpty', { n: minGames })}</p> : (
         <table className="kgt">
-          <thead><tr><th>{t('acRank')}</th><th>{t('acPlayer')}</th><th>{t('acLevel')}</th><th>{t('acProfit')}</th></tr></thead>
-          <tbody>{rows.slice(0, 20).map((r) => (
-            <tr key={r.rank} className={r.me ? 'me' : ''}><td>{r.rank}</td><td>{r.name}{r.me ? ` (${t('acYou')})` : ''}</td><td>{r.level}</td><td className={r.profit >= 0 ? 'kg-up' : 'kg-down'}>{fmt(r.profit)}</td></tr>
-          ))}</tbody>
+          <thead><tr><th>{t('acRank')}</th><th>{t('acPlayer')}</th><th>{t('acLevel')}</th><th>{overall ? t('acScore') : t('acProfit')}</th></tr></thead>
+          <tbody>{rows.slice(0, 20).map((r) => {
+            const v = overall ? (r.score ?? 0) : r.profit
+            return <tr key={r.rank} className={r.me ? 'me' : ''}><td>{r.rank}</td><td>{r.name}{r.me ? ` (${t('acYou')})` : ''}</td><td>{r.level}</td><td className={v >= 0 ? 'kg-up' : 'kg-down'}>{overall ? (v > 0 ? '+' : '') + v.toFixed(1) : fmt(v)}</td></tr>
+          })}</tbody>
         </table>
       )}
-      <p className="kg-note">{t('acBoardNote')}</p>
+      <p className="kg-note">{overall ? t('acBoardNoteAll', { n: minGames }) : t('acBoardNote', { n: minGames })}</p>
     </section>
   )
 }

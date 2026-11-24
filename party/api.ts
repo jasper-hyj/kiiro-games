@@ -1,7 +1,7 @@
 import { getServerByName } from 'partyserver'
 import type { Env } from './d1'
 import { allow, cleanName, endSession, badPassword, finishGoogle, isAdmin, login, passwordOk, register, setPassword, userFromToken, type User } from './auth'
-import { ensureAccount, FLOOR_CHIPS, leaderboard, level, seasonOf, START_CHIPS } from './economy'
+import { ensureAccount, FLOOR_CHIPS, leaderboard, MIN_BOARD_GAMES, level, seasonOf, START_CHIPS } from './economy'
 import { trimReplays } from './matches'
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }
@@ -52,7 +52,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
   if (req.method === 'GET' && path === '/leaderboard') {
     const me = await userFromToken(db, token)
     const season = /^\d{4}-\d{2}$/.test(url.searchParams.get('season') || '') ? url.searchParams.get('season')! : seasonOf()
-    return json({ season, rows: await leaderboard(db, season, me?.id) })
+    return json({ season, rows: await leaderboard(db, season, me?.id, 50, url.searchParams.get('game') || 'all'), minGames: MIN_BOARD_GAMES })
   }
 
   const user = await userFromToken(db, token)
@@ -158,7 +158,16 @@ async function admin(req: Request, env: Env, me: User, path: string, url: URL): 
     const { results: negative } = await db.prepare('SELECT user_id,balance FROM season_accounts WHERE season=? AND balance<0').bind(season).all()
     const { results: unbalanced } = await db.prepare(
       `SELECT ref AS match_id, SUM(delta) AS net FROM ledger WHERE season=? AND reason LIKE 'play:%' AND reason NOT IN ('play:holdem','play:blackjack') GROUP BY ref HAVING ABS(SUM(delta)) > 5`).bind(season).all()
-    return json({ season, balanceDrift: drift, negativeBalances: negative, unbalancedMatches: unbalanced, ok: !drift.length && !negative.length && !unbalanced.length })
+    // two accounts that keep meeting in ranked games where chips flow mostly one way: worth a look (not proof of anything)
+    const { results: pairs } = await db.prepare(
+      `SELECT ua.name AS a_name, ub.name AS b_name, COUNT(*) AS n_games, SUM(a.chips) AS a_net, SUM(CASE WHEN a.chips>0 THEN 1 ELSE 0 END) AS a_wins
+         FROM match_players a JOIN match_players b ON a.match_id=b.match_id AND a.user_id < b.user_id
+         JOIN matches m ON m.id=a.match_id JOIN users ua ON ua.id=a.user_id JOIN users ub ON ub.id=b.user_id
+        WHERE m.season=? AND m.ranked=1 AND a.user_id IS NOT NULL AND b.user_id IS NOT NULL
+        GROUP BY a.user_id, b.user_id
+       HAVING n_games>=5 AND ABS(a_net)>=1500 AND (a_wins*1.0/n_games>=0.8 OR a_wins*1.0/n_games<=0.2)
+        ORDER BY ABS(a_net) DESC LIMIT 20`).bind(season).all()
+    return json({ season, balanceDrift: drift, negativeBalances: negative, unbalancedMatches: unbalanced, suspiciousPairs: pairs, ok: !drift.length && !negative.length && !unbalanced.length })
   }
   if (req.method === 'POST') {
     const b = await body(req)
