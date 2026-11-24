@@ -1,5 +1,5 @@
 import { shuffled } from '../../holdem/engine/cards'
-import { allCombos, beats, evalCombo, penalty, power, THREE_DIAMONDS, type Combo } from './combos'
+import { allCombos, bRank, beats, evalCombo, penalty, power, THREE_DIAMONDS, type Combo } from './combos'
 
 export interface BtConfig { ranked: boolean }
 export interface BtSeat { id: string | null; name: string; bot: boolean; connected: boolean; dcAt: number; hand: number[]; passed: boolean; missed: number }
@@ -199,7 +199,8 @@ export class BigTwoTable {
     if (wait === 0) tick(); else setTimeout(tick, wait)
   }
   private autoMove(i: number) {
-    const move = chooseMove(this.seats[i].hand, this.current ? this.current.combo : null, this.opening)
+    const others = this.seats.filter((_, k) => k !== i).map((x) => x.hand.length)
+    const move = this.seats[i].bot || this.seats[i].missed < 2 ? botMove(this.seats[i].hand, this.current ? this.current.combo : null, this.opening, others) : chooseMove(this.seats[i].hand, this.current ? this.current.combo : null, this.opening)
     if (move) { const r = this.check(i, move.cards); if (typeof r !== 'string') return this.apply(i, r) }
     if (this.current) this.doPass(i)
     else { // must lead: play the lowest single as a last resort
@@ -246,4 +247,46 @@ export function chooseMove(hand: number[], current: Combo | null, opening: boole
   // leading: prefer shedding more cards at once, lowest first (five-card hands only when they are not strong)
   const rank = (c: Combo) => (c.size === 5 ? 0 : c.size === 3 ? 1 : c.size === 2 ? 2 : 3)
   return options.sort((a, b) => rank(a) - rank(b) || a.key - b.key)[0]
+}
+
+
+/**
+ * The bots' move: the same legal moves as the hint, but chosen the way people choose. It mostly plays the weakest answer, sometimes the second weakest;
+ * it leads small singles to bait a reply while it holds strong cards, shows a pair or a triple now and then, saves its 2s for later, sometimes lets a
+ * low trick go by (a pass it could have beaten), and stops playing games the moment someone is close to going out.
+ */
+export function botMove(hand: number[], current: Combo | null, opening: boolean, others: number[], rng: () => number = Math.random): Combo | null {
+  let options = allCombos(hand)
+  if (opening) options = options.filter((c) => c.cards.includes(THREE_DIAMONDS))
+  if (current) options = options.filter((c) => beats(c, current))
+  if (options.length === 0) return null
+  const danger = others.some((n) => n <= 2) // someone is about to go out: no tricks, shed or block as hard as possible
+  const pressure = others.some((n) => n <= 4)
+  const hasTwo = (c: Combo) => c.cards.some((x) => bRank(x) === 12)
+  if (current) {
+    const sorted = options.sort((a, b) => a.key - b.key || a.cards.length - b.cards.length)
+    if (opening) return sorted[0]
+    if (danger) return sorted[sorted.length > 1 && current.size === 1 ? sorted.length - 1 : 0] // block with the strongest
+    // bait: let a low trick go by sometimes (never when it is cheap to win and the hand is nearly empty)
+    if (!pressure && hand.length > 6 && current.key < 30 && rng() < 0.18) return null
+    // save the 2s: prefer an answer without one if there is one that is not much higher
+    const clean = sorted.filter((c) => !hasTwo(c))
+    const pool = clean.length ? clean : sorted
+    const k = pool.length > 1 && rng() < 0.22 ? 1 : 0 // sometimes not the very weakest
+    return pool[k]
+  }
+  // leading
+  const group = (c: Combo) => (c.size === 5 ? 1 : c.size === 3 ? 2 : c.size === 2 ? 3 : 4) // 4 = single, shed these last
+  const lows = options.filter((c) => !hasTwo(c)).sort((a, b) => a.key - b.key)
+  const pool = lows.length ? lows : options.sort((a, b) => a.key - b.key)
+  if (opening) return pool[0]
+  if (danger) { // lead the biggest group so the others cannot answer cheaply
+    const big = pool.filter((c) => c.size >= 2).sort((a, b) => b.size - a.size || a.key - b.key)
+    return big[0] ?? pool[pool.length - 1]
+  }
+  const r = rng()
+  if (r < 0.28) { const singles = pool.filter((c) => c.size === 1); if (singles.length) return singles[Math.min(singles.length - 1, Math.floor(rng() * 2))] } // bait with a small single
+  if (r < 0.5) { const pairs = pool.filter((c) => c.size === 2 || c.size === 3); if (pairs.length) return pairs[0] }
+  const shed = [...pool].sort((a, b) => group(a) - group(b) || a.key - b.key)
+  return shed[Math.min(shed.length - 1, rng() < 0.2 ? 1 : 0)]
 }
