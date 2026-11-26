@@ -266,7 +266,7 @@ export class Hearts extends TurnGame {
       best = Math.min(...sc)
     const winners = sc.map((v, i) => (v === best ? i : -1)).filter((i) => i >= 0)
     const avg = sc.reduce((a, b) => a + b, 0) / 4
-    return { points: sc.map((v) => avg - v), winner: winners.length === 1 ? winners[0] : -1, winners, summary: { scores: sc, moon: this.s.moon } }
+    return { points: sc.map((v) => avg - v), scores: sc, winner: winners.length === 1 ? winners[0] : -1, winners, summary: { scores: sc, moon: this.s.moon } }
   }
   protected saveState() {
     return this.s

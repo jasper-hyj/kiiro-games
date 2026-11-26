@@ -259,6 +259,7 @@ export class Spades extends TurnGame {
     const points = [(a - b) / 2, (b - a) / 2, (a - b) / 2, (b - a) / 2]
     return {
       points,
+      scores: [a, b, a, b],
       winners: a === b ? undefined : a > b ? [0, 2] : [1, 3],
       winner: a === b ? -1 : a > b ? 0 : 1,
       summary: { team: this.s.team, detail: this.s.detail },

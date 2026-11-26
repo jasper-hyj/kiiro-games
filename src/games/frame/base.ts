@@ -37,6 +37,8 @@ export interface GameMeta {
 }
 export interface Outcome {
   points: number[]
+  /** the scores to show, in the game's own terms, when they differ from `points` (which settle chips and must balance) */
+  scores?: number[]
   /** every winning seat, when more than one wins (partners, farmers, a tie for first) */
   winners?: number[]
   winner: number

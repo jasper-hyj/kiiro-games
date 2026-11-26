@@ -235,12 +235,16 @@ export default function PlayApp({ game }: { game: GenericGame }) {
                   : t('plDraw')
             }
             columns={[t('acPlayer'), t('plScore')]}
-            rows={v.seats.map((s) => ({
-              name: s.name,
-              me: s.me,
-              value: `${v.result!.points[s.seat] > 0 ? '+' : ''}${v.result!.points[s.seat]}`,
-              tone: v.result!.points[s.seat] > 0 ? 'up' : v.result!.points[s.seat] < 0 ? 'down' : 'flat',
-            }))}
+            rows={v.seats.map((s) => {
+              const points = v.result!.points[s.seat]
+              const score = v.result!.scores?.[s.seat]
+              return {
+                name: s.name,
+                me: s.me,
+                value: score !== undefined ? String(score) : `${points > 0 ? '+' : ''}${points}`,
+                tone: points > 0 ? ('up' as const) : points < 0 ? ('down' as const) : ('flat' as const),
+              }
+            })}
             note={v.host ? undefined : t('plWaitHost')}
           >
             {v.host && (
