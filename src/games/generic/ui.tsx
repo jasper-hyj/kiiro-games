@@ -39,7 +39,7 @@ function GomokuBoard({ v, send }: BoardProps) {
     if (!touch || (pick && pick[0] === x && pick[1] === y)) place(x, y)
     else setPick([x, y])
   }
-  const pad = 1, size = n - 1 + pad * 2
+  const pad = 0.7, size = n - 1 + pad * 2
   const stars = n === 19 ? [3, 9, 15] : [3, 7, 11]
   const sideName = (side: number) => (side === 1 ? t('gmBlack') : t('gmWhite'))
   return (

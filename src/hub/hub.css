@@ -147,3 +147,8 @@ a.kg-game:hover .kg-go { transform: translateX(3px); }
 .kg-lang button { border-radius: 999px; padding: 6px 11px; transition: background .15s, color .15s; }
 .kg-lang button.on { background: var(--k-accent); color: var(--k-accent-ink); }
 @media (max-width: 560px) { .kg-lang button { padding: 6px 9px; } }
+
+/* one navbar width everywhere: the hub, the room and every table */
+.kg-bar { width: min(960px, 100%); margin-inline: auto; box-sizing: border-box; }
+.kg-wrap > .kg-bar { margin: 0 -24px; width: calc(100% + 48px); }
+@media (max-width: 760px) { .kg-wrap > .kg-bar { margin: 0 -18px; width: calc(100% + 36px); } .kg-bar { padding-left: 14px; padding-right: 14px; } }

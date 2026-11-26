@@ -115,7 +115,7 @@ export function GoBoard({ v, send, name }: BoardProps) {
     if (!myTurn || s.board[i] !== 0) return
     if (!touch || pick === i) place(i); else setPick(i)
   }
-  const pad = 1, size = n - 1 + pad * 2
+  const pad = 0.7, size = n - 1 + pad * 2
   const stars = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6]
   const colourName = (c: number) => (c === 1 ? t('goBlack') : t('goWhite'))
   const lastPass = v.status === 'playing' && s.passes > 0 && s.last < 0 && s.moves > 0
@@ -177,7 +177,7 @@ export function ChineseCheckersBoard({ v, send, name }: BoardProps) {
     if (sel !== null && dests.includes(i)) { send({ k: 'act', a: { from: sel, to: i } }); setSel(null); return }
     setSel(s.cells[i] === v.you && s.dests[i] && i !== sel ? i : null)
   }
-  const pad = 1.4
+  const pad = 0.8
   const vb = `${MINX - pad} ${MINY - pad} ${MAXX - MINX + pad * 2} ${MAXY - MINY + pad * 2}`
   const home = (seat: number) => { const target = (s.camps[seat] + 3) % 6; return HOLES.reduce((a, h, i) => a + (s.cells[i] === seat && inCamp(h, target) ? 1 : 0), 0) }
   return (
@@ -198,7 +198,7 @@ export function ChineseCheckersBoard({ v, send, name }: BoardProps) {
               {c >= 0 && <circle cx={px} cy={py} r="0.5" className={'ccmarble' + (s.camps[c] === 5 ? ' light' : '') + (sel === i ? ' sel' : '')} style={{ fill: colourOf(c) }} />}
               {dests.includes(i) && <circle cx={px} cy={py} r="0.28" className="ccdest" />}
               {s.last && s.last[1] === i && <circle cx={px} cy={py} r="0.16" className="gmlast" />}
-              <circle cx={px} cy={py} r="0.7" fill="transparent" />
+              <circle cx={px} cy={py} r="0.86" fill="transparent" />
             </g>
           )
         })}
