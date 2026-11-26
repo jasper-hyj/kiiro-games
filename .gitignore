@@ -7,3 +7,6 @@ dist
 .dev.vars
 .wrangler
 *.tsbuildinfo
+
+# screenshots written by the test and tool scripts
+/*.png
