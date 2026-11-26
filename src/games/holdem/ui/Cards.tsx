@@ -6,7 +6,8 @@ export function Card({ c, small, back, hot }: { c?: number; small?: boolean; bac
   const red = suitOf(c) === 1 || suitOf(c) === 2
   return (
     <span className={'pkcard' + (small ? ' small' : '') + (red ? ' red' : '') + (hot ? ' hot' : '')} aria-label={RANKS[rankOf(c)] + SUITS[suitOf(c)]}>
-      <b>{RANKS[rankOf(c)] === 'T' ? '10' : RANKS[rankOf(c)]}</b><i>{SUITS[suitOf(c)]}</i>
+      <b>{RANKS[rankOf(c)] === 'T' ? '10' : RANKS[rankOf(c)]}</b>
+      <i>{SUITS[suitOf(c)]}</i>
     </span>
   )
 }

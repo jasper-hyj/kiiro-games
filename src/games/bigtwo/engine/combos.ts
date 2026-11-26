@@ -10,7 +10,12 @@ export const power = (c: number) => bRank(c) * 4 + bSuit(c)
 export const THREE_DIAMONDS = 2 * 13 + 1 // holdem id: suit 2 (diamonds), rank index 1 (the 3)
 
 export type ComboType = 'single' | 'pair' | 'triple' | 'straight' | 'flush' | 'fullhouse' | 'quads' | 'straightflush'
-export interface Combo { type: ComboType; size: number; /** order within the type (and between five-card types: type rank first) */ key: number; cards: number[] }
+export interface Combo {
+  type: ComboType
+  size: number
+  /** order within the type (and between five-card types: type rank first) */ key: number
+  cards: number[]
+}
 const FIVE_RANK: Record<string, number> = { straight: 1, flush: 2, fullhouse: 3, quads: 4, straightflush: 5 }
 
 /** Classify a set of cards as a legal play, or null. */
@@ -26,7 +31,8 @@ export function evalCombo(cards: number[]): Combo | null {
   if (n !== 5) return null
   const flush = cs.every((c) => bSuit(c) === bSuit(cs[0]))
   const straight = ranks.every((r, i) => i === 0 || r === ranks[i - 1] + 1) && ranks[4] <= 11 // no 2 in a straight
-  const cnt = new Map<number, number>(); for (const r of ranks) cnt.set(r, (cnt.get(r) ?? 0) + 1)
+  const cnt = new Map<number, number>()
+  for (const r of ranks) cnt.set(r, (cnt.get(r) ?? 0) + 1)
   const groups = [...cnt.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])
   const mk = (type: ComboType, key: number): Combo => ({ type, size: 5, key: FIVE_RANK[type] * 1000 + key, cards: cs })
   if (straight && flush) return mk('straightflush', top)
@@ -49,15 +55,25 @@ export function allCombos(hand: number[]): Combo[] {
   const h = [...hand].sort((a, b) => power(a) - power(b))
   const out: Combo[] = []
   for (const c of h) out.push({ type: 'single', size: 1, key: power(c), cards: [c] })
-  for (let i = 0; i < h.length; i++) for (let j = i + 1; j < h.length; j++) {
-    if (bRank(h[i]) === bRank(h[j])) out.push({ type: 'pair', size: 2, key: power(h[j]), cards: [h[i], h[j]] })
-    for (let k = j + 1; k < h.length; k++) if (bRank(h[i]) === bRank(h[k])) out.push({ type: 'triple', size: 3, key: power(h[k]), cards: [h[i], h[j], h[k]] })
-  }
+  for (let i = 0; i < h.length; i++)
+    for (let j = i + 1; j < h.length; j++) {
+      if (bRank(h[i]) === bRank(h[j])) out.push({ type: 'pair', size: 2, key: power(h[j]), cards: [h[i], h[j]] })
+      for (let k = j + 1; k < h.length; k++) if (bRank(h[i]) === bRank(h[k])) out.push({ type: 'triple', size: 3, key: power(h[k]), cards: [h[i], h[j], h[k]] })
+    }
   if (h.length >= 5) {
     const idx = h.map((_, i) => i)
     const pick = (start: number, chosen: number[]) => {
-      if (chosen.length === 5) { const c = evalCombo(chosen.map((i) => h[i])); if (c) out.push(c); return }
-      for (let i = start; i < idx.length; i++) { if (idx.length - i < 5 - chosen.length) break; chosen.push(i); pick(i + 1, chosen); chosen.pop() }
+      if (chosen.length === 5) {
+        const c = evalCombo(chosen.map((i) => h[i]))
+        if (c) out.push(c)
+        return
+      }
+      for (let i = start; i < idx.length; i++) {
+        if (idx.length - i < 5 - chosen.length) break
+        chosen.push(i)
+        pick(i + 1, chosen)
+        chosen.pop()
+      }
     }
     pick(0, [])
   }

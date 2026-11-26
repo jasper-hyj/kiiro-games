@@ -28,7 +28,10 @@ function evaluate(ctx: WinContext): HandScore | null {
     return y
   }
   const done = (y: YakuItem[]): HandScore | null => {
-    const fan = Math.min(13, y.reduce((a, q) => a + q.value, 0))
+    const fan = Math.min(
+      13,
+      y.reduce((a, q) => a + q.value, 0),
+    )
     if (fan < ctx.options.minFan) return null
     return { yaku: y, total: fan, base: hkValue(fan), label: fan >= 13 ? 'Limit' : undefined }
   }
@@ -44,7 +47,8 @@ function evaluate(ctx: WinContext): HandScore | null {
     const y = common()
     const tris = it.sets.filter((s) => s.type === 'tri')
     const seqs = it.sets.filter((s) => s.type === 'seq')
-    const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
+    const sw = 27 + ctx.seatWind,
+      rw = 27 + ctx.roundWind
     let limit = false
     for (const t of tris) {
       if (isDragon(t.kind)) y.push({ name: 'Dragon Triplet', zh: '三元牌', value: 1 })
@@ -58,9 +62,14 @@ function evaluate(ctx: WinContext): HandScore | null {
     if (dt === 3) y.push({ name: 'Big Three Dragons', zh: '大三元', value: 8 })
     else if (dt === 2 && isDragon(it.pair)) y.push({ name: 'Small Three Dragons', zh: '小三元', value: 5 })
     const wt = tris.filter((t) => t.kind >= 27 && t.kind < 31).length
-    if (wt === 4) { y.push({ name: 'Big Four Winds', zh: '大四喜', value: 13 }); limit = true }
-    else if (wt === 3 && it.pair >= 27 && it.pair < 31) y.push({ name: 'Small Four Winds', zh: '小四喜', value: 10 })
-    if (tris.filter((t) => t.kan).length === 4) { y.push({ name: 'Four Kongs', zh: '十八羅漢', value: 13 }); limit = true }
+    if (wt === 4) {
+      y.push({ name: 'Big Four Winds', zh: '大四喜', value: 13 })
+      limit = true
+    } else if (wt === 3 && it.pair >= 27 && it.pair < 31) y.push({ name: 'Small Four Winds', zh: '小四喜', value: 10 })
+    if (tris.filter((t) => t.kan).length === 4) {
+      y.push({ name: 'Four Kongs', zh: '十八羅漢', value: 13 })
+      limit = true
+    }
     if (kinds.every(isHonor)) y.push({ name: 'All Honors', zh: '字一色', value: 10 })
     else if (kinds.every(isTerminal)) y.push({ name: 'All Terminals', zh: '清幺九', value: 10 })
     else if (kinds.every(isTermOrHonor)) y.push({ name: 'Mixed Terminals', zh: '混幺九', value: 7 })
@@ -79,15 +88,30 @@ function settle(score: HandScore, info: { winner: number; from: number | null; n
   const d = new Array(n).fill(0)
   const V = score.base
   if (info.from === null) {
-    for (let p = 0; p < n; p++) if (p !== info.winner) { d[p] -= V; d[info.winner] += V }
-  } else { d[info.from] -= 2 * V; d[info.winner] += 2 * V }
+    for (let p = 0; p < n; p++)
+      if (p !== info.winner) {
+        d[p] -= V
+        d[info.winner] += V
+      }
+  } else {
+    d[info.from] -= 2 * V
+    d[info.winner] += 2 * V
+  }
   return d
 }
 
 export const hongkong: RuleSet = {
-  id: 'hk', name: 'Hong Kong', zh: '香港麻雀',
+  id: 'hk',
+  name: 'Hong Kong',
+  zh: '香港麻雀',
   blurb: '13 tiles · 8 flowers · 3-fan minimum · fan doubling table',
-  handSize: 13, nSets: 4, flowers: true, deadWall: 14, startPoints: 1000, unit: 'pts',
+  handSize: 13,
+  nSets: 4,
+  flowers: true,
+  deadWall: 14,
+  startPoints: 1000,
+  unit: 'pts',
   specials: { kokushi: true },
-  evaluate, settle,
+  evaluate,
+  settle,
 }

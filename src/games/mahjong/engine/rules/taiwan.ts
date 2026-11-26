@@ -25,7 +25,8 @@ function evaluate(ctx: WinContext): HandScore | null {
     if (!ctx.tsumo && ctx.melds.length === 5 && ctx.melds.every((m) => m.type !== 'ankan')) y.push({ name: 'All Exposed', zh: '全求人', value: 2 })
     const tris = it.sets.filter((s) => s.type === 'tri')
     const seqs = it.sets.filter((s) => s.type === 'seq')
-    const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
+    const sw = 27 + ctx.seatWind,
+      rw = 27 + ctx.roundWind
     for (const t of tris) {
       if (isDragon(t.kind)) y.push({ name: 'Dragon Triplet', zh: '三元牌', value: 1 })
       if (t.kind === sw) y.push({ name: 'Seat Wind', zh: '門風', value: 1 })
@@ -35,8 +36,10 @@ function evaluate(ctx: WinContext): HandScore | null {
     if (own) y.push({ name: `Seat Flower ×${own}`, zh: `花牌 ×${own}`, value: own })
     const fs = flowerSetBonus(ctx.flowers)
     if (fs) y.push({ name: 'Flower Set', zh: '花槓', value: 2 * fs })
-    if (seqs.length === 5 && sc[3] === 0 && ctx.flowers.length === 0 && it.waitKind === 'ryanmen') y.push({ name: 'Pinghu (All Sequences)', zh: '平胡', value: 2 })
-    if (ctx.waitCount === 1 && (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki')) y.push({ name: 'Single Wait', zh: '獨聽', value: 1 })
+    if (seqs.length === 5 && sc[3] === 0 && ctx.flowers.length === 0 && it.waitKind === 'ryanmen')
+      y.push({ name: 'Pinghu (All Sequences)', zh: '平胡', value: 2 })
+    if (ctx.waitCount === 1 && (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki'))
+      y.push({ name: 'Single Wait', zh: '獨聽', value: 1 })
     if (tris.length === 5) y.push({ name: 'All Triplets', zh: '碰碰胡', value: 4 })
     const conc = tris.filter((t) => !t.open).length
     if (conc === 5) y.push({ name: 'Five Concealed Triplets', zh: '五暗刻', value: 8 })
@@ -71,15 +74,30 @@ function settle(score: HandScore, info: { winner: number; from: number | null; d
     return TW_BASE + TW_PER_TAI * (score.total + extra)
   }
   if (info.from === null) {
-    for (let p = 0; p < 4; p++) if (p !== info.winner) { d[p] -= pay(p); d[info.winner] += pay(p) }
-  } else { d[info.from] -= pay(info.from); d[info.winner] += pay(info.from) }
+    for (let p = 0; p < 4; p++)
+      if (p !== info.winner) {
+        d[p] -= pay(p)
+        d[info.winner] += pay(p)
+      }
+  } else {
+    d[info.from] -= pay(info.from)
+    d[info.winner] += pay(info.from)
+  }
   return d
 }
 
 export const taiwan: RuleSet = {
-  id: 'taiwan', name: 'Taiwanese', zh: '台灣麻將',
+  id: 'taiwan',
+  name: 'Taiwanese',
+  zh: '台灣麻將',
   blurb: '16 tiles · 8 flowers · tai scoring · dealer streaks (連莊)',
-  handSize: 16, nSets: 5, flowers: true, deadWall: 16, startPoints: 1000, unit: 'pts',
+  handSize: 16,
+  nSets: 5,
+  flowers: true,
+  deadWall: 16,
+  startPoints: 1000,
+  unit: 'pts',
   specials: {},
-  evaluate, settle,
+  evaluate,
+  settle,
 }

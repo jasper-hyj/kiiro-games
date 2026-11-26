@@ -13,7 +13,10 @@ import { legacyTarget, newRoomUrl, route } from './route'
  * The page for the current address (all addresses are described in src/route.ts). Old-style addresses are rewritten first.
  * A game's bare address (/holdem) has nothing to show, so it opens a new room for that game.
  */
-function Redirect({ to }: { to: string }) { location.replace(to); return null }
+function Redirect({ to }: { to: string }) {
+  location.replace(to)
+  return null
+}
 
 export default function App() {
   const old = legacyTarget()
@@ -21,13 +24,28 @@ export default function App() {
   const r = route()
   const page = (() => {
     switch (r.page) {
-      case 'admin': return <Admin />
-      case 'room': return <RoomApp />
-      case 'hub': return <Hub />
-      case 'gameStart': return <Redirect to={newRoomUrl(r.game)} />
-      case 'tiles': return <MahjongApp />
+      case 'admin':
+        return <Admin />
+      case 'room':
+        return <RoomApp />
+      case 'hub':
+        return <Hub />
+      case 'gameStart':
+        return <Redirect to={newRoomUrl(r.game)} />
+      case 'tiles':
+        return <MahjongApp />
       default: // a table, or practice against bots
-        return r.game === 'holdem' ? <HoldemApp /> : r.game === 'blackjack' ? <BlackjackApp /> : r.game === 'bigtwo' ? <BigTwoApp /> : r.game === 'mahjong' ? <MahjongApp /> : <PlayApp game={r.game} />
+        return r.game === 'holdem' ? (
+          <HoldemApp />
+        ) : r.game === 'blackjack' ? (
+          <BlackjackApp />
+        ) : r.game === 'bigtwo' ? (
+          <BigTwoApp />
+        ) : r.game === 'mahjong' ? (
+          <MahjongApp />
+        ) : (
+          <PlayApp game={r.game} />
+        )
     }
   })()
   return <AccountProvider>{page}</AccountProvider>

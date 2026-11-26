@@ -10,7 +10,12 @@ const API = process.env.API ?? WS.replace(/^ws/, 'http') + '/api'
 async function freeCode(): Promise<string> {
   for (let i = 0; i < 30; i++) {
     const code = String(1000 + Math.floor(Math.random() * 9000))
-    try { const r = (await (await fetch(`${API}/rooms/${code}`)).json()) as { free?: boolean }; if (r.free) return code } catch { return code }
+    try {
+      const r = (await (await fetch(`${API}/rooms/${code}`)).json()) as { free?: boolean }
+      if (r.free) return code
+    } catch {
+      return code
+    }
   }
   throw new Error('no free room code')
 }
@@ -20,12 +25,31 @@ export async function makeTable(game: string, cfg: object = {}, room?: string, w
   room ??= await freeCode()
   const ws = new WebSocket(`${WS}/parties/room/${room}`)
   const got: Record<string, unknown>[] = []
-  ws.addEventListener('message', (e) => { try { got.push(JSON.parse(String(e.data))) } catch { /* ignore */ } })
-  await new Promise<void>((res, rej) => { ws.addEventListener('open', () => res()); ws.addEventListener('error', () => rej(new Error('cannot reach the room server on ' + WS))) })
+  ws.addEventListener('message', (e) => {
+    try {
+      got.push(JSON.parse(String(e.data)))
+    } catch {
+      /* ignore */
+    }
+  })
+  await new Promise<void>((res, rej) => {
+    ws.addEventListener('open', () => res())
+    ws.addEventListener('error', () => rej(new Error('cannot reach the room server on ' + WS)))
+  })
   ws.send(JSON.stringify({ t: 'join', id: 'maker-' + room, name: 'Maker', create: true }))
-  const until = async (f: () => boolean, what: string) => { for (let i = 0; i < 100; i++) { if (f()) return; await wait(50) } throw new Error('table helper: ' + what + ' ' + JSON.stringify(got.slice(-2))) }
+  const until = async (f: () => boolean, what: string) => {
+    for (let i = 0; i < 100; i++) {
+      if (f()) return
+      await wait(50)
+    }
+    throw new Error('table helper: ' + what + ' ' + JSON.stringify(got.slice(-2)))
+  }
   await until(() => got.some((m) => m.t === 'room'), 'room did not open')
-  for (let i = 0; i < waitFor; i++) { const x = new WebSocket(`${WS}/parties/room/${room}`); await new Promise<void>((r) => x.addEventListener('open', () => r())); x.send(JSON.stringify({ t: 'join', id: `extra${i}-${room}`, name: 'Extra' + i })) }
+  for (let i = 0; i < waitFor; i++) {
+    const x = new WebSocket(`${WS}/parties/room/${room}`)
+    await new Promise<void>((r) => x.addEventListener('open', () => r()))
+    x.send(JSON.stringify({ t: 'join', id: `extra${i}-${room}`, name: 'Extra' + i }))
+  }
   await wait(200)
   ws.send(JSON.stringify({ t: 'pick', game, cfg }))
   await until(() => got.some((m) => m.t === 'room' && m.game === game), 'game was not picked')

@@ -14,11 +14,14 @@ export function preflopStrength(hole: number[]): number {
   const suited = suitOf(hole[0]) === suitOf(hole[1])
   const gap = a - b
   let s: number
-  if (a === b) s = 0.5 + (a / 12) * 0.5 // pairs: 22 = .5, AA = 1
+  if (a === b)
+    s = 0.5 + (a / 12) * 0.5 // pairs: 22 = .5, AA = 1
   else {
-    s = (a * 0.6 + b * 0.4) / 12 * 0.62 // high cards
+    s = ((a * 0.6 + b * 0.4) / 12) * 0.62 // high cards
     if (suited) s += 0.06
-    if (gap === 1) s += 0.05; else if (gap === 2) s += 0.03; else if (gap >= 4) s -= 0.04
+    if (gap === 1) s += 0.05
+    else if (gap === 2) s += 0.03
+    else if (gap >= 4) s -= 0.04
     if (a === 12) s += 0.1 // an ace is always worth something
   }
   return Math.max(0, Math.min(1, s))
@@ -44,7 +47,11 @@ export function madeStrength(hole: number[], board: number[]): number {
   const suits = [...hole, ...board].map(suitOf)
   const flushDraw = [0, 1, 2, 3].some((s) => suits.filter((x) => x === s).length === 4)
   const ranks = [...new Set([...hole, ...board].map(rankOf))].sort((x, y) => x - y)
-  const run = ranks.reduce((m, r, i) => { let k = 1; while (ranks.includes(r + k)) k++; return Math.max(m, i >= 0 ? k : 0) }, 0)
+  const run = ranks.reduce((m, r, i) => {
+    let k = 1
+    while (ranks.includes(r + k)) k++
+    return Math.max(m, i >= 0 ? k : 0)
+  }, 0)
   return 0.12 + (flushDraw ? 0.16 : 0) + (run >= 4 ? 0.1 : 0)
 }
 
@@ -56,15 +63,43 @@ const roundTo = (n: number, step: number) => Math.round(n / step) * step
  * trap = how often it slow-plays a strong hand (check or call now, spring the raise later), steady = how little its mood swings.
  * All between 0 and 1.
  */
-export interface Persona { name: string; loose: number; aggro: number; bluff: number; trap: number; steady: number }
+export interface Persona {
+  name: string
+  loose: number
+  aggro: number
+  bluff: number
+  trap: number
+  steady: number
+}
 export const NEUTRAL: Persona = { name: 'balanced', loose: 0.5, aggro: 0.5, bluff: 0.5, trap: 0.4, steady: 0.5 }
 /** A stable personality for a seat, picked from its id (so a refresh keeps the same bot). */
 export function personaFor(id: string): Persona {
   let h = 2166136261
   for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0
-  const next = () => { h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296 }
-  const loose = next(), aggro = next(), bluff = next(), trap = next(), steady = next()
-  const name = aggro > 0.66 ? (loose > 0.5 ? 'maniac' : 'aggressive') : aggro < 0.34 ? (loose > 0.5 ? 'calling station' : 'rock') : loose > 0.6 ? 'loose' : loose < 0.35 ? 'tight' : 'balanced'
+  const next = () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0
+    h ^= h >>> 13
+    return (h >>> 0) / 4294967296
+  }
+  const loose = next(),
+    aggro = next(),
+    bluff = next(),
+    trap = next(),
+    steady = next()
+  const name =
+    aggro > 0.66
+      ? loose > 0.5
+        ? 'maniac'
+        : 'aggressive'
+      : aggro < 0.34
+        ? loose > 0.5
+          ? 'calling station'
+          : 'rock'
+        : loose > 0.6
+          ? 'loose'
+          : loose < 0.35
+            ? 'tight'
+            : 'balanced'
   return { name, loose, aggro, bluff, trap, steady }
 }
 
@@ -78,7 +113,10 @@ export function drawStrength(hole: number[], board: number[]): number {
   if (ranks.includes(12)) ranks.push(-1) // an ace also plays low
   const set = new Set(ranks)
   let open = false
-  for (let lo = -1; lo <= 8; lo++) { const n = [0, 1, 2, 3, 4].filter((k) => set.has(lo + k)).length; if (n >= 4) open = true }
+  for (let lo = -1; lo <= 8; lo++) {
+    const n = [0, 1, 2, 3, 4].filter((k) => set.has(lo + k)).length
+    if (n >= 4) open = true
+  }
   return (flushDraw ? 0.3 : 0) + (open ? 0.22 : 0)
 }
 
@@ -106,9 +144,12 @@ export function botDecision(v: PokerView, rng: () => number = Math.random, p: Pe
     const target = roundTo(v.seats.reduce((m, x) => Math.max(m, x.bet), 0) + Math.max(bb, pot * frac), Math.max(5, bb / 2))
     return Math.min(t.maxRaiseTo, Math.max(t.minRaiseTo, target))
   }
-  const raise = (frac: number): PokerAct => { const to = raiseTo(frac); return to >= t.maxRaiseTo ? { a: 'allin' } : { a: 'raise', to } }
+  const raise = (frac: number): PokerAct => {
+    const to = raiseTo(frac)
+    return to >= t.maxRaiseTo ? { a: 'allin' } : { a: 'raise', to }
+  }
   /** a bet size a person would pick: small for thin value or a probe, big for the nuts or a big bluff */
-  const size = (strong: boolean) => strong ? sizes[2 + Math.floor(rng() * 4)] : sizes[Math.floor(rng() * 4)]
+  const size = (strong: boolean) => (strong ? sizes[2 + Math.floor(rng() * 4)] : sizes[Math.floor(rng() * 4)])
 
   const strongHand = strength > 0.78
   // slow-play: a monster on the flop or turn is sometimes checked or just called, to let others catch up (never on the river, never against a crowd)
@@ -117,12 +158,14 @@ export function botDecision(v: PokerView, rng: () => number = Math.random, p: Pe
   if (t.call === 0) {
     // nothing to pay
     if (trapping) return { a: 'check' }
-    if (t.canRaise && strength > (pre ? 0.72 - p.loose * 0.1 : 0.62 - p.loose * 0.06) && rng() < Math.min(0.95, 0.55 + p.aggro * 0.4)) return raise(size(strongHand))
+    if (t.canRaise && strength > (pre ? 0.72 - p.loose * 0.1 : 0.62 - p.loose * 0.06) && rng() < Math.min(0.95, 0.55 + p.aggro * 0.4))
+      return raise(size(strongHand))
     if (t.canRaise && strength > (pre ? 0.55 : 0.45) && rng() < 0.3 * aggro) return raise(size(false))
     // semi-bluff: a draw bets sometimes, with a bigger bet when it has outs to fall back on
     if (t.canRaise && draw >= 0.22 && rng() < 0.45 * aggro) return raise(size(draw > 0.4))
     // pure bluff: more likely heads-up and when the board is cold, never with a hand worth showing down
-    if (t.canRaise && !pre && strength < 0.3 && draw < 0.22 && rng() < 0.06 * (0.4 + p.bluff * 1.6) * (opponents <= 1 ? 1.6 : 0.6)) return raise(size(rng() < 0.5))
+    if (t.canRaise && !pre && strength < 0.3 && draw < 0.22 && rng() < 0.06 * (0.4 + p.bluff * 1.6) * (opponents <= 1 ? 1.6 : 0.6))
+      return raise(size(rng() < 0.5))
     // blind steal from the late seats with nothing
     if (pre && t.canRaise && strength < 0.4 && rng() < 0.05 * (0.4 + p.bluff * 1.2) && opponents <= 3) return raise(0.8)
     return { a: 'check' }

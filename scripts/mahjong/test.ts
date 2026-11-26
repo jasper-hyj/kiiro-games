@@ -15,18 +15,37 @@ const parse = (s: string): number[] => {
   let digits: number[] = []
   for (const ch of s) {
     if (/\d/.test(ch)) digits.push(+ch)
-    else { const base = { m: 0, p: 9, s: 18, z: 27 }[ch as 'm']; for (const d of digits) ks.push(base + d - 1); digits = [] }
+    else {
+      const base = { m: 0, p: 9, s: 18, z: 27 }[ch as 'm']
+      for (const d of digits) ks.push(base + d - 1)
+      digits = []
+    }
   }
   return ks
 }
 const used = new Map<number, number>()
-const ids = (ks: number[]) => ks.map((k) => { const n = used.get(k) ?? 0; used.set(k, n + 1); return k * 4 + n })
+const ids = (ks: number[]) =>
+  ks.map((k) => {
+    const n = used.get(k) ?? 0
+    used.set(k, n + 1)
+    return k * 4 + n
+  })
 
-function setup(rule: RuleId, hand: string, win: string, o: { minFan?: number; lian?: number; flowers?: number[]; seat?: number; tsumo?: boolean; riichi?: boolean; melds?: { type: any; tiles: string }[] } = {}) {
+function setup(
+  rule: RuleId,
+  hand: string,
+  win: string,
+  o: { minFan?: number; lian?: number; flowers?: number[]; seat?: number; tsumo?: boolean; riichi?: boolean; melds?: { type: any; tiles: string }[] } = {},
+) {
   used.clear()
   const g = new Game(rule, { rule, aka: false, rounds: 1, minFan: o.minFan ?? 3 } as any, ['a', 'b', 'c', 'd'])
-  g.dealer = 0; g.roundIndex = 0; g.lian = o.lian ?? 0; g.honba = 0
-  g.doraPool = [120, 120, 120, 120, 120]; g.uraPool = [120, 120, 120, 120, 120]; g.doraCount = 1
+  g.dealer = 0
+  g.roundIndex = 0
+  g.lian = o.lian ?? 0
+  g.honba = 0
+  g.doraPool = [120, 120, 120, 120, 120]
+  g.uraPool = [120, 120, 120, 120, 120]
+  g.doraCount = 1
   const seat = o.seat ?? 1
   const p = g.players[seat]
   p.flowers = o.flowers ?? []
@@ -36,7 +55,10 @@ function setup(rule: RuleId, hand: string, win: string, o: { minFan?: number; li
   const wid = ids(parse(win))[0]
   p.riichi = !!o.riichi
   const tsumo = o.tsumo ?? true
-  if (tsumo) { p.hand.push(wid); p.drawn = wid }
+  if (tsumo) {
+    p.hand.push(wid)
+    p.drawn = wid
+  }
   return { g, seat, wid, tsumo, p }
 }
 const run = (t: ReturnType<typeof setup>) => {
@@ -108,7 +130,13 @@ const pay = (t: ReturnType<typeof setup>) => {
 }
 {
   // open hand: pon of red dragon + chi, ron. fu: 20 + open red dragon pon 4 = 24 -> 30
-  const t = setup('riichi', '234p678s5m', '5m', { tsumo: false, melds: [{ type: 'pon', tiles: '777z' }, { type: 'chi', tiles: '123m' }] })
+  const t = setup('riichi', '234p678s5m', '5m', {
+    tsumo: false,
+    melds: [
+      { type: 'pon', tiles: '777z' },
+      { type: 'chi', tiles: '123m' },
+    ],
+  })
   const sc = run(t)!
   eq('open yakuhai ron han/fu', [sc.total, sc.fu], [1, 30])
   eq('1han30fu ron non-dealer pays 1000', pay(t)[0], -1000)
@@ -124,39 +152,83 @@ eq('dora (sanma): 1m indicator -> 9m, 9m -> 1m', [doraFrom(0, true), doraFrom(8,
 {
   // closed hand 234m 456p 678s 33z + 11m(pair?) -> use a simple tanyao-free valid hand with 2 dora
   const t = setup('riichi', '123m456p789s5566z', '6z', { tsumo: false, riichi: true })
-  t.g.doraPool = [parse('4s')[0] * 4]            // indicator 4s -> dora 5s ... hand has none
-  eq('no dora in hand -> no dora entry', run(t)!.yaku.some((y) => y.name === 'Dora'), false)
-  t.g.doraPool = [parse('9m')[0] * 4]            // 9m -> 1m : hand holds one 1m
+  t.g.doraPool = [parse('4s')[0] * 4] // indicator 4s -> dora 5s ... hand has none
+  eq(
+    'no dora in hand -> no dora entry',
+    run(t)!.yaku.some((y) => y.name === 'Dora'),
+    false,
+  )
+  t.g.doraPool = [parse('9m')[0] * 4] // 9m -> 1m : hand holds one 1m
   eq('one dora tile in hand counted', run(t)!.yaku.find((y) => y.name === 'Dora')?.value, 1)
-  t.g.doraPool = [parse('4z')[0] * 4]            // North -> East: none
-  t.g.uraPool = [parse('9m')[0] * 4]             // ura indicator 9m -> 1m, riichi hand -> +1 ura
+  t.g.doraPool = [parse('4z')[0] * 4] // North -> East: none
+  t.g.uraPool = [parse('9m')[0] * 4] // ura indicator 9m -> 1m, riichi hand -> +1 ura
   t.p.riichi = true
   eq('ura dora counts only with riichi', run(t)!.yaku.find((y) => y.name === 'Ura Dora')?.value, 1)
   t.p.riichi = false
   eq('no ura dora without riichi', run(t)!.yaku?.some((y) => y.name === 'Ura Dora') ?? false, false)
 }
 
-
 // --- Riichi match ending ---
 {
   const mk = (rounds: 1 | 2, players = 4) => new Game('riichi', { rule: 'riichi', aka: true, rounds, minFan: 0 } as any, ['a', 'b', 'c', 'd'].slice(0, players))
-  const finishDraw = (g: Game, dealerStays: boolean) => (g as any).finish({ kind: 'draw', deltas: new Array(g.n).fill(0), tenpai: [], hands: [], dealerBefore: g.dealer }, dealerStays, true)
-  const finishWin = (g: Game, winner: number, dealerStays: boolean) => (g as any).finish({ kind: 'win', winner, from: null, tsumo: true, score: { yaku: [], total: 1, base: 1000 }, deltas: new Array(g.n).fill(0), hands: [], dealerBefore: g.dealer }, dealerStays, false)
-  let g = mk(2); g.roundIndex = 7; g.players.forEach((p, i) => (p.points = [26000, 25000, 24000, 25000][i])); finishDraw(g, false)
+  const finishDraw = (g: Game, dealerStays: boolean) =>
+    (g as any).finish({ kind: 'draw', deltas: new Array(g.n).fill(0), tenpai: [], hands: [], dealerBefore: g.dealer }, dealerStays, true)
+  const finishWin = (g: Game, winner: number, dealerStays: boolean) =>
+    (g as any).finish(
+      {
+        kind: 'win',
+        winner,
+        from: null,
+        tsumo: true,
+        score: { yaku: [], total: 1, base: 1000 },
+        deltas: new Array(g.n).fill(0),
+        hands: [],
+        dealerBefore: g.dealer,
+      },
+      dealerStays,
+      false,
+    )
+  let g = mk(2)
+  g.roundIndex = 7
+  g.players.forEach((p, i) => (p.points = [26000, 25000, 24000, 25000][i]))
+  finishDraw(g, false)
   eq('end of South with nobody at 30000 -> extends into West', (g as any).pendingOver, false)
-  g = mk(2); g.roundIndex = 7; g.players.forEach((p, i) => (p.points = [31000, 25000, 20000, 24000][i])); finishDraw(g, false)
+  g = mk(2)
+  g.roundIndex = 7
+  g.players.forEach((p, i) => (p.points = [31000, 25000, 20000, 24000][i]))
+  finishDraw(g, false)
   eq('end of South with a player at 30000+ -> game over', (g as any).pendingOver, true)
-  g = mk(2); g.roundIndex = 11; g.players.forEach((p) => (p.points = 25000)); finishDraw(g, false)
+  g = mk(2)
+  g.roundIndex = 11
+  g.players.forEach((p) => (p.points = 25000))
+  finishDraw(g, false)
   eq('extension is limited to one more wind', (g as any).pendingOver, true)
-  g = mk(2); g.roundIndex = 7; g.dealer = 3; g.players.forEach((p, i) => (p.points = [20000, 22000, 23000, 35000][i])); finishWin(g, 3, true)
+  g = mk(2)
+  g.roundIndex = 7
+  g.dealer = 3
+  g.players.forEach((p, i) => (p.points = [20000, 22000, 23000, 35000][i]))
+  finishWin(g, 3, true)
   eq('agari-yame: dealer wins the last hand in 1st with 30000+ -> over', (g as any).pendingOver, true)
-  g = mk(2); g.roundIndex = 7; g.dealer = 3; g.players.forEach((p, i) => (p.points = [20000, 22000, 33000, 25000][i])); finishWin(g, 3, true)
+  g = mk(2)
+  g.roundIndex = 7
+  g.dealer = 3
+  g.players.forEach((p, i) => (p.points = [20000, 22000, 33000, 25000][i]))
+  finishWin(g, 3, true)
   eq('dealer wins last hand but is not 1st -> game continues', (g as any).pendingOver, false)
-  g = mk(2); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [-100, 30000, 40000, 30100][i])); finishDraw(g, false)
+  g = mk(2)
+  g.roundIndex = 3
+  g.players.forEach((p, i) => (p.points = [-100, 30000, 40000, 30100][i]))
+  finishDraw(g, false)
   eq('a bust (below 0) ends the game', (g as any).pendingOver, true)
-  g = mk(1, 3); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [30000, 35000, 40000][i])); finishDraw(g, false)
+  g = mk(1, 3)
+  g.roundIndex = 3
+  g.players.forEach((p, i) => (p.points = [30000, 35000, 40000][i]))
+  finishDraw(g, false)
   eq('sanma return is 40000: 40000 reached -> over', (g as any).pendingOver, true)
-  g = mk(1, 3); g.roundIndex = 3; g.players.forEach((p, i) => (p.points = [30000, 35000, 38000][i])); finishDraw(g, false)
+  g = mk(1, 3)
+  g.roundIndex = 3
+  g.players.forEach((p, i) => (p.points = [30000, 35000, 38000][i]))
+  finishDraw(g, false)
   eq('sanma: nobody at 40000 -> extends', (g as any).pendingOver, false)
 }
 
@@ -188,7 +260,11 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
 {
   const t = setup('taiwan', '111m222m333m444m555m6m', '6m', { tsumo: false })
   const n = names(t)
-  eq('tw pure one suit + all triplets + five concealed', ['Pure One Suit', 'All Triplets', 'Five Concealed Triplets'].every((x) => n.includes(x)), true)
+  eq(
+    'tw pure one suit + all triplets + five concealed',
+    ['Pure One Suit', 'All Triplets', 'Five Concealed Triplets'].every((x) => n.includes(x)),
+    true,
+  )
 }
 {
   const t = setup('taiwan', '123m456m789m123p456p4p', '4p')
@@ -214,7 +290,11 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
   const score = { yaku: [], total: 5, base: 80 }
   const rule = new Game('taiwan', { rule: 'taiwan' } as any, ['a', 'b', 'c', 'd']).rule
   eq('tw dealer pays streak bonus on ron (1+2*2 extra tai)', rule.settle(score, { winner: 1, from: 0, dealer: 0, honba: 0, lianZhuang: 2 }), [-130, 130, 0, 0])
-  eq('tw dealer pays more on tsumo, others normal', rule.settle(score, { winner: 1, from: null, dealer: 0, honba: 0, lianZhuang: 2 }), [-130, 340, -80, -80].map((x, i) => (i === 1 ? 290 : x)))
+  eq(
+    'tw dealer pays more on tsumo, others normal',
+    rule.settle(score, { winner: 1, from: null, dealer: 0, honba: 0, lianZhuang: 2 }),
+    [-130, 340, -80, -80].map((x, i) => (i === 1 ? 290 : x)),
+  )
 }
 
 // =====================  Scoring audit: Taiwanese  =====================
@@ -224,7 +304,7 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
   // dragons
   let t = setup('taiwan', '555z666z777z123m456p1s', '1s', { tsumo: false })
   eq('tw big three dragons = 8', [has(t, 'Big Three Dragons'), val(t, 'Big Three Dragons')], [true, 8])
-  eq('tw dragon triplets 1 each (x3)', (run(t)!.yaku.filter((y) => y.name === 'Dragon Triplet')).length, 3)
+  eq('tw dragon triplets 1 each (x3)', run(t)!.yaku.filter((y) => y.name === 'Dragon Triplet').length, 3)
   t = setup('taiwan', '555z666z7z123m456p789s', '7z', { tsumo: false })
   eq('tw small three dragons = 4', [has(t, 'Small Three Dragons'), has(t, 'Big Three Dragons')], [true, false])
   // suits
@@ -266,7 +346,13 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
   // concealed
   t = setup('taiwan', '123m456m789m123p45p77s', '3p', { tsumo: false, melds: [] })
   eq('tw concealed hand = 1 on a discard win', val(t, 'Concealed Hand'), 1)
-  t = setup('taiwan', '456m789m123p45p77s', '3p', { tsumo: false, melds: [{ type: 'chi', tiles: '123m' }, { type: 'chi', tiles: '456p' }].slice(0, 1) as never })
+  t = setup('taiwan', '456m789m123p45p77s', '3p', {
+    tsumo: false,
+    melds: [
+      { type: 'chi', tiles: '123m' },
+      { type: 'chi', tiles: '456p' },
+    ].slice(0, 1) as never,
+  })
   // open hand: no concealed bonus
   eq('tw open hand has no concealed bonus', has(t, 'Concealed'), false)
   // dealer + streak when the dealer wins
@@ -276,7 +362,11 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
   const sc = { yaku: [], total: 8, base: 110 }
   const twr = new Game('taiwan', { rule: 'taiwan' } as any, ['a', 'b', 'c', 'd']).rule
   eq('tw 8-tai tsumo (non-dealer): dealer owes +1', twr.settle(sc, { winner: 2, from: null, dealer: 0, honba: 0, lianZhuang: 0 }), [-120, -110, 340, -110])
-  eq('tw ron by non-dealer from non-dealer: only the discarder pays', twr.settle(sc, { winner: 2, from: 3, dealer: 0, honba: 0, lianZhuang: 0 }), [0, 0, 110, -110])
+  eq(
+    'tw ron by non-dealer from non-dealer: only the discarder pays',
+    twr.settle(sc, { winner: 2, from: 3, dealer: 0, honba: 0, lianZhuang: 0 }),
+    [0, 0, 110, -110],
+  )
 }
 
 // =====================  Scoring audit: Hong Kong  =====================
@@ -298,7 +388,17 @@ const names = (t: ReturnType<typeof setup>) => run(t)!.yaku.map((y) => y.name)
   eq('hk fan is capped at 13 (limit)', (fan(t) ?? 0) <= 13, true)
   t = setup('hk', '123m456m789m45p77s', '3p', { tsumo: false })
   eq('hk common hand + concealed + no flowers = 3 on a discard win', fan(t), 3)
-  eq('hk 3 fan pays 8: discarder pays double (16)', setup('hk', '123m456m789m45p77s', '3p', { tsumo: false }).g.rule.settle(run(setup('hk', '123m456m789m45p77s', '3p', { tsumo: false }))!, { winner: 1, from: 0, dealer: 0, honba: 0, lianZhuang: 0 }), [-16, 16, 0, 0])
+  eq(
+    'hk 3 fan pays 8: discarder pays double (16)',
+    setup('hk', '123m456m789m45p77s', '3p', { tsumo: false }).g.rule.settle(run(setup('hk', '123m456m789m45p77s', '3p', { tsumo: false }))!, {
+      winner: 1,
+      from: 0,
+      dealer: 0,
+      honba: 0,
+      lianZhuang: 0,
+    }),
+    [-16, 16, 0, 0],
+  )
   t = setup('hk', '123m456m789m123p4p', '4p')
   eq('hk fully concealed self-draw (不求人) = 3 fan', hasF(t, 'Fully Concealed'), true)
   t = setup('hk', '1122m3344p5566s7z', '7z', { tsumo: false })

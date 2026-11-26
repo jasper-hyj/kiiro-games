@@ -3,8 +3,14 @@ import { allCombos, beats, evalCombo, penalty, power, THREE_DIAMONDS } from '../
 import { BigTwoTable, chooseMove } from '../../src/games/bigtwo/engine/table'
 
 let fails = 0
-const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
-const R = '23456789TJQKA', S = 'shdc'
+const ok = (c: boolean, m: string) => {
+  if (!c) {
+    fails++
+    console.log('FAIL', m)
+  } else console.log('ok  ', m)
+}
+const R = '23456789TJQKA',
+  S = 'shdc'
 const C = (x: string) => R.indexOf(x[0]) + 13 * S.indexOf(x[1])
 const H = (...x: string[]) => x.map(C)
 const combo = (...x: string[]) => evalCombo(H(...x))
@@ -33,7 +39,12 @@ ok(beat(['4d', '4c', '4h', '4s', '9d'], ['5d', '5c', '5h', '9s', '9d']), 'four o
 ok(beat(['3d', '4d', '5d', '6d', '7d'], ['4d', '4c', '4h', '4s', '9d']), 'straight flush beats four of a kind')
 ok(beat(['4d', '5c', '6h', '7s', '8d'], ['3d', '4c', '5h', '6s', '7d']), 'straights compare by the highest card')
 ok(beat(['3c', '5c', '9c', 'Jc', 'Kc'], ['3d', '5d', '9d', 'Jd', 'Kd']), 'flushes: higher suit wins first')
-ok(beat(['4h', '4d', '9s', '9c', '9h'], ['3h', '3d', '8s', '8c', '8h']) && beat(['4h', '4d', '8s', '8c', '8h'], ['5h', '5d', '3s', '3c', '3h']) && !beat(['9h', '9d', '3s', '3c', '3h'], ['4h', '4d', '8s', '8c', '8h']), 'full houses compare the triple, not the pair')
+ok(
+  beat(['4h', '4d', '9s', '9c', '9h'], ['3h', '3d', '8s', '8c', '8h']) &&
+    beat(['4h', '4d', '8s', '8c', '8h'], ['5h', '5d', '3s', '3c', '3h']) &&
+    !beat(['9h', '9d', '3s', '3c', '3h'], ['4h', '4d', '8s', '8c', '8h']),
+  'full houses compare the triple, not the pair',
+)
 ok(penalty(3) === 3 && penalty(8) === 2 && penalty(10) === 3 && penalty(13) === 4, 'penalty scale: 1 each, x2 from 8 cards, x3 from 10, x4 for all 13')
 ok(allCombos(H('3d', '3c', '3h', '4s')).filter((c) => c.type === 'pair').length === 3, 'a triple contains three pairs')
 
@@ -48,10 +59,18 @@ ok(allCombos(H('3d', '3c', '3h', '4s')).filter((c) => c.type === 'pair').length 
 }
 
 // ---- a scripted game ----
-const mk = () => { const t = new BigTwoTable(); t.turnTimerMs = 0; t.botDelayMs = 0; t.shuffleSeats = false; return t }
+const mk = () => {
+  const t = new BigTwoTable()
+  t.turnTimerMs = 0
+  t.botDelayMs = 0
+  t.shuffleSeats = false
+  return t
+}
 {
-  const t = mk(); t.botDelayMs = 3600000 // keep the bots idle so the script controls every move
-  t.join('a', 'A'); t.join('b', 'B')
+  const t = mk()
+  t.botDelayMs = 3600000 // keep the bots idle so the script controls every move
+  t.join('a', 'A')
+  t.join('b', 'B')
   t.riggedHands = [H('3d', 'Ac', '2s'), H('4d', '4c', '5h'), H('6d', '7c', '8h', '9s'), H('Td', 'Jc')]
   t.start('a')
   ok(t.status === 'playing' && t.seats.every((s) => s.id || s.bot), 'the host starts; empty seats become bots')
@@ -66,46 +85,80 @@ const mk = () => { const t = new BigTwoTable(); t.turnTimerMs = 0; t.botDelayMs 
   ok(t.play('b', [C('4c')]) === null && t.turn === 2, 'a higher single is accepted')
   ok(t.pass('a') === 'not_your_turn', 'passing out of turn is refused')
   // seats 2 and 3 are idle bots: pretend they pass, then the trick returns to seat 1 who leads again
-  t['doPass'](2); t['doPass'](3); t['doPass'](0)
+  t['doPass'](2)
+  t['doPass'](3)
+  t['doPass'](0)
   ok(t.current === null && t.turn === 1, 'after three passes the last player leads a fresh trick')
   ok(t.play('b', [C('4d'), C('5h')]) === 'bad_combo', 'a non-matching pair is refused')
   ok(t.play('b', [C('4d')]) === null, 'a fresh trick can start with anything')
 }
 {
   // going out ends the game; points are zero-sum and the winner collects
-  const t = mk(); t.botDelayMs = 3600000
+  const t = mk()
+  t.botDelayMs = 3600000
   t.join('a', 'A')
   t.riggedHands = [H('3d'), H('4d', '4c', '5h'), H('6d', '7c', '8h', '9s', 'Ts', 'Js', 'Qs', 'Ks', 'As', '2s'), H('Td', 'Jc')]
-  let got: any = null; t.onOver = (x) => { got = x.result }
+  let got: any = null
+  t.onOver = (x) => {
+    got = x.result
+  }
   t.start('a')
   ok(t.play('a', [C('3d')]) === null && t.status === 'over', 'playing the last card ends the game')
-  ok(got && got.winner === 0 && got.points[0] === 2 + 7 + 2 * 0 + 3 + 0 - 0 + 0 || got?.points?.reduce((a: number, b: number) => a + b, 0) === 0, 'scores are zero-sum')
+  ok(
+    (got && got.winner === 0 && got.points[0] === 2 + 7 + 2 * 0 + 3 + 0 - 0 + 0) || got?.points?.reduce((a: number, b: number) => a + b, 0) === 0,
+    'scores are zero-sum',
+  )
   ok(got.points[0] === -(got.points[1] + got.points[2] + got.points[3]) && got.points[2] === -3, 'the 10-card hand pays triple, the winner collects it all')
   ok(t.view('a').result?.winner === 0, 'the result is in the view')
 }
 {
   // full simulated games with all-bot play must always finish, conserve points and never deadlock
-  let problems = 0, games = 0
+  let problems = 0,
+    games = 0
   for (let g = 0; g < 200; g++) {
     const t = mk()
     t.join('a', 'A')
-    let result: any = null; t.onOver = (x) => { result = x.result }
+    let result: any = null
+    t.onOver = (x) => {
+      result = x.result
+    }
     // the human seat plays like a bot too
     t.seats[0].missed = 2
     t.start('a')
-    for (let step = 0; step < 4000 && t.status === 'playing'; step++) { if (t.turn >= 0 && t.seats[t.turn].id === 'a') t['autoMove'](t.turn) ; else if (t.turn < 0) break; else t.drive?.() }
+    for (let step = 0; step < 4000 && t.status === 'playing'; step++) {
+      if (t.turn >= 0 && t.seats[t.turn].id === 'a') t['autoMove'](t.turn)
+      else if (t.turn < 0) break
+      else t.drive?.()
+    }
     // drive is async for bots with delay 0 it is synchronous
-    if (t.status !== 'over') { problems++; console.log('game did not finish', g); continue }
+    if (t.status !== 'over') {
+      problems++
+      console.log('game did not finish', g)
+      continue
+    }
     games++
     const pts = t.result!.points
-    if (pts.reduce((a: number, b: number) => a + b, 0) !== 0) { problems++; console.log('points do not sum to zero', pts) }
-    if (pts[t.result!.winner] <= 0) { problems++; console.log('winner did not gain', pts) }
-    if (t.seats[t.result!.winner].hand.length !== 0) { problems++; console.log('winner still holds cards') }
+    if (pts.reduce((a: number, b: number) => a + b, 0) !== 0) {
+      problems++
+      console.log('points do not sum to zero', pts)
+    }
+    if (pts[t.result!.winner] <= 0) {
+      problems++
+      console.log('winner did not gain', pts)
+    }
+    if (t.seats[t.result!.winner].hand.length !== 0) {
+      problems++
+      console.log('winner still holds cards')
+    }
     // every card appears exactly once across the final hands + played cards is hard to track; check total cards left sum
     const left = t.result!.left.reduce((a: number, b: number) => a + b, 0)
-    if (left < 0 || left > 39) { problems++; console.log('odd card count', left) }
+    if (left < 0 || left > 39) {
+      problems++
+      console.log('odd card count', left)
+    }
     void result
   }
   ok(problems === 0, `${games} complete bot games finish with zero-sum points`)
 }
-console.log(fails ? `${fails} FAILED` : 'all passed'); process.exit(fails ? 1 : 0)
+console.log(fails ? `${fails} FAILED` : 'all passed')
+process.exit(fails ? 1 : 0)

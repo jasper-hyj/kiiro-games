@@ -2,25 +2,26 @@
 
 Small browser games for friends and clubs, free to play.
 
-| game | address | status |
-|---|---|---|
+| game              | address    | status                                                                                                                                          |
+| ----------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Kiiro Mahjong** | `/mahjong` | playable by anyone, no sign-in: Taiwanese, Hong Kong, Japanese Riichi (4 and 3 players), Chinese Official, Sichuan; English, 繁中, 简中, 日本語 |
-| Texas Hold'em | – | planned |
+| Texas Hold'em     | –          | planned                                                                                                                                         |
 
 `/` is the hub (game picker). Every address is described in `src/route.ts`:
 
-| Address | Page |
-| --- | --- |
-| `/` | hub |
-| `/room`, `/room/new?game=holdem`, `/room/1234` | create or join, a new room, a room (the invite link) |
-| `/<game>/1234`, `/<game>/1234?watch=1` | that room's table (play, or only watch); game = `mahjong` `holdem` `blackjack` `bigtwo` |
-| `/<game>/practice`, `/mahjong/tutorial` | against bots in the browser |
-| `/<game>/local` | two people on one device (Gomoku, Chess, Xiangqi, Checkers, Reversi, Go, Chinese Checkers, Yahtzee: games with no hidden information); the table is shown from the seat on turn |
-| `/admin`, `/admin/users` | admin (the tab is in the path) |
+| Address                                        | Page                                                                                                                                                                            |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                            | hub                                                                                                                                                                             |
+| `/room`, `/room/new?game=holdem`, `/room/1234` | create or join, a new room, a room (the invite link)                                                                                                                            |
+| `/<game>/1234`, `/<game>/1234?watch=1`         | that room's table (play, or only watch); game = `mahjong` `holdem` `blackjack` `bigtwo`                                                                                         |
+| `/<game>/practice`, `/mahjong/tutorial`        | against bots in the browser                                                                                                                                                     |
+| `/<game>/local`                                | two people on one device (Gomoku, Chess, Xiangqi, Checkers, Reversi, Go, Chinese Checkers, Yahtzee: games with no hidden information); the table is shown from the seat on turn |
+| `/admin`, `/admin/users`                       | admin (the tab is in the path)                                                                                                                                                  |
 
 Older addresses (`/holdem?room=1234&from=room`, `/?solo=1`, `/room?create=1&pick=bigtwo`, ...) are rewritten to these. The API is listed at the top of `party/api.ts` (REST-style; the older route names still answer).
 
 ## Mahjong in short
+
 - **Play** online with an invite link / 4-digit room code; empty seats are bots. Without a game server the same Play button runs a game against bots in the browser.
 - Coach, wait hints, auto-win / auto-discard / skip, round history, hand review, rulebook with 69 worked examples, a 10-lesson guide.
 - Works on desktop, tablets and phones (landscape and upright).
@@ -119,6 +120,7 @@ Debug URLs: `/?solo=1&rule=riichi&players=3&speed=0.05` starts a solo game (fast
 ## Deploy
 
 ### 1. Online server (Cloudflare Workers + PartyServer)
+
 Only needed for online rooms.
 
 ```bash
@@ -127,9 +129,10 @@ npm run party:deploy
 # prints a URL like https://kiiro-games.<you>.workers.dev
 ```
 
-The Worker is named `kiiro-games` (`wrangler.jsonc`). Renaming a Worker creates a new one with an empty set of rooms; update `VITE_PARTYKIT_HOST` afterwards. Without Cloudflare *Workers Builds*, a `git push` does not redeploy the Worker: run `npm run party:deploy` after changing `src/games/mahjong/engine`, `src/games/mahjong/net` or `party/`.
+The Worker is named `kiiro-games` (`wrangler.jsonc`). Renaming a Worker creates a new one with an empty set of rooms; update `VITE_PARTYKIT_HOST` afterwards. Without Cloudflare _Workers Builds_, a `git push` does not redeploy the Worker: run `npm run party:deploy` after changing `src/games/mahjong/engine`, `src/games/mahjong/net` or `party/`.
 
 ### 2. Web app (Vercel)
+
 1. Import the Git repo in Vercel (framework preset: Vite) or run `npx vercel`. `vercel.json` rewrites every path to `index.html`, which `/mahjong` needs.
 2. Environment variable `VITE_PARTYKIT_HOST` = your Worker host without `https://`, e.g. `kiiro-games.<you>.workers.dev`.
 3. Add the domain (for example `games.<your-domain>`) in the Vercel project and point its DNS record at Vercel.

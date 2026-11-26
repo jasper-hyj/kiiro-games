@@ -4,7 +4,9 @@ import { kindOf, numOf, suitOf, isFlowerId } from './tiles'
 /** A second, independent look at the whole game state. Runs after every move; any message it returns means a rule was broken. */
 export function auditGame(g: Game): string[] {
   const errs: string[] = []
-  const e = (m: string) => { if (errs.length < 12) errs.push(m) }
+  const e = (m: string) => {
+    if (errs.length < 12) errs.push(m)
+  }
 
   // 1. every tile exists exactly once
   const ids: number[] = [...g.wall, ...g.dead, ...g.doraPool, ...g.uraPool]
@@ -27,7 +29,10 @@ export function auditGame(g: Game): string[] {
       const base = g.rule.handSize - 3 * p.melds.length
       const diff = p.hand.length - base
       const mover = g.phase === 'turn' && g.turn === p.seat && !p.out
-      if (p.out) { if (Math.abs(diff) > 1) e(`seat ${p.seat} (already won) holds ${p.hand.length} tiles`); continue } // winners keep their hand (a shared winning tile may not be in it)
+      if (p.out) {
+        if (Math.abs(diff) > 1) e(`seat ${p.seat} (already won) holds ${p.hand.length} tiles`)
+        continue
+      } // winners keep their hand (a shared winning tile may not be in it)
       if (g.phase === 'turn' && mover && diff !== 1) e(`seat ${p.seat} is on turn with hand size ${p.hand.length} and ${p.melds.length} melds`)
       if (g.phase === 'turn' && !mover && diff !== 0 && !(p.out && diff === 1)) e(`seat ${p.seat} holds ${p.hand.length} tiles with ${p.melds.length} melds`)
       const kanMaker = g.phase === 'reaction' && g.reactionKind === 'chankan' && g.lastDiscard?.from === p.seat // still holds the tile it is adding to its pon
@@ -42,7 +47,8 @@ export function auditGame(g: Game): string[] {
       const ks = m.tiles.map(kindOf)
       if (m.type === 'chi') {
         const s = [...ks].sort((a, b) => a - b)
-        if (m.tiles.length !== 3 || s[0] >= 27 || suitOf(s[0]) !== suitOf(s[2]) || s[1] !== s[0] + 1 || s[2] !== s[1] + 1) e(`seat ${p.seat} has an illegal chi`)
+        if (m.tiles.length !== 3 || s[0] >= 27 || suitOf(s[0]) !== suitOf(s[2]) || s[1] !== s[0] + 1 || s[2] !== s[1] + 1)
+          e(`seat ${p.seat} has an illegal chi`)
         if ((g.sanma && g.isRiichi) || g.sichuan) e('chi in a ruleset without chi')
       } else if (m.type === 'pon') {
         if (m.tiles.length !== 3 || new Set(ks).size !== 1) e(`seat ${p.seat} has an illegal pon`)
@@ -77,7 +83,8 @@ export function auditGame(g: Game): string[] {
   if (g.sichuan && g.phase !== 'swap' && g.phase !== 'void') {
     for (const p of g.players) {
       if (p.voidSuit === null) e(`seat ${p.seat} never chose a suit to give up`)
-      else if (p.out && [...p.hand, ...p.melds.flatMap((m) => m.tiles)].some((i) => suitOf(kindOf(i)) === p.voidSuit)) e(`seat ${p.seat} won while holding the given-up suit`)
+      else if (p.out && [...p.hand, ...p.melds.flatMap((m) => m.tiles)].some((i) => suitOf(kindOf(i)) === p.voidSuit))
+        e(`seat ${p.seat} won while holding the given-up suit`)
     }
     if (g.sc.wins.length > 3) e('more than three winners')
   }

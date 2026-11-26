@@ -16,7 +16,9 @@
     "test:holdem": "tsx scripts/holdem/engine-test.ts",
     "test:blackjack": "tsx scripts/blackjack/engine-test.ts",
     "test:bigtwo": "tsx scripts/bigtwo/engine-test.ts",
-    "test:cards": "tsx scripts/cards/fairness-test.ts && tsx scripts/cards/idle-test.ts"
+    "test:cards": "tsx scripts/cards/fairness-test.ts && tsx scripts/cards/idle-test.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "partyserver": "^0.5.10",
@@ -29,6 +31,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "prettier": "3.10.1",
     "puppeteer-core": "^25.17.0",
     "tsx": "^4.16.0",
     "typescript": "^5.5.3",

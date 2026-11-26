@@ -4,14 +4,38 @@ import puppeteer from 'puppeteer-core'
 const out = process.argv[2] || '.'
 const port = process.argv[3] || '5200'
 const only = process.argv[4]?.split(',')
-const GAMES = ['holdem', 'blackjack', 'bigtwo', 'mahjong', 'gomoku', 'crazyeights', 'yahtzee', 'liarsdice', 'chess', 'xiangqi', 'doudizhu', 'bridge', 'chinesecheckers', 'go', 'hearts', 'spades', 'checkers', 'reversi']
+const GAMES = [
+  'holdem',
+  'blackjack',
+  'bigtwo',
+  'mahjong',
+  'gomoku',
+  'crazyeights',
+  'yahtzee',
+  'liarsdice',
+  'chess',
+  'xiangqi',
+  'doudizhu',
+  'bridge',
+  'chinesecheckers',
+  'go',
+  'hearts',
+  'spades',
+  'checkers',
+  'reversi',
+]
 // the board or main play area, and the things a finger has to hit
-const BOARD = '.gmboard, .chboard, .xqboard, .ckboard, .rvboard, .ccboard, .tktable, .bttable, .hdfelt, .bjtable, .c8table, .yzdice, .ldbid, .ddtable, .brtable, .board'
-const TAPS = '.chsq:not(:disabled), .cksq:not(:disabled), .rvsq.ok, .cclive, .xqcell.live, .gmhit, .btcard, .c8card.ok, .tkcard.ok, .ddcard, .brcard.ok, .yzdie.live, .tile, .hdbtn:not(:disabled), .k-back, .k-ghost'
+const BOARD =
+  '.gmboard, .chboard, .xqboard, .ckboard, .rvboard, .ccboard, .tktable, .bttable, .hdfelt, .bjtable, .c8table, .yzdice, .ldbid, .ddtable, .brtable, .board'
+const TAPS =
+  '.chsq:not(:disabled), .cksq:not(:disabled), .rvsq.ok, .cclive, .xqcell.live, .gmhit, .btcard, .c8card.ok, .tkcard.ok, .ddcard, .brcard.ok, .yzdie.live, .tile, .hdbtn:not(:disabled), .k-back, .k-ghost'
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 for (const g of GAMES) {
   if (only && !only.includes(g)) continue
-  for (const [w, h] of [[375, 667], [390, 844]] as const) {
+  for (const [w, h] of [
+    [375, 667],
+    [390, 844],
+  ] as const) {
     const p = await (await b.createBrowserContext()).newPage()
     await p.setViewport({ width: w, height: h, hasTouch: true, isMobile: true })
     await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))

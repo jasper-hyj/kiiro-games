@@ -3,7 +3,12 @@ import { PokerTable } from '../../src/games/holdem/engine/table'
 import { botDecision, madeStrength, personaFor, preflopStrength } from '../../src/games/holdem/engine/bot'
 
 let fails = 0
-const ok = (c: boolean, m: string) => { if (!c) { fails++; console.log('FAIL', m) } else console.log('ok  ', m) }
+const ok = (c: boolean, m: string) => {
+  if (!c) {
+    fails++
+    console.log('FAIL', m)
+  } else console.log('ok  ', m)
+}
 
 // --- the strength estimate puts hands in a sensible order
 ok(preflopStrength([12 * 1 + 0 + 39 - 39, 12 + 13]) >= 0, 'strength is computed')
@@ -19,9 +24,19 @@ t.resultMs = 5
 t.turnTimerMs = 60000
 const ids = ['b1', 'b2', 'b3', 'b4']
 const seatOf: Record<string, number> = {}
-for (const id of ids) { t.join(id); const r = t.sit(id, id, t.casualStack); if (r.ok) seatOf[id] = r.seat }
+for (const id of ids) {
+  t.join(id)
+  const r = t.sit(id, id, t.casualStack)
+  if (r.ok) seatOf[id] = r.seat
+}
 const counts = { fold: 0, check: 0, call: 0, raise: 0, allin: 0 }
-let illegal = 0, hands = 0, acts = 0, bluffs = 0, traps = 0, heroCalls = 0, postflop = 0
+let illegal = 0,
+  hands = 0,
+  acts = 0,
+  bluffs = 0,
+  traps = 0,
+  heroCalls = 0,
+  postflop = 0
 const perBot: Record<string, { raise: number; n: number }> = Object.fromEntries(ids.map((i) => [i, { raise: 0, n: 0 }]))
 const wins: Record<string, number> = { b1: 0, b2: 0, b3: 0, b4: 0 }
 const total0 = ids.length * t.casualStack
@@ -35,36 +50,54 @@ const step = () => {
   const a = botDecision(v, Math.random, personaFor(id))
   const me = v.seats[v.you]
   if (v.street !== 'preflop' && me.hole) {
-    const ms = madeStrength(me.hole, v.board); postflop++
+    const ms = madeStrength(me.hole, v.board)
+    postflop++
     if ((a.a === 'raise' || a.a === 'allin') && ms < 0.3) bluffs++
     if (a.a === 'check' && ms > 0.78) traps++
     if (a.a === 'call' && ms < 0.3 && v.turn!.call > 0) heroCalls++
   }
-  perBot[id].n++; if (a.a === 'raise' || a.a === 'allin') perBot[id].raise++
+  perBot[id].n++
+  if (a.a === 'raise' || a.a === 'allin') perBot[id].raise++
   const err = t.act(id, a)
   acts++
-  if (err) { illegal++; if (illegal < 4) console.log('illegal', id, JSON.stringify(a), err, JSON.stringify(v.turn)) }
-  else counts[a.a]++
+  if (err) {
+    illegal++
+    if (illegal < 4) console.log('illegal', id, JSON.stringify(a), err, JSON.stringify(v.turn))
+  } else counts[a.a]++
 }
-t.onChange(() => { if (t.handNo !== lastHand.n && t.street === 'showdown') { /* counted below */ } queueMicrotask(step) })
+t.onChange(() => {
+  if (t.handNo !== lastHand.n && t.street === 'showdown') {
+    /* counted below */
+  }
+  queueMicrotask(step)
+})
 const target = Number(process.env.HANDS ?? 300)
 const t0 = Date.now()
 await new Promise<void>((resolve) => {
   const tick = setInterval(() => {
     if (t.result && t.handNo !== lastHand.n) {
-      lastHand.n = t.handNo; hands++
+      lastHand.n = t.handNo
+      hands++
       // at the end of every hand the chips on the table are the starting chips plus free refills of busted seats (whole stacks)
       const sum = t.seats.reduce((a, x) => a + (x.id ? x.stack : 0), 0)
       if (sum < total0 || (sum - total0) % t.casualStack !== 0) badSums++
- t.result.won.forEach((w, i) => { if (w > 0) wins[t.seats[i].id ?? ''] = (wins[t.seats[i].id ?? ''] ?? 0) + 1 }) }
-    if (hands >= target || Date.now() - t0 > 120000) { clearInterval(tick); resolve() }
+      t.result.won.forEach((w, i) => {
+        if (w > 0) wins[t.seats[i].id ?? ''] = (wins[t.seats[i].id ?? ''] ?? 0) + 1
+      })
+    }
+    if (hands >= target || Date.now() - t0 > 120000) {
+      clearInterval(tick)
+      resolve()
+    }
   }, 4)
 })
 t.dispose()
 ok(hands >= Math.min(target, 150), `${hands} hands were played to a result`)
 ok(illegal === 0, `the bots never made an illegal action (${illegal} of ${acts})`)
 ok(badSums === 0, `after every hand the chips add up (${badSums} hands off; busted bots are refilled with a whole free stack)`)
-const mix = Object.entries(counts).map(([k, n]) => `${k} ${Math.round((n / Math.max(1, acts)) * 100)}%`).join(', ')
+const mix = Object.entries(counts)
+  .map(([k, n]) => `${k} ${Math.round((n / Math.max(1, acts)) * 100)}%`)
+  .join(', ')
 console.log('action mix:', mix)
 ok(counts.fold > acts * 0.08 && counts.fold < acts * 0.65, 'they fold sometimes but not always')
 ok(counts.raise + counts.allin > acts * 0.03, 'they bet and raise')

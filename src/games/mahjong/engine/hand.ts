@@ -1,8 +1,16 @@
 import { NUM_KINDS, suitOf, numOf } from './tiles'
 
 export type Counts = number[]
-export interface SetInfo { type: 'seq' | 'tri'; kind: number; open?: boolean; kan?: boolean }
-export interface Decomp { sets: SetInfo[]; pair: number }
+export interface SetInfo {
+  type: 'seq' | 'tri'
+  kind: number
+  open?: boolean
+  kan?: boolean
+}
+export interface Decomp {
+  sets: SetInfo[]
+  pair: number
+}
 
 export const emptyCounts = (): Counts => new Array(NUM_KINDS).fill(0)
 export function toCounts(kinds: number[]): Counts {
@@ -23,14 +31,22 @@ function setsOf(c: Counts, n: number, from: number, acc: SetInfo[], out: SetInfo
   while (i < NUM_KINDS && c[i] === 0) i++
   if (i >= NUM_KINDS) return
   if (c[i] >= 3) {
-    c[i] -= 3; acc.push({ type: 'tri', kind: i })
+    c[i] -= 3
+    acc.push({ type: 'tri', kind: i })
     setsOf(c, n - 1, i, acc, out)
-    acc.pop(); c[i] += 3
+    acc.pop()
+    c[i] += 3
   }
   if (canSeq(i) && c[i + 1] > 0 && c[i + 2] > 0) {
-    c[i]--; c[i + 1]--; c[i + 2]--; acc.push({ type: 'seq', kind: i })
+    c[i]--
+    c[i + 1]--
+    c[i + 2]--
+    acc.push({ type: 'seq', kind: i })
     setsOf(c, n - 1, i, acc, out)
-    acc.pop(); c[i]++; c[i + 1]++; c[i + 2]++
+    acc.pop()
+    c[i]++
+    c[i + 1]++
+    c[i + 2]++
   }
 }
 
@@ -52,11 +68,20 @@ function canSets(c: Counts, from: number): boolean {
   let i = from
   while (i < NUM_KINDS && c[i] === 0) i++
   if (i >= NUM_KINDS) return true
-  if (c[i] >= 3) { c[i] -= 3; const r = canSets(c, i); c[i] += 3; if (r) return true }
-  if (canSeq(i) && c[i + 1] > 0 && c[i + 2] > 0) {
-    c[i]--; c[i + 1]--; c[i + 2]--
+  if (c[i] >= 3) {
+    c[i] -= 3
     const r = canSets(c, i)
-    c[i]++; c[i + 1]++; c[i + 2]++
+    c[i] += 3
+    if (r) return true
+  }
+  if (canSeq(i) && c[i + 1] > 0 && c[i + 2] > 0) {
+    c[i]--
+    c[i + 1]--
+    c[i + 2]--
+    const r = canSets(c, i)
+    c[i]++
+    c[i + 1]++
+    c[i + 2]++
     if (r) return true
   }
   return false
@@ -79,11 +104,18 @@ export const isChiitoi = (c: Counts) => c.reduce((a, v) => a + (v === 2 ? 1 : 0)
 export const isChiitoiDup = (c: Counts) => c.every((v) => v === 0 || v === 2 || v === 4) && c.reduce((a: number, v: number) => a + v, 0) === 14
 export function isKokushi(c: Counts) {
   let pair = false
-  for (const k of KOKUSHI) { if (c[k] === 0) return false; if (c[k] === 2) pair = true }
+  for (const k of KOKUSHI) {
+    if (c[k] === 0) return false
+    if (c[k] === 2) pair = true
+  }
   return pair && c.reduce((a, v) => a + v, 0) === 14
 }
 
-export interface Special { chiitoi?: boolean; kokushi?: boolean; chiitoiDup?: boolean }
+export interface Special {
+  chiitoi?: boolean
+  kokushi?: boolean
+  chiitoiDup?: boolean
+}
 export function isComplete(c: Counts, special: Special = {}): boolean {
   if (canComplete(c)) return true
   if (special.chiitoi && isChiitoi(c)) return true
@@ -108,7 +140,9 @@ export function waitsOf(c: Counts, special: Special = {}): number[] {
 export function shantenStd(counts: Counts, melds: number, N: number): number {
   const c = counts.slice()
   let best = 2 * N
-  let m = melds, t = 0, pair = false
+  let m = melds,
+    t = 0,
+    pair = false
   const evalNow = () => {
     let tt = t
     if (m + tt > N) tt = N - m
@@ -120,30 +154,80 @@ export function shantenStd(counts: Counts, melds: number, N: number): number {
     if (i >= NUM_KINDS) return evalNow()
     if (best <= -1) return
     const seqOk = canSeq(i)
-    if (c[i] >= 3) { c[i] -= 3; m++; dfs(i); m--; c[i] += 3 }
+    if (c[i] >= 3) {
+      c[i] -= 3
+      m++
+      dfs(i)
+      m--
+      c[i] += 3
+    }
     if (seqOk && c[i + 1] > 0 && c[i + 2] > 0) {
-      c[i]--; c[i + 1]--; c[i + 2]--; m++; dfs(i); m--; c[i]++; c[i + 1]++; c[i + 2]++
+      c[i]--
+      c[i + 1]--
+      c[i + 2]--
+      m++
+      dfs(i)
+      m--
+      c[i]++
+      c[i + 1]++
+      c[i + 2]++
     }
     if (c[i] >= 2) {
-      if (!pair) { pair = true; c[i] -= 2; dfs(i); c[i] += 2; pair = false }
-      c[i] -= 2; t++; dfs(i); t--; c[i] += 2
+      if (!pair) {
+        pair = true
+        c[i] -= 2
+        dfs(i)
+        c[i] += 2
+        pair = false
+      }
+      c[i] -= 2
+      t++
+      dfs(i)
+      t--
+      c[i] += 2
     }
-    if (i < 27 && numOf(i) <= 8 && c[i + 1] > 0) { c[i]--; c[i + 1]--; t++; dfs(i); t--; c[i]++; c[i + 1]++ }
-    if (seqOk && c[i + 2] > 0) { c[i]--; c[i + 2]--; t++; dfs(i); t--; c[i]++; c[i + 2]++ }
-    c[i]--; dfs(i); c[i]++
+    if (i < 27 && numOf(i) <= 8 && c[i + 1] > 0) {
+      c[i]--
+      c[i + 1]--
+      t++
+      dfs(i)
+      t--
+      c[i]++
+      c[i + 1]++
+    }
+    if (seqOk && c[i + 2] > 0) {
+      c[i]--
+      c[i + 2]--
+      t++
+      dfs(i)
+      t--
+      c[i]++
+      c[i + 2]++
+    }
+    c[i]--
+    dfs(i)
+    c[i]++
   }
   dfs(0)
   return best
 }
 
 export function shantenChiitoi(c: Counts): number {
-  let pairs = 0, kinds = 0
-  for (const v of c) { if (v >= 2) pairs++; if (v >= 1) kinds++ }
+  let pairs = 0,
+    kinds = 0
+  for (const v of c) {
+    if (v >= 2) pairs++
+    if (v >= 1) kinds++
+  }
   return 6 - pairs + Math.max(0, 7 - kinds)
 }
 export function shantenKokushi(c: Counts): number {
-  let n = 0, pair = 0
-  for (const k of KOKUSHI) { if (c[k]) n++; if (c[k] >= 2) pair = 1 }
+  let n = 0,
+    pair = 0
+  for (const k of KOKUSHI) {
+    if (c[k]) n++
+    if (c[k] >= 2) pair = 1
+  }
   return 13 - n - pair
 }
 export function shantenAll(c: Counts, melds: number, N: number, special: Special): number {

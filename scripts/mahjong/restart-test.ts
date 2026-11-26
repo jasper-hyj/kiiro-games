@@ -4,16 +4,29 @@ import { utimesSync } from 'node:fs'
  *  reload (touching party/server.ts evicts the room object from memory), then rejoin with the same id. */
 const HOST = process.env.HOST ?? 'localhost:8787'
 let fails = 0
-const check = (n: string, ok: boolean, extra = '') => { if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, ok ? '' : extra) }
+const check = (n: string, ok: boolean, extra = '') => {
+  if (!ok) fails++
+  console.log(ok ? 'ok  ' : 'FAIL', n, ok ? '' : extra)
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-interface C { ws: WebSocket; msgs: any[] }
-const connect = (room: string) => new Promise<C>((resolve, reject) => {
-  const ws = new WebSocket(`ws://${HOST}/parties/main/${room}`)
-  const c: C = { ws, msgs: [] }
-  ws.onmessage = (e) => { try { c.msgs.push(JSON.parse(String(e.data))) } catch { /* ignore */ } }
-  ws.onopen = () => resolve(c)
-  ws.onerror = () => reject(new Error('connect failed'))
-})
+interface C {
+  ws: WebSocket
+  msgs: any[]
+}
+const connect = (room: string) =>
+  new Promise<C>((resolve, reject) => {
+    const ws = new WebSocket(`ws://${HOST}/parties/main/${room}`)
+    const c: C = { ws, msgs: [] }
+    ws.onmessage = (e) => {
+      try {
+        c.msgs.push(JSON.parse(String(e.data)))
+      } catch {
+        /* ignore */
+      }
+    }
+    ws.onopen = () => resolve(c)
+    ws.onerror = () => reject(new Error('connect failed'))
+  })
 const send = (c: C, m: unknown) => c.ws.send(JSON.stringify(m))
 const lastView = (c: C) => [...c.msgs].reverse().find((m) => m.t === 'view')?.view
 

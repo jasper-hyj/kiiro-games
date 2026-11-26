@@ -49,13 +49,20 @@ export function Stage({ children, allowRotate = true }: { children: ReactNode; a
   const rotate = allowRotate && box.w > 0 && port.s > land.s * 1.05
   const f = rotate ? port : land
   const style = {
-    width: f.sw, height: f.dh,
+    width: f.sw,
+    height: f.dh,
     transform: `translate(-50%, -50%) ${rotate ? 'rotate(90deg) ' : ''}scale(${f.s || 0.01})`,
-    '--s': f.s || 0.01, '--H': f.dh, '--SW': f.sw,
+    '--s': f.s || 0.01,
+    '--H': f.dh,
+    '--SW': f.sw,
   } as CSSProperties
   return (
     <div className="stagewrap" ref={ref} data-rotated={rotate ? '1' : '0'} data-narrow={f.sw === 700 ? '1' : '0'}>
-      {box.w > 0 && <div className="stage" style={style}>{children}</div>}
+      {box.w > 0 && (
+        <div className="stage" style={style}>
+          {children}
+        </div>
+      )}
     </div>
   )
 }

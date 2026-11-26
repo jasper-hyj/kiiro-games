@@ -65,15 +65,31 @@ function evaluate(ctx: WinContext): HandScore | null {
 function settle(score: HandScore, info: { winner: number; from: number | null }): number[] {
   const d = [0, 0, 0, 0]
   const V = score.base
-  if (info.from === null) { for (let p = 0; p < 4; p++) if (p !== info.winner) { d[p] -= V; d[info.winner] += V } }
-  else { d[info.from] -= V; d[info.winner] += V }
+  if (info.from === null) {
+    for (let p = 0; p < 4; p++)
+      if (p !== info.winner) {
+        d[p] -= V
+        d[info.winner] += V
+      }
+  } else {
+    d[info.from] -= V
+    d[info.winner] += V
+  }
   return d
 }
 
 export const sichuan: RuleSet = {
-  id: 'sichuan', name: 'Sichuan', zh: '四川麻將',
+  id: 'sichuan',
+  name: 'Sichuan',
+  zh: '四川麻將',
   blurb: '108 tiles · pick a missing suit · no chi · play on after wins (Blood Battle)',
-  handSize: 13, nSets: 4, flowers: false, deadWall: 0, startPoints: 0, unit: 'pts',
+  handSize: 13,
+  nSets: 4,
+  flowers: false,
+  deadWall: 0,
+  startPoints: 0,
+  unit: 'pts',
   specials: { chiitoi: true, chiitoiDup: true },
-  evaluate, settle,
+  evaluate,
+  settle,
 }

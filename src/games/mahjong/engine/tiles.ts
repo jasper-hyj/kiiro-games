@@ -37,4 +37,3 @@ export function freshWall(withFlowers: boolean, sanma = false, sichuan = false):
   }
   return w
 }
-

@@ -18,15 +18,34 @@ export function score5(cs: number[]): number {
     else if (ranks[0] === 12 && ranks[1] === 3 && ranks[4] === 0) straightHigh = 3 // wheel A-2-3-4-5
   }
   let cat: number, tb: number[]
-  if (straightHigh >= 0 && flush) { cat = 8; tb = [straightHigh] }
-  else if (groups[0][1] === 4) { cat = 7; tb = groups.map((g) => g[0]) }
-  else if (groups[0][1] === 3 && groups[1][1] === 2) { cat = 6; tb = groups.map((g) => g[0]) }
-  else if (flush) { cat = 5; tb = ranks }
-  else if (straightHigh >= 0) { cat = 4; tb = [straightHigh] }
-  else if (groups[0][1] === 3) { cat = 3; tb = groups.map((g) => g[0]) }
-  else if (groups[0][1] === 2 && groups[1][1] === 2) { cat = 2; tb = groups.map((g) => g[0]) }
-  else if (groups[0][1] === 2) { cat = 1; tb = groups.map((g) => g[0]) }
-  else { cat = 0; tb = ranks }
+  if (straightHigh >= 0 && flush) {
+    cat = 8
+    tb = [straightHigh]
+  } else if (groups[0][1] === 4) {
+    cat = 7
+    tb = groups.map((g) => g[0])
+  } else if (groups[0][1] === 3 && groups[1][1] === 2) {
+    cat = 6
+    tb = groups.map((g) => g[0])
+  } else if (flush) {
+    cat = 5
+    tb = ranks
+  } else if (straightHigh >= 0) {
+    cat = 4
+    tb = [straightHigh]
+  } else if (groups[0][1] === 3) {
+    cat = 3
+    tb = groups.map((g) => g[0])
+  } else if (groups[0][1] === 2 && groups[1][1] === 2) {
+    cat = 2
+    tb = groups.map((g) => g[0])
+  } else if (groups[0][1] === 2) {
+    cat = 1
+    tb = groups.map((g) => g[0])
+  } else {
+    cat = 0
+    tb = ranks
+  }
   let s = cat
   for (let i = 0; i < 5; i++) s = s * B + (tb[i] ?? 0)
   return s
@@ -39,8 +58,17 @@ export function best(cards: number[]): number {
   const n = cards.length
   // choose which (n - 5) cards to leave out
   const pick = (start: number, left: number, chosen: number[]) => {
-    if (chosen.length === 5) { const s = score5(chosen); if (s > top) top = s; return }
-    for (let i = start; i < n; i++) { if (n - i < 5 - chosen.length) break; chosen.push(cards[i]); pick(i + 1, left, chosen); chosen.pop() }
+    if (chosen.length === 5) {
+      const s = score5(chosen)
+      if (s > top) top = s
+      return
+    }
+    for (let i = start; i < n; i++) {
+      if (n - i < 5 - chosen.length) break
+      chosen.push(cards[i])
+      pick(i + 1, left, chosen)
+      chosen.pop()
+    }
   }
   pick(0, 0, [])
   return top

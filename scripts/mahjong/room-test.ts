@@ -2,11 +2,22 @@ import { Table } from '../../src/games/mahjong/engine/table'
 
 /** Room life cycle: creating, joining by code, leaving, host hand-over, everybody leaving, coming back. */
 let fails = 0
-const check = (name: string, ok: boolean, extra = '') => { if (!ok) fails++; console.log(`${ok ? 'ok  ' : 'FAIL'} ${name} ${extra}`) }
+const check = (name: string, ok: boolean, extra = '') => {
+  if (!ok) fails++
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name} ${extra}`)
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.emptyMs = 150; t.turnTimerMs = 0; return t }
+const fresh = () => {
+  const t = new Table()
+  t.speed = 0.003
+  t.graceMs = 60
+  t.emptyMs = 150
+  t.turnTimerMs = 0
+  return t
+}
 
-{ // a code nobody created
+{
+  // a code nobody created
   const t = fresh()
   check('joining a code nobody created is refused', t.admit('a', false) === 'room_not_found')
   check('creating a room on an unused code is allowed', t.admit('a', true) === 'ok')
@@ -15,7 +26,8 @@ const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.
   check('joining a room that exists is allowed', t.admit('b', false) === 'ok')
   check('coming back to your own seat is always allowed (refresh)', t.admit('a', true) === 'ok' && t.admit('a', false) === 'ok')
 }
-{ // lobby: join, full, leave, host hand-over, last one out
+{
+  // lobby: join, full, leave, host hand-over, last one out
   const t = fresh()
   for (const id of ['a', 'b', 'c', 'd']) t.join(id, id)
   check('4 players fit', t.slots.filter((s) => s.id).length === 4)
@@ -28,9 +40,11 @@ const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.
   check('everybody left the lobby: the room is empty again', !t.hasPlayers() && t.hostId === null)
   check('and its code can no longer be joined, only created', t.admit('x', false) === 'room_not_found' && t.admit('x', true) === 'ok')
 }
-{ // a started game
+{
+  // a started game
   const t = fresh()
-  t.join('a', 'Ann'); t.join('b', 'Bob')
+  t.join('a', 'Ann')
+  t.join('b', 'Bob')
   t.start('a')
   check('game started', t.status === 'playing' && !!t.game)
   const hostSeat = t.seatOf('a')
@@ -54,26 +68,37 @@ const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.
   check('everybody gone for a while: the room is closed and emptied', !t.hasPlayers() && t.status === 'lobby' && t.game === null)
   check('a closed room behaves like a new one', t.admit('z', false) === 'room_not_found' && t.admit('z', true) === 'ok')
 }
-{ // mid-game joiner takes a bot seat; none left -> refused
+{
+  // mid-game joiner takes a bot seat; none left -> refused
   const t = fresh()
-  t.join('a', 'Ann'); t.start('a')
+  t.join('a', 'Ann')
+  t.start('a')
   const s = t.join('n', 'New')
   check('a newcomer mid-game replaces a bot', s >= 0 && s !== t.seatOf('a'))
-  t.join('m', 'M'); t.join('o', 'O')
+  t.join('m', 'M')
+  t.join('o', 'O')
   check('with no bot left a newcomer is refused', t.join('p', 'P') === -1)
-  t.leave('a'); t.leave('n'); t.leave('m'); t.leave('o')
+  t.leave('a')
+  t.leave('n')
+  t.leave('m')
+  t.leave('o')
 }
-{ // game over -> back to lobby clears disconnected seats, keeps connected ones
+{
+  // game over -> back to lobby clears disconnected seats, keeps connected ones
   const t = fresh()
-  t.join('a', 'Ann'); t.join('b', 'Bob'); t.start('a')
+  t.join('a', 'Ann')
+  t.join('b', 'Bob')
+  t.start('a')
   t.leave('b')
   t.backToLobby('a')
   check('back to lobby: disconnected player is removed, connected one stays', t.status === 'lobby' && t.seatOf('b') < 0 && t.seatOf('a') >= 0)
   t.leave('a')
 }
-{ // the host can turn the coach and hints off for the whole room
+{
+  // the host can turn the coach and hints off for the whole room
   const t = fresh()
-  t.join('a', 'Ann'); t.join('b', 'Bob')
+  t.join('a', 'Ann')
+  t.join('b', 'Bob')
   t.setConfig('b', { coach: false })
   check('only the host can change the coach option', t.config.coach !== false)
   t.setConfig('a', { coach: false })
@@ -81,7 +106,8 @@ const fresh = () => { const t = new Table(); t.speed = 0.003; t.graceMs = 60; t.
   t.start('a')
   const v = t.view('a').game!
   check('with the coach off nobody gets suggestions or wait hints', v.coach === null && v.hint === null && t.view('b').game!.coach === null)
-  t.leave('a'); t.leave('b')
+  t.leave('a')
+  t.leave('b')
 }
 console.log(fails ? `${fails} FAILED` : 'room checks passed')
 process.exit(fails ? 1 : 0)

@@ -22,9 +22,24 @@ import '../../src/games/generic/bridgeStrings'
 import '../../src/games/generic/moreStrings'
 
 const { D, JA } = allStrings()
-const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : [] })
-const files = ['src/hub', 'src/account', 'src/games/holdem', 'src/games/blackjack', 'src/games/bigtwo', 'src/games/shared', 'src/games/generic', 'src/room'].flatMap(walk)
-let missingZh = 0, missingJa = 0, used = new Set<string>()
+const walk = (d: string): string[] =>
+  readdirSync(d).flatMap((f) => {
+    const p = join(d, f)
+    return statSync(p).isDirectory() ? walk(p) : p.endsWith('.tsx') ? [p] : []
+  })
+const files = [
+  'src/hub',
+  'src/account',
+  'src/games/holdem',
+  'src/games/blackjack',
+  'src/games/bigtwo',
+  'src/games/shared',
+  'src/games/generic',
+  'src/room',
+].flatMap(walk)
+let missingZh = 0,
+  missingJa = 0,
+  used = new Set<string>()
 for (const f of files) {
   const src = readFileSync(f, 'utf8')
   for (const m of src.matchAll(/\bt\(\s*'([A-Za-z0-9_.]+)'/g)) if (!m[1].endsWith('.')) used.add(m[1])
@@ -37,23 +52,71 @@ for (const k of ['single', 'pair', 'triple', 'straight', 'flush', 'fullhouse', '
 for (const k of ['blackjack', 'win', 'push', 'lose', 'bust']) used.add('bjo.' + k)
 for (const k of ['hdLastFold', 'hdLastCheck', 'hdLastCall', 'hdLastRaise', 'hdLastBet', 'hdLastAllin', 'hdLastSb', 'hdLastBb']) used.add(k)
 // server error codes shown to players
-for (const k of ['signin_required', 'not_enough_chips', 'bad_buyin', 'table_full', 'not_your_turn', 'cannot_check', 'cannot_raise', 'bad_amount', 'cannot_hit', 'cannot_double', 'cannot_split', 'not_betting', 'bad_combo', 'too_low', 'must_open', 'must_lead', 'bad_cards', 'already_seated', 'ranked_needs_signin', 'ranked_needs_players', 'room_not_found', 'code_taken', 'room_full']) used.add(k)
+for (const k of [
+  'signin_required',
+  'not_enough_chips',
+  'bad_buyin',
+  'table_full',
+  'not_your_turn',
+  'cannot_check',
+  'cannot_raise',
+  'bad_amount',
+  'cannot_hit',
+  'cannot_double',
+  'cannot_split',
+  'not_betting',
+  'bad_combo',
+  'too_low',
+  'must_open',
+  'must_lead',
+  'bad_cards',
+  'already_seated',
+  'ranked_needs_signin',
+  'ranked_needs_players',
+  'room_not_found',
+  'code_taken',
+  'room_full',
+])
+  used.add(k)
 const zhOnlyIgnore = new Set<string>()
 const missing: string[] = []
 for (const k of [...used].sort()) {
-  if (!D[k]) { missing.push(`no English/Chinese text for "${k}"`); missingZh++ }
-  if (!JA[k] && !zhOnlyIgnore.has(k)) { 
+  if (!D[k]) {
+    missing.push(`no English/Chinese text for "${k}"`)
+    missingZh++
+  }
+  if (!JA[k] && !zhOnlyIgnore.has(k)) {
     // Mahjong's own error strings live in the Mahjong files; they are registered too, so a miss here is real
-    missing.push(`no Japanese text for "${k}"`); missingJa++
+    missing.push(`no Japanese text for "${k}"`)
+    missingJa++
   }
 }
 // every English string has a Chinese one, and placeholders match between languages
 let badPlaceholders = 0
 for (const [k, [en, zh]] of Object.entries(D)) {
-  const a = [...en.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(','), b = [...zh.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',')
-  if (a !== b) { badPlaceholders++; console.log(`placeholder mismatch (en vs zh) in "${k}": {${a}} vs {${b}}`) }
+  const a = [...en.matchAll(/\{(\w+)\}/g)]
+      .map((m) => m[1])
+      .sort()
+      .join(','),
+    b = [...zh.matchAll(/\{(\w+)\}/g)]
+      .map((m) => m[1])
+      .sort()
+      .join(',')
+  if (a !== b) {
+    badPlaceholders++
+    console.log(`placeholder mismatch (en vs zh) in "${k}": {${a}} vs {${b}}`)
+  }
   const j = JA[k]
-  if (j) { const c = [...j.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(','); if (a !== c) { badPlaceholders++; console.log(`placeholder mismatch (en vs ja) in "${k}": {${a}} vs {${c}}`) } }
+  if (j) {
+    const c = [...j.matchAll(/\{(\w+)\}/g)]
+      .map((m) => m[1])
+      .sort()
+      .join(',')
+    if (a !== c) {
+      badPlaceholders++
+      console.log(`placeholder mismatch (en vs ja) in "${k}": {${a}} vs {${c}}`)
+    }
+  }
 }
 for (const m of missing) console.log(m)
 console.log(`${used.size} keys used; ${missingZh} missing in English/Chinese, ${missingJa} missing in Japanese, ${badPlaceholders} placeholder mismatches`)

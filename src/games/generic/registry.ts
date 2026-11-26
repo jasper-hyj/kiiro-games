@@ -31,6 +31,21 @@ export const ENGINES: Record<string, () => TurnGame> = {
   checkers: () => new Checkers().init(),
   reversi: () => new Reversi().init(),
 }
-export const METAS: Record<string, GameMeta> = { gomoku: GOMOKU_META, crazyeights: C8_META, yahtzee: YAHTZEE_META, liarsdice: LIARS_META, chess: CHESS_META, xiangqi: XQ_META, doudizhu: DD_META, bridge: BRIDGE_META, chinesecheckers: CC_META, go: GO_META, hearts: HEARTS_META, spades: SPADES_META, checkers: CHECKERS_META, reversi: REVERSI_META }
+export const METAS: Record<string, GameMeta> = {
+  gomoku: GOMOKU_META,
+  crazyeights: C8_META,
+  yahtzee: YAHTZEE_META,
+  liarsdice: LIARS_META,
+  chess: CHESS_META,
+  xiangqi: XQ_META,
+  doudizhu: DD_META,
+  bridge: BRIDGE_META,
+  chinesecheckers: CC_META,
+  go: GO_META,
+  hearts: HEARTS_META,
+  spades: SPADES_META,
+  checkers: CHECKERS_META,
+  reversi: REVERSI_META,
+}
 export const GENERIC_KINDS = Object.keys(ENGINES)
 export const isGeneric = (k: string) => k in ENGINES

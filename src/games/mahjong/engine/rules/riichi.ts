@@ -32,15 +32,21 @@ function tileYaku(ctx: WinContext, closed: boolean, out: YakuItem[], yakuman: Ya
     const ok = c[b] >= 3 && c[b + 8] >= 3 && [1, 2, 3, 4, 5, 6, 7].every((i) => c[b + i] >= 1)
     if (ok) {
       // the pure form (1112345678999 before the winning tile: the nine-sided wait) counts double
-      const pre = c.slice(b, b + 9); if (ctx.winKind >= b && ctx.winKind < b + 9) pre[ctx.winKind - b]--
+      const pre = c.slice(b, b + 9)
+      if (ctx.winKind >= b && ctx.winKind < b + 9) pre[ctx.winKind - b]--
       const junsei = [3, 1, 1, 1, 1, 1, 1, 1, 3].every((n, i) => pre[i] === n)
-      yakuman.push(junsei ? { name: 'Junsei Chuuren Poutou (Pure Nine Gates)', zh: '純正九蓮寶燈', value: 26, yakuman: true } : { name: 'Chuuren Poutou (Nine Gates)', zh: '九蓮寶燈', value: 13, yakuman: true })
+      yakuman.push(
+        junsei
+          ? { name: 'Junsei Chuuren Poutou (Pure Nine Gates)', zh: '純正九蓮寶燈', value: 26, yakuman: true }
+          : { name: 'Chuuren Poutou (Nine Gates)', zh: '九蓮寶燈', value: 13, yakuman: true },
+      )
     }
   }
   if (suitsUsed === 1 && !honors) out.push({ name: 'Chinitsu (Full Flush)', zh: '清一色', value: closed ? 6 : 5 })
   else if (suitsUsed === 1 && honors) out.push({ name: 'Honitsu (Half Flush)', zh: '混一色', value: closed ? 3 : 2 })
   if (kinds.every(isSimple)) out.push({ name: 'Tanyao (All Simples)', zh: '斷幺九', value: 1 })
-  if (kinds.every(isTermOrHonor) && !kinds.every(isHonor) && !kinds.every(isTerminal)) out.push({ name: 'Honroutou (All Terminals & Honors)', zh: '混老頭', value: 2 })
+  if (kinds.every(isTermOrHonor) && !kinds.every(isHonor) && !kinds.every(isTerminal))
+    out.push({ name: 'Honroutou (All Terminals & Honors)', zh: '混老頭', value: 2 })
 }
 
 function situational(ctx: WinContext, closed: boolean, out: YakuItem[]) {
@@ -60,7 +66,8 @@ function setYaku(ctx: WinContext, it: Interp, closed: boolean, out: YakuItem[], 
   const tris = sets.filter((s) => s.type === 'tri')
   const hasSeq = (k: number) => seqs.some((s) => s.kind === k)
   const hasTri = (k: number) => tris.some((s) => s.kind === k)
-  const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
+  const sw = 27 + ctx.seatWind,
+    rw = 27 + ctx.roundWind
 
   // yakuhai
   for (const t of tris) {
@@ -81,12 +88,18 @@ function setYaku(ctx: WinContext, it: Interp, closed: boolean, out: YakuItem[], 
     else if (pairs === 1) out.push({ name: 'Iipeikou', zh: '一盃口', value: 1 })
   }
   for (let n = 0; n < 7; n++) if (hasSeq(n) && hasSeq(9 + n) && hasSeq(18 + n)) out.push({ name: 'Sanshoku Doujun', zh: '三色同順', value: closed ? 2 : 1 })
-  for (let s = 0; s < 3; s++) if (hasSeq(s * 9) && hasSeq(s * 9 + 3) && hasSeq(s * 9 + 6)) out.push({ name: 'Ittsu (Pure Straight)', zh: '一氣通貫', value: closed ? 2 : 1 })
+  for (let s = 0; s < 3; s++)
+    if (hasSeq(s * 9) && hasSeq(s * 9 + 3) && hasSeq(s * 9 + 6)) out.push({ name: 'Ittsu (Pure Straight)', zh: '一氣通貫', value: closed ? 2 : 1 })
   for (let n = 0; n < 9; n++) if (hasTri(n) && hasTri(9 + n) && hasTri(18 + n)) out.push({ name: 'Sanshoku Doukou', zh: '三色同刻', value: 2 })
   if (tris.length === 4) out.push({ name: 'Toitoi', zh: '對對和', value: 2 })
   const conc = tris.filter((t) => !t.open).length
   if (conc === 3) out.push({ name: 'Sanankou', zh: '三暗刻', value: 2 })
-  if (conc === 4) yakuman.push(it.waitKind === 'tanki' ? { name: 'Suuankou Tanki (Four Concealed Triplets, single wait)', zh: '四暗刻單騎', value: 26, yakuman: true } : { name: 'Suuankou (Four Concealed Triplets)', zh: '四暗刻', value: 13, yakuman: true })
+  if (conc === 4)
+    yakuman.push(
+      it.waitKind === 'tanki'
+        ? { name: 'Suuankou Tanki (Four Concealed Triplets, single wait)', zh: '四暗刻單騎', value: 26, yakuman: true }
+        : { name: 'Suuankou (Four Concealed Triplets)', zh: '四暗刻', value: 13, yakuman: true },
+    )
   const kans = tris.filter((t) => t.kan).length
   if (kans === 3) out.push({ name: 'Sankantsu', zh: '三槓子', value: 2 })
   if (kans === 4) yakuman.push({ name: 'Suukantsu (Four Kans)', zh: '四槓子', value: 13, yakuman: true })
@@ -110,30 +123,52 @@ type FuLine = { label: [string, string]; value: number }
 function calcFu(ctx: WinContext, it: Interp, closed: boolean, pinfu: boolean): { fu: number; detail: FuLine[] } {
   const detail: FuLine[] = [{ label: ['Base', '底符'], value: 20 }]
   let fu = 20
-  const add = (en: string, zh: string, v: number) => { fu += v; detail.push({ label: [en, zh], value: v }) }
+  const add = (en: string, zh: string, v: number) => {
+    fu += v
+    detail.push({ label: [en, zh], value: v })
+  }
   if (closed && !ctx.tsumo) add('Closed hand won by ron', '門清榮和', 10)
   if (ctx.tsumo && !pinfu) add('Self-draw', '自摸', 2)
-  if (pinfu) return { fu: ctx.tsumo ? 20 : 30, detail: [{ label: [ctx.tsumo ? 'Pinfu self-draw: fixed 20 fu' : 'Pinfu ron: fixed 30 fu', ctx.tsumo ? '平和自摸固定 20 符' : '平和榮和固定 30 符'], value: ctx.tsumo ? 20 : 30 }] }
+  if (pinfu)
+    return {
+      fu: ctx.tsumo ? 20 : 30,
+      detail: [
+        {
+          label: [ctx.tsumo ? 'Pinfu self-draw: fixed 20 fu' : 'Pinfu ron: fixed 30 fu', ctx.tsumo ? '平和自摸固定 20 符' : '平和榮和固定 30 符'],
+          value: ctx.tsumo ? 20 : 30,
+        },
+      ],
+    }
   for (const s of it.sets) {
     if (s.type !== 'tri') continue
     let f = isTermOrHonor(s.kind) ? 4 : 2
     if (!s.open) f *= 2
     if (s.kan) f *= 4
-    add(`${s.open ? 'Open' : 'Concealed'} ${s.kan ? 'kan' : 'triplet'} of ${isTermOrHonor(s.kind) ? 'terminals/honors' : 'simples'}`, `${s.open ? '明' : '暗'}${s.kan ? '槓' : '刻'}（${isTermOrHonor(s.kind) ? '幺九字牌' : '中張牌'}）`, f)
+    add(
+      `${s.open ? 'Open' : 'Concealed'} ${s.kan ? 'kan' : 'triplet'} of ${isTermOrHonor(s.kind) ? 'terminals/honors' : 'simples'}`,
+      `${s.open ? '明' : '暗'}${s.kan ? '槓' : '刻'}（${isTermOrHonor(s.kind) ? '幺九字牌' : '中張牌'}）`,
+      f,
+    )
   }
-  const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
+  const sw = 27 + ctx.seatWind,
+    rw = 27 + ctx.roundWind
   if (isDragon(it.pair)) add('Dragon pair', '三元牌將', 2)
   if (it.pair === sw) add('Seat-wind pair', '自風將', 2)
   if (it.pair === rw) add('Round-wind pair', '場風將', 2)
-  if (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki') add('Single-tile wait (closed / edge / pair)', '單張聽（嵌張／邊張／單騎）', 2)
-  if (!closed && fu === 20) { detail.push({ label: ['Open hand minimum', '副露最低 30 符'], value: 10 }); fu = 30 }
+  if (it.waitKind === 'kanchan' || it.waitKind === 'penchan' || it.waitKind === 'tanki')
+    add('Single-tile wait (closed / edge / pair)', '單張聽（嵌張／邊張／單騎）', 2)
+  if (!closed && fu === 20) {
+    detail.push({ label: ['Open hand minimum', '副露最低 30 符'], value: 10 })
+    fu = 30
+  }
   const rounded = Math.ceil(fu / 10) * 10
   if (rounded !== fu) detail.push({ label: ['Rounded up to the next 10', '進位到 10 的倍數'], value: rounded - fu })
   return { fu: rounded, detail }
 }
 
 function finish(ctx: WinContext, yaku: YakuItem[], yakuman: YakuItem[], fu: number, fuDetail?: FuLine[]): HandScore | null {
-  if (ctx.firstTurn && ctx.tsumo) yakuman.push(ctx.dealer ? { name: 'Tenhou', zh: '天和', value: 13, yakuman: true } : { name: 'Chiihou', zh: '地和', value: 13, yakuman: true })
+  if (ctx.firstTurn && ctx.tsumo)
+    yakuman.push(ctx.dealer ? { name: 'Tenhou', zh: '天和', value: 13, yakuman: true } : { name: 'Chiihou', zh: '地和', value: 13, yakuman: true })
   if (yakuman.length) {
     const mult = yakuman.reduce((a, y) => a + y.value / 13, 0) // a double yakuman counts twice
     return { yaku: yakuman, total: 13 * mult, fu, yakuman: mult, ...limitOf(0, 0, mult) }
@@ -156,7 +191,16 @@ function evaluate(ctx: WinContext): HandScore | null {
 
   if (noMelds && isKokushi(ctx.counts)) {
     const thirteenWait = ctx.counts[ctx.winKind] === 2 // the 13 orphans were all there before the winning tile
-    const s = finish(ctx, [], [thirteenWait ? { name: 'Kokushi Musou (13-sided wait)', zh: '國士無雙十三面', value: 26, yakuman: true } : { name: 'Kokushi Musou (Thirteen Orphans)', zh: '國士無雙', value: 13, yakuman: true }], 0)
+    const s = finish(
+      ctx,
+      [],
+      [
+        thirteenWait
+          ? { name: 'Kokushi Musou (13-sided wait)', zh: '國士無雙十三面', value: 26, yakuman: true }
+          : { name: 'Kokushi Musou (Thirteen Orphans)', zh: '國士無雙', value: 13, yakuman: true },
+      ],
+      0,
+    )
     if (s) cands.push(s)
   }
   if (noMelds && isChiitoi(ctx.counts)) {
@@ -193,20 +237,30 @@ function settle(score: HandScore, info: { winner: number; from: number | null; d
     for (let p = 0; p < n; p++) {
       if (p === win) continue
       const pay = (isDealer || p === info.dealer ? ceil100(2 * b) : ceil100(b)) + 100 * info.honba
-      d[p] -= pay; d[win] += pay
+      d[p] -= pay
+      d[win] += pay
     }
   } else {
     const pay = ceil100((isDealer ? 6 : 4) * b) + 300 * info.honba
-    d[info.from] -= pay; d[win] += pay
+    d[info.from] -= pay
+    d[win] += pay
   }
   return d
 }
 
 export const riichi: RuleSet = {
-  id: 'riichi', name: 'Japanese Riichi', zh: '日本麻雀',
+  id: 'riichi',
+  name: 'Japanese Riichi',
+  zh: '日本麻雀',
   blurb: '13 tiles · yaku required · riichi, dora & red fives · han/fu scoring',
-  handSize: 13, nSets: 4, flowers: false, deadWall: 14, startPoints: 25000, unit: 'pts',
+  handSize: 13,
+  nSets: 4,
+  flowers: false,
+  deadWall: 14,
+  startPoints: 25000,
+  unit: 'pts',
   specials: { chiitoi: true, kokushi: true },
-  evaluate, settle,
+  evaluate,
+  settle,
 }
 export { suitOf }

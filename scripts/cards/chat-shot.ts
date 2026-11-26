@@ -9,7 +9,14 @@ const p = await (await b.createBrowserContext()).newPage()
 await p.setViewport({ width: w, height: h, hasTouch: w < 1000, isMobile: w < 1000 })
 await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
 await p.goto(`http://localhost:5200/${game}`, { waitUntil: 'networkidle0' })
-await p.goto(await MK(game, game === 'holdem' ? { sb: 25, bb: 50, casual: true } : game === 'blackjack' ? { bb: 10, casual: true } : {})); await p.waitForSelector('.kgchat'); await sleep(600)
+await p.goto(await MK(game, game === 'holdem' ? { sb: 25, bb: 50, casual: true } : game === 'blackjack' ? { bb: 10, casual: true } : {}))
+await p.waitForSelector('.kgchat')
+await sleep(600)
 await p.focus('.kgin input')
-for (const t of ['gl hf everyone', 'nice hand, that river hurt']) { await p.type('.kgin input', t); await p.keyboard.press('Enter'); await sleep(1200) }
-await p.screenshot({ path: out }); await b.close()
+for (const t of ['gl hf everyone', 'nice hand, that river hurt']) {
+  await p.type('.kgin input', t)
+  await p.keyboard.press('Enter')
+  await sleep(1200)
+}
+await p.screenshot({ path: out })
+await b.close()

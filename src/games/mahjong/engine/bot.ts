@@ -11,7 +11,11 @@ const neighbours = (counts: Counts): number[] => {
   for (let k = 0; k < 34; k++) {
     if (!counts[k]) continue
     s.add(k)
-    if (k < 27) for (const d of [-2, -1, 1, 2]) { const j = k + d; if (j >= 0 && j < 27 && suitOf(j) === suitOf(k)) s.add(j) }
+    if (k < 27)
+      for (const d of [-2, -1, 1, 2]) {
+        const j = k + d
+        if (j >= 0 && j < 27 && suitOf(j) === suitOf(k)) s.add(j)
+      }
   }
   return [...s]
 }
@@ -29,7 +33,8 @@ function ukeire(g: Game, counts: Counts, melds: number, cur: number, vis: Counts
 
 function keepValue(g: Game, seat: number, k: number, counts: Counts, dora?: Set<number>): number {
   if (dora?.has(k)) return 40 + (counts[k] >= 2 ? 20 : 0)
-  const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
+  const sw = 27 + g.seatWind(seat),
+    rw = 27 + g.roundWind
   if (isHonor(k)) {
     const yaku = isDragon(k) || k === sw || k === rw
     if (counts[k] >= 2) return yaku ? 60 : 25
@@ -103,18 +108,28 @@ export function chooseDiscard(g: Game, seat: number, ids: number[], level: BotLe
 /** Look at the tenpai hand left after discarding `tile`: how many winning tiles remain and what a win would be worth right now (no riichi). */
 function tenpaiInfo(g: Game, seat: number, tile: number) {
   const p = g.players[seat]
-  const saved = p.hand.slice(), savedDrawn = p.drawn
-  p.hand.splice(p.hand.indexOf(tile), 1); p.drawn = null
+  const saved = p.hand.slice(),
+    savedDrawn = p.drawn
+  p.hand.splice(p.hand.indexOf(tile), 1)
+  p.drawn = null
   try {
     const vis = g.visibleCounts(seat)
-    let left = 0, worth = 0, yaku = false
+    let left = 0,
+      worth = 0,
+      yaku = false
     for (const k of g.waitsFor(seat)) {
       left += Math.max(0, 4 - vis[k])
       const sc = g.checkWin(seat, false, k * 4 + 3)
-      if (sc) { yaku = true; worth = Math.max(worth, sc.total) }
+      if (sc) {
+        yaku = true
+        worth = Math.max(worth, sc.total)
+      }
     }
     return { left, worth, yaku }
-  } finally { p.hand = saved; p.drawn = savedDrawn }
+  } finally {
+    p.hand = saved
+    p.drawn = savedDrawn
+  }
 }
 
 /** Hard bots do not riichi blindly: declare when the hand needs it for a yaku, or the wait is good and the hand is cheap; stay quiet (dama) with a big hand or a bad wait. */
@@ -128,7 +143,8 @@ function wantsRiichi(g: Game, seat: number, tile: number): boolean {
 
 /** Sichuan: how many tiles of each number suit the bot holds, and how connected each suit is (fewer + looser = better to give up). */
 function suitProfile(g: Game, seat: number) {
-  const cnt = [0, 0, 0], conn = [0, 0, 0]
+  const cnt = [0, 0, 0],
+    conn = [0, 0, 0]
   const c = toCounts(g.players[seat].hand.map(kindOf))
   for (let k = 0; k < 27; k++) {
     if (!c[k]) continue
@@ -148,8 +164,20 @@ export function botSwap(g: Game, seat: number): number[] {
   const { cnt, conn } = suitProfile(g, seat)
   const suit = [0, 1, 2].filter((x) => cnt[x] >= 3).sort((a, b) => cnt[a] * 10 + conn[a] - (cnt[b] * 10 + conn[b]) || Math.random() - 0.5)[0]
   const c = toCounts(g.players[seat].hand.map(kindOf))
-  const loose = (id: number) => { const k = kindOf(id); return (c[k] >= 2 ? 3 : 0) + (k % 9 < 8 && c[k + 1] ? 2 : 0) + (k % 9 > 0 && c[k - 1] ? 2 : 0) + (k % 9 < 7 && c[k + 2] ? 1 : 0) + (k % 9 > 1 && c[k - 2] ? 1 : 0) }
-  return g.players[seat].hand.filter((i) => suitOf(kindOf(i)) === suit).sort((a, b) => loose(a) - loose(b)).slice(0, 3)
+  const loose = (id: number) => {
+    const k = kindOf(id)
+    return (
+      (c[k] >= 2 ? 3 : 0) +
+      (k % 9 < 8 && c[k + 1] ? 2 : 0) +
+      (k % 9 > 0 && c[k - 1] ? 2 : 0) +
+      (k % 9 < 7 && c[k + 2] ? 1 : 0) +
+      (k % 9 > 1 && c[k - 2] ? 1 : 0)
+    )
+  }
+  return g.players[seat].hand
+    .filter((i) => suitOf(kindOf(i)) === suit)
+    .sort((a, b) => loose(a) - loose(b))
+    .slice(0, 3)
 }
 
 export function botTurn(g: Game, seat: number, level: BotLevel = 'normal'): TurnAction {
@@ -175,7 +203,8 @@ export function botTurn(g: Game, seat: number, level: BotLevel = 'normal'): Turn
 }
 
 function callAllowed(g: Game, seat: number, kind: number, remaining: Counts, meldsAfter: Game['players'][0]['melds']): boolean {
-  const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
+  const sw = 27 + g.seatWind(seat),
+    rw = 27 + g.roundWind
   const yakuhai = isDragon(kind) || kind === sw || kind === rw
   if (g.rule.id === 'taiwan' || g.rule.id === 'sichuan') return true
   if (yakuhai && meldsAfter.some((m) => m.type === 'pon' && kindOf(m.tiles[0]) === kind)) return true
@@ -186,7 +215,7 @@ function callAllowed(g: Game, seat: number, kind: number, remaining: Counts, mel
   all.forEach((v, k) => (suits[suitOf(k)] += v))
   const flush = Math.max(suits[0], suits[1], suits[2]) + suits[3] >= total - 1
   if (flush) return true
-  if (g.rule.id === 'riichi') return all.every((v, k) => v === 0 || (!isTermOrHonor(k)))
+  if (g.rule.id === 'riichi') return all.every((v, k) => v === 0 || !isTermOrHonor(k))
   return false
 }
 
@@ -215,10 +244,14 @@ export function botReact(g: Game, seat: number, level: BotLevel = 'normal'): Dec
   const consider = (d: Decision, used: number[]) => {
     const rem = counts.slice()
     for (const u of used) rem[kindOf(u)]--
-    const meldsAfter = [...p.melds, { type: d.type === 'chi' ? 'chi' : 'pon', tiles: [tile, ...used], from: g.lastDiscard!.from } as Game['players'][0]['melds'][0]]
+    const meldsAfter = [
+      ...p.melds,
+      { type: d.type === 'chi' ? 'chi' : 'pon', tiles: [tile, ...used], from: g.lastDiscard!.from } as Game['players'][0]['melds'][0],
+    ]
     const sh = bestAfter(rem, p.melds.length + 1)
     const isPon = d.type === 'pon'
-    const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
+    const sw = 27 + g.seatWind(seat),
+      rw = 27 + g.roundWind
     const yakuhai = isPon && (isDragon(k) || k === sw || k === rw)
     if (!(sh < cur || (yakuhai && sh <= cur))) return
     if (!callAllowed(g, seat, k, rem, meldsAfter)) return
@@ -237,28 +270,37 @@ export function explainDiscard(g: Game, seat: number, tile: number): { why: stri
   const p = g.players[seat]
   const k = kindOf(tile)
   const counts = toCounts(p.hand.map(kindOf))
-  const sw = 27 + g.seatWind(seat), rw = 27 + g.roundWind
+  const sw = 27 + g.seatWind(seat),
+    rw = 27 + g.roundWind
   const threats = g.players.filter((q) => q.seat !== seat && q.riichi)
-  const near = (kk: number) => !isHonor(kk) && [-2, -1, 1, 2].some((d) => { const j = kk + d; return j >= 0 && j < 27 && suitOf(j) === suitOf(kk) && counts[j] > 0 })
+  const near = (kk: number) =>
+    !isHonor(kk) &&
+    [-2, -1, 1, 2].some((d) => {
+      const j = kk + d
+      return j >= 0 && j < 27 && suitOf(j) === suitOf(kk) && counts[j] > 0
+    })
   let why = 'eff'
   if (threats.length && threats.every((q) => q.discards.some((d) => kindOf(d.tile) === k))) why = 'safe'
   else if (isHonor(k) && counts[k] <= 1) why = (isDragon(k) || k === sw || k === rw) && g.rule.id !== 'sichuan' ? 'lonelyYakuhai' : 'lonelyHonor'
   else if (!isHonor(k) && isTermOrHonor(k) && counts[k] <= 1 && !near(k)) why = 'lonelyTerminal'
   else if (!isHonor(k) && counts[k] <= 1 && !near(k)) why = 'isolated'
   // what the rest of the hand is heading for
-  const rest = counts.slice(); rest[k]--
+  const rest = counts.slice()
+  rest[k]--
   for (const m of p.melds) for (const t of m.tiles) rest[kindOf(t)]++
   const total = rest.reduce((a, b) => a + b, 0)
   let plan: string | undefined
   if (g.rule.id !== 'sichuan') {
-    if (rest.some((v, kk) => v >= 2 && (isDragon(kk) || kk === sw || kk === rw))) plan = rest.some((v, kk) => v >= 2 && isDragon(kk)) ? 'yakuhaiDragon' : 'yakuhaiWind'
+    if (rest.some((v, kk) => v >= 2 && (isDragon(kk) || kk === sw || kk === rw)))
+      plan = rest.some((v, kk) => v >= 2 && isDragon(kk)) ? 'yakuhaiDragon' : 'yakuhaiWind'
   }
   const suits = [0, 0, 0, 0]
   rest.forEach((v, kk) => (suits[suitOf(kk)] += v))
   const main = Math.max(suits[0], suits[1], suits[2])
   if (!plan && g.rule.id !== 'sichuan' && main + suits[3] >= total - 1 && total >= 9) plan = suits[3] === 0 ? 'chinitsu' : 'honitsu'
   if (!plan && g.rule.id === 'sichuan' && main >= total - 2 && total >= 9) plan = 'flush'
-  if (!plan && (g.rule.id === 'riichi' || g.rule.id === 'hk') && suits[3] === 0 && !rest.some((v, kk) => v > 0 && isTermOrHonor(kk)) && total >= 8) plan = 'tanyao'
+  if (!plan && (g.rule.id === 'riichi' || g.rule.id === 'hk') && suits[3] === 0 && !rest.some((v, kk) => v > 0 && isTermOrHonor(kk)) && total >= 8)
+    plan = 'tanyao'
   return { why, plan }
 }
 

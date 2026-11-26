@@ -23,23 +23,36 @@ function autoPlay(p: Page, label: string) {
           const tiles = await p.$$('.handrow .tile.clickable')
           if (tiles.length) {
             const b = await tiles[tiles.length - 1].boundingBox()
-            if (b) { await p.mouse.click(b.x + b.width / 2, b.y + b.height / 2); await sleep(80); const s = await p.$('.handrow .tile.sel'); const sb = s && (await s.boundingBox()); if (sb) await p.mouse.click(sb.x + sb.width / 2, sb.y + sb.height / 2) }
+            if (b) {
+              await p.mouse.click(b.x + b.width / 2, b.y + b.height / 2)
+              await sleep(80)
+              const s = await p.$('.handrow .tile.sel')
+              const sb = s && (await s.boundingBox())
+              if (sb) await p.mouse.click(sb.x + sb.width / 2, sb.y + sb.height / 2)
+            }
           }
         }
-      } catch { /* page navigating */ }
+      } catch {
+        /* page navigating */
+      }
       await sleep(250)
     }
   })()
   void label
-  return { stop: async () => { on = false; await loop } }
+  return {
+    stop: async () => {
+      on = false
+      await loop
+    },
+  }
 }
 
 async function hostCreate(p: any) {
-  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Play with friends
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click()) // Play with friends
   await p.waitForSelector('button.rule')
-  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click())  // pick Taiwanese
+  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click()) // pick Taiwanese
   await p.waitForSelector('input.bigname')
-  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Create room
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click()) // Create room
 }
 
 async function main() {
@@ -49,8 +62,17 @@ async function main() {
       const ctx = await browser.createBrowserContext()
       const p = await ctx.newPage()
       await p.setViewport({ width: 1280, height: 800 })
-      await p.evaluateOnNewDocument(() => { try { localStorage.setItem('kiiro-lang', 'en') } catch { /* ignore */ } })
-      p.on('pageerror', (e) => { fails++; console.log('FAIL pageerror', String(e).slice(0, 160)) })
+      await p.evaluateOnNewDocument(() => {
+        try {
+          localStorage.setItem('kiiro-lang', 'en')
+        } catch {
+          /* ignore */
+        }
+      })
+      p.on('pageerror', (e) => {
+        fails++
+        console.log('FAIL pageerror', String(e).slice(0, 160))
+      })
       return p
     }
     const host = await mk()
@@ -104,4 +126,7 @@ async function main() {
   console.log(fails ? `\n${fails} FAILED` : '\nreconnect flows ok')
   process.exit(fails ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

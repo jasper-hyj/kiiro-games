@@ -8,7 +8,12 @@ import { isDragon, isHonor, isTerminal, isWind, numOf, suitOf } from '../tiles'
  *  and 和絕張 are not. Overlapping patterns are removed with the official "does not count" relationships. */
 const BASE = 8
 
-interface Fan { id: string; name: string; zh: string; v: number }
+interface Fan {
+  id: string
+  name: string
+  zh: string
+  v: number
+}
 const F = (id: string, name: string, zh: string, v: number): Fan => ({ id, name, zh, v })
 
 /** id -> ids that are not counted when it is present (a simplified form of the official exclusion rules) */
@@ -35,14 +40,17 @@ const EXCLUDES: Record<string, string[]> = {
   fullFlush: ['oneVoided', 'noHonors'],
   pureTripleChow: ['pureDoubleChow'],
   allEvenPungs: ['allPungs', 'allSimples', 'noHonors'],
-  upperTiles: ['upperFour', 'noHonors'], middleTiles: ['allSimples', 'noHonors'], lowerTiles: ['lowerFour', 'noHonors'],
+  upperTiles: ['upperFour', 'noHonors'],
+  middleTiles: ['allSimples', 'noHonors'],
+  lowerTiles: ['lowerFour', 'noHonors'],
   pureStraight: ['shortStraight', 'twoTerminalChows'],
   threeSuitedTerminalChows: ['allChows', 'twoTerminalChows', 'mixedDoubleChow', 'noHonors'],
   allFives: ['allSimples', 'noHonors'],
   triplePung: ['doublePung'],
   threeConcealedPungs: ['twoConcealedPungs'],
   bigThreeWinds: ['pungTH'],
-  upperFour: ['noHonors'], lowerFour: ['noHonors'],
+  upperFour: ['noHonors'],
+  lowerFour: ['noHonors'],
   reversibleTiles: ['oneVoided'],
   allPungs: [],
   halfFlush: ['oneVoided'],
@@ -54,7 +62,6 @@ const EXCLUDES: Record<string, string[]> = {
   allSimples: ['noHonors'],
   allChows: ['noHonors'],
 }
-
 
 function tileFans(ctx: WinContext, out: Fan[]) {
   const kinds = ctx.allKinds.map((v, k) => (v ? k : -1)).filter((k) => k >= 0)
@@ -108,7 +115,8 @@ function setFans(ctx: WinContext, it: ReturnType<typeof interpretations>[number]
   const sets = it.sets
   const seqs = sets.filter((s) => s.type === 'seq')
   const tris = sets.filter((s) => s.type === 'tri')
-  const sw = 27 + ctx.seatWind, rw = 27 + ctx.roundWind
+  const sw = 27 + ctx.seatWind,
+    rw = 27 + ctx.roundWind
   const dragons = tris.filter((t) => isDragon(t.kind)).length
   const winds = tris.filter((t) => isWind(t.kind)).length
   // honours
@@ -135,11 +143,17 @@ function setFans(ctx: WinContext, it: ReturnType<typeof interpretations>[number]
   const byNum = new Map<number, number[]>()
   for (const t of suitedTris) byNum.set(numOf(t.kind), [...(byNum.get(numOf(t.kind)) ?? []), suitOf(t.kind)])
   let dbl = 0
-  for (const [, ss] of byNum) { if (new Set(ss).size === 3) out.push(F('triplePung', 'Triple Pung', '三同刻', 16)); else if (ss.length >= 2) dbl++ }
+  for (const [, ss] of byNum) {
+    if (new Set(ss).size === 3) out.push(F('triplePung', 'Triple Pung', '三同刻', 16))
+    else if (ss.length >= 2) dbl++
+  }
   if (dbl > 0 && !out.some((f) => f.id === 'triplePung')) for (let i = 0; i < dbl; i++) out.push(F('doublePung', 'Double Pung', '雙同刻', 2))
   // shifted pungs (consecutive numbers)
   for (const s of [0, 1, 2]) {
-    const ns = suitedTris.filter((t) => suitOf(t.kind) === s).map((t) => numOf(t.kind)).sort((a, b) => a - b)
+    const ns = suitedTris
+      .filter((t) => suitOf(t.kind) === s)
+      .map((t) => numOf(t.kind))
+      .sort((a, b) => a - b)
     const run = (len: number) => ns.some((n) => Array.from({ length: len }, (_, i) => n + i).every((x) => ns.includes(x)))
     if (run(4)) out.push(F('fourPureShiftedPungs', 'Four Pure Shifted Pungs', '一色四節高', 48))
     else if (run(3)) out.push(F('pureShiftedPungs', 'Pure Shifted Pungs', '一色三節高', 24))
@@ -152,41 +166,63 @@ function setFans(ctx: WinContext, it: ReturnType<typeof interpretations>[number]
       if (pick(0, [])) out.push(F('mixedShiftedPungs', 'Mixed Shifted Pungs', '三色三節高', 8))
     }
   }
-  if (suitedTris.length === 4 && suitedTris.every((t) => numOf(t.kind) % 2 === 0) && isEvenPair(it.pair)) out.push(F('allEvenPungs', 'All Even Pungs', '全雙刻', 24))
+  if (suitedTris.length === 4 && suitedTris.every((t) => numOf(t.kind) % 2 === 0) && isEvenPair(it.pair))
+    out.push(F('allEvenPungs', 'All Even Pungs', '全雙刻', 24))
   // chows
   const cnt = new Map<string, number>()
   for (const s of seqs) cnt.set(`${suitOf(s.kind)}:${numOf(s.kind)}`, (cnt.get(`${suitOf(s.kind)}:${numOf(s.kind)}`) ?? 0) + 1)
   const groups = [...cnt.values()]
   if (groups.includes(4)) out.push(F('quadrupleChow', 'Quadruple Chow', '一色四同順', 48))
   else if (groups.includes(3)) out.push(F('pureTripleChow', 'Pure Triple Chow', '一色三同順', 24))
-  else { const pairs = groups.filter((g) => g === 2).length; for (let i = 0; i < pairs; i++) out.push(F('pureDoubleChow', 'Pure Double Chow', '一般高', 1)) }
+  else {
+    const pairs = groups.filter((g) => g === 2).length
+    for (let i = 0; i < pairs; i++) out.push(F('pureDoubleChow', 'Pure Double Chow', '一般高', 1))
+  }
   const startsBySuit = [0, 1, 2].map((s) => seqs.filter((q) => suitOf(q.kind) === s).map((q) => numOf(q.kind)))
   for (const ns of startsBySuit) {
     const has = (n: number) => ns.includes(n)
     if (has(1) && has(4) && has(7)) out.push(F('pureStraight', 'Pure Straight', '清龍', 16))
     for (const step of [1, 2]) {
       for (let n = 1; n <= 7; n++) {
-        if (n + 3 * step <= 7 && has(n) && has(n + step) && has(n + 2 * step) && has(n + 3 * step)) out.push(F('fourPureShiftedChows', 'Four Pure Shifted Chows', '一色四步高', 32))
+        if (n + 3 * step <= 7 && has(n) && has(n + step) && has(n + 2 * step) && has(n + 3 * step))
+          out.push(F('fourPureShiftedChows', 'Four Pure Shifted Chows', '一色四步高', 32))
         else if (n + 2 * step <= 7 && has(n) && has(n + step) && has(n + 2 * step)) out.push(F('pureShiftedChows', 'Pure Shifted Chows', '一色三步高', 16))
       }
     }
   }
   const mixedAt = (n: number) => [0, 1, 2].map((s) => startsBySuit[s].includes(n))
   for (let n = 1; n <= 7; n++) if (mixedAt(n).every(Boolean)) out.push(F('mixedTripleChow', 'Mixed Triple Chow', '三色三同順', 8))
-  const perm = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
-  if (perm.some(([a, b, c]) => startsBySuit[a].includes(1) && startsBySuit[b].includes(4) && startsBySuit[c].includes(7))) out.push(F('mixedStraight', 'Mixed Straight', '花龍', 8))
-  for (let n = 1; n <= 5; n++) if (perm.some(([a, b, c]) => startsBySuit[a].includes(n) && startsBySuit[b].includes(n + 1) && startsBySuit[c].includes(n + 2))) { out.push(F('mixedShiftedChows', 'Mixed Shifted Chows', '三色三步高', 6)); break }
+  const perm = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ]
+  if (perm.some(([a, b, c]) => startsBySuit[a].includes(1) && startsBySuit[b].includes(4) && startsBySuit[c].includes(7)))
+    out.push(F('mixedStraight', 'Mixed Straight', '花龍', 8))
+  for (let n = 1; n <= 5; n++)
+    if (perm.some(([a, b, c]) => startsBySuit[a].includes(n) && startsBySuit[b].includes(n + 1) && startsBySuit[c].includes(n + 2))) {
+      out.push(F('mixedShiftedChows', 'Mixed Shifted Chows', '三色三步高', 6))
+      break
+    }
   // small chow patterns (counted once each)
-  const mixedDouble = (() => { for (let n = 1; n <= 7; n++) if (mixedAt(n).filter(Boolean).length >= 2) return true; return false })()
+  const mixedDouble = (() => {
+    for (let n = 1; n <= 7; n++) if (mixedAt(n).filter(Boolean).length >= 2) return true
+    return false
+  })()
   if (mixedDouble && !out.some((f) => f.id === 'mixedTripleChow')) out.push(F('mixedDoubleChow', 'Mixed Double Chow', '喜相逢', 1))
   if (startsBySuit.some((ns) => ns.includes(1) && ns.includes(7))) out.push(F('twoTerminalChows', 'Two Terminal Chows', '老少副', 1))
   if (startsBySuit.some((ns) => ns.some((n) => ns.includes(n + 3)))) out.push(F('shortStraight', 'Short Straight', '連六', 1))
   // 3-suited / pure terminal chows
   if (seqs.length === 4 && it.pair < 27 && numOf(it.pair) === 5) {
     const s1 = startsBySuit.map((ns) => ns.filter((n) => n === 1).length === 1 && ns.filter((n) => n === 7).length === 1)
-    if (s1.filter(Boolean).length === 2 && s1[suitOf(it.pair)] === false) out.push(F('threeSuitedTerminalChows', 'Three-Suited Terminal Chows', '三色雙龍會', 16))
+    if (s1.filter(Boolean).length === 2 && s1[suitOf(it.pair)] === false)
+      out.push(F('threeSuitedTerminalChows', 'Three-Suited Terminal Chows', '三色雙龍會', 16))
     const ps = suitOf(it.pair)
-    if (startsBySuit[ps].filter((n) => n === 1).length === 2 && startsBySuit[ps].filter((n) => n === 7).length === 2) out.push(F('pureTerminalChows', 'Pure Terminal Chows', '一色雙龍會', 64))
+    if (startsBySuit[ps].filter((n) => n === 1).length === 2 && startsBySuit[ps].filter((n) => n === 7).length === 2)
+      out.push(F('pureTerminalChows', 'Pure Terminal Chows', '一色雙龍會', 64))
   }
   // sets containing a terminal / a five
   const isTermOrHon = (k: number) => isTerminal(k) || isHonor(k)
@@ -222,7 +258,12 @@ function resolve(fans: Fan[], flowers: number): HandScore | null {
   // keep one entry per id for the "single" patterns, repeats only where the rules count each occurrence
   const REPEAT = new Set(['pureDoubleChow', 'pungTH', 'doublePung', 'tileHog'])
   const seen = new Set<string>()
-  const uniq = fans.filter((f) => { if (REPEAT.has(f.id)) return true; if (seen.has(f.id)) return false; seen.add(f.id); return true })
+  const uniq = fans.filter((f) => {
+    if (REPEAT.has(f.id)) return true
+    if (seen.has(f.id)) return false
+    seen.add(f.id)
+    return true
+  })
   const dropped = new Set<string>()
   for (const f of uniq) for (const x of EXCLUDES[f.id] ?? []) dropped.add(x)
   let kept = uniq.filter((f) => !dropped.has(f.id))
@@ -251,7 +292,8 @@ function evaluate(ctx: WinContext): HandScore | null {
     const fans = [...flags, ...tiles]
     // seven shifted pairs: seven consecutive pairs of one suit
     const ks = ctx.counts.map((v, k) => (v ? k : -1)).filter((k) => k >= 0)
-    if (ks.length === 7 && ks.every((k) => k < 27 && suitOf(k) === suitOf(ks[0])) && ks[6] - ks[0] === 6) fans.push(F('sevenShiftedPairs', 'Seven Shifted Pairs', '連七對', 88))
+    if (ks.length === 7 && ks.every((k) => k < 27 && suitOf(k) === suitOf(ks[0])) && ks[6] - ks[0] === 6)
+      fans.push(F('sevenShiftedPairs', 'Seven Shifted Pairs', '連七對', 88))
     else fans.push(F('sevenPairs', 'Seven Pairs', '七對', 24))
     push(fans)
   }
@@ -269,21 +311,34 @@ function settle(score: HandScore, info: { winner: number; from: number | null })
   const d = [0, 0, 0, 0]
   const T = score.total
   if (info.from === null) {
-    for (let p = 0; p < 4; p++) if (p !== info.winner) { d[p] -= BASE + T; d[info.winner] += BASE + T }
+    for (let p = 0; p < 4; p++)
+      if (p !== info.winner) {
+        d[p] -= BASE + T
+        d[info.winner] += BASE + T
+      }
   } else {
     for (let p = 0; p < 4; p++) {
       if (p === info.winner) continue
       const pay = p === info.from ? BASE + T : BASE
-      d[p] -= pay; d[info.winner] += pay
+      d[p] -= pay
+      d[info.winner] += pay
     }
   }
   return d
 }
 
 export const mcr: RuleSet = {
-  id: 'mcr', name: 'Chinese Official', zh: '國標麻將',
+  id: 'mcr',
+  name: 'Chinese Official',
+  zh: '國標麻將',
   blurb: '13 tiles · 8 flowers · 8-fan minimum · ~80 scoring patterns',
-  handSize: 13, nSets: 4, flowers: true, deadWall: 14, startPoints: 0, unit: 'pts',
+  handSize: 13,
+  nSets: 4,
+  flowers: true,
+  deadWall: 14,
+  startPoints: 0,
+  unit: 'pts',
   specials: { chiitoi: true, kokushi: true },
-  evaluate, settle,
+  evaluate,
+  settle,
 }

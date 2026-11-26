@@ -4,20 +4,31 @@ import type { RuleId } from '../../src/games/mahjong/engine/rules'
 
 /** A human who calls chi / pon / kan at random moments while bots react on timers: every meld must stay legal and the audit clean. */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-let bad = 0, melds = 0
-const fail = (m: string) => { bad++; if (bad < 20) console.log('FAIL', m) }
+let bad = 0,
+  melds = 0
+const fail = (m: string) => {
+  bad++
+  if (bad < 20) console.log('FAIL', m)
+}
 
 async function play(rule: RuleId) {
   const t = new Table({ rule, aka: true, rounds: 1, minFan: 0, players: 4, botLevel: 'hard', swap: false } as never)
-  t.speed = 0.01; t.randomize = true
-  t.join('h', 'Me'); t.start('h')
+  t.speed = 0.01
+  t.randomize = true
+  t.join('h', 'Me')
+  t.start('h')
   const seen = new Set<string>()
   for (let guard = 0; guard < 4000 && t.game && t.game.phase !== 'over'; guard++) {
     const g = t.game
     const you = t.seatOf('h')
-    if (g.phase === 'result') { t.ack('h'); continue }
-    if (g.phase === 'turn' && g.turn === you) { const o = g.turnOptions(you); t.turnAction('h', o.tsumo ? { type: 'tsumo' } : { type: 'discard', tile: o.discard[Math.floor(Math.random() * o.discard.length)] }) }
-    else if (g.phase === 'reaction' && g.reactions[you] && !g.decisions[you]) {
+    if (g.phase === 'result') {
+      t.ack('h')
+      continue
+    }
+    if (g.phase === 'turn' && g.turn === you) {
+      const o = g.turnOptions(you)
+      t.turnAction('h', o.tsumo ? { type: 'tsumo' } : { type: 'discard', tile: o.discard[Math.floor(Math.random() * o.discard.length)] })
+    } else if (g.phase === 'reaction' && g.reactions[you] && !g.decisions[you]) {
       const r = g.reactions[you]
       if (Math.random() < 0.3) await sleep(Math.random() * 30)
       if (g.phase === 'reaction' && g.reactions[you] && !g.decisions[you]) {
@@ -36,7 +47,8 @@ async function play(rule: RuleId) {
       for (const m of p.melds) {
         const key = `${g.handNo}:${p.seat}:${m.tiles.join(',')}`
         if (seen.has(key)) continue
-        seen.add(key); melds++
+        seen.add(key)
+        melds++
         const ks = m.tiles.map(kindOf).sort((a, b) => a - b)
         if (new Set(m.tiles).size !== m.tiles.length) fail(`${rule}: ${m.type} with a repeated tile ${m.tiles}`)
         if (m.type === 'chi' && !(ks[1] === ks[0] + 1 && ks[2] === ks[1] + 1)) fail(`${rule}: illegal chi ${ks}`)

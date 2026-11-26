@@ -14,13 +14,18 @@ const check = (name: string, ok: boolean, extra = '') => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const text = (p: Page) => p.evaluate(() => document.body.innerText)
 const clickText = (p: Page, sel: string, re: RegExp) =>
-  p.evaluate((sel, src, fl) => {
-    const r = new RegExp(src, fl)
-    const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
-    if (!el) return false
-    el.click()
-    return true
-  }, sel, re.source, re.flags)
+  p.evaluate(
+    (sel, src, fl) => {
+      const r = new RegExp(src, fl)
+      const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
+      if (!el) return false
+      el.click()
+      return true
+    },
+    sel,
+    re.source,
+    re.flags,
+  )
 
 async function tapSel(p: Page, touch: boolean, sel: string, nth = 0) {
   const h = (await p.$$(sel))[nth]
@@ -37,7 +42,10 @@ async function playTurn(p: Page, touch: boolean) {
     await p.evaluate(() => (document.querySelector('.overlay .btn.gold') as HTMLElement)?.click())
     return
   }
-  if (await p.$('.cbtn.pass')) { await tapSel(p, touch, '.cbtn.pass'); return }
+  if (await p.$('.cbtn.pass')) {
+    await tapSel(p, touch, '.cbtn.pass')
+    return
+  }
   const tiles = await p.$$('.handrow .tile.clickable')
   if (tiles.length) {
     await tapSel(p, touch, '.handrow .tile.clickable', tiles.length - 1)
@@ -48,11 +56,11 @@ async function playTurn(p: Page, touch: boolean) {
 const pondCounts = (p: Page) => p.evaluate(() => ['p0', 'p1', 'p2', 'p3'].map((k) => document.querySelectorAll(`.pond.${k} .tile`).length))
 
 async function hostCreate(p: any) {
-  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Play with friends
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click()) // Play with friends
   await p.waitForSelector('button.rule')
-  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click())  // pick Taiwanese
+  await p.evaluate(() => (document.querySelector('button.rule') as HTMLElement).click()) // pick Taiwanese
   await p.waitForSelector('input.bigname')
-  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click())   // Create room
+  await p.evaluate(() => (document.querySelector('.btn.gold') as HTMLElement).click()) // Create room
 }
 
 async function main() {
@@ -64,9 +72,21 @@ async function main() {
     await A.setViewport({ width: 1280, height: 800 })
     const B = await ctxB.newPage()
     await B.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, hasTouch: true, isMobile: true })
-    for (const [p, n] of [[A, 'A'], [B, 'B']] as const) {
-      p.on('pageerror', (e) => { fails++; console.log('FAIL pageerror', n, String(e).slice(0, 200)) })
-      await p.evaluateOnNewDocument(() => { try { localStorage.setItem('kiiro-lang', 'en') } catch { /* ignore */ } })
+    for (const [p, n] of [
+      [A, 'A'],
+      [B, 'B'],
+    ] as const) {
+      p.on('pageerror', (e) => {
+        fails++
+        console.log('FAIL pageerror', n, String(e).slice(0, 200))
+      })
+      await p.evaluateOnNewDocument(() => {
+        try {
+          localStorage.setItem('kiiro-lang', 'en')
+        } catch {
+          /* ignore */
+        }
+      })
     }
 
     // 1. host creates a room
@@ -90,7 +110,10 @@ async function main() {
     await sleep(500)
     const seatsA = await A.$$eval('.seatbox', (e) => e.map((x) => (x as HTMLElement).innerText))
     check('both players seated in the lobby', seatsA.filter((s) => /Human/.test(s)).length === 2, seatsA.join(' | '))
-    for (const pg of [A, B]) await pg.evaluate(() => { (document.querySelector('.tablesettings') as HTMLDetailsElement).open = true })
+    for (const pg of [A, B])
+      await pg.evaluate(() => {
+        ;(document.querySelector('.tablesettings') as HTMLDetailsElement).open = true
+      })
     check('guest sees "waiting for the host"', /Waiting for the host/.test(await text(B)))
     check('guest cannot change settings (cards disabled)', await B.$$eval('button.rule', (e) => e.every((x) => (x as HTMLButtonElement).disabled)))
     await B.screenshot({ path: `${SHOTS}/online-guest-lobby.png` })
@@ -146,7 +169,10 @@ async function main() {
     await B.screenshot({ path: `${SHOTS}/online-after-refresh.png` })
 
     // 7. guest leaves; host's table marks the seat away (bot takes over)
-    await B.evaluate(() => { (document.querySelector('.dock summary') as HTMLElement)?.click(); (document.querySelector('.dock .leavebtn') as HTMLElement)?.click() })
+    await B.evaluate(() => {
+      ;(document.querySelector('.dock summary') as HTMLElement)?.click()
+      ;(document.querySelector('.dock .leavebtn') as HTMLElement)?.click()
+    })
     await sleep(1200)
     check('host sees guest as away', /away/i.test(await text(A)))
     await A.screenshot({ path: `${SHOTS}/online-guest-left.png` })
@@ -157,4 +183,7 @@ async function main() {
   console.log(fails ? `\n${fails} FAILED` : '\nall online UI checks passed')
   process.exit(fails ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

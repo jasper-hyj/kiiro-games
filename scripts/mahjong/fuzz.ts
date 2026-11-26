@@ -5,9 +5,13 @@ import type { RuleId } from '../../src/games/mahjong/engine/rules'
 const SCENARIOS = Number(process.argv[2] ?? 24)
 const SECONDS = Number(process.argv[3] ?? 40)
 const rnd = (n: number) => Math.floor(Math.random() * n)
-const pick = <T,>(a: readonly T[]): T => a[rnd(a.length)]
+const pick = <T>(a: readonly T[]): T => a[rnd(a.length)]
 
-interface Violation { scenario: number; config: string; msg: string }
+interface Violation {
+  scenario: number
+  config: string
+  msg: string
+}
 const violations: Violation[] = []
 const stats: Record<string, number> = { scenarios: 0, ops: 0, hands: 0, games: 0, rejected: 0, stuck: 0 }
 
@@ -51,7 +55,11 @@ function inv(t: Table): string[] {
 function leaks(t: Table, id: string): string[] {
   const v = t.view(id)
   const errs: string[] = []
-  try { JSON.stringify(v) } catch { errs.push('view not serialisable') }
+  try {
+    JSON.stringify(v)
+  } catch {
+    errs.push('view not serialisable')
+  }
   const g = v.game
   if (g && (g.phase === 'turn' || g.phase === 'reaction' || g.phase === 'swap' || g.phase === 'void')) {
     for (const p of g.players) {
@@ -64,20 +72,37 @@ function leaks(t: Table, id: string): string[] {
 
 async function scenario(n: number): Promise<void> {
   const rule = pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr', 'sichuan'])
-  const cfg: RoomConfig = { rule, aka: Math.random() < 0.5, rounds: rule === 'taiwan' ? pick([1, 4] as const) : pick([1, 2] as const), minFan: rnd(5), players: rule === 'riichi' && Math.random() < 0.4 ? 3 : 4, botLevel: pick(['easy', 'normal'] as const) }
+  const cfg: RoomConfig = {
+    rule,
+    aka: Math.random() < 0.5,
+    rounds: rule === 'taiwan' ? pick([1, 4] as const) : pick([1, 2] as const),
+    minFan: rnd(5),
+    players: rule === 'riichi' && Math.random() < 0.4 ? 3 : 4,
+    botLevel: pick(['easy', 'normal'] as const),
+  }
   const t = new Table(cfg)
   t.speed = 0.003
   t.graceMs = 30
   t.turnTimerMs = Math.random() < 0.5 ? 60 + rnd(200) : 0
   const label = JSON.stringify({ ...cfg, timer: t.turnTimerMs })
   const clients = Array.from({ length: 6 }, (_, i) => ({ id: `s${n}c${i}`, name: `N${i}` }))
-  const bad = (msg: string) => { if (violations.length < 60) violations.push({ scenario: n, config: label, msg }) }
+  const bad = (msg: string) => {
+    if (violations.length < 60) violations.push({ scenario: n, config: label, msg })
+  }
   let lastCheck = ''
   t.onChange(() => {
     try {
-      for (const e of inv(t)) { const k = e + t.game?.handNo; if (k !== lastCheck) { bad(e); lastCheck = k } }
+      for (const e of inv(t)) {
+        const k = e + t.game?.handNo
+        if (k !== lastCheck) {
+          bad(e)
+          lastCheck = k
+        }
+      }
       for (const c of clients) if (t.seatOf(c.id) >= 0 || Math.random() < 0.05) for (const e of leaks(t, c.id)) bad(e)
-    } catch (e) { bad('check threw: ' + String(e).slice(0, 120)) }
+    } catch (e) {
+      bad('check threw: ' + String(e).slice(0, 120))
+    }
   })
 
   let lastHand = 0
@@ -93,23 +118,62 @@ async function scenario(n: number): Promise<void> {
     try {
       if (!g) {
         // lobby phase
-        if (seat < 0) { if (t.join(c.id, c.name + rnd(99)) < 0) stats.rejected++ }
-        else if (roll < 0.1) t.leave(c.id)
-        else if (roll < 0.25) t.setConfig(c.id, { rule: pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr', 'sichuan']), rounds: pick([1, 2, 4] as const), aka: Math.random() < 0.5, players: pick([3, 4] as const), botLevel: pick(['easy', 'normal'] as const), minFan: rnd(6) } as Partial<RoomConfig>)
+        if (seat < 0) {
+          if (t.join(c.id, c.name + rnd(99)) < 0) stats.rejected++
+        } else if (roll < 0.1) t.leave(c.id)
+        else if (roll < 0.25)
+          t.setConfig(c.id, {
+            rule: pick<RuleId>(['riichi', 'hk', 'taiwan', 'mcr', 'sichuan']),
+            rounds: pick([1, 2, 4] as const),
+            aka: Math.random() < 0.5,
+            players: pick([3, 4] as const),
+            botLevel: pick(['easy', 'normal'] as const),
+            minFan: rnd(6),
+          } as Partial<RoomConfig>)
         else if (roll < 0.35) t.toggleBot(c.id, rnd(5))
         else if (roll < 0.55) t.start(c.id)
         else if (roll < 0.65) t.chat(c.id, pick([...CHAT_KEYS, 'bogus']))
         return
       }
-      if (seat < 0) { if (roll < 0.5) t.join(c.id, c.name) ; return }  // late join mid-game
-      if (roll < 0.015) { t.leave(c.id); return }                      // disconnect
-      if (roll < 0.03) { t.join(c.id, c.name); return }                // reconnect
-      if (roll < 0.05) { t.chat(c.id, pick(CHAT_KEYS)); return }
-      if (roll < 0.07 && roll >= 0.05) { t.setConfig(c.id, { rule: 'hk' }); t.toggleBot(c.id, rnd(4)); t.start(c.id); return } // must all be ignored mid-game
-      if (roll < 0.0802 && roll >= 0.08 && !process.env.NOLOBBY) { t.backToLobby(c.id); return }
-      if (g.phase === 'over') { if (roll < 0.3) { t.backToLobby(c.id); stats.rematch = (stats.rematch ?? 0) + 1 } return }
-      if (g.phase === 'result') { if (roll < 0.6) t.ack(c.id); return }
-      if (roll < 0.2) { // invalid input
+      if (seat < 0) {
+        if (roll < 0.5) t.join(c.id, c.name)
+        return
+      } // late join mid-game
+      if (roll < 0.015) {
+        t.leave(c.id)
+        return
+      } // disconnect
+      if (roll < 0.03) {
+        t.join(c.id, c.name)
+        return
+      } // reconnect
+      if (roll < 0.05) {
+        t.chat(c.id, pick(CHAT_KEYS))
+        return
+      }
+      if (roll < 0.07 && roll >= 0.05) {
+        t.setConfig(c.id, { rule: 'hk' })
+        t.toggleBot(c.id, rnd(4))
+        t.start(c.id)
+        return
+      } // must all be ignored mid-game
+      if (roll < 0.0802 && roll >= 0.08 && !process.env.NOLOBBY) {
+        t.backToLobby(c.id)
+        return
+      }
+      if (g.phase === 'over') {
+        if (roll < 0.3) {
+          t.backToLobby(c.id)
+          stats.rematch = (stats.rematch ?? 0) + 1
+        }
+        return
+      }
+      if (g.phase === 'result') {
+        if (roll < 0.6) t.ack(c.id)
+        return
+      }
+      if (roll < 0.2) {
+        // invalid input
         const k = rnd(6)
         if (k === 0) t.turnAction(c.id, { type: 'discard', tile: pick(garbage) } as never)
         else if (k === 1) t.turnAction(c.id, { type: 'nonsense' } as never)
@@ -141,14 +205,27 @@ async function scenario(n: number): Promise<void> {
         else t.decide(c.id, { type: 'pass' })
       }
     } catch (e) {
-      bad('exception: ' + String(e).slice(0, 160) + ' @' + String((e as Error).stack?.split('\n')[1] ?? '').trim().slice(0, 100))
+      bad(
+        'exception: ' +
+          String(e).slice(0, 160) +
+          ' @' +
+          String((e as Error).stack?.split('\n')[1] ?? '')
+            .trim()
+            .slice(0, 100),
+      )
     }
     const hn = t.game?.handNo ?? 0
-    if (hn !== lastHand) { lastHand = hn; lastProgress = Date.now(); stats.hands++ }
+    if (hn !== lastHand) {
+      lastHand = hn
+      lastProgress = Date.now()
+      stats.hands++
+    }
     if (t.game?.phase === 'over') stats.games++
   }
 
-  const iv = setInterval(() => { for (let i = 0; i < 3; i++) step() }, 3)
+  const iv = setInterval(() => {
+    for (let i = 0; i < 3; i++) step()
+  }, 3)
   // keep at least one client present so the game is not abandoned
   t.join(clients[0].id, clients[0].name)
   await new Promise((r) => setTimeout(r, SECONDS * 1000))
@@ -157,7 +234,10 @@ async function scenario(n: number): Promise<void> {
   if (t.game && t.game.phase !== 'over' && Date.now() - lastProgress > 20000 && t.game.phase !== 'result') {
     // human-controlled seat waiting with timer off is legitimately idle; only flag when everything is bot/timer driven
     const waiting = t.game.phase === 'turn' ? t.game.turn : t.game.pendingSeats()[0]
-    if (waiting !== undefined && (t.isBotControlled(waiting) || t.turnTimerMs > 0)) { stats.stuck++; bad(`stuck for 20s in phase ${t.game.phase} waiting on seat ${waiting}`) }
+    if (waiting !== undefined && (t.isBotControlled(waiting) || t.turnTimerMs > 0)) {
+      stats.stuck++
+      bad(`stuck for 20s in phase ${t.game.phase} waiting on seat ${waiting}`)
+    }
   }
   stats.scenarios++
 }
@@ -165,7 +245,9 @@ async function scenario(n: number): Promise<void> {
 async function main() {
   const t0 = Date.now()
   await Promise.all(Array.from({ length: SCENARIOS }, (_, i) => scenario(i)))
-  console.log(`fuzz: ${stats.scenarios} scenarios, ${stats.ops} operations, ${stats.hands} hands, ${stats.games} game-over screens, ${stats.rematch ?? 0} rematches, ${stats.rejected} joins rejected, ${Math.round((Date.now() - t0) / 1000)}s`)
+  console.log(
+    `fuzz: ${stats.scenarios} scenarios, ${stats.ops} operations, ${stats.hands} hands, ${stats.games} game-over screens, ${stats.rematch ?? 0} rematches, ${stats.rejected} joins rejected, ${Math.round((Date.now() - t0) / 1000)}s`,
+  )
   if (!violations.length) console.log('no invariant violations')
   const seen = new Set<string>()
   for (const v of violations) {

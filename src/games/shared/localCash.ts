@@ -13,14 +13,20 @@ export function connectLocalBlackjack(id: string, name: string, minBet: number, 
   const t = new BlackjackTable({ bet: minBet, casual: true, maxSeats: 6 })
   const push = () => h.onView({ ...t.view(id), signedIn: false, balance: null })
   t.onChange(push)
-  t.join(id); t.sit(id, name, t.casualStack)
-  h.onStatus('open'); push()
+  t.join(id)
+  t.sit(id, name, t.casualStack)
+  h.onStatus('open')
+  push()
   return {
     send(m) {
-      if (m.k === 'act') { const e = t.act(id, m.a); if (e) h.onError(e) }
-      else if (m.k === 'out') t.setOut(id, m.out)
+      if (m.k === 'act') {
+        const e = t.act(id, m.a)
+        if (e) h.onError(e)
+      } else if (m.k === 'out') t.setOut(id, m.out)
     },
-    close() { t.dispose() },
+    close() {
+      t.dispose()
+    },
   }
 }
 
@@ -30,14 +36,24 @@ export function connectLocalBigTwo(id: string, name: string, h: CashHandlers<Big
   t.onChange(push)
   t.join(id, name)
   t.start(id) // practice starts at once: three bots take the other seats
-  h.onStatus('open'); push()
+  h.onStatus('open')
+  push()
   return {
     send(m) {
-      if (m.k === 'play') { const e = t.play(id, m.cards); if (e) h.onError(e) }
-      else if (m.k === 'pass') { const e = t.pass(id); if (e) h.onError(e) }
-      else if (m.k === 'lobby') { t.backToLobby(id); t.start(id) } // "play again" deals a new game straight away
+      if (m.k === 'play') {
+        const e = t.play(id, m.cards)
+        if (e) h.onError(e)
+      } else if (m.k === 'pass') {
+        const e = t.pass(id)
+        if (e) h.onError(e)
+      } else if (m.k === 'lobby') {
+        t.backToLobby(id)
+        t.start(id)
+      } // "play again" deals a new game straight away
     },
-    close() { t.dispose() },
+    close() {
+      t.dispose()
+    },
   }
 }
 
@@ -60,7 +76,8 @@ export function connectLocalHoldem(id: string, name: string, h: CashHandlers<Hol
     const first = t.view(botId)
     if (!first.turn) return
     const plan = botDecision(first, Math.random, personaFor(botId))
-    const think = plan.a === 'fold' || plan.a === 'check' ? 650 + Math.random() * 800 : plan.a === 'call' ? 900 + Math.random() * 900 : 1300 + Math.random() * 1900
+    const think =
+      plan.a === 'fold' || plan.a === 'check' ? 650 + Math.random() * 800 : plan.a === 'call' ? 900 + Math.random() * 900 : 1300 + Math.random() * 1900
     const timer = setTimeout(() => {
       timers.delete(timer)
       if (t.seats[t.toAct]?.id !== botId) return
@@ -71,17 +88,32 @@ export function connectLocalHoldem(id: string, name: string, h: CashHandlers<Hol
     }, think)
     timers.add(timer)
   }
-  t.onChange(() => { push(); botTurn() })
+  t.onChange(() => {
+    push()
+    botTurn()
+  })
   t.autostart = false // seat everyone first, then deal
-  t.join(id); t.sit(id, name, t.casualStack)
-  bots.forEach((b, i) => { t.join(b); t.sit(b, `Bot ${i + 1}`, t.casualStack) })
+  t.join(id)
+  t.sit(id, name, t.casualStack)
+  bots.forEach((b, i) => {
+    t.join(b)
+    t.sit(b, `Bot ${i + 1}`, t.casualStack)
+  })
   t.autostart = true
-  h.onStatus('open'); push(); t.drive()
+  h.onStatus('open')
+  push()
+  t.drive()
   return {
     send(m) {
-      if (m.k === 'act') { const e = t.act(id, m.a); if (e) h.onError(e) }
-      else if (m.k === 'out') t.setOut(id, m.out)
+      if (m.k === 'act') {
+        const e = t.act(id, m.a)
+        if (e) h.onError(e)
+      } else if (m.k === 'out') t.setOut(id, m.out)
     },
-    close() { for (const x of timers) clearTimeout(x); timers.clear(); t.dispose() },
+    close() {
+      for (const x of timers) clearTimeout(x)
+      timers.clear()
+      t.dispose()
+    },
   }
 }

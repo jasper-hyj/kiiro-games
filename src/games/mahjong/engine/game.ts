@@ -6,54 +6,135 @@ import { doraFrom, freshWall, isFlowerId, isRedFive, kindOf, sortIds, suitOf, nu
 import { isComplete, shantenAll, toCounts, waitsOf, KOKUSHI, type Counts } from './hand'
 
 export type Meld = MeldInfo & { called?: number }
-export interface Discard { tile: number; riichi: boolean; called: boolean }
+export interface Discard {
+  tile: number
+  riichi: boolean
+  called: boolean
+}
 export interface Player {
-  seat: number; name: string; points: number
-  hand: number[]; drawn: number | null
-  melds: Meld[]; discards: Discard[]; flowers: number[]
-  riichi: boolean; doubleRiichi: boolean; ippatsu: boolean; riichiPending: boolean; nuki: number[]
-  tempFuriten: boolean; permFuriten: boolean
-  voidSuit: number | null; out: boolean; swapTiles: number[] | null; swapIn: number[]  // Sichuan
+  seat: number
+  name: string
+  points: number
+  hand: number[]
+  drawn: number | null
+  melds: Meld[]
+  discards: Discard[]
+  flowers: number[]
+  riichi: boolean
+  doubleRiichi: boolean
+  ippatsu: boolean
+  riichiPending: boolean
+  nuki: number[]
+  tempFuriten: boolean
+  permFuriten: boolean
+  voidSuit: number | null
+  out: boolean
+  swapTiles: number[] | null
+  swapIn: number[] // Sichuan
 }
-export type Decision =
-  | { type: 'pass' } | { type: 'ron' } | { type: 'pon' } | { type: 'minkan' }
-  | { type: 'chi'; use: [number, number] }
+export type Decision = { type: 'pass' } | { type: 'ron' } | { type: 'pon' } | { type: 'minkan' } | { type: 'chi'; use: [number, number] }
 export type TurnAction =
-  | { type: 'tsumo' } | { type: 'discard'; tile: number; riichi?: boolean }
-  | { type: 'ankan'; kind: number } | { type: 'kakan'; tile: number } | { type: 'nuki' } | { type: 'abort' }
-export interface ReactionOptions { ron: boolean; pon: boolean; minkan: boolean; chi: [number, number][] }
-export interface TurnOptions {
-  tsumo: boolean; discard: number[]; riichi: number[]; ankan: number[]; kakan: number[]; nuki: boolean; abort: boolean
+  | { type: 'tsumo' }
+  | { type: 'discard'; tile: number; riichi?: boolean }
+  | { type: 'ankan'; kind: number }
+  | { type: 'kakan'; tile: number }
+  | { type: 'nuki' }
+  | { type: 'abort' }
+export interface ReactionOptions {
+  ron: boolean
+  pon: boolean
+  minkan: boolean
+  chi: [number, number][]
 }
-export interface WinNotice { code: 'void' | 'furiten' | 'noYaku' | 'minFan' | 'other'; n?: number; need?: number; suit?: number; tile?: number }
+export interface TurnOptions {
+  tsumo: boolean
+  discard: number[]
+  riichi: number[]
+  ankan: number[]
+  kakan: number[]
+  nuki: boolean
+  abort: boolean
+}
+export interface WinNotice {
+  code: 'void' | 'furiten' | 'noYaku' | 'minFan' | 'other'
+  n?: number
+  need?: number
+  suit?: number
+  tile?: number
+}
 export type Phase = 'swap' | 'void' | 'turn' | 'reaction' | 'result' | 'over'
-export interface ScWin { winner: number; from: number | null; tsumo: boolean; score: HandScore; points: number; order: number; winTile: number; hand: { hand: number[]; melds: Meld[] } }
-export interface ScNote { label: string; zh: string; deltas: number[] }
+export interface ScWin {
+  winner: number
+  from: number | null
+  tsumo: boolean
+  score: HandScore
+  points: number
+  order: number
+  winTile: number
+  hand: { hand: number[]; melds: Meld[] }
+}
+export interface ScNote {
+  label: string
+  zh: string
+  deltas: number[]
+}
 export interface HandResult {
   kind: 'win' | 'draw'
-  winner?: number; from?: number | null; tsumo?: boolean; score?: HandScore; winTile?: number
-  deltas: number[]; sticksWon?: number; tenpai?: boolean[]
+  winner?: number
+  from?: number | null
+  tsumo?: boolean
+  score?: HandScore
+  winTile?: number
+  deltas: number[]
+  sticksWon?: number
+  tenpai?: boolean[]
   hands: { hand: number[]; melds: Meld[]; flowers: number[] }[]
-  ura?: number[]; dora?: number[]; dealerBefore: number; label?: string
+  ura?: number[]
+  dora?: number[]
+  dealerBefore: number
+  label?: string
   /** additional winners when several players ron the same discard (Taiwanese) */
   sc?: { wins: ScWin[]; notes: ScNote[] }
   others?: { winner: number; from?: number | null; tsumo?: boolean; score: HandScore; hand: { hand: number[]; melds: Meld[]; flowers: number[] } }[]
 }
 
 export interface HistoryEntry {
-  handNo: number; roundIndex: number; dealer: number
-  kind: 'win' | 'draw'; winners: number[]; from: number | null; tsumo: boolean
-  total: number; label?: string; names: { name: string; zh?: string }[]
-  deltas: number[]; points: number[]
+  handNo: number
+  roundIndex: number
+  dealer: number
+  kind: 'win' | 'draw'
+  winners: number[]
+  from: number | null
+  tsumo: boolean
+  total: number
+  label?: string
+  names: { name: string; zh?: string }[]
+  deltas: number[]
+  points: number[]
 }
 
 /** A public snapshot taken after each discard; enough to replay a hand without revealing hidden information. */
-export interface ReplayStep { seat: number; tile: number; riichi: boolean; p: { d: [number, boolean][]; m: { type: string; tiles: number[] }[]; f: number[] }[] }
+export interface ReplayStep {
+  seat: number
+  tile: number
+  riichi: boolean
+  p: { d: [number, boolean][]; m: { type: string; tiles: number[] }[]; f: number[] }[]
+}
 export interface Replay {
-  handNo: number; roundIndex: number; dealer: number; steps: ReplayStep[]
-  kind: 'win' | 'draw'; winners: number[]; from: number | null; tsumo: boolean; label?: string; total: number
-  deltas: number[]; hands: { hand: number[]; melds: { type: string; tiles: number[] }[]; flowers: number[] }[]
-  winTile?: number; yaku: { name: string; zh?: string; value: number }[]
+  handNo: number
+  roundIndex: number
+  dealer: number
+  steps: ReplayStep[]
+  kind: 'win' | 'draw'
+  winners: number[]
+  from: number | null
+  tsumo: boolean
+  label?: string
+  total: number
+  deltas: number[]
+  hands: { hand: number[]; melds: { type: string; tiles: number[] }[]; flowers: number[] }[]
+  winTile?: number
+  yaku: { name: string; zh?: string; value: number }[]
 }
 
 export const WIND_NAMES = ['East', 'South', 'West', 'North']
@@ -105,15 +186,34 @@ export class Game {
     this.sanma = this.n === 3 && (ruleId === 'riichi' || ruleId === 'hk') // 3 players: 2m-8m removed
     this.dealer = opts.fixedDealer ? 0 : Math.floor(Math.random() * this.n) // the first East is random
     this.players = names.map((name, seat) => ({
-      seat, name, points: this.sanma && ruleId === 'riichi' ? 35000 : this.rule.startPoints, hand: [], drawn: null, melds: [], discards: [], flowers: [],
-      riichi: false, doubleRiichi: false, ippatsu: false, riichiPending: false, nuki: [], tempFuriten: false, permFuriten: false, voidSuit: null, out: false, swapTiles: null, swapIn: [],
+      seat,
+      name,
+      points: this.sanma && ruleId === 'riichi' ? 35000 : this.rule.startPoints,
+      hand: [],
+      drawn: null,
+      melds: [],
+      discards: [],
+      flowers: [],
+      riichi: false,
+      doubleRiichi: false,
+      ippatsu: false,
+      riichiPending: false,
+      nuki: [],
+      tempFuriten: false,
+      permFuriten: false,
+      voidSuit: null,
+      out: false,
+      swapTiles: null,
+      swapIn: [],
     }))
     this.startHand()
   }
 
   // ---------- persistence ----------
   /** Plain JSON of the whole game state (the ruleset is re-linked from its id on restore). */
-  serialize(): string { return JSON.stringify({ ruleId: this.rule.id, f: { ...this, rule: undefined } }) }
+  serialize(): string {
+    return JSON.stringify({ ruleId: this.rule.id, f: { ...this, rule: undefined } })
+  }
   static restore(json: string): Game {
     const d = JSON.parse(json) as { ruleId: RuleId; f: Record<string, unknown> }
     const g = Object.create(Game.prototype) as Game
@@ -123,11 +223,22 @@ export class Game {
   }
 
   // ---------- helpers ----------
-  get roundWind() { return Math.min(3, Math.floor(this.roundIndex / this.n)) }
-  seatWind(seat: number) { return (seat - this.dealer + this.n) % this.n }
-  say(m: string) { this.log.push(m); if (this.log.length > 60) this.log.shift() }
-  get isRiichi() { return this.rule.id === 'riichi' }
-  get sichuan() { return this.rule.id === 'sichuan' }
+  get roundWind() {
+    return Math.min(3, Math.floor(this.roundIndex / this.n))
+  }
+  seatWind(seat: number) {
+    return (seat - this.dealer + this.n) % this.n
+  }
+  say(m: string) {
+    this.log.push(m)
+    if (this.log.length > 60) this.log.shift()
+  }
+  get isRiichi() {
+    return this.rule.id === 'riichi'
+  }
+  get sichuan() {
+    return this.rule.id === 'sichuan'
+  }
   /** How many of each tile this seat can see (own hand, all discards not yet claimed, all melds, dora indicators, set-aside norths). */
   visibleCounts(seat: number): number[] {
     const c = new Array(34).fill(0)
@@ -141,9 +252,15 @@ export class Game {
     return c
   }
 
-  doraIndicators() { return this.isRiichi ? this.doraPool.slice(0, this.doraCount) : [] }
-  isClosed(p: Player) { return p.melds.every((m) => m.type === 'ankan') }
-  handCounts(p: Player): Counts { return toCounts(p.hand.map(kindOf)) }
+  doraIndicators() {
+    return this.isRiichi ? this.doraPool.slice(0, this.doraCount) : []
+  }
+  isClosed(p: Player) {
+    return p.melds.every((m) => m.type === 'ankan')
+  }
+  handCounts(p: Player): Counts {
+    return toCounts(p.hand.map(kindOf))
+  }
 
   // ---------- hand setup ----------
   startHand() {
@@ -153,13 +270,41 @@ export class Game {
     if (this.isRiichi) {
       this.doraPool = this.dead.splice(0, 5)
       this.uraPool = this.dead.splice(0, 5)
-    } else { this.doraPool = []; this.uraPool = [] }
+    } else {
+      this.doraPool = []
+      this.uraPool = []
+    }
     this.doraCount = 1
-    this.kuikae = []; this.kanCount = 0; this.anyCall = false; this.rinshan = false; this.afterCall = false
+    this.kuikae = []
+    this.kanCount = 0
+    this.anyCall = false
+    this.rinshan = false
+    this.afterCall = false
     this.steps = []
-    this.result = null; this.reactions = {}; this.decisions = {}; this.lastDiscard = null; this.pendingKakan = null
+    this.result = null
+    this.reactions = {}
+    this.decisions = {}
+    this.lastDiscard = null
+    this.pendingKakan = null
     for (const p of this.players) {
-      Object.assign(p, { hand: [], drawn: null, melds: [], discards: [], flowers: [], nuki: [], riichi: false, doubleRiichi: false, ippatsu: false, riichiPending: false, tempFuriten: false, permFuriten: false, voidSuit: null, out: false, swapTiles: null, swapIn: [] })
+      Object.assign(p, {
+        hand: [],
+        drawn: null,
+        melds: [],
+        discards: [],
+        flowers: [],
+        nuki: [],
+        riichi: false,
+        doubleRiichi: false,
+        ippatsu: false,
+        riichiPending: false,
+        tempFuriten: false,
+        permFuriten: false,
+        voidSuit: null,
+        out: false,
+        swapTiles: null,
+        swapIn: [],
+      })
     }
     this.sc = { wins: [], notes: [], deltas: new Array(this.n).fill(0) }
     for (const p of this.players) for (let i = 0; i < this.rule.handSize; i++) p.hand.push(this.wall.pop()!)
@@ -182,7 +327,10 @@ export class Game {
     this.say(`— ${WIND_NAMES[this.roundWind]} ${(this.roundIndex % this.n) + 1}${this.honba ? ` · ${this.honba} honba` : ''} —`)
     if (this.sichuan) {
       this.turn = this.dealer
-      if (this.opts.swap !== false) { this.swapDir = 1 + Math.floor(Math.random() * (this.n - 1)); this.phase = 'swap' } else this.phase = 'void'
+      if (this.opts.swap !== false) {
+        this.swapDir = 1 + Math.floor(Math.random() * (this.n - 1))
+        this.phase = 'swap'
+      } else this.phase = 'void'
       return
     }
     this.beginTurn(this.dealer, false)
@@ -202,7 +350,11 @@ export class Game {
   private doSwap() {
     const give = this.players.map((p) => p.swapTiles!)
     for (const p of this.players) p.hand = p.hand.filter((i) => !give[p.seat].includes(i))
-    this.players.forEach((_p, s) => { const to = this.players[(s + this.swapDir) % this.n]; to.hand.push(...give[s]); to.swapIn = give[s].slice() })
+    this.players.forEach((_p, s) => {
+      const to = this.players[(s + this.swapDir) % this.n]
+      to.hand.push(...give[s])
+      to.swapIn = give[s].slice()
+    })
     for (const p of this.players) sortIds(p.hand)
     this.say(`Three tiles passed ${this.swapDir === 2 ? 'across' : this.swapDir === 1 ? 'to the right' : 'to the left'}`)
     this.phase = 'void'
@@ -212,11 +364,17 @@ export class Game {
     const p = this.players[seat]
     if (!p || p.voidSuit !== null) return false
     p.voidSuit = suit
-    if (this.players.every((q) => q.voidSuit !== null)) { this.phase = 'turn'; this.beginTurn(this.dealer, false) }
+    if (this.players.every((q) => q.voidSuit !== null)) {
+      this.phase = 'turn'
+      this.beginTurn(this.dealer, false)
+    }
     return true
   }
   private activeSeat(from: number): number {
-    for (let i = 0; i < this.n; i++) { const s = (from + i) % this.n; if (!this.players[s].out) return s }
+    for (let i = 0; i < this.n; i++) {
+      const s = (from + i) % this.n
+      if (!this.players[s].out) return s
+    }
     return -1
   }
 
@@ -246,7 +404,10 @@ export class Game {
     p.hand.push(t)
     p.drawn = t
     this.notices = {}
-    { const w = this.explainNoWin(seat, true); if (w) this.notices[seat] = w }
+    {
+      const w = this.explainNoWin(seat, true)
+      if (w) this.notices[seat] = w
+    }
     this.turn = seat
     this.rinshan = fromKan
     this.afterCall = false
@@ -263,7 +424,9 @@ export class Game {
     const allIds = [...ids, ...meldIds]
     const allKinds = toCounts(allIds.map(kindOf))
     const winKind = tsumo ? kindOf(p.drawn!) : kindOf(tile!)
-    let dora = 0, ura = 0, aka = 0
+    let dora = 0,
+      ura = 0,
+      aka = 0
     if (this.isRiichi) {
       const dk = this.doraPool.slice(0, this.doraCount).map((i) => doraFrom(kindOf(i), this.sanma))
       for (const k of dk) dora += allKinds[k]
@@ -272,18 +435,36 @@ export class Game {
     }
     let waitCount = 0
     if (this.rule.id === 'taiwan' || this.rule.id === 'mcr') {
-      const c = counts.slice(); c[winKind]--
+      const c = counts.slice()
+      c[winKind]--
       waitCount = waitsOf(c, this.rule.specials).length
     }
     return {
-      counts, melds: p.melds, allKinds, allIds, winKind, tsumo,
-      seatWind: this.seatWind(seat), roundWind: this.roundWind, dealer: seat === this.dealer,
+      counts,
+      melds: p.melds,
+      allKinds,
+      allIds,
+      winKind,
+      tsumo,
+      seatWind: this.seatWind(seat),
+      roundWind: this.roundWind,
+      dealer: seat === this.dealer,
       flowers: p.flowers.map(kindOf),
-      riichi: p.riichi, doubleRiichi: p.doubleRiichi, ippatsu: p.ippatsu,
-      lastTile: this.wall.length === 0, rinshan: tsumo && this.rinshan, chankan,
+      riichi: p.riichi,
+      doubleRiichi: p.doubleRiichi,
+      ippatsu: p.ippatsu,
+      lastTile: this.wall.length === 0,
+      rinshan: tsumo && this.rinshan,
+      chankan,
       firstTurn: tsumo && !this.anyCall && p.discards.length === 0,
       voidSuit: this.players[seat].voidSuit,
-      dora, ura, aka, nuki: this.players[seat].nuki.length, lianZhuang: this.lian, waitCount, options: this.opts,
+      dora,
+      ura,
+      aka,
+      nuki: this.players[seat].nuki.length,
+      lianZhuang: this.lian,
+      waitCount,
+      options: this.opts,
     }
   }
 
@@ -303,7 +484,8 @@ export class Game {
     const sp = p.melds.length === 0 ? this.rule.specials : {}
     if (!isComplete(ctx.counts, sp)) return null
     if (this.checkWin(seat, tsumo, tile) !== null && !(!tsumo && this.isFuriten(seat))) return null
-    if (this.sichuan && p.voidSuit !== null && ctx.allKinds.some((v, k) => v > 0 && k < 27 && suitOf(k) === p.voidSuit)) return { code: 'void', suit: p.voidSuit, tile }
+    if (this.sichuan && p.voidSuit !== null && ctx.allKinds.some((v, k) => v > 0 && k < 27 && suitOf(k) === p.voidSuit))
+      return { code: 'void', suit: p.voidSuit, tile }
     if (!tsumo && this.isFuriten(seat)) return { code: 'furiten', tile }
     const min = this.opts.minFan ?? 0
     const free = this.rule.evaluate({ ...ctx, options: { ...ctx.options, minFan: 0 } })
@@ -325,15 +507,21 @@ export class Game {
   furitenIfDiscard(seat: number, tile: number): boolean {
     if (!this.isRiichi) return false
     const p = this.players[seat]
-    const saved = p.hand.slice(), savedDrawn = p.drawn
+    const saved = p.hand.slice(),
+      savedDrawn = p.drawn
     try {
       if (p.tempFuriten || p.permFuriten) return true
       const at = p.hand.indexOf(tile)
       if (at < 0) return false
-      p.hand.splice(at, 1); p.drawn = null
-      const mine = new Set(p.discards.map((d) => kindOf(d.tile))); mine.add(kindOf(tile))
+      p.hand.splice(at, 1)
+      p.drawn = null
+      const mine = new Set(p.discards.map((d) => kindOf(d.tile)))
+      mine.add(kindOf(tile))
       return this.waitsFor(seat).some((k) => mine.has(k))
-    } finally { p.hand = saved; p.drawn = savedDrawn }
+    } finally {
+      p.hand = saved
+      p.drawn = savedDrawn
+    }
   }
   isFuriten(seat: number): boolean {
     if (!this.isRiichi) return false
@@ -355,12 +543,27 @@ export class Game {
     const p = this.players[seat]
     const none: TurnOptions = { tsumo: false, discard: [], riichi: [], ankan: [], kakan: [], nuki: false, abort: false }
     if (this.phase !== 'turn' || this.turn !== seat) return none
-    const o: TurnOptions = { tsumo: false, discard: p.riichi && p.drawn !== null ? [p.drawn] : [...p.hand], riichi: [], ankan: [], kakan: [], nuki: false, abort: false }
+    const o: TurnOptions = {
+      tsumo: false,
+      discard: p.riichi && p.drawn !== null ? [p.drawn] : [...p.hand],
+      riichi: [],
+      ankan: [],
+      kakan: [],
+      nuki: false,
+      abort: false,
+    }
     if (this.sichuan) {
       const voidIds = p.hand.filter((i) => suitOf(kindOf(i)) === p.voidSuit)
       if (voidIds.length) o.discard = voidIds // the given-up suit has to go first
     }
-    if (this.sanma && this.isRiichi && this.wall.length > 0 && p.hand.some((i) => kindOf(i) === 30) && (!p.riichi || (p.drawn !== null && kindOf(p.drawn) === 30))) o.nuki = true
+    if (
+      this.sanma &&
+      this.isRiichi &&
+      this.wall.length > 0 &&
+      p.hand.some((i) => kindOf(i) === 30) &&
+      (!p.riichi || (p.drawn !== null && kindOf(p.drawn) === 30))
+    )
+      o.nuki = true
     if (this.afterCall) {
       if (this.kuikae.length) {
         const ok = o.discard.filter((i) => !this.kuikae.includes(kindOf(i)))
@@ -381,13 +584,24 @@ export class Game {
         if (this.sichuan && suitOf(k) === p.voidSuit) continue
         if (p.riichi) {
           if (k !== kindOf(p.drawn!)) continue
-          const before = this.waitsFor(seat, p.hand.filter((i) => i !== p.drawn)).join()
-          const after = this.waitsFor(seat, p.hand.filter((i) => kindOf(i) !== k)).join()
+          const before = this.waitsFor(
+            seat,
+            p.hand.filter((i) => i !== p.drawn),
+          ).join()
+          const after = this.waitsFor(
+            seat,
+            p.hand.filter((i) => kindOf(i) !== k),
+          ).join()
           if (before !== after || !before) continue
         }
         o.ankan.push(k)
       }
-      if (!p.riichi) for (const m of p.melds) if (m.type === 'pon') { const id = p.hand.find((i) => kindOf(i) === kindOf(m.tiles[0])); if (id !== undefined) o.kakan.push(id) }
+      if (!p.riichi)
+        for (const m of p.melds)
+          if (m.type === 'pon') {
+            const id = p.hand.find((i) => kindOf(i) === kindOf(m.tiles[0]))
+            if (id !== undefined) o.kakan.push(id)
+          }
     }
     if (this.isRiichi && !p.riichi && this.isClosed(p) && p.points >= 1000 && this.wall.length >= 4) {
       const seen = new Set<number>()
@@ -395,7 +609,8 @@ export class Game {
         const k = kindOf(id)
         if (seen.has(k)) continue
         seen.add(k)
-        const rest = p.hand.slice(); rest.splice(rest.indexOf(id), 1)
+        const rest = p.hand.slice()
+        rest.splice(rest.indexOf(id), 1)
         if (this.waitsFor(seat, rest).length > 0) o.riichi.push(...p.hand.filter((i) => kindOf(i) === k))
       }
     }
@@ -407,7 +622,11 @@ export class Game {
     if (this.phase !== 'turn' || this.turn !== seat) return false
     const p = this.players[seat]
     const o = this.turnOptions(seat)
-    if (a.type === 'tsumo') { if (!o.tsumo) return false; this.declareWin(seat, true, null); return true }
+    if (a.type === 'tsumo') {
+      if (!o.tsumo) return false
+      this.declareWin(seat, true, null)
+      return true
+    }
     if (a.type === 'discard') {
       if (!o.discard.includes(a.tile)) return false
       if (a.riichi && !o.riichi.includes(a.tile)) return false
@@ -449,7 +668,9 @@ export class Game {
         if (this.canRon(s, a.tile, true)) reactions[s] = { ron: true, pon: false, minkan: false, chi: [] }
       }
       if (Object.keys(reactions).length) {
-        this.reactions = reactions; this.decisions = {}; this.reactionKind = 'chankan'
+        this.reactions = reactions
+        this.decisions = {}
+        this.reactionKind = 'chankan'
         this.lastDiscard = { tile: a.tile, from: seat }
         this.phase = 'reaction'
       } else this.completeKakan()
@@ -464,7 +685,8 @@ export class Game {
     const p = this.players[seat]
     p.hand.splice(p.hand.indexOf(tile), 1)
     const m = p.melds.find((x) => x.type === 'pon' && kindOf(x.tiles[0]) === kindOf(tile))!
-    m.type = 'kakan'; m.tiles = [...m.tiles, tile]
+    m.type = 'kakan'
+    m.tiles = [...m.tiles, tile]
     p.drawn = null
     if (this.sichuan) this.scKong(seat, 'kakan')
     this.afterKan(seat, 'adds to a pon (kan)')
@@ -488,7 +710,16 @@ export class Game {
     p.tempFuriten = false
     p.ippatsu = false
     p.discards.push({ tile, riichi, called: false })
-    this.steps.push({ seat: p.seat, tile, riichi, p: this.players.map((q) => ({ d: q.discards.map((x) => [x.tile, x.riichi] as [number, boolean]), m: q.melds.map((m) => ({ type: m.type, tiles: m.tiles.slice() })), f: [...q.flowers, ...q.nuki] })) })
+    this.steps.push({
+      seat: p.seat,
+      tile,
+      riichi,
+      p: this.players.map((q) => ({
+        d: q.discards.map((x) => [x.tile, x.riichi] as [number, boolean]),
+        m: q.melds.map((m) => ({ type: m.type, tiles: m.tiles.slice() })),
+        f: [...q.flowers, ...q.nuki],
+      })),
+    })
     if (riichi) {
       p.riichiPending = true
       p.doubleRiichi = !this.anyCall && p.discards.length === 1
@@ -503,11 +734,17 @@ export class Game {
     for (let s = 0; s < this.n; s++) {
       if (s === p.seat) continue
       const r = this.reactionOptions(s, tile, p.seat)
-      if (!r.ron && !this.players[s].out) { const w = this.explainNoWin(s, false, tile); if (w) this.notices[s] = w }
+      if (!r.ron && !this.players[s].out) {
+        const w = this.explainNoWin(s, false, tile)
+        if (w) this.notices[s] = w
+      }
       if (r.ron || r.pon || r.minkan || r.chi.length) reactions[s] = r
     }
     if (Object.keys(reactions).length) {
-      this.reactions = reactions; this.decisions = {}; this.reactionKind = 'discard'; this.phase = 'reaction'
+      this.reactions = reactions
+      this.decisions = {}
+      this.reactionKind = 'discard'
+      this.phase = 'reaction'
     } else this.nextAfterDiscard()
   }
 
@@ -542,7 +779,10 @@ export class Game {
     if (this.phase !== 'reaction' || !this.reactions[seat] || this.decisions[seat]) return false
     const r = this.reactions[seat]
     const ok =
-      d.type === 'pass' || (d.type === 'ron' && r.ron) || (d.type === 'pon' && r.pon) || (d.type === 'minkan' && r.minkan) ||
+      d.type === 'pass' ||
+      (d.type === 'ron' && r.ron) ||
+      (d.type === 'pon' && r.pon) ||
+      (d.type === 'minkan' && r.minkan) ||
       (d.type === 'chi' && Array.isArray(d.use) && d.use.length === 2 && r.chi.some((c) => c[0] === d.use[0] && c[1] === d.use[1]))
     if (!ok) return false
     this.decisions[seat] = d
@@ -552,7 +792,9 @@ export class Game {
 
   pendingSeats(): number[] {
     if (this.phase !== 'reaction') return []
-    return Object.keys(this.reactions).map(Number).filter((s) => !this.decisions[s])
+    return Object.keys(this.reactions)
+      .map(Number)
+      .filter((s) => !this.decisions[s])
   }
 
   private resolveReactions() {
@@ -573,7 +815,11 @@ export class Game {
         if (p.riichi) p.permFuriten = true
       }
     }
-    if (isChankan) { this.reactions = {}; this.phase = 'turn'; return this.completeKakan() }
+    if (isChankan) {
+      this.reactions = {}
+      this.phase = 'turn'
+      return this.completeKakan()
+    }
     for (const t of ['pon', 'minkan'] as const) {
       const s = order.find((x) => this.decisions[x]?.type === t)
       if (s !== undefined) return this.doCall(s, this.decisions[s], tile, from)
@@ -588,8 +834,13 @@ export class Game {
     const p = this.players[seat]
     const fp = this.players[from]
     fp.discards[fp.discards.length - 1].called = true
-    if (fp.riichiPending) { fp.riichiPending = false; fp.points -= 1000; this.sticks++ } // riichi stands
-    this.reactions = {}; this.decisions = {}
+    if (fp.riichiPending) {
+      fp.riichiPending = false
+      fp.points -= 1000
+      this.sticks++
+    } // riichi stands
+    this.reactions = {}
+    this.decisions = {}
     this.anyCall = true
     for (const q of this.players) q.ippatsu = false
     const k = kindOf(tile)
@@ -601,14 +852,22 @@ export class Game {
       if (k === ks[0] && ks[2] % 9 !== 8) this.kuikae.push(ks[0] + 3)
       if (k === ks[2] && ks[0] % 9 !== 0) this.kuikae.push(ks[2] - 3)
       this.say(`${p.name} calls chi`)
-      p.drawn = null; this.turn = seat; this.afterCall = true; this.rinshan = false; this.phase = 'turn'
+      p.drawn = null
+      this.turn = seat
+      this.afterCall = true
+      this.rinshan = false
+      this.phase = 'turn'
     } else if (d.type === 'pon') {
       const use = p.hand.filter((i) => kindOf(i) === k).slice(0, 2)
       for (const id of use) p.hand.splice(p.hand.indexOf(id), 1)
       p.melds.push({ type: 'pon', tiles: [tile, ...use], from, called: tile })
       this.kuikae = [k]
       this.say(`${p.name} calls pon`)
-      p.drawn = null; this.turn = seat; this.afterCall = true; this.rinshan = false; this.phase = 'turn'
+      p.drawn = null
+      this.turn = seat
+      this.afterCall = true
+      this.rinshan = false
+      this.phase = 'turn'
     } else {
       const use = p.hand.filter((i) => kindOf(i) === k)
       p.hand = p.hand.filter((i) => kindOf(i) !== k)
@@ -621,11 +880,18 @@ export class Game {
   private nextAfterDiscard() {
     const { from } = this.lastDiscard!
     const fp = this.players[from]
-    if (fp.riichiPending) { fp.riichiPending = false; fp.riichi = true; fp.ippatsu = true; fp.points -= 1000; this.sticks++ }
+    if (fp.riichiPending) {
+      fp.riichiPending = false
+      fp.riichi = true
+      fp.ippatsu = true
+      fp.points -= 1000
+      this.sticks++
+    }
     if (this.isRiichi && this.n === 4) {
       const first = this.players.every((q) => q.discards.length === 1)
       const w = kindOf(this.players[0].discards[0]?.tile ?? 0)
-      if (!this.anyCall && first && w >= 27 && w < 31 && this.players.every((q) => kindOf(q.discards[0].tile) === w)) return this.abortDraw('Abortive draw (four winds)')
+      if (!this.anyCall && first && w >= 27 && w < 31 && this.players.every((q) => kindOf(q.discards[0].tile) === w))
+        return this.abortDraw('Abortive draw (four winds)')
       if (this.players.every((q) => q.riichi)) return this.abortDraw('Abortive draw (four riichi)')
       const kans = this.players.map((q) => q.melds.filter((m) => m.tiles.length === 4).length)
       if (kans.reduce((a, b) => a + b, 0) === 4 && kans.filter((x) => x > 0).length >= 2) return this.abortDraw('Abortive draw (four kans)')
@@ -646,7 +912,11 @@ export class Game {
     for (const q of this.players) if (q.riichiPending) q.riichiPending = false
     const deltas = this.rule.settle(score, { winner, from, dealer: this.dealer, honba: this.honba, lianZhuang: this.lian, n: this.n })
     let sticksWon = 0
-    if (this.isRiichi) { sticksWon = this.sticks * 1000; deltas[winner] += sticksWon; this.sticks = 0 }
+    if (this.isRiichi) {
+      sticksWon = this.sticks * 1000
+      deltas[winner] += sticksWon
+      this.sticks = 0
+    }
     const winTile = tsumo ? p.drawn! : tile!
     const hands = this.snapshotHands()
     if (!tsumo) hands[winner].hand.push(tile!)
@@ -659,14 +929,32 @@ export class Game {
       others.push({ winner: w, score: sc, hand: h2 })
     }
     const ura = this.isRiichi && p.riichi ? this.uraPool.slice(0, this.doraCount) : undefined
-    this.finish({ kind: 'win', winner, from, tsumo, score, winTile, deltas, sticksWon, hands, ura, dealerBefore: this.dealer, others: others.length ? others : undefined }, winner === this.dealer || extra.includes(this.dealer))
+    this.finish(
+      {
+        kind: 'win',
+        winner,
+        from,
+        tsumo,
+        score,
+        winTile,
+        deltas,
+        sticksWon,
+        hands,
+        ura,
+        dealerBefore: this.dealer,
+        others: others.length ? others : undefined,
+      },
+      winner === this.dealer || extra.includes(this.dealer),
+    )
     this.say(`${p.name} wins${tsumo ? ' by tsumo' : ' by ron'} (${score.label ?? `${score.total}`})`)
   }
 
-
   // ---------- Sichuan: several winners per hand, kong money, end-of-hand checks ----------
   private scApply(d: number[]) {
-    d.forEach((x, i) => { this.players[i].points += x; this.sc.deltas[i] += x })
+    d.forEach((x, i) => {
+      this.players[i].points += x
+      this.sc.deltas[i] += x
+    })
   }
   private scWin(w: number, tsumo: boolean, from: number | null, tile: number | undefined, chankan: boolean, takeTile = true) {
     const p = this.players[w]
@@ -674,16 +962,31 @@ export class Game {
     const pts = score.base
     const payers = tsumo ? this.players.filter((q) => !q.out && q.seat !== w).map((q) => q.seat) : [from!]
     const d = new Array(this.n).fill(0)
-    for (const s of payers) { d[s] -= pts; d[w] += pts }
+    for (const s of payers) {
+      d[s] -= pts
+      d[w] += pts
+    }
     this.scApply(d)
     const winTile = tsumo ? p.drawn! : tile!
-    if (!tsumo && !chankan) { const fp = this.players[from!]; fp.discards[fp.discards.length - 1].called = true }
+    if (!tsumo && !chankan) {
+      const fp = this.players[from!]
+      fp.discards[fp.discards.length - 1].called = true
+    }
     // when several players win off one tile, only the first keeps it in their hand (so no tile exists twice); all of them show it in the result
     if (!tsumo && takeTile) p.hand.push(tile!)
     sortIds(p.hand)
     p.drawn = null
     p.out = true
-    this.sc.wins.push({ winner: w, from: tsumo ? null : from, tsumo, score, points: pts, order: this.sc.wins.length + 1, winTile, hand: { hand: sortIds([...p.hand, ...(!tsumo && !takeTile ? [tile!] : [])]), melds: p.melds.map((m) => ({ ...m })) } })
+    this.sc.wins.push({
+      winner: w,
+      from: tsumo ? null : from,
+      tsumo,
+      score,
+      points: pts,
+      order: this.sc.wins.length + 1,
+      winTile,
+      hand: { hand: sortIds([...p.hand, ...(!tsumo && !takeTile ? [tile!] : [])]), melds: p.melds.map((m) => ({ ...m })) },
+    })
     this.say(`${p.name} wins${tsumo ? ' by self-draw' : ''} (+${pts})`)
   }
   private scDeclare(winner: number, tsumo: boolean, from: number | null, tile: number | undefined, chankan: boolean, extra: number[]) {
@@ -696,7 +999,8 @@ export class Game {
       this.pendingKakan = null
     }
     ;[winner, ...extra].forEach((w, i) => this.scWin(w, tsumo, from, tile, chankan, i === 0))
-    this.reactions = {}; this.decisions = {}
+    this.reactions = {}
+    this.decisions = {}
     if (this.players.filter((q) => !q.out).length <= 1) return this.finishSichuan(false)
     this.phase = 'turn'
     this.beginTurn(((tsumo ? winner : from!) + 1) % this.n, false)
@@ -705,9 +1009,16 @@ export class Game {
     const amt = kind === 'ankan' ? 2 : 1
     const payers = kind === 'minkan' ? [from!] : this.players.filter((q) => !q.out && q.seat !== seat).map((q) => q.seat)
     const d = new Array(this.n).fill(0)
-    for (const s of payers) { d[s] -= amt; d[seat] += amt }
+    for (const s of payers) {
+      d[s] -= amt
+      d[seat] += amt
+    }
     this.scApply(d)
-    this.sc.notes.push({ label: kind === 'ankan' ? 'Closed kong' : kind === 'kakan' ? 'Added kong' : 'Open kong', zh: kind === 'ankan' ? '暗槓' : kind === 'kakan' ? '加槓' : '明槓', deltas: d })
+    this.sc.notes.push({
+      label: kind === 'ankan' ? 'Closed kong' : kind === 'kakan' ? 'Added kong' : 'Open kong',
+      zh: kind === 'ankan' ? '暗槓' : kind === 'kakan' ? '加槓' : '明槓',
+      deltas: d,
+    })
   }
   private scHasAllSuits(p: Player): boolean {
     const suits = new Set<number>()
@@ -734,7 +1045,12 @@ export class Game {
     const pigs = alive.filter((p) => this.scHasAllSuits(p))
     if (pigs.length) {
       const d = new Array(this.n).fill(0)
-      for (const pg of pigs) for (const q of this.players) if (!pigs.includes(q)) { d[pg.seat] -= cap; d[q.seat] += cap }
+      for (const pg of pigs)
+        for (const q of this.players)
+          if (!pigs.includes(q)) {
+            d[pg.seat] -= cap
+            d[q.seat] += cap
+          }
       this.scApply(d)
       this.sc.notes.push({ label: 'Flower pig (still holding all three suits)', zh: '查花豬（三門都有）', deltas: d })
     }
@@ -744,21 +1060,40 @@ export class Game {
     const unready = rest.filter((p) => (val.get(p.seat) ?? 0) === 0)
     if (ready.length && unready.length) {
       const d = new Array(this.n).fill(0)
-      for (const u of unready) for (const r of ready) { const v = val.get(r.seat)!; d[u.seat] -= v; d[r.seat] += v }
+      for (const u of unready)
+        for (const r of ready) {
+          const v = val.get(r.seat)!
+          d[u.seat] -= v
+          d[r.seat] += v
+        }
       this.scApply(d)
       this.sc.notes.push({ label: 'Not ready when the wall ran out', zh: '查大叫（流局未聽牌）', deltas: d })
     }
   }
   private finishSichuan(exhausted: boolean) {
-    this.reactions = {}; this.decisions = {}
+    this.reactions = {}
+    this.decisions = {}
     if (exhausted) this.scPenalties()
     const wins = this.sc.wins
     const first = wins[0]
     const r: HandResult = {
-      kind: wins.length ? 'win' : 'draw', winner: first?.winner, from: first?.from, tsumo: first?.tsumo, score: first?.score, winTile: first?.winTile,
-      deltas: this.sc.deltas.slice(), hands: this.snapshotHands(), dealerBefore: this.dealer, label: wins.length ? undefined : 'Exhaustive draw',
+      kind: wins.length ? 'win' : 'draw',
+      winner: first?.winner,
+      from: first?.from,
+      tsumo: first?.tsumo,
+      score: first?.score,
+      winTile: first?.winTile,
+      deltas: this.sc.deltas.slice(),
+      hands: this.snapshotHands(),
+      dealerBefore: this.dealer,
+      label: wins.length ? undefined : 'Exhaustive draw',
       tenpai: this.players.map((p) => this.scReadyValue(p.seat) > 0),
-      others: wins.length > 1 ? wins.slice(1).map((w) => ({ winner: w.winner, from: w.from, tsumo: w.tsumo, score: w.score, hand: { hand: w.hand.hand, melds: w.hand.melds, flowers: [] } })) : undefined,
+      others:
+        wins.length > 1
+          ? wins
+              .slice(1)
+              .map((w) => ({ winner: w.winner, from: w.from, tsumo: w.tsumo, score: w.score, hand: { hand: w.hand.hand, melds: w.hand.melds, flowers: [] } }))
+          : undefined,
       sc: { wins: wins.map((w) => ({ ...w })), notes: this.sc.notes.map((n) => ({ ...n })) },
     }
     this.finish(r, false, wins.length === 0, true)
@@ -770,27 +1105,48 @@ export class Game {
     const base = this.rule.id === 'hk' ? hkValue(8) : TW_BASE + TW_PER_TAI * 8
     const score: HandScore = { yaku: [{ name: 'Eight Flowers', zh: '八仙過海', value: 8 }], total: 8, base }
     const deltas = this.rule.settle(score, { winner, from: null, dealer: this.dealer, honba: this.honba, lianZhuang: this.lian, n: this.n })
-    this.finish({ kind: 'win', winner, from: null, tsumo: true, score, winTile: p.flowers[p.flowers.length - 1], deltas, hands: this.snapshotHands(), dealerBefore: this.dealer }, winner === this.dealer)
+    this.finish(
+      {
+        kind: 'win',
+        winner,
+        from: null,
+        tsumo: true,
+        score,
+        winTile: p.flowers[p.flowers.length - 1],
+        deltas,
+        hands: this.snapshotHands(),
+        dealerBefore: this.dealer,
+      },
+      winner === this.dealer,
+    )
     this.say(`${p.name} collects all eight flowers!`)
   }
 
   private abortDraw(label: string) {
     for (const q of this.players) q.riichiPending = false
     this.reactions = {}
-    this.finish({ kind: 'draw', deltas: new Array(this.n).fill(0), tenpai: new Array(this.n).fill(false), hands: this.snapshotHands(), dealerBefore: this.dealer, label }, true, true)
+    this.finish(
+      { kind: 'draw', deltas: new Array(this.n).fill(0), tenpai: new Array(this.n).fill(false), hands: this.snapshotHands(), dealerBefore: this.dealer, label },
+      true,
+      true,
+    )
     this.say(label)
   }
 
   private exhaustiveDraw() {
     if (this.sichuan) return this.finishSichuan(true)
-    const tenpai = this.players.map((p) => this.waitsFor(p.seat, p.hand).length > 0 && (!p.drawn))
+    const tenpai = this.players.map((p) => this.waitsFor(p.seat, p.hand).length > 0 && !p.drawn)
     const deltas: number[] = new Array(this.n).fill(0)
     if (this.isRiichi) {
       const t = tenpai.filter(Boolean).length
       if (t > 0 && t < this.n) for (let i = 0; i < this.n; i++) deltas[i] = tenpai[i] ? 3000 / t : -3000 / (this.n - t)
     }
     for (const q of this.players) if (q.riichiPending) q.riichiPending = false
-    this.finish({ kind: 'draw', deltas, tenpai, hands: this.snapshotHands(), dealerBefore: this.dealer, label: 'Exhaustive draw' }, this.isRiichi ? tenpai[this.dealer] : true, true)
+    this.finish(
+      { kind: 'draw', deltas, tenpai, hands: this.snapshotHands(), dealerBefore: this.dealer, label: 'Exhaustive draw' },
+      this.isRiichi ? tenpai[this.dealer] : true,
+      true,
+    )
     this.say('Exhaustive draw')
   }
 
@@ -799,18 +1155,34 @@ export class Game {
     if (this.isRiichi) r.dora = this.doraIndicators().slice()
     if (!applied) this.players.forEach((p, i) => (p.points += r.deltas[i]))
     this.history.push({
-      handNo: this.handNo, roundIndex: this.roundIndex, dealer: this.dealer,
-      kind: r.kind, winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [],
-      from: r.from ?? null, tsumo: !!r.tsumo, total: r.score?.total ?? 0, label: r.label ?? r.score?.label,
+      handNo: this.handNo,
+      roundIndex: this.roundIndex,
+      dealer: this.dealer,
+      kind: r.kind,
+      winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [],
+      from: r.from ?? null,
+      tsumo: !!r.tsumo,
+      total: r.score?.total ?? 0,
+      label: r.label ?? r.score?.label,
       names: (r.score?.yaku ?? []).slice(0, 4).map((y) => ({ name: y.name, zh: y.zh })),
-      deltas: r.deltas.slice(), points: this.players.map((p) => p.points),
+      deltas: r.deltas.slice(),
+      points: this.players.map((p) => p.points),
     })
     this.replays.push({
-      handNo: this.handNo, roundIndex: this.roundIndex, dealer: this.dealer, steps: this.steps,
-      kind: r.kind, winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [], from: r.from ?? null, tsumo: !!r.tsumo,
-      label: r.label ?? r.score?.label, total: r.score?.total ?? 0, deltas: r.deltas.slice(),
+      handNo: this.handNo,
+      roundIndex: this.roundIndex,
+      dealer: this.dealer,
+      steps: this.steps,
+      kind: r.kind,
+      winners: r.kind === 'win' ? [r.winner!, ...(r.others?.map((o) => o.winner) ?? [])] : [],
+      from: r.from ?? null,
+      tsumo: !!r.tsumo,
+      label: r.label ?? r.score?.label,
+      total: r.score?.total ?? 0,
+      deltas: r.deltas.slice(),
       hands: r.hands.map((h) => ({ hand: h.hand.slice(), melds: h.melds.map((m) => ({ type: m.type, tiles: m.tiles.slice() })), flowers: h.flowers.slice() })),
-      winTile: r.winTile, yaku: (r.score?.yaku ?? []).map((y) => ({ name: y.name, zh: y.zh, value: y.value })),
+      winTile: r.winTile,
+      yaku: (r.score?.yaku ?? []).map((y) => ({ name: y.name, zh: y.zh, value: y.value })),
     })
     this.steps = []
     this.result = r
@@ -833,8 +1205,15 @@ export class Game {
       const top = this.players.reduce((m, p) => Math.max(m, p.points), -Infinity)
       over = this.players.some((p) => p.points < 0)
       if (this.roundIndex >= nominal) over = over || top >= ret || this.roundIndex >= nominal + this.n
-      else if (dealerStays && this.roundIndex === nominal - 1 && r.kind === 'win' && (r.winner === this.dealer || r.others?.some((o) => o.winner === this.dealer))
-        && this.players[this.dealer].points === top && top >= ret) over = true
+      else if (
+        dealerStays &&
+        this.roundIndex === nominal - 1 &&
+        r.kind === 'win' &&
+        (r.winner === this.dealer || r.others?.some((o) => o.winner === this.dealer)) &&
+        this.players[this.dealer].points === top &&
+        top >= ret
+      )
+        over = true
     }
     this.pendingOver = over
     if (this.pendingOver && this.isRiichi && this.sticks > 0) {
@@ -847,7 +1226,10 @@ export class Game {
   /** Advance from the result screen. */
   next() {
     if (this.phase !== 'result') return
-    if (this.pendingOver) { this.phase = 'over'; return }
+    if (this.pendingOver) {
+      this.phase = 'over'
+      return
+    }
     this.startHand()
   }
 

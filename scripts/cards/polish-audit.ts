@@ -2,7 +2,10 @@ import puppeteer from 'puppeteer-core'
 // Run: npx tsx scripts/cards/polish-audit.ts   (wrangler :8787 + vite :5200)
 // Looks for the small things that make a screen feel unfinished: button text that is not centred in its button, buttons whose
 // keyboard focus shows nothing (or the browser's default blue ring), and a different look for the same kind of control.
-setTimeout(() => { console.log('TIMEOUT'); process.exit(1) }, 280000)
+setTimeout(() => {
+  console.log('TIMEOUT')
+  process.exit(1)
+}, 280000)
 import { tableUrl } from '../lib/table'
 const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -59,8 +62,14 @@ const run = async (label: string, url: string, wait: string, w = 390, h = 844, a
   if (act) await act(p)
   const a = (await p.evaluate(AUDIT)) as { off: string[] }
   const f = (await p.evaluate(FOCUS)) as string[]
-  for (const x of a.off) { problems++; console.log(`  ${label} (${w}px): text not centred: ${x}`) }
-  for (const x of f) { problems++; console.log(`  ${label} (${w}px): ${x}`) }
+  for (const x of a.off) {
+    problems++
+    console.log(`  ${label} (${w}px): text not centred: ${x}`)
+  }
+  for (const x of f) {
+    problems++
+    console.log(`  ${label} (${w}px): ${x}`)
+  }
   console.log(`${a.off.length + f.length === 0 ? 'ok  ' : 'ISSUES'} ${label} ${w}px`)
   await p.browserContext().close()
 }
@@ -68,15 +77,29 @@ const run = async (label: string, url: string, wait: string, w = 390, h = 844, a
 for (const w of [390, 1100]) {
   const h = w < 700 ? 844 : 800
   await run('hub', BASE + '/', '.kg-grid', w, h)
-  await run('sign-in dialog', BASE + '/', '.kg-grid', w, h, async (p) => { await p.click('.kg-acct'); await p.waitForSelector('.acbox'); await sleep(300) })
-  await run('create-account dialog', BASE + '/', '.kg-grid', w, h, async (p) => { await p.click('.kg-acct'); await p.waitForSelector('.actabs'); await p.click('.actabs button:nth-child(2)'); await sleep(300) })
+  await run('sign-in dialog', BASE + '/', '.kg-grid', w, h, async (p) => {
+    await p.click('.kg-acct')
+    await p.waitForSelector('.acbox')
+    await sleep(300)
+  })
+  await run('create-account dialog', BASE + '/', '.kg-grid', w, h, async (p) => {
+    await p.click('.kg-acct')
+    await p.waitForSelector('.actabs')
+    await p.click('.actabs button:nth-child(2)')
+    await sleep(300)
+  })
   await run('room landing', BASE + '/room', '.rmentry', w, h)
   await run('room', BASE + '/room/new?game=holdem', '.rmpeople', w, h)
   await run("hold'em practice", BASE + '/holdem/practice', '.hd-actions', w, h)
-  await run("hold'em help", BASE + '/holdem/practice', '.hd-actions', w, h, async (p) => { await p.click('.k-helpbtn'); await sleep(300) })
+  await run("hold'em help", BASE + '/holdem/practice', '.hd-actions', w, h, async (p) => {
+    await p.click('.k-helpbtn')
+    await sleep(300)
+  })
   await run('blackjack practice', BASE + '/blackjack/practice', '.bjchips', w, h)
   await run('big two practice', BASE + '/bigtwo/practice', '.bthand .btcard', w, h)
   await run('big two lobby', await tableUrl('bigtwo', {}), '.btlobby', w, h)
   await run('mahjong practice', BASE + '/mahjong/practice', '.handrow .tile', w, h)
 }
-await b.close(); console.log(problems ? `${problems} things to look at` : 'clean'); process.exit(0)
+await b.close()
+console.log(problems ? `${problems} things to look at` : 'clean')
+process.exit(0)

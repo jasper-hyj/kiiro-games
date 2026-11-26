@@ -11,7 +11,11 @@ const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...Object
 const MJ_RULES = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
 const KEEP_MS = 12 * 3600e3 // a room stays findable this long after its last visitor, so people can come back to it after a game
 
-interface Member { name: string; watching: boolean; signedIn: boolean }
+interface Member {
+  name: string
+  watching: boolean
+  signedIn: boolean
+}
 type Cfg = Record<string, string | number | boolean>
 
 /**
@@ -31,23 +35,46 @@ export class Room extends Server<Env> {
   private lastTalk = new Map<string, number>()
   private store: { get<T>(k: string): Promise<T | undefined>; put(k: string, v: unknown): Promise<void> }
   private envv: Env
-  constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) { super(ctx, env); this.envv = env; this.store = (ctx as unknown as { storage: Room['store'] }).storage }
+  constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) {
+    super(ctx, env)
+    this.envv = env
+    this.store = (ctx as unknown as { storage: Room['store'] }).storage
+  }
 
   async onStart() {
     const s = await this.store.get<{ hostId: string | null; game: RoomGame | null; cfg: Cfg; launched: boolean; alive: number; talk: Room['talkLog'] }>('room')
-    if (s) { this.hostId = s.hostId; this.game = s.game; this.cfg = s.cfg ?? {}; this.launched = !!s.launched; this.alive = s.alive; this.talkLog = s.talk ?? []; this.talkN = this.talkLog.at(-1)?.n ?? 0 }
+    if (s) {
+      this.hostId = s.hostId
+      this.game = s.game
+      this.cfg = s.cfg ?? {}
+      this.launched = !!s.launched
+      this.alive = s.alive
+      this.talkLog = s.talk ?? []
+      this.talkN = this.talkLog.at(-1)?.n ?? 0
+    }
   }
   private save() {
     this.alive = Date.now() + KEEP_MS
     void this.store.put('room', { hostId: this.hostId, game: this.game, cfg: this.cfg, launched: this.launched, alive: this.alive, talk: this.talkLog })
   }
-  private exists() { return this.members.size > 0 || this.alive > Date.now() }
-  private send(c: Connection, m: unknown) { c.send(JSON.stringify(m)) }
-  private err(c: Connection, message: string) { this.send(c, { t: 'error', message }) }
+  private exists() {
+    return this.members.size > 0 || this.alive > Date.now()
+  }
+  private send(c: Connection, m: unknown) {
+    c.send(JSON.stringify(m))
+  }
+  private err(c: Connection, message: string) {
+    this.send(c, { t: 'error', message })
+  }
 
   private view(id: string) {
     return {
-      t: 'room', you: id, host: id === this.hostId, game: this.game, cfg: this.cfg, launched: this.launched,
+      t: 'room',
+      you: id,
+      host: id === this.hostId,
+      game: this.game,
+      cfg: this.cfg,
+      launched: this.launched,
       members: [...this.members].map(([mid, m]) => ({ name: m.name, host: mid === this.hostId, watching: m.watching, signedIn: m.signedIn, me: mid === id })),
     }
   }
@@ -66,33 +93,52 @@ export class Room extends Server<Env> {
       cfg.rule = rule
       // every Mahjong setting is chosen here, in the room (the table's lobby only shows them): validated the way the table itself does
       const rounds = Number(r.rounds)
-      cfg.rounds = rule === 'taiwan' ? (rounds === 4 ? 4 : 1) : (rounds === 2 ? 2 : 1)
+      cfg.rounds = rule === 'taiwan' ? (rounds === 4 ? 4 : 1) : rounds === 2 ? 2 : 1
       cfg.players = (rule === 'riichi' || rule === 'hk') && Number(r.players) === 3 ? 3 : 4
       cfg.botLevel = r.botLevel === 'easy' || r.botLevel === 'hard' ? String(r.botLevel) : 'normal'
       cfg.coach = r.coach !== false
       if (rule === 'riichi') cfg.aka = r.aka !== false
       if (rule === 'sichuan') cfg.swap = r.swap !== false
-      if (rule === 'hk' || rule === 'mcr') { const f = Number(r.minFan); cfg.minFan = Number.isInteger(f) && f >= 0 && f <= 13 ? f : rule === 'mcr' ? 8 : DEFAULT_CONFIG.minFan }
-      if (ranked && host?.signedIn) cfg.ranked = true; else if (ranked) error = 'ranked_needs_signin'
+      if (rule === 'hk' || rule === 'mcr') {
+        const f = Number(r.minFan)
+        cfg.minFan = Number.isInteger(f) && f >= 0 && f <= 13 ? f : rule === 'mcr' ? 8 : DEFAULT_CONFIG.minFan
+      }
+      if (ranked && host?.signedIn) cfg.ranked = true
+      else if (ranked) error = 'ranked_needs_signin'
     } else if (game === 'bigtwo') {
-      if (ranked && host?.signedIn) cfg.ranked = true; else if (ranked) error = 'ranked_needs_signin'
+      if (ranked && host?.signedIn) cfg.ranked = true
+      else if (ranked) error = 'ranked_needs_signin'
     } else if (game === 'holdem') {
       const b = BLINDS.find(([sb, bb]) => sb === Number(r.sb) && bb === Number(r.bb)) ?? BLINDS[2]
-      cfg.sb = b[0]; cfg.bb = b[1]; cfg.casual = r.casual !== false
+      cfg.sb = b[0]
+      cfg.bb = b[1]
+      cfg.casual = r.casual !== false
     } else if (isGeneric(game)) {
       Object.assign(cfg, ENGINES[game]().sanitize(r))
-      if (cfg.ranked === true && !host?.signedIn) { delete cfg.ranked; error = 'ranked_needs_signin' }
+      if (cfg.ranked === true && !host?.signedIn) {
+        delete cfg.ranked
+        error = 'ranked_needs_signin'
+      }
     } else {
-      cfg.bb = MIN_BETS.includes(Number(r.bb)) ? Number(r.bb) : MIN_BETS[0]; cfg.casual = r.casual !== false
+      cfg.bb = MIN_BETS.includes(Number(r.bb)) ? Number(r.bb) : MIN_BETS[0]
+      cfg.casual = r.casual !== false
     }
     return { cfg, error }
   }
 
   async onMessage(sender: Connection<{ id?: string }>, raw: WSMessage) {
     let m: Record<string, unknown>
-    try { m = JSON.parse(String(raw)) } catch { return }
+    try {
+      m = JSON.parse(String(raw))
+    } catch {
+      return
+    }
     if (!m || typeof m !== 'object' || typeof m.t !== 'string') return
-    try { await this.handle(m, sender) } catch (e) { console.error('room handler error', e) }
+    try {
+      await this.handle(m, sender)
+    } catch (e) {
+      console.error('room handler error', e)
+    }
   }
 
   private async handle(m: Record<string, unknown>, c: Connection<{ id?: string }>) {
@@ -105,18 +151,33 @@ export class Room extends Server<Env> {
         if (!this.exists() && m.create !== true) return this.err(c, 'room_not_found')
         if (this.exists() && m.create === true && this.members.size > 0) return this.err(c, 'code_taken')
       }
-      let name = String(m.name ?? 'Player').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16) || 'Player'
+      let name =
+        String(m.name ?? 'Player')
+          .replace(/[\u0000-\u001f\u007f<>]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 16) || 'Player'
       let signedIn = false
       if (typeof m.token === 'string' && m.token && this.envv.DB) {
         const u = await userFromToken(this.envv.DB, m.token)
-        if (u) { name = u.name; signedIn = true }
+        if (u) {
+          name = u.name
+          signedIn = true
+        }
       }
-      if (m.create === true && this.members.size === 0) { this.game = null; this.cfg = {}; this.launched = false; this.talkLog = []; this.hostId = null } // an old, empty room code is reused as a fresh room
+      if (m.create === true && this.members.size === 0) {
+        this.game = null
+        this.cfg = {}
+        this.launched = false
+        this.talkLog = []
+        this.hostId = null
+      } // an old, empty room code is reused as a fresh room
       const prev = this.members.get(id)
       this.members.set(id, { name, signedIn, watching: prev?.watching ?? false })
       c.setState({ id })
       if (!this.hostId || !this.members.has(this.hostId)) this.hostId = id
-      this.save(); this.pushViews()
+      this.save()
+      this.pushViews()
       if (this.talkLog.length) this.send(c, { t: 'talklog', msgs: this.talkLog })
       return
     }
@@ -126,19 +187,34 @@ export class Room extends Server<Env> {
     switch (m.t) {
       case 'rename': {
         if (me.signedIn) return // signed-in people keep their account name
-        const n = String(m.name ?? '').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16)
+        const n = String(m.name ?? '')
+          .replace(/[\u0000-\u001f\u007f<>]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 16)
         if (n.length < 2) return this.err(c, 'bad_name')
-        me.name = n; this.pushViews(); this.save(); return
+        me.name = n
+        this.pushViews()
+        this.save()
+        return
       }
-      case 'mode': me.watching = m.watching === true; this.pushViews(); this.save(); return
+      case 'mode':
+        me.watching = m.watching === true
+        this.pushViews()
+        this.save()
+        return
       case 'pick': {
         if (id !== this.hostId) return this.err(c, 'host_only')
         const game = GAMES.find((g) => g === m.game)
         if (!game) return
         const { cfg, error } = this.clean(game, m.cfg, me)
-        this.game = game; this.cfg = cfg; this.launched = false
+        this.game = game
+        this.cfg = cfg
+        this.launched = false
         if (error) this.err(c, error)
-        this.save(); this.pushViews(); return
+        this.save()
+        this.pushViews()
+        return
       }
       case 'launch': {
         if (id !== this.hostId) return this.err(c, 'host_only')
@@ -149,31 +225,48 @@ export class Room extends Server<Env> {
         if (ns) {
           try {
             const stub = await getServerByName(ns as never, this.name)
-            const r = await stub.fetch(new Request(`https://table/parties/${party}/${this.name}/__prepare`, { method: 'POST', body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id, expect: [...this.members.values()].filter((m) => !m.watching).length }) }))
+            const r = await stub.fetch(
+              new Request(`https://table/parties/${party}/${this.name}/__prepare`, {
+                method: 'POST',
+                body: JSON.stringify({ game: this.game, cfg: this.cfg, host: id, expect: [...this.members.values()].filter((m) => !m.watching).length }),
+              }),
+            )
             if (r.status === 409) return this.err(c, 'rmCodeClash')
             if (!r.ok) return this.err(c, 'rmTableFailed')
-          } catch { return this.err(c, 'rmTableFailed') }
+          } catch {
+            return this.err(c, 'rmTableFailed')
+          }
         }
-        this.launched = true; this.save(); this.pushViews()
+        this.launched = true
+        this.save()
+        this.pushViews()
         for (const conn of this.getConnections<{ id?: string }>()) {
-          const cid = conn.state?.id; if (!cid) continue
+          const cid = conn.state?.id
+          if (!cid) continue
           this.send(conn, { t: 'go', game: this.game, cfg: this.cfg, role: cid === this.hostId ? 'host' : this.members.get(cid)?.watching ? 'watch' : 'play' })
         }
         return
       }
       case 'talk': {
-        const text = String(m.text ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140)
+        const text = String(m.text ?? '')
+          .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 140)
         if (!text) return
         const now = Date.now()
         if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.err(c, 'slow_down')
         this.lastTalk.set(id, now)
         const msg = { n: ++this.talkN, name: me.name, text }
-        this.talkLog.push(msg); if (this.talkLog.length > 40) this.talkLog.shift()
+        this.talkLog.push(msg)
+        if (this.talkLog.length > 40) this.talkLog.shift()
         this.save()
         for (const conn of this.getConnections<{ id?: string }>()) if (conn.state?.id) this.send(conn, { t: 'talk', msg })
         return
       }
-      case 'bye': this.leave(id); return
+      case 'bye':
+        this.leave(id)
+        return
     }
   }
 
@@ -181,7 +274,8 @@ export class Room extends Server<Env> {
     this.members.delete(id)
     if (this.hostId === id) this.hostId = [...this.members.keys()][0] ?? this.hostId // the next person in the room takes over
     if (this.hostId && !this.members.has(this.hostId) && this.members.size > 0) this.hostId = [...this.members.keys()][0]
-    this.save(); this.pushViews()
+    this.save()
+    this.pushViews()
   }
 
   onClose(conn: Connection<{ id?: string }>) {
@@ -190,9 +284,12 @@ export class Room extends Server<Env> {
     // a refresh or a move to a game page reconnects with the same id: only forget the person if no other socket of theirs is open
     if ([...this.getConnections<{ id?: string }>()].some((c) => c.id !== conn.id && c.state?.id === id)) return
     // keep the member for a short grace period, so a page change does not hand the host role away mid-launch
-    setTimeout(() => {
-      if ([...this.getConnections<{ id?: string }>()].some((c) => c.state?.id === id)) return
-      this.leave(id)
-    }, this.launched ? 60000 : 4000)
+    setTimeout(
+      () => {
+        if ([...this.getConnections<{ id?: string }>()].some((c) => c.state?.id === id)) return
+        this.leave(id)
+      },
+      this.launched ? 60000 : 4000,
+    )
   }
 }

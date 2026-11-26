@@ -6,7 +6,11 @@ export function Rules({ title, lines }: { title: string; lines: string[] }) {
   return (
     <details className="hdrules">
       <summary>{t(title)}</summary>
-      <ul>{lines.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+      <ul>
+        {lines.map((k) => (
+          <li key={k}>{t(k)}</li>
+        ))}
+      </ul>
     </details>
   )
 }

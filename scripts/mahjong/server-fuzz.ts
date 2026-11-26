@@ -1,16 +1,31 @@
 /** Hostile-client test against the real online server (run `npm run party:dev` first). */
 const HOST = process.env.HOST ?? 'localhost:8787'
 let fails = 0
-const check = (n: string, ok: boolean, extra = '') => { if (!ok) fails++; console.log(ok ? 'ok  ' : 'FAIL', n, ok ? '' : extra) }
+const check = (n: string, ok: boolean, extra = '') => {
+  if (!ok) fails++
+  console.log(ok ? 'ok  ' : 'FAIL', n, ok ? '' : extra)
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-interface C { ws: WebSocket; msgs: any[]; closed: boolean }
+interface C {
+  ws: WebSocket
+  msgs: any[]
+  closed: boolean
+}
 function connect(room: string): Promise<C> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://${HOST}/parties/main/${room}`)
     const c: C = { ws, msgs: [], closed: false }
-    ws.onmessage = (e) => { try { c.msgs.push(JSON.parse(String(e.data))) } catch { /* ignore */ } }
-    ws.onclose = () => { c.closed = true }
+    ws.onmessage = (e) => {
+      try {
+        c.msgs.push(JSON.parse(String(e.data)))
+      } catch {
+        /* ignore */
+      }
+    }
+    ws.onclose = () => {
+      c.closed = true
+    }
     ws.onopen = () => resolve(c)
     ws.onerror = () => reject(new Error('connect failed'))
   })
@@ -24,9 +39,27 @@ async function main() {
   // 1. garbage never breaks the room
   const a = await connect(room)
   const garbage: unknown[] = [
-    'not json', '{', '[]', 'null', '123', '"str"', { t: 5 }, { t: 'join' }, { t: 'join', id: null, name: 5 }, { t: 'join', id: 'x'.repeat(5000), name: 'y' },
-    { t: 'act', a: null }, { t: 'act', a: { type: 'discard', tile: 'abc' } }, { t: 'decide', d: 7 }, { t: 'config', config: 'hk' }, { t: 'config', config: { rule: 'pwn', rounds: 9e9, players: 99 } },
-    { t: 'toggleBot', seat: 'a' }, { t: 'chat', key: { a: 1 } }, { t: '__proto__', x: 1 }, { t: 'start' }, { t: 'ack' }, { t: 'lobby' },
+    'not json',
+    '{',
+    '[]',
+    'null',
+    '123',
+    '"str"',
+    { t: 5 },
+    { t: 'join' },
+    { t: 'join', id: null, name: 5 },
+    { t: 'join', id: 'x'.repeat(5000), name: 'y' },
+    { t: 'act', a: null },
+    { t: 'act', a: { type: 'discard', tile: 'abc' } },
+    { t: 'decide', d: 7 },
+    { t: 'config', config: 'hk' },
+    { t: 'config', config: { rule: 'pwn', rounds: 9e9, players: 99 } },
+    { t: 'toggleBot', seat: 'a' },
+    { t: 'chat', key: { a: 1 } },
+    { t: '__proto__', x: 1 },
+    { t: 'start' },
+    { t: 'ack' },
+    { t: 'lobby' },
   ]
   for (const g of garbage) send(a, g)
   send(a, 'x'.repeat(2_000_000)) // oversized payload
@@ -42,11 +75,19 @@ async function main() {
   send(a, { t: 'config', config: { rule: 'riichi', rounds: 99999, players: 3, minFan: -5, botLevel: 'god' } })
   await sleep(300)
   const cfg = lastView(a)?.config
-  check('config values are validated', cfg && cfg.rule === 'riichi' && [1, 2].includes(cfg.rounds) && cfg.players === 3 && cfg.minFan >= 0 && cfg.botLevel === 'normal', JSON.stringify(cfg))
+  check(
+    'config values are validated',
+    cfg && cfg.rule === 'riichi' && [1, 2].includes(cfg.rounds) && cfg.players === 3 && cfg.minFan >= 0 && cfg.botLevel === 'normal',
+    JSON.stringify(cfg),
+  )
 
   // 3. room overflow: 10 more clients, only 4 seats
   const extra: C[] = []
-  for (let i = 0; i < 10; i++) { const c = await connect(room); send(c, { t: 'join', id: 'extra' + i, name: 'E' + i }); extra.push(c) }
+  for (let i = 0; i < 10; i++) {
+    const c = await connect(room)
+    send(c, { t: 'join', id: 'extra' + i, name: 'E' + i })
+    extra.push(c)
+  }
   await sleep(800)
   const seated = extra.filter((c) => lastView(c)?.you >= 0).length
   const refused = extra.filter((c) => c.msgs.some((m) => m.t === 'error')).length
@@ -58,7 +99,11 @@ async function main() {
   check('server alive after a 3000-message flood', !a.closed)
 
   // 5. rapid connect / disconnect churn
-  for (let i = 0; i < 60; i++) { const c = await connect(room); send(c, { t: 'join', id: 'churn' + (i % 3), name: 'c' }); c.ws.close() }
+  for (let i = 0; i < 60; i++) {
+    const c = await connect(room)
+    send(c, { t: 'join', id: 'churn' + (i % 3), name: 'c' })
+    c.ws.close()
+  }
   await sleep(500)
   const fresh = await connect(room)
   send(fresh, { t: 'join', id: 'good1', name: 'Alice' })
@@ -81,4 +126,7 @@ async function main() {
   console.log(fails ? `\n${fails} FAILED` : '\nserver survived every hostile input')
   process.exit(fails ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

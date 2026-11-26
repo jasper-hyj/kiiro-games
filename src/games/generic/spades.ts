@@ -7,40 +7,97 @@ import { rankOf, shuffled, suitOf } from '../holdem/engine/cards'
  * trick bid plus 1 for each extra trick; a team that falls short loses 10 per trick bid. A successful nil is worth 100, a failed one costs 100.
  */
 export const SPADES_META: GameMeta = {
-  kind: 'spades', minPlayers: 4, maxPlayers: 4, variable: false, chipUnit: 5,
+  kind: 'spades',
+  minPlayers: 4,
+  maxPlayers: 4,
+  variable: false,
+  chipUnit: 5,
   fields: [],
   defaults: { ranked: false },
 }
-const SPADE = 0, ACE = 12, KING = 11, QUEEN = 10
+const SPADE = 0,
+  ACE = 12,
+  KING = 11,
+  QUEEN = 10
 const order = (a: number, b: number) => suitOf(a) - suitOf(b) || rankOf(a) - rankOf(b)
 
 interface State {
-  hands: number[][]; phase: 'bid' | 'play' | 'done'; bids: (number | null)[]; turn: number; lead: number; trick: { seat: number; card: number }[]
-  won: number[]; broken: boolean; tricks: number; last: { seat: number; card: number }[] | null; lastWinner: number; team: [number, number]; detail: { team: number; bid: number; made: number; score: number; nil: number }[]
+  hands: number[][]
+  phase: 'bid' | 'play' | 'done'
+  bids: (number | null)[]
+  turn: number
+  lead: number
+  trick: { seat: number; card: number }[]
+  won: number[]
+  broken: boolean
+  tricks: number
+  last: { seat: number; card: number }[] | null
+  lastWinner: number
+  team: [number, number]
+  detail: { team: number; bid: number; made: number; score: number; nil: number }[]
 }
 
 export class Spades extends TurnGame {
   readonly meta = SPADES_META
-  private s: State = { hands: [], phase: 'bid', bids: [], turn: 0, lead: 0, trick: [], won: [], broken: false, tricks: 0, last: null, lastWinner: -1, team: [0, 0], detail: [] }
+  private s: State = {
+    hands: [],
+    phase: 'bid',
+    bids: [],
+    turn: 0,
+    lead: 0,
+    trick: [],
+    won: [],
+    broken: false,
+    tricks: 0,
+    last: null,
+    lastWinner: -1,
+    team: [0, 0],
+    detail: [],
+  }
 
   protected begin() {
     const d = shuffled()
     const hands = [0, 1, 2, 3].map((i) => d.slice(i * 13, i * 13 + 13).sort(order))
     const first = (this.gameNo - 1) % 4
-    this.s = { hands, phase: 'bid', bids: [null, null, null, null], turn: first, lead: first, trick: [], won: [0, 0, 0, 0], broken: false, tricks: 0, last: null, lastWinner: -1, team: [0, 0], detail: [] }
+    this.s = {
+      hands,
+      phase: 'bid',
+      bids: [null, null, null, null],
+      turn: first,
+      lead: first,
+      trick: [],
+      won: [0, 0, 0, 0],
+      broken: false,
+      tricks: 0,
+      last: null,
+      lastWinner: -1,
+      team: [0, 0],
+      detail: [],
+    }
   }
-  turn() { return this.status === 'playing' && this.s.phase !== 'done' ? this.s.turn : -1 }
+  turn() {
+    return this.status === 'playing' && this.s.phase !== 'done' ? this.s.turn : -1
+  }
 
   // ---- bidding ----
   private doBid(seat: number, bid: number) {
     this.s.bids[seat] = bid
-    if (this.s.bids.every((b) => b !== null)) { this.s.phase = 'play'; this.s.turn = this.s.lead; return }
+    if (this.s.bids.every((b) => b !== null)) {
+      this.s.phase = 'play'
+      this.s.turn = this.s.lead
+      return
+    }
     this.s.turn = (seat + 1) % 4
   }
   private guess(hand: number[]): number {
     let t = 0
     const bySuit = [0, 1, 2, 3].map((su) => hand.filter((c) => suitOf(c) === su))
-    for (const c of bySuit[SPADE]) { const r = rankOf(c); if (r === ACE) t += 1; else if (r === KING && bySuit[SPADE].length >= 2) t += 0.9; else if (r === QUEEN && bySuit[SPADE].length >= 3) t += 0.7 }
+    for (const c of bySuit[SPADE]) {
+      const r = rankOf(c)
+      if (r === ACE) t += 1
+      else if (r === KING && bySuit[SPADE].length >= 2) t += 0.9
+      else if (r === QUEEN && bySuit[SPADE].length >= 3) t += 0.7
+    }
     if (bySuit[SPADE].length > 3) t += (bySuit[SPADE].length - 3) * 0.8
     for (let su = 1; su < 4; su++) {
       const h = bySuit[su]
@@ -66,16 +123,20 @@ export class Spades extends TurnGame {
     if (this.s.phase === 'bid') {
       const b = Number(m?.bid)
       if (!Number.isInteger(b) || b < 0 || b > 13) return 'bad_bid'
-      this.doBid(seat, b); return null
+      this.doBid(seat, b)
+      return null
     }
     const c = Number(m?.card)
     if (!this.legal(seat).includes(c)) return 'bad_card'
-    this.playCard(seat, c); return null
+    this.playCard(seat, c)
+    return null
   }
   private winnerOf(trick: { seat: number; card: number }[]) {
     const lead = suitOf(trick[0].card)
-    const beats = (a: number, b: number) => { // does b beat a?
-      const sa = suitOf(a), sb = suitOf(b)
+    const beats = (a: number, b: number) => {
+      // does b beat a?
+      const sa = suitOf(a),
+        sb = suitOf(b)
       if (sb === SPADE && sa !== SPADE) return true
       if (sb === sa) return rankOf(b) > rankOf(a)
       return false
@@ -84,16 +145,26 @@ export class Spades extends TurnGame {
     return trick.reduce((a, b) => (beats(a.card, b.card) ? b : a))
   }
   private playCard(seat: number, c: number) {
-    const h = this.s.hands[seat]; h.splice(h.indexOf(c), 1)
+    const h = this.s.hands[seat]
+    h.splice(h.indexOf(c), 1)
     this.s.trick.push({ seat, card: c })
     if (suitOf(c) === SPADE) this.s.broken = true
-    if (this.s.trick.length < 4) { this.s.turn = (seat + 1) % 4; return }
+    if (this.s.trick.length < 4) {
+      this.s.turn = (seat + 1) % 4
+      return
+    }
     const win = this.winnerOf(this.s.trick)
     this.s.won[win.seat]++
-    this.s.last = this.s.trick; this.s.lastWinner = win.seat
-    this.s.trick = []; this.s.tricks++
-    if (this.s.tricks === 13) { this.settle(); return }
-    this.s.turn = win.seat; this.s.lead = win.seat
+    this.s.last = this.s.trick
+    this.s.lastWinner = win.seat
+    this.s.trick = []
+    this.s.tricks++
+    if (this.s.tricks === 13) {
+      this.settle()
+      return
+    }
+    this.s.turn = win.seat
+    this.s.lead = win.seat
   }
   private settle() {
     this.s.phase = 'done'
@@ -105,7 +176,10 @@ export class Spades extends TurnGame {
       const made = real.reduce((a, m) => a + this.s.won[m], 0)
       let score = bid > 0 ? (made >= bid ? bid * 10 + (made - bid) : -bid * 10) : 0
       let nil = 0
-      for (const m of members) if (this.s.bids[m] === 0) { nil += this.s.won[m] === 0 ? 100 : -100 }
+      for (const m of members)
+        if (this.s.bids[m] === 0) {
+          nil += this.s.won[m] === 0 ? 100 : -100
+        }
       score += nil
       detail.push({ team, bid, made, score, nil })
     }
@@ -142,9 +216,13 @@ export class Spades extends TurnGame {
     const lead = suitOf(trick[0].card)
     const win = this.winnerOf(trick)
     const partnerWinning = win.seat === (seat + 2) % 4
-    const beat = (c: number) => { const w = win.card; return suitOf(c) === SPADE && suitOf(w) !== SPADE ? true : suitOf(c) === suitOf(w) && rankOf(c) > rankOf(w) }
+    const beat = (c: number) => {
+      const w = win.card
+      return suitOf(c) === SPADE && suitOf(w) !== SPADE ? true : suitOf(c) === suitOf(w) && rankOf(c) > rankOf(w)
+    }
     const winners = ok.filter(beat)
-    if (nil) { // stay under the winning card, as high as possible; never win
+    if (nil) {
+      // stay under the winning card, as high as possible; never win
       const under = ok.filter((c) => !beat(c))
       return under.length ? highest(under) : lowest(ok)
     }
@@ -159,8 +237,20 @@ export class Spades extends TurnGame {
   protected gameView(seat: number) {
     const s = this.s
     return {
-      phase: s.phase, hand: seat >= 0 ? s.hands[seat] : [], counts: s.hands.map((h) => h.length), bids: s.bids, trick: s.trick, lead: s.lead, last: s.last, lastWinner: s.lastWinner, broken: s.broken, won: s.won, tricks: s.tricks,
-      legal: seat >= 0 && s.phase === 'play' && s.turn === seat ? this.legal(seat) : [], team: s.team, detail: s.detail,
+      phase: s.phase,
+      hand: seat >= 0 ? s.hands[seat] : [],
+      counts: s.hands.map((h) => h.length),
+      bids: s.bids,
+      trick: s.trick,
+      lead: s.lead,
+      last: s.last,
+      lastWinner: s.lastWinner,
+      broken: s.broken,
+      won: s.won,
+      tricks: s.tricks,
+      legal: seat >= 0 && s.phase === 'play' && s.turn === seat ? this.legal(seat) : [],
+      team: s.team,
+      detail: s.detail,
     }
   }
   protected outcome(): Outcome | null {
@@ -169,6 +259,10 @@ export class Spades extends TurnGame {
     const points = [(a - b) / 2, (b - a) / 2, (a - b) / 2, (b - a) / 2]
     return { points, winner: a === b ? -1 : a > b ? 0 : 1, summary: { team: this.s.team, detail: this.s.detail } }
   }
-  protected saveState() { return this.s }
-  protected loadState(s: State) { this.s = s }
+  protected saveState() {
+    return this.s
+  }
+  protected loadState(s: State) {
+    this.s = s
+  }
 }

@@ -22,7 +22,10 @@ for (const rule of rules) {
         const r = g.result!
         stats.hands++
         if (r.kind === 'win') {
-          stats.wins++; if (r.score!.yaku.some((y) => y.name.startsWith('Nuki'))) (stats as any).nuki = ((stats as any).nuki ?? 0) + 1; if (r.others) (stats as any).multiRon = ((stats as any).multiRon ?? 0) + 1; if (r.tsumo) stats.tsumo++
+          stats.wins++
+          if (r.score!.yaku.some((y) => y.name.startsWith('Nuki'))) (stats as any).nuki = ((stats as any).nuki ?? 0) + 1
+          if (r.others) (stats as any).multiRon = ((stats as any).multiRon ?? 0) + 1
+          if (r.tsumo) stats.tsumo++
           r.score!.yaku.forEach((y) => (stats.yaku[y.name] = (stats.yaku[y.name] ?? 0) + 1))
           stats.maxTotal = Math.max(stats.maxTotal, r.score!.total)
         } else stats.draws++
@@ -32,5 +35,14 @@ for (const rule of rules) {
     }
     if (guard >= 50000) throw new Error('infinite loop in ' + rule)
   }
-  console.log(rule, `${Date.now() - t0}ms`, JSON.stringify({ ...stats, yaku: Object.entries(stats.yaku).sort((a, b) => b[1] - a[1]).slice(0, 10) }))
+  console.log(
+    rule,
+    `${Date.now() - t0}ms`,
+    JSON.stringify({
+      ...stats,
+      yaku: Object.entries(stats.yaku)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10),
+    }),
+  )
 }

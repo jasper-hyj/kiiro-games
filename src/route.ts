@@ -44,7 +44,8 @@ export const practiceUrl = (game: GameKey) => `/${game}/practice`
 export function legacyTarget(loc: Pick<Location, 'pathname' | 'search'> = location): string | null {
   const parts = loc.pathname.split('/').filter(Boolean)
   const q = new URLSearchParams(loc.search)
-  const first = parts[0], second = parts[1]
+  const first = parts[0],
+    second = parts[1]
   const code = q.get('room')
   if (parts.length === 0) {
     if (isCode(code)) return roomUrl(code) // "/?room=1234"
@@ -77,10 +78,16 @@ export function route(): Route {
   const [first, second] = parts
   let r: Route = { page: 'hub' }
   if (first === 'admin') r = { page: 'admin', tab: second ?? 'overview' }
-  else if (first === 'room') r = isCode(second) ? { page: 'room', code: second, fresh: false, game: null } : second === 'new' ? { page: 'room', code: null, fresh: true, game: isGame(q.get('game')) ? (q.get('game') as GameKey) : null } : { page: 'room', code: null, fresh: false, game: null }
+  else if (first === 'room')
+    r = isCode(second)
+      ? { page: 'room', code: second, fresh: false, game: null }
+      : second === 'new'
+        ? { page: 'room', code: null, fresh: true, game: isGame(q.get('game')) ? (q.get('game') as GameKey) : null }
+        : { page: 'room', code: null, fresh: false, game: null }
   else if (isGame(first)) {
     if (isCode(second)) r = { page: 'table', game: first, code: second, watch: q.get('watch') === '1' }
-    else if (second === 'practice' || second === 'tutorial') r = q.has('tiles') ? { page: 'tiles' } : { page: 'practice', game: first, tutorial: second === 'tutorial' }
+    else if (second === 'practice' || second === 'tutorial')
+      r = q.has('tiles') ? { page: 'tiles' } : { page: 'practice', game: first, tutorial: second === 'tutorial' }
     else if (second === 'local' && LOCAL_GAMES.includes(first)) r = { page: 'practice', game: first, tutorial: false, local: true }
     else r = { page: 'gameStart', game: first }
   }

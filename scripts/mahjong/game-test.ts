@@ -22,7 +22,12 @@ async function tap(p: Page, touch: boolean, sel: string, nth = 0) {
   return true
 }
 
-interface Dev { name: string; w: number; h: number; touch: boolean }
+interface Dev {
+  name: string
+  w: number
+  h: number
+  touch: boolean
+}
 
 const n4 = (n: number) => String(n)
 
@@ -34,7 +39,9 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
     try {
       localStorage.setItem('kiiro-lang', l)
       localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: false }))
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, lang)
   const errors: string[] = []
   p.on('pageerror', (e) => errors.push(String(e).slice(0, 160)))
@@ -46,7 +53,10 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
   let over = false
   let turns = 0
   while (Date.now() - t0 < 240000) {
-    if (await p.$('.overlay .podium')) { over = true; break }
+    if (await p.$('.overlay .podium')) {
+      over = true
+      break
+    }
     const nextBtn = await p.$('.overlay .btn.gold:not([disabled])')
     if (nextBtn) {
       hands++
@@ -58,16 +68,36 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
       await sleep(150)
       continue
     }
-    if (await p.$('.pickhint')) {   // Sichuan: pass three tiles / give up a suit
+    if (await p.$('.pickhint')) {
+      // Sichuan: pass three tiles / give up a suit
       const confirm = await p.$('.apbtns .cbtn.call:not([disabled])')
-      if (confirm && (await p.$$('.apbtns .cbtn')).length === 1) { await tap(p, dev.touch, '.apbtns .cbtn.call'); await sleep(200); continue }
-      if ((await p.$$('.apbtns .cbtn')).length === 3) { await tap(p, dev.touch, '.apbtns .cbtn', 0); await sleep(200); continue }
+      if (confirm && (await p.$$('.apbtns .cbtn')).length === 1) {
+        await tap(p, dev.touch, '.apbtns .cbtn.call')
+        await sleep(200)
+        continue
+      }
+      if ((await p.$$('.apbtns .cbtn')).length === 3) {
+        await tap(p, dev.touch, '.apbtns .cbtn', 0)
+        await sleep(200)
+        continue
+      }
       const hand = await p.$$('.handrow .tile.clickable')
-      for (let i = 0; i < hand.length && !(await p.$('.apbtns .cbtn.call:not([disabled])')); i++) { await tap(p, dev.touch, '.handrow .tile.clickable', i); await sleep(40) }
+      for (let i = 0; i < hand.length && !(await p.$('.apbtns .cbtn.call:not([disabled])')); i++) {
+        await tap(p, dev.touch, '.handrow .tile.clickable', i)
+        await sleep(40)
+      }
       continue
     }
-    if (await p.$('.cbtn.ron')) { await tap(p, dev.touch, '.cbtn.ron'); await sleep(80); continue }
-    if (await p.$('.cbtn.pass')) { await tap(p, dev.touch, '.cbtn.pass'); await sleep(60); continue }
+    if (await p.$('.cbtn.ron')) {
+      await tap(p, dev.touch, '.cbtn.ron')
+      await sleep(80)
+      continue
+    }
+    if (await p.$('.cbtn.pass')) {
+      await tap(p, dev.touch, '.cbtn.pass')
+      await sleep(60)
+      continue
+    }
     const tiles = await p.$$('.handrow .tile.clickable')
     if (tiles.length) {
       await tap(p, dev.touch, '.handrow .tile.clickable', tiles.length - 1)
@@ -83,15 +113,30 @@ async function playGame(browser: Browser, rule: string, dev: Dev, lang: 'en' | '
     const rows = await p.$$eval('.overlay .podium .pd', (e) => e.map((x) => (x as HTMLElement).innerText))
     const pts = rows.map((r) => Number(((r.match(/(-?\d[\d,]*)[^\d]*$/) ?? [])[1] ?? '').replace(/,/g, '')))
     const start = rule === 'riichi' ? 25000 : rule === 'mcr' || rule === 'sichuan' ? 0 : 1000
-    check(`${tag}: final standings list 4 players and points add up (${pts.join(', ')})`, rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4, rows.join(' | '))
+    check(
+      `${tag}: final standings list 4 players and points add up (${pts.join(', ')})`,
+      rows.length === 4 && pts.reduce((a, b) => a + b, 0) === start * 4,
+      rows.join(' | '),
+    )
     // hand review: open it, step to the end of the first hand and see the final hands
-    await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.overlay .btn')].find((e) => /Review hands|回顧牌局/i.test(e.innerText)); b?.click() })
+    await p.evaluate(() => {
+      const b = [...document.querySelectorAll<HTMLElement>('.overlay .btn')].find((e) => /Review hands|回顧牌局/i.test(e.innerText))
+      b?.click()
+    })
     await sleep(300)
     check(`${tag}: hand review opens with ${n4(await p.$$eval('.rp-row', (e) => e.length))} player rows`, (await p.$$eval('.rp-row', (e) => e.length)) >= 3)
-    await p.evaluate(() => { const r = document.querySelector('.rp-ctl input[type=range]') as HTMLInputElement; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!; set.call(r, r.max); r.dispatchEvent(new Event('input', { bubbles: true })) })
+    await p.evaluate(() => {
+      const r = document.querySelector('.rp-ctl input[type=range]') as HTMLInputElement
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+      set.call(r, r.max)
+      r.dispatchEvent(new Event('input', { bubbles: true }))
+    })
     await sleep(200)
     check(`${tag}: review's last step shows the final hands`, (await p.$$eval('.rp-final .tile', (e) => e.length)) > 0)
-    await p.evaluate(() => { const b = [...document.querySelectorAll<HTMLElement>('.modal .btn')].find((e) => /Close|關閉/.test(e.innerText)); b?.click() })
+    await p.evaluate(() => {
+      const b = [...document.querySelectorAll<HTMLElement>('.modal .btn')].find((e) => /Close|關閉/.test(e.innerText))
+      b?.click()
+    })
     await sleep(200)
     await p.evaluate(() => (document.querySelector('.overlay .btn.alt') as HTMLElement | null)?.click())
     await sleep(300)
@@ -116,4 +161,7 @@ async function main() {
   console.log(fails ? `\n${fails} FAILED` : '\nall full-game checks passed')
   process.exit(fails ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

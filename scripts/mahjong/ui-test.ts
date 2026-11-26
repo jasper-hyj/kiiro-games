@@ -13,7 +13,13 @@ const check = (name: string, ok: boolean, extra = '') => {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-interface Dev { name: string; w: number; h: number; touch: boolean; scale: number }
+interface Dev {
+  name: string
+  w: number
+  h: number
+  touch: boolean
+  scale: number
+}
 const ALL: Dev[] = [
   { name: 'desktop', w: 1440, h: 900, touch: false, scale: 1 },
   { name: 'laptop', w: 1024, h: 700, touch: false, scale: 1 },
@@ -33,20 +39,30 @@ async function newPage(b: Browser, d: Dev, lang: 'en' | 'zh' = 'en'): Promise<Pa
     try {
       localStorage.setItem('kiiro-lang', l)
       localStorage.setItem('kiiro-auto2', JSON.stringify({ win: true, discard: false, skip: true, sort: true }))
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, lang)
-  p.on('pageerror', (e) => { fails++; console.log('FAIL pageerror', String(e).slice(0, 200)) })
+  p.on('pageerror', (e) => {
+    fails++
+    console.log('FAIL pageerror', String(e).slice(0, 200))
+  })
   return p
 }
 const text = (p: Page) => p.evaluate(() => document.body.innerText)
 const clickText = (p: Page, sel: string, re: RegExp) =>
-  p.evaluate((sel, src, fl) => {
-    const r = new RegExp(src, fl)
-    const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
-    if (!el) return false
-    el.click()
-    return true
-  }, sel, re.source, re.flags)
+  p.evaluate(
+    (sel, src, fl) => {
+      const r = new RegExp(src, fl)
+      const el = [...document.querySelectorAll<HTMLElement>(sel)].find((e) => r.test(e.innerText))
+      if (!el) return false
+      el.click()
+      return true
+    },
+    sel,
+    re.source,
+    re.flags,
+  )
 
 /** real mouse click / touch tap at an element's centre */
 async function tap(p: Page, d: Dev, sel: string, nth = 0) {
@@ -88,9 +104,9 @@ async function playTurn(p: Page, d: Dev): Promise<'discarded' | 'passed' | 'resu
   }
   const tiles = await p.$$('.handrow .tile.clickable')
   if (tiles.length) {
-    await tap(p, d, '.handrow .tile.clickable', tiles.length - 1)   // first tap selects
+    await tap(p, d, '.handrow .tile.clickable', tiles.length - 1) // first tap selects
     await sleep(150)
-    await tap(p, d, '.handrow .tile.sel')                            // second tap on the same tile discards
+    await tap(p, d, '.handrow .tile.sel') // second tap on the same tile discards
     return 'discarded'
   }
   return 'idle'
@@ -105,13 +121,19 @@ async function main() {
         const p = await newPage(browser, d, lang)
         await p.goto(BASE, { waitUntil: 'networkidle0' })
         const t = await text(p)
-        check(`${tag}: start screen shows the play buttons`, lang === 'en' ? /Play vs bots/i.test(t) && /Play with friends/i.test(t) : /對戰電腦/.test(t) && /和朋友玩/.test(t))
+        check(
+          `${tag}: start screen shows the play buttons`,
+          lang === 'en' ? /Play vs bots/i.test(t) && /Play with friends/i.test(t) : /對戰電腦/.test(t) && /和朋友玩/.test(t),
+        )
         await layout(p, `${tag} menu`)
         await p.screenshot({ path: `${SHOTS}/${d.name}-${lang}-menu.png` })
         await clickText(p, '.btn.big', lang === 'en' ? /vs bots/i : /對戰電腦/)
         await sleep(450)
         const t2 = await text(p)
-        check(`${tag}: rules step shows the three rule cards`, lang === 'en' ? /Taiwanese/.test(t2) && /Hong Kong/.test(t2) && /Riichi/.test(t2) : /台灣麻將/.test(t2))
+        check(
+          `${tag}: rules step shows the three rule cards`,
+          lang === 'en' ? /Taiwanese/.test(t2) && /Hong Kong/.test(t2) && /Riichi/.test(t2) : /台灣麻將/.test(t2),
+        )
         await layout(p, `${tag} rules step`)
         await p.waitForSelector('button.rule', { timeout: 10000 })
         await p.click('button.rule')
@@ -181,4 +203,7 @@ async function main() {
   console.log(fails ? `\n${fails} FAILED` : '\nall UI checks passed')
   process.exit(fails ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

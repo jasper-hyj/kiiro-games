@@ -6,6 +6,12 @@ const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.
 const p = await (await b.createBrowserContext()).newPage()
 await p.setViewport({ width: w, height: h, hasTouch: true, isMobile: true })
 await p.evaluateOnNewDocument(() => localStorage.setItem('kiiro-lang', 'en'))
-await p.goto('http://localhost:5200' + url, { waitUntil: 'domcontentloaded' }); await new Promise((r) => setTimeout(r, 2500))
-console.log(await p.evaluate(`(() => Array.from(document.querySelectorAll('.kg *')).filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > innerWidth + 1 }).slice(0, 8).map((e) => e.tagName + '.' + String(e.className).slice(0, 40) + ' right=' + Math.round(e.getBoundingClientRect().right)).join('\\n'))()`))
-await b.close(); process.exit(0)
+await p.goto('http://localhost:5200' + url, { waitUntil: 'domcontentloaded' })
+await new Promise((r) => setTimeout(r, 2500))
+console.log(
+  await p.evaluate(
+    `(() => Array.from(document.querySelectorAll('.kg *')).filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > innerWidth + 1 }).slice(0, 8).map((e) => e.tagName + '.' + String(e.className).slice(0, 40) + ' right=' + Math.round(e.getBoundingClientRect().right)).join('\\n'))()`,
+  ),
+)
+await b.close()
+process.exit(0)

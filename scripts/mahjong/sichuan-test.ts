@@ -4,19 +4,32 @@ import { kindOf, sortIds, suitOf } from '../../src/games/mahjong/engine/tiles'
 
 /** Sichuan (Blood Battle): scoring examples + bot-played games with invariant checks. */
 let fails = 0
-const ok = (name: string, cond: boolean, extra = '') => { if (!cond) fails++; console.log(cond ? 'ok  ' : 'FAIL', name, cond ? '' : extra) }
+const ok = (name: string, cond: boolean, extra = '') => {
+  if (!cond) fails++
+  console.log(cond ? 'ok  ' : 'FAIL', name, cond ? '' : extra)
+}
 
 // ---------- scoring ----------
 const parse = (s: string): number[] => {
-  const ks: number[] = []; let digits: number[] = []
+  const ks: number[] = []
+  let digits: number[] = []
   for (const ch of s) {
     if (/\d/.test(ch)) digits.push(+ch)
-    else { const base = { m: 0, p: 9, s: 18 }[ch as 'm']; for (const d of digits) ks.push(base + d - 1); digits = [] }
+    else {
+      const base = { m: 0, p: 9, s: 18 }[ch as 'm']
+      for (const d of digits) ks.push(base + d - 1)
+      digits = []
+    }
   }
   return ks
 }
 const used = new Map<number, number>()
-const ids = (ks: number[]) => ks.map((k) => { const n = used.get(k) ?? 0; used.set(k, n + 1); return k * 4 + n })
+const ids = (ks: number[]) =>
+  ks.map((k) => {
+    const n = used.get(k) ?? 0
+    used.set(k, n + 1)
+    return k * 4 + n
+  })
 function score(hand: string, win: string, o: { tsumo?: boolean; voidSuit?: number; melds?: { type: 'pon' | 'minkan' | 'ankan'; tiles: string }[] } = {}) {
   used.clear()
   const g = new Game('sichuan', { rule: 'sichuan', aka: false, rounds: 1, minFan: 0, swap: false } as never, ['a', 'b', 'c', 'd'])
@@ -28,15 +41,18 @@ function score(hand: string, win: string, o: { tsumo?: boolean; voidSuit?: numbe
   p.hand = sortIds(ids(parse(hand)))
   const wid = ids(parse(win))[0]
   const tsumo = o.tsumo ?? false
-  if (tsumo) { p.hand.push(wid); p.drawn = wid }
+  if (tsumo) {
+    p.hand.push(wid)
+    p.drawn = wid
+  }
   return g.checkWin(seat, tsumo, tsumo ? undefined : wid)
 }
 {
-  const s = score('123m456m789m12p33p', '3p')       // plain: 0 fan => 1 point
+  const s = score('123m456m789m12p33p', '3p') // plain: 0 fan => 1 point
   ok('plain hand is worth 1 point (2^0)', !!s && s.total === 0 && s.base === 1, JSON.stringify(s))
   const t = score('123m456m789m12p33p', '3p', { tsumo: true })
   ok('self-draw adds a fan (2 points)', !!t && t.total === 1 && t.base === 2, JSON.stringify(t))
-  const f = score('1112345678999m', '5m')            // pure suit (void = sou)
+  const f = score('1112345678999m', '5m') // pure suit (void = sou)
   ok('pure suit scores and is capped at 4 fan (16 points)', !!f && f.total >= 2 && f.base <= 16, JSON.stringify(f))
   const v = score('123m456m789m12p33p', '3p', { voidSuit: 1 })
   ok('a hand holding the given-up suit cannot win', v === null)
@@ -44,7 +60,13 @@ function score(hand: string, win: string, o: { tsumo?: boolean; voidSuit?: numbe
   ok('a hand with a seven-pairs shape needs 7 pairs (not here)', pairs === null || pairs.yaku.some((y) => y.name === 'Seven Pairs'))
   const sp = score('1122m3344m5566m7m', '7m', { voidSuit: 2 })
   ok('seven pairs: 2 fan + pure suit 2 = 4 fan', !!sp && sp.yaku.some((y) => y.name === 'Seven Pairs') && sp.total >= 4, JSON.stringify(sp))
-  const ap = score('222m555p9p', '9p', { voidSuit: 2, melds: [{ type: 'pon', tiles: '888m' }, { type: 'pon', tiles: '444p' }] })
+  const ap = score('222m555p9p', '9p', {
+    voidSuit: 2,
+    melds: [
+      { type: 'pon', tiles: '888m' },
+      { type: 'pon', tiles: '444p' },
+    ],
+  })
   ok('all pungs is 1 fan', !!ap && ap.yaku.some((y) => y.name === 'All Pungs'), JSON.stringify(ap))
   const root = score('1111m23m456p789p9p', '9p', { voidSuit: 2 })
   ok('four of a kind in the hand is a root (+1 fan)', !!root && root.yaku.some((y) => y.name.startsWith('Root')), JSON.stringify(root))
@@ -58,21 +80,33 @@ function playGame(n: number, swap: boolean, level: Lv): string[] {
   let guard = 0
   while ((g.phase as string) !== 'over' && guard++ < 40000) {
     const ph = g.phase as string
-    if (ph === 'swap') { for (const p of g.players) if (!p.swapTiles && !g.submitSwap(p.seat, botSwap(g, p.seat))) errs.push('bot swap rejected') }
-    else if (ph === 'void') { for (const p of g.players) if (p.voidSuit === null && !g.submitVoid(p.seat, botVoid(g, p.seat))) errs.push('bot void rejected') }
-    else if (ph === 'turn') {
+    if (ph === 'swap') {
+      for (const p of g.players) if (!p.swapTiles && !g.submitSwap(p.seat, botSwap(g, p.seat))) errs.push('bot swap rejected')
+    } else if (ph === 'void') {
+      for (const p of g.players) if (p.voidSuit === null && !g.submitVoid(p.seat, botVoid(g, p.seat))) errs.push('bot void rejected')
+    } else if (ph === 'turn') {
       const s = g.turn
-      if (g.players[s].out) { errs.push('an out player was given a turn'); break }
+      if (g.players[s].out) {
+        errs.push('an out player was given a turn')
+        break
+      }
       const a = botTurn(g, s, level)
-      if (!g.act(s, a)) { const o = g.turnOptions(s); if (!o.discard.length || !g.act(s, { type: 'discard', tile: o.discard[0] })) { errs.push('turn stuck'); break } }
+      if (!g.act(s, a)) {
+        const o = g.turnOptions(s)
+        if (!o.discard.length || !g.act(s, { type: 'discard', tile: o.discard[0] })) {
+          errs.push('turn stuck')
+          break
+        }
+      }
       for (const p of g.players) {
         const vs = p.voidSuit
         if (p.out && p.hand.some((i) => suitOf(kindOf(i)) === vs)) errs.push('winner holds the void suit')
       }
     } else if (ph === 'reaction') {
-      for (const s of g.pendingSeats()) if ((g.phase as string) === 'reaction') {
-        if (!g.submitDecision(s, botReact(g, s, level))) g.submitDecision(s, { type: 'pass' })
-      }
+      for (const s of g.pendingSeats())
+        if ((g.phase as string) === 'reaction') {
+          if (!g.submitDecision(s, botReact(g, s, level))) g.submitDecision(s, { type: 'pass' })
+        }
     } else if (ph === 'result') {
       const r = g.result!
       const wins = r.sc?.wins ?? []
@@ -86,7 +120,11 @@ function playGame(n: number, swap: boolean, level: Lv): string[] {
       }
       if (g.players.reduce((a, p) => a + p.points, 0) !== 0) errs.push('points not conserved')
       const all: number[] = [...g.wall]
-      for (const p of g.players) { all.push(...p.hand); for (const m of p.melds) all.push(...m.tiles); for (const d of p.discards) if (!d.called) all.push(d.tile) }
+      for (const p of g.players) {
+        all.push(...p.hand)
+        for (const m of p.melds) all.push(...m.tiles)
+        for (const d of p.discards) if (!d.called) all.push(d.tile)
+      }
       if (all.length !== 108 || new Set(all).size !== 108) errs.push(`tile conservation broken (${all.length} tiles, ${new Set(all).size} distinct)`)
       g.next()
     }
@@ -97,11 +135,15 @@ function playGame(n: number, swap: boolean, level: Lv): string[] {
   return errs
 }
 const N = Number(process.argv[2] ?? 60)
-let games = 0, bad = 0
+let games = 0,
+  bad = 0
 for (let i = 0; i < N; i++) {
   const errs = playGame(i, i % 3 !== 0, (['easy', 'normal', 'hard'] as Lv[])[i % 3])
   games++
-  if (errs.length) { bad++; console.log('FAIL game', i, [...new Set(errs)].slice(0, 4).join(' | ')) }
+  if (errs.length) {
+    bad++
+    console.log('FAIL game', i, [...new Set(errs)].slice(0, 4).join(' | '))
+  }
 }
 ok(`${games} bot games finished with all invariants intact`, bad === 0, `${bad} bad games`)
 console.log(fails ? `\n${fails} FAILED` : '\nsichuan checks passed')
