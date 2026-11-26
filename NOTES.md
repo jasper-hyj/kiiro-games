@@ -61,21 +61,21 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 - No top bar: menus are full-screen; the table has a corner dock (burger) with auto options, hints, chat, history, shortcuts, language, leave.
 - Home is a step-by-step flow (start -> rules -> options -> name; friends skips options, join uses code -> name).
 - Table shows essentials only (hints off by default). Call buttons live in a reserved centered row above the hand. Results show headline + hand + scores with a Details toggle. Discard: double-tap or drag a tile upward.
-- Tests: `scripts/orient-test.ts` and `scripts/webkit-game-test.ts` run in WebKit/Chromium via Playwright (see their headers); `scripts/flick-test.ts` covers drag-to-discard.
+- Tests: `scripts/mahjong/orient-test.ts` and `scripts/mahjong/webkit-game-test.ts` run in WebKit/Chromium via Playwright (see their headers); `scripts/mahjong/flick-test.ts` covers drag-to-discard.
 
 ## Added in the Nov 2026 pass
 
-- Rooms persist in Durable Object storage (`party/durable/main.ts`, `Table.serialize/restore`, `Game.serialize/restore`); `scripts/persist-test.ts` and `scripts/restart-test.ts` cover it. Empty rooms are dropped from storage.
+- Rooms persist in Durable Object storage (`party/durable/main.ts`, `Table.serialize/restore`, `Game.serialize/restore`); `scripts/mahjong/persist-test.ts` and `scripts/mahjong/restart-test.ts` cover it. Empty rooms are dropped from storage.
 - Hand review (replay) after a finished game: `Game.replays` (a public snapshot per discard), shown only when the game is over (`src/games/mahjong/ui/Replay.tsx`).
 - Accessibility settings: reduce motion, larger text, upright discards (`src/settings.ts`).
 - Hard bots: dora/red-five aware, riichi vs dama decision. Measured +246 pts/seat/game against Normal over 150 Riichi games; no measurable gain in Taiwanese/Hong Kong (results there are mostly luck), so Hard behaves like Normal in those.
 - Tiles: traditional style (multicolour coins, painted flower emblems, ivory face on a jade back with visible thickness). Centre: compass plate; ponds are six per row, turned toward each seat.
-- Chinese Official (MCR) ruleset (`src/games/mahjong/engine/rules/mcr.ts`, `scripts/mcr-test.ts`): ~75 of 81 patterns with a simplified form of the official exclusion rules; knitted hands (全不靠, 七星不靠, 組合龍) and 和絕張 are not scored.
-- Sichuan Blood Battle (`src/games/mahjong/engine/rules/sichuan.ts`, Sichuan sections in `game.ts`, `scripts/sichuan-test.ts`): 108 tiles, optional swap-three, give-up-a-suit, no chi, several winners per hand, kong money, flower-pig and not-ready checks at the end. Fan are additive and a win is worth 2^fan capped at 4. Not included: kong-point transfer (呼叫轉移), 過水不胡, Blood River.
+- Chinese Official (MCR) ruleset (`src/games/mahjong/engine/rules/mcr.ts`, `scripts/mahjong/mcr-test.ts`): ~75 of 81 patterns with a simplified form of the official exclusion rules; knitted hands (全不靠, 七星不靠, 組合龍) and 和絕張 are not scored.
+- Sichuan Blood Battle (`src/games/mahjong/engine/rules/sichuan.ts`, Sichuan sections in `game.ts`, `scripts/mahjong/sichuan-test.ts`): 108 tiles, optional swap-three, give-up-a-suit, no chi, several winners per hand, kong money, flower-pig and not-ready checks at the end. Fan are additive and a win is worth 2^fan capped at 4. Not included: kong-point transfer (呼叫轉移), 過水不胡, Blood River.
 
 ## Nov 2026 late pass
 
 - Layout is landscape-first: a scaled table (`Stage`) above a real-size hand bar (`.handbar`). Portrait phones get a rotate prompt. Hand tile size depends only on screen width and ruleset (never changes while playing). Rivers are Mahjong Soul style (7 per row x 3 rows hugging a square plate, turned toward each seat; "Upright rivers" setting).
-- Integrity audit (`src/games/mahjong/engine/audit.ts`) runs after every move; the menu shows its status. `scripts/calls-test.ts` fuzzes every chi/pon/kan/ron offer (and refusal) over thousands of turns; `scripts/special-hands.ts` and `scripts/examples-test.ts` check special hands and the rulebook examples; `scripts/whynot-test.ts`, `scripts/coach-test.ts`, `scripts/contrast-test.ts`, `scripts/seating-test.ts` cover the newer features.
+- Integrity audit (`src/games/mahjong/engine/audit.ts`) runs after every move; the menu shows its status. `scripts/mahjong/calls-test.ts` fuzzes every chi/pon/kan/ron offer (and refusal) over thousands of turns; `scripts/mahjong/special-hands.ts` and `scripts/mahjong/examples-test.ts` check special hands and the rulebook examples; `scripts/mahjong/whynot-test.ts`, `scripts/mahjong/coach-test.ts`, `scripts/mahjong/contrast-test.ts`, `scripts/mahjong/seating-test.ts` cover the newer features.
 - Beginner help: Coach (suggested move + reason), call tooltips, "why you cannot win" notices and per-wait reasons, guided practice game (`?tutorial=1`), full scoring breakdown (fu, base points, payments) on every win.
 - Not testable here: Firefox (its test browser will not launch in this environment), real iOS Safari/Android devices.
