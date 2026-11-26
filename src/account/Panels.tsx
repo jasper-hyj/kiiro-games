@@ -4,28 +4,9 @@ import { useLang } from '../i18n'
 import { api, ApiError, type BoardRow } from './api'
 import { fmt, PasswordInput, useAccount, useEscape } from './Account'
 import { Avatar } from '../ui/components'
+import { CATALOG } from '../games/catalog'
 
-const GAMES: [string, string][] = [
-  ['all', 'acAll'],
-  ['mahjong', 'hubMahjong'],
-  ['holdem', 'hubHoldem'],
-  ['blackjack', 'bjName'],
-  ['bigtwo', 'btName'],
-  ['gomoku', 'gomoku'],
-  ['crazyeights', 'crazyeights'],
-  ['yahtzee', 'yahtzee'],
-  ['liarsdice', 'liarsdice'],
-  ['chess', 'chess'],
-  ['xiangqi', 'xiangqi'],
-  ['doudizhu', 'doudizhu'],
-  ['bridge', 'bridge'],
-  ['hearts', 'hearts'],
-  ['spades', 'spades'],
-  ['go', 'go'],
-  ['checkers', 'checkers'],
-  ['reversi', 'reversi'],
-  ['chinesecheckers', 'chinesecheckers'],
-]
+const GAMES: [string, string][] = [['all', 'acAll'], ...CATALOG.map((g): [string, string] => [g.id, g.name])]
 
 export function Leaderboard() {
   const { t } = useLang()

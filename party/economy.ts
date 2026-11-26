@@ -1,3 +1,4 @@
+import { CATALOG } from '../src/games/catalog'
 import type { D1, D1Stmt } from './d1'
 
 /** Tunables. Everyone starts equal; veterans get a small capped bonus; the floor keeps nobody broke. */
@@ -6,26 +7,7 @@ export const FLOOR_CHIPS = 3000
 /** A player appears on a leaderboard after this many results in it (one lucky hand is not a ranking). */
 export const MIN_BOARD_GAMES = 3
 /** What one "normal" win is worth in each game, so results can be compared across games on the overall board. */
-export const GAME_UNIT: Record<string, number> = {
-  mahjong: 1000,
-  bigtwo: 500,
-  holdem: 5000,
-  blackjack: 5000,
-  gomoku: 500,
-  crazyeights: 100,
-  yahtzee: 100,
-  liarsdice: 400,
-  chess: 500,
-  xiangqi: 500,
-  doudizhu: 600,
-  bridge: 200,
-  hearts: 400,
-  spades: 400,
-  go: 500,
-  checkers: 500,
-  reversi: 400,
-  chinesecheckers: 300,
-}
+export const GAME_UNIT: Record<string, number> = Object.fromEntries(CATALOG.map((g) => [g.id, g.unit]))
 export const BOARD_GAMES = Object.keys(GAME_UNIT)
 export const MAX_BONUS_PCT = 0.1
 export const GRANTS = ['start', 'bonus', 'floor', 'hold']

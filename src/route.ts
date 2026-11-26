@@ -13,9 +13,8 @@
  *
  * Older links (/holdem?room=1234&from=room&make=1&cfg=..., /?solo=1, /room?create=1&pick=...) are rewritten to these by `legacyTarget()`.
  */
-import { GENERIC_GAMES } from './games/frame/kinds'
-export const GAMES = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...GENERIC_GAMES] as const
-export type GameKey = (typeof GAMES)[number]
+import { GAMES, playsOnOneDevice, type GameKey } from './games/catalog'
+export { GAMES, type GameKey }
 export const MAHJONG_PATH = '/mahjong'
 export const HOLDEM_PATH = '/holdem'
 export const BLACKJACK_PATH = '/blackjack'
@@ -35,8 +34,6 @@ export type Route =
 export const tableUrl = (game: GameKey, code: string, watch = false) => `/${game}/${code}${watch ? '?watch=1' : ''}`
 export const roomUrl = (code?: string) => (code ? `/room/${code}` : '/room')
 export const newRoomUrl = (game?: GameKey, rule?: string) => `/room/new${game ? `?game=${game}${rule ? `&rule=${rule}` : ''}` : ''}`
-/** the games two people can play on one device: everything is on the table for both to see (no hidden hands) */
-export const LOCAL_GAMES: readonly string[] = ['gomoku', 'chess', 'xiangqi', 'checkers', 'reversi', 'go', 'chinesecheckers', 'yahtzee']
 export const localUrl = (game: GameKey) => `/${game}/local`
 export const practiceUrl = (game: GameKey) => `/${game}/practice`
 
@@ -88,7 +85,7 @@ export function route(): Route {
     if (isCode(second)) r = { page: 'table', game: first, code: second, watch: q.get('watch') === '1' }
     else if (second === 'practice' || second === 'tutorial')
       r = q.has('tiles') ? { page: 'tiles' } : { page: 'practice', game: first, tutorial: second === 'tutorial' }
-    else if (second === 'local' && LOCAL_GAMES.includes(first)) r = { page: 'practice', game: first, tutorial: false, local: true }
+    else if (second === 'local' && playsOnOneDevice(first)) r = { page: 'practice', game: first, tutorial: false, local: true }
     else r = { page: 'gameStart', game: first }
   }
   cached = r
