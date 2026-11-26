@@ -10,6 +10,7 @@ import { RoomLobby } from './ui/Lobby'
 import { Board } from './ui/Board'
 import { AkaCtx } from './ui/Tile'
 import { Connecting } from '../../ui/components'
+import { useTableSounds } from '../../ui/sound'
 import { useLang } from '../../i18n'
 import './strings'
 import { TileGallery } from './ui/TileGallery'
@@ -234,6 +235,12 @@ export default function MahjongApp() {
     if (joined.current && where.page === 'table') joinRoom(joined.current)
   }, [me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const table = view?.status === 'playing' ? view.game : null
+  useTableSounds({
+    move: table ? [table.handNo, table.phase, ...table.players.map((p) => p.discards.length + '.' + p.melds.length)].join(':') : '',
+    myTurn: !!(table?.turnOptions || table?.reaction),
+    result: null,
+  })
   if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('tiles')) return <TileGallery />
   const playing = view?.status === 'playing' && view.game
   const aka = (view?.config.aka ?? false) && view?.config.rule === 'riichi'

@@ -102,3 +102,10 @@
   display: grid;
   place-items: center;
 }
+
+.play .plundo {
+  justify-self: center;
+  align-self: center;
+  margin: 4px auto 0;
+  display: flex;
+}

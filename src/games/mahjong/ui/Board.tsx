@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fromRoom } from '../../shared/fromRoom'
+import { SoundSwitch } from '../../../ui/components'
 import '../../../room/strings'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'
@@ -498,6 +499,7 @@ export function Board({
               ? t(ruleId + '.name')
               : v.rule.name}
         </div>
+        <SoundSwitch className="menuitem soundbtn" labelled />
         <button
           className="menuitem rulesbtn"
           onClick={() => {

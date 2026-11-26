@@ -248,7 +248,9 @@ export class PokerTable implements CashGame {
   sit(id: string, name: string, amount: number): { ok: true; seat: number } | { ok: false; error: string } {
     if (this.seatOf(id) >= 0) return { ok: false, error: 'already_seated' }
     if (!Number.isInteger(amount) || amount < this.minBuyin || amount > this.maxBuyin) return { ok: false, error: 'bad_buyin' }
-    const i = this.seats.findIndex((s) => !s.id)
+    // at an eight-seat table people spread out (opposite sides first), so a few players never bunch on one side
+    const order = this.seats.length === 8 ? [0, 4, 2, 6, 1, 5, 3, 7] : this.seats.map((_, n) => n)
+    const i = order.find((n) => !this.seats[n].id) ?? -1
     if (i < 0) return { ok: false, error: 'table_full' }
     const s = this.seats[i]
     Object.assign(s, this.empty(), { id, name: clean(name) || 'Player', stack: amount, buyin: amount, connected: true, out: false })

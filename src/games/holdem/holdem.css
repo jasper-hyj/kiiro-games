@@ -935,3 +935,12 @@ body.has-kgchat .kg.hd .kg-wrap {
     width: 66px;
   }
 }
+
+/* a long name ends in an ellipsis inside its seat */
+.hd .hdseat .k-seatname {
+  width: 100%;
+  min-width: 0;
+}
+.hd .hdseat .k-seatname span:last-child {
+  min-width: 0;
+}

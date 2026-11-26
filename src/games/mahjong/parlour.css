@@ -6558,3 +6558,10 @@ input *,
     word-break: normal;
   }
 }
+
+/* the sound switch in the table menu: speaker and label side by side */
+.dockpanel .soundbtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

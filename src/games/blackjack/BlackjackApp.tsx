@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTableSounds } from '../../ui/sound'
 import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
@@ -196,6 +197,22 @@ function BjTable({
   useEffect(() => {
     if (view && (buyin < minBuy || buyin > maxBuy)) setBuyin(Math.min(maxBuy, Math.max(minBuy, minB * 50)))
   }, [minB]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const seatNow = view?.seats.find((s) => s.me)
+  useTableSounds({
+    move: view
+      ? `${view.phase}:${view.dealer.cards.length}:${view.seats.map((s) => s.hands.map((h) => h.cards.length).join('.') + '/' + s.pending).join()}`
+      : '',
+    myTurn: !!view?.options || (view?.phase === 'bet' && !!view.canBet),
+    result:
+      view?.phase === 'result' && seatNow
+        ? seatNow.hands.reduce((a, h) => a + h.net, 0) > 0
+          ? 'win'
+          : seatNow.hands.reduce((a, h) => a + h.net, 0) < 0
+            ? 'lose'
+            : 'draw'
+        : null,
+  })
 
   if (!view)
     return (

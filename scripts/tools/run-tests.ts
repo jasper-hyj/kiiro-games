@@ -41,6 +41,7 @@ const SUITES: Record<string, string[]> = {
     'site/codebox-test',
     'site/reconnect-test',
     'generic/local-test',
+    'generic/undo-sound-test',
     'generic/new-games-ui-test',
     'site/full-table-test',
     'generic/layout-check',

@@ -17,6 +17,8 @@ export interface CatalogEntry {
   unit: number
   /** two people can play on one device (nothing is hidden from either player) */
   local?: boolean
+  /** moves can be taken back in practice and on one device (no chance, nothing hidden) */
+  undo?: boolean
 }
 
 export const CATALOG = [
@@ -24,22 +26,23 @@ export const CATALOG = [
   { id: 'holdem', name: 'hubHoldem', unit: 5000 },
   { id: 'blackjack', name: 'bjName', unit: 5000 },
   { id: 'bigtwo', name: 'btName', unit: 500 },
-  { id: 'gomoku', name: 'gomoku', unit: 500, local: true },
+  { id: 'gomoku', name: 'gomoku', unit: 500, local: true, undo: true },
   { id: 'crazyeights', name: 'crazyeights', unit: 100 },
   { id: 'yahtzee', name: 'yahtzee', unit: 100, local: true },
   { id: 'liarsdice', name: 'liarsdice', unit: 400 },
-  { id: 'chess', name: 'chess', unit: 500, local: true },
-  { id: 'xiangqi', name: 'xiangqi', unit: 500, local: true },
+  { id: 'chess', name: 'chess', unit: 500, local: true, undo: true },
+  { id: 'xiangqi', name: 'xiangqi', unit: 500, local: true, undo: true },
   { id: 'doudizhu', name: 'doudizhu', unit: 600 },
   { id: 'bridge', name: 'bridge', unit: 200 },
   { id: 'hearts', name: 'hearts', unit: 400 },
   { id: 'spades', name: 'spades', unit: 400 },
-  { id: 'go', name: 'go', unit: 500, local: true },
-  { id: 'checkers', name: 'checkers', unit: 500, local: true },
-  { id: 'reversi', name: 'reversi', unit: 400, local: true },
-  { id: 'chinesecheckers', name: 'chinesecheckers', unit: 300, local: true },
+  { id: 'go', name: 'go', unit: 500, local: true, undo: true },
+  { id: 'checkers', name: 'checkers', unit: 500, local: true, undo: true },
+  { id: 'reversi', name: 'reversi', unit: 400, local: true, undo: true },
+  { id: 'chinesecheckers', name: 'chinesecheckers', unit: 300, local: true, undo: true },
 ] as const satisfies readonly CatalogEntry[]
 
 export type GameKey = (typeof CATALOG)[number]['id']
 export const GAMES: readonly GameKey[] = CATALOG.map((g) => g.id)
+export const allowsUndo = (id: string) => CATALOG.some((g) => g.id === id && 'undo' in g)
 export const playsOnOneDevice = (id: string) => CATALOG.some((g) => g.id === id && 'local' in g)

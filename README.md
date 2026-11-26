@@ -61,6 +61,8 @@ To add a game:
 
 ## Addresses
 
+**Undo** is offered in practice and same-device play for the games without chance or hidden hands (Gomoku, Chess, Xiangqi, Go, Checkers, Reversi, Chinese Checkers; `undo` in `games/catalog.ts`). **Sound** (`src/ui/sound.ts`) is made with Web Audio: a click for a move, two notes for your turn, a phrase at the end, with one remembered mute switch in every table header.
+
 | Address                                        | Page                                                                                                                   |
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `/`                                            | hub                                                                                                                    |

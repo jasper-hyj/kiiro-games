@@ -2,10 +2,12 @@ import { liveSocket } from '../../net/live'
 import { PARTY_HOST } from '../mahjong/net/client'
 import { getToken } from '../../account/api'
 import { ENGINES } from './registry'
+import { allowsUndo } from '../catalog'
+import type { TurnGame } from './base'
 import type { PlayView } from './base'
 
 /** `local`: two people share this device, so the board keeps one orientation and nobody is marked "you" */
-export type PlayViewX = PlayView & { signedIn: boolean; watching: number; local?: boolean }
+export type PlayViewX = PlayView & { signedIn: boolean; watching: number; local?: boolean; canUndo?: boolean }
 export type TalkMsg = { n: number; name: string; text: string }
 export interface PlayHandlers {
   onView(v: PlayViewX): void
@@ -17,6 +19,8 @@ export interface PlayHandlers {
 export interface PlayConn {
   send(m: Record<string, unknown>): void
   say?(text: string): void
+  /** take back the last move (practice and same-device board games only) */
+  undo?(): void
   close(): void
 }
 
@@ -52,16 +56,18 @@ export function connectLocalPlay(
   g.turnTimerMs = 0
   g.join(id, name)
   g.setConfig(id, { ...g.config, ...config, ranked: false })
-  const push = () => h.onView({ ...g.view(id), signedIn: false, watching: 0 })
+  const history = undoStack(kind, g)
+  const push = () => h.onView({ ...g.view(id), signedIn: false, watching: 0, canUndo: history.can() })
   g.onChange(push)
   h.onStatus('open')
   g.start(id)
   push()
   return {
     send(m) {
-      const e = g.message(id, m)
+      const e = history.send(id, m)
       if (e) h.onError(e)
     },
+    undo: () => history.undo(),
     close() {
       g.dispose()
     },
@@ -81,9 +87,10 @@ function connectSameDevice(kind: string, h: PlayHandlers, config: Record<string,
   g.join(second, 'Player 2')
   g.setConfig(host, { ...g.config, ...config, ranked: false })
   const viewer = () => (g.status === 'playing' && g.turn() >= 0 ? (g.seats[g.turn()].id ?? host) : host)
+  const history = undoStack(kind, g)
   const push = () => {
     const v = g.view(viewer())
-    h.onView({ ...v, seats: v.seats.map((s) => ({ ...s, me: false })), local: true, signedIn: false, watching: 0 })
+    h.onView({ ...v, seats: v.seats.map((s) => ({ ...s, me: false })), local: true, signedIn: false, watching: 0, canUndo: history.can() })
   }
   g.onChange(push)
   h.onStatus('open')
@@ -91,11 +98,41 @@ function connectSameDevice(kind: string, h: PlayHandlers, config: Record<string,
   push()
   return {
     send(m) {
-      const e = g.message(m.k === 'act' ? viewer() : host, m)
+      const e = history.send(m.k === 'act' ? viewer() : host, m)
       if (e) h.onError(e)
     },
+    undo: () => history.undo(),
     close() {
       g.dispose()
+    },
+  }
+}
+
+/**
+ * Remembers the table before each move a person makes, so it can be taken back. In practice that also takes back the computer's reply.
+ * Only for games without chance or hidden hands (see the catalog).
+ */
+function undoStack(kind: string, g: TurnGame) {
+  const before: string[] = []
+  const enabled = allowsUndo(kind)
+  return {
+    can: () => before.length > 0,
+    send(id: string, m: Record<string, unknown>): string | null {
+      if (m.k !== 'act') {
+        before.length = 0 // a new game starts a new history
+        return g.message(id, m)
+      }
+      if (!enabled) return g.message(id, m)
+      // pushed first, so the view sent out by the move already offers to take it back
+      before.push(g.serialize())
+      if (before.length > 400) before.shift()
+      const error = g.message(id, m)
+      if (error) before.pop()
+      return error
+    },
+    undo() {
+      const state = before.pop()
+      if (state) g.rewind(state)
     },
   }
 }

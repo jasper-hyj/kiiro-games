@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTableSounds } from '../../ui/sound'
 import { readName, writeName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
@@ -258,6 +259,13 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
     if (view && (buyin < minBuy || buyin > maxBuy)) setBuyin(Math.min(maxBuy, Math.max(minBuy, view.config.bb * 50)))
   }, [view?.config.bb]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const mySeat = view && view.you >= 0 ? view.you : -1
+  useTableSounds({
+    move: view ? `${view.handNo}:${view.street}:${view.toAct}:${view.pot}:${view.seats.map((s) => s.bet).join()}` : '',
+    myTurn: !!view?.turn,
+    result: view?.result && mySeat >= 0 ? (view.result.won[mySeat] > 0 ? 'win' : 'draw') : null,
+  })
+
   if (!view)
     return (
       <div className="kg hd">
@@ -375,7 +383,9 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
             const [x, y0] = spots[rel(s.seat) % spots.length]
             // on a short felt keep every seat (with the cards above it) inside the table
             const low = !s.me && y0 > 60 // the lower side seats sit level with you, clear of the board cards
-            const y = feltH < 440 ? (low ? 100 - (44 / feltH) * 100 : Math.max(((s.me ? 112 : 40) / feltH) * 100, Math.min(100 - (40 / feltH) * 100, y0))) : y0
+            let y = feltH < 440 ? (low ? 100 - (44 / feltH) * 100 : Math.max(((s.me ? 112 : 40) / feltH) * 100, Math.min(100 - (40 / feltH) * 100, y0))) : y0
+            // on a phone the seat at the top moves down enough for its cards to stay on the table, clear of the header
+            if (narrow && !s.me && feltH >= 440 && y0 < 12) y = Math.max(y0, (78 / feltH) * 100)
             // the chips bet sit between the seat and the middle; with eight seats on a narrow table they move further in, clear of the seat
             const pull = narrow && v.seats.length > 6 && x !== 50 ? 0.5 : 0.32
             const bx = x + (50 - x) * pull,

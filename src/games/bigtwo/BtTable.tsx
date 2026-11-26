@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useTableSounds } from '../../ui/sound'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { Card } from '../holdem/ui/Cards'
@@ -77,6 +78,11 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
   const ref = Math.max(0, v.you)
   const rel = (seat: number) => (seat - ref + 4) % 4 // 0 me, 1 left, 2 top, 3 right
   const myTurn = v.status === 'playing' && v.turn === v.you
+  useTableSounds({
+    move: `${v.status}:${v.turn}:${v.seats.map((s) => (s as { count?: number }).count ?? '').join()}:${JSON.stringify(v.current)}`,
+    myTurn,
+    result: v.status === 'over' && v.result ? (v.you < 0 ? 'draw' : v.result.winner === v.you ? 'win' : 'lose') : null,
+  })
   const chosen = sel.length ? evalCombo(sel) : null
   const curCombo = v.current ? evalCombo(v.current.cards) : null
   const curName = curCombo ? t('btt.' + curCombo.type) : ''

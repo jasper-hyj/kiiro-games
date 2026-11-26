@@ -583,3 +583,23 @@
     animation: none;
   }
 }
+
+/* the narrowest phones: the table header keeps to one line */
+@media (max-width: 360px) {
+  .k-head {
+    gap: 4px;
+  }
+  .k-tools {
+    gap: 2px;
+  }
+  :root:root .k-ghost.k-helpbtn {
+    width: 32px;
+    min-height: 36px;
+  }
+  .k-head .k-pill {
+    display: none;
+  }
+  .k-head .k-title {
+    font-size: 14px;
+  }
+}

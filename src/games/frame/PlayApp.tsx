@@ -8,6 +8,7 @@ import { nameOrGuest } from '../shared/name'
 import { TalkBox } from '../shared/TalkBox'
 import { Connecting, Hotkeys, NoRoom, ResultPanel, SeatChip, TableHeader, useShownName } from '../../ui/components'
 import { connectLocalPlay, connectPlay, type PlayConn, type PlayViewX, type TalkMsg } from './client'
+import { useTableSounds } from '../../ui/sound'
 import { GAME_UI } from './boards'
 import type { GenericGame } from './kinds'
 import '../holdem/strings'
@@ -87,6 +88,14 @@ export default function PlayApp({ game }: { game: GenericGame }) {
     const i = setInterval(() => tick((n) => n + 1), 500)
     return () => clearInterval(i)
   }, [])
+
+  const mine = !!view && view.status === 'playing' && !view.local && (view.anyTurn || (view.actor ?? view.turn) === view.you)
+  const points = view?.status === 'over' && view.result ? (view.local || view.you < 0 ? 1 : view.result.points[view.you]) : null
+  useTableSounds({
+    move: view?.state ? JSON.stringify(view.state) : '',
+    myTurn: mine,
+    result: points === null ? null : points > 0 ? 'win' : points < 0 ? 'lose' : 'draw',
+  })
 
   const send = (m: Record<string, unknown>) => conn.current?.send(m)
   const leave = () => {
@@ -225,6 +234,11 @@ export default function PlayApp({ game }: { game: GenericGame }) {
           {line}
         </div>
         <ui.Board v={v} send={send} name={shown} />
+        {v.canUndo && (
+          <button className="hdbtn plundo" onClick={() => conn.current?.undo?.()}>
+            ↶ {t('plUndo')}
+          </button>
+        )}
         {over && (
           <ResultPanel
             title={

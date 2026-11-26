@@ -374,6 +374,19 @@ export abstract class TurnGame {
     })
   }
   restore(raw: string) {
+    // after a restart nobody is connected yet: people have the grace time to come back
+    this.load(raw, (s) => ({ ...s, connected: s.bot, dcAt: s.id ? Date.now() : 0 }))
+    this.drive()
+  }
+  /** go back to an earlier `serialize()` of this same game, with everyone still sitting where they are (undo) */
+  rewind(raw: string) {
+    this.clearTimer()
+    const now = this.seats
+    this.load(raw, (s, i) => ({ ...s, connected: now[i].connected, dcAt: now[i].dcAt, missed: 0 }))
+    this.emit()
+    this.drive()
+  }
+  private load(raw: string, seat: (s: Seat, i: number) => Seat) {
     const d = JSON.parse(raw)
     this.config = d.config
     this.hostId = d.hostId
@@ -382,9 +395,8 @@ export abstract class TurnGame {
     this.matchId = d.matchId
     this.startedAt = d.startedAt
     this.result = d.result
-    this.seats = (d.seats as Seat[]).map((s) => ({ ...s, connected: s.bot, dcAt: s.id ? Date.now() : 0 }))
+    this.seats = (d.seats as Seat[]).map(seat)
     if (d.state) this.loadState(d.state)
-    this.drive()
   }
   dispose() {
     this.clearTimer()
