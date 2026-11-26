@@ -11,7 +11,7 @@ import '../../src/room/strings'
 
 // the converter's own table (Traditional -> Simplified) gives every Simplified character that differs from its Traditional form
 const src = readFileSync('src/simplify.ts', 'utf8')
-const pairs = /const PAIRS = '([^']+)'/.exec(src)![1]
+const pairs = /const PAIRS\s*=\s*'([^']+)'/.exec(src)![1]
 const simp = new Set<string>(),
   trad = new Set<string>()
 for (let i = 0; i < pairs.length; i += 2) {

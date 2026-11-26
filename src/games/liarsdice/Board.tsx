@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLang } from '../../i18n'
 import { Hotkeys, Kbd } from '../../ui/components'
 import type { BoardProps } from '../frame/types'
+import { PIPS } from '../frame/dice'
 import './strings'
 
 /* ---------------------------------------------------------------- Liar's Dice */

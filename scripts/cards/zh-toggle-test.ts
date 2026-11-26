@@ -16,7 +16,7 @@ const ok = (c: boolean, m: string) => {
     console.log('FAIL', m)
   } else console.log('ok  ', m)
 }
-const pairs = /const PAIRS = '([^']+)'/.exec(readFileSync('src/simplify.ts', 'utf8'))![1]
+const pairs = /const PAIRS\s*=\s*'([^']+)'/.exec(readFileSync('src/simplify.ts', 'utf8'))![1]
 const simp = new Set<string>()
 for (let i = 0; i < pairs.length; i += 2) if (pairs[i + 1] !== pairs[i]) simp.add(pairs[i + 1])
 for (const c of '制台系面云干只表复里后') simp.delete(c) // valid in both scripts

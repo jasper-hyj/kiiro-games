@@ -3,10 +3,10 @@ import { useLang } from '../../i18n'
 import { Hotkeys, Kbd } from '../../ui/components'
 import { CATS } from './engine'
 import type { BoardProps } from '../frame/types'
+import { PIPS } from '../frame/dice'
 import './strings'
 
 /* ---------------------------------------------------------------- Yahtzee */
-const PIPS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }
 function Die({ n, held, live, onClick }: { n: number; held: boolean; live: boolean; onClick(): void }) {
   return (
     <button className={'yzdie' + (held ? ' held' : '') + (live ? ' live' : '')} disabled={!live} onClick={onClick} aria-pressed={held} aria-label={String(n)}>
