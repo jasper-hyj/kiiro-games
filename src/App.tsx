@@ -6,7 +6,7 @@ import HoldemApp from './games/holdem/HoldemApp'
 import BlackjackApp from './games/blackjack/BlackjackApp'
 import BigTwoApp from './games/bigtwo/BigTwoApp'
 import RoomApp from './room/RoomApp'
-import PlayApp from './games/generic/PlayApp'
+import PlayApp from './games/frame/PlayApp'
 import { legacyTarget, newRoomUrl, route } from './route'
 
 /**

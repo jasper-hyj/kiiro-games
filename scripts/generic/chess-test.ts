@@ -1,5 +1,5 @@
 // Run: npx tsx scripts/generic/chess-test.ts   The chess rules against the published perft node counts (every legal-move path to a depth), plus ends of games and the computer opponent.
-import { bestMove, ending, fromFen, inCheck, key, legal, parseSq, perft, play, san, startPos, toFen, START_FEN } from '../../src/games/generic/chessrules'
+import { bestMove, ending, fromFen, inCheck, key, legal, parseSq, perft, play, san, startPos, toFen, START_FEN } from '../../src/games/chess/rules'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

@@ -168,17 +168,15 @@ export async function leaderboard(db: D1, season = seasonOf(), me?: string, limi
   }
   const all = [...by.values()].filter((x) => x.n >= MIN_BOARD_GAMES)
   all.sort((a, b) => (game === 'all' ? b.score - a.score : b.profit - a.profit) || a.games - b.games)
-  return all
-    .slice(0, limit)
-    .map((r, i) => ({
-      rank: i + 1,
-      name: r.name,
-      level: level(r.games),
-      profit: r.profit,
-      score: Math.round(r.score * 10) / 10,
-      games: r.n,
-      me: r.id === me || undefined,
-    }))
+  return all.slice(0, limit).map((r, i) => ({
+    rank: i + 1,
+    name: r.name,
+    level: level(r.games),
+    profit: r.profit,
+    score: Math.round(r.score * 10) / 10,
+    games: r.n,
+    me: r.id === me || undefined,
+  }))
 }
 
 /**

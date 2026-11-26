@@ -1,10 +1,10 @@
 // Run: npx tsx scripts/generic/more-test.ts   Rules of Reversi, Checkers, Go, Chinese Checkers, Hearts and Spades (the bot games are in engine-test.ts).
-import { Reversi, legal as rvLegal, flips } from '../../src/games/generic/reversi'
-import { Checkers, movesFor, apply } from '../../src/games/generic/checkers'
-import { Go, areaScore } from '../../src/games/generic/go'
-import { ChineseCheckers, HOLES, CAMPS, LAYOUT, idx } from '../../src/games/generic/chinesecheckers'
-import { Hearts, QS, TWO_CLUBS } from '../../src/games/generic/hearts'
-import { Spades } from '../../src/games/generic/spades'
+import { Reversi, legal as rvLegal, flips } from '../../src/games/reversi/engine'
+import { Checkers, movesFor, apply } from '../../src/games/checkers/engine'
+import { Go, areaScore } from '../../src/games/go/engine'
+import { ChineseCheckers, HOLES, CAMPS, LAYOUT, idx } from '../../src/games/chinesecheckers/engine'
+import { Hearts, QS, TWO_CLUBS } from '../../src/games/hearts/engine'
+import { Spades } from '../../src/games/spades/engine'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

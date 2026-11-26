@@ -1,9 +1,9 @@
 // Run: npx tsx scripts/generic/engine-test.ts   Every turn-based game on the shared frame: lobby, bots, full games to a result, persistence, rules.
-import { ENGINES } from '../../src/games/generic/registry'
-import { Gomoku } from '../../src/games/generic/gomoku'
-import { CrazyEights } from '../../src/games/generic/crazyeights'
-import { Yahtzee, scoreFor } from '../../src/games/generic/yahtzee'
-import { LiarsDice } from '../../src/games/generic/liarsdice'
+import { ENGINES } from '../../src/games/frame/registry'
+import { Gomoku } from '../../src/games/gomoku/engine'
+import { CrazyEights } from '../../src/games/crazyeights/engine'
+import { Yahtzee, scoreFor } from '../../src/games/yahtzee/engine'
+import { LiarsDice } from '../../src/games/liarsdice/engine'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

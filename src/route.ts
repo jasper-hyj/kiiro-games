@@ -13,7 +13,7 @@
  *
  * Older links (/holdem?room=1234&from=room&make=1&cfg=..., /?solo=1, /room?create=1&pick=...) are rewritten to these by `legacyTarget()`.
  */
-import { GENERIC_GAMES } from './games/generic/kinds'
+import { GENERIC_GAMES } from './games/frame/kinds'
 export const GAMES = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...GENERIC_GAMES] as const
 export type GameKey = (typeof GAMES)[number]
 export const MAHJONG_PATH = '/mahjong'

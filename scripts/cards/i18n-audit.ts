@@ -6,20 +6,8 @@ import '../../src/games/mahjong/strings'
 import '../../src/games/mahjong/strings.ja'
 import '../../src/hub/strings'
 import '../../src/account/strings'
-import '../../src/games/holdem/strings'
-import '../../src/games/blackjack/strings'
-import '../../src/games/bigtwo/strings'
+import '../../src/games/strings'
 import '../../src/room/strings'
-import '../../src/games/generic/strings'
-import '../../src/games/generic/gomokuStrings'
-import '../../src/games/generic/crazyStrings'
-import '../../src/games/generic/yahtzeeStrings'
-import '../../src/games/generic/liarsStrings'
-import '../../src/games/generic/chessStrings'
-import '../../src/games/generic/xqStrings'
-import '../../src/games/generic/ddStrings'
-import '../../src/games/generic/bridgeStrings'
-import '../../src/games/generic/moreStrings'
 
 const { D, JA } = allStrings()
 const walk = (d: string): string[] =>
@@ -30,11 +18,26 @@ const walk = (d: string): string[] =>
 const files = [
   'src/hub',
   'src/account',
+  'src/games/shared',
+  'src/games/frame',
   'src/games/holdem',
   'src/games/blackjack',
   'src/games/bigtwo',
-  'src/games/shared',
-  'src/games/generic',
+  'src/games/gomoku',
+  'src/games/crazyeights',
+  'src/games/yahtzee',
+  'src/games/liarsdice',
+  'src/games/chess',
+  'src/games/xiangqi',
+  'src/games/doudizhu',
+  'src/games/bridge',
+  'src/games/chinesecheckers',
+  'src/games/go',
+  'src/games/hearts',
+  'src/games/spades',
+  'src/games/checkers',
+  'src/games/reversi',
+  'src/games/trick',
   'src/room',
 ].flatMap(walk)
 let missingZh = 0,

@@ -1,5 +1,5 @@
 // Run: npx tsx scripts/generic/bridge-test.ts   Bridge: scoring against the standard score table, the auction rules, play (follow suit, trumps, the dummy), and whole games by the bots.
-import { Bridge, scoreContract } from '../../src/games/generic/bridge'
+import { Bridge, scoreContract } from '../../src/games/bridge/engine'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

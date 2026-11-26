@@ -2,8 +2,8 @@ import { Server, type Connection, type WSMessage } from 'partyserver'
 import type { Env } from './d1'
 import { userFromToken } from './auth'
 import { recordMatch } from './matches'
-import { ENGINES, isGeneric } from '../src/games/generic/registry'
-import type { TurnGame } from '../src/games/generic/base'
+import { ENGINES, isGeneric } from '../src/games/frame/registry'
+import type { TurnGame } from '../src/games/frame/base'
 
 type Conn = Connection<{ id?: string }>
 const clean = (s: unknown, n = 140) =>
@@ -14,7 +14,7 @@ const clean = (s: unknown, n = 140) =>
     .slice(0, n)
 
 /**
- * One table of any turn-based game on the shared frame (src/games/generic/base.ts): Gomoku, Yahtzee, Chess ...
+ * One table of any turn-based game on the shared frame (src/games/frame/base.ts): Gomoku, Yahtzee, Chess ...
  * Same shape as the older tables: a room prepares it (kind, settings, host), the first person to open it sits down,
  * the others join, watch or take a free seat; ranked tables settle chips zero-sum between the signed-in humans.
  */

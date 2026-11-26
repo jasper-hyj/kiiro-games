@@ -1,5 +1,5 @@
 // Run: npx tsx scripts/generic/dd-test.ts   Dou Dizhu: which card sets are legal plays, what beats what, bidding, scoring, and whole games played by the bots.
-import { beats, classify, DouDizhu, options } from '../../src/games/generic/doudizhu'
+import { beats, classify, DouDizhu, options } from '../../src/games/doudizhu/engine'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

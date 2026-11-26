@@ -5,7 +5,7 @@ import { BLINDS } from '../src/games/holdem/engine/table'
 import { MIN_BETS } from '../src/games/blackjack/engine/table'
 import { DEFAULT_CONFIG } from '../src/games/mahjong/engine/table'
 
-import { ENGINES, isGeneric } from '../src/games/generic/registry'
+import { ENGINES, isGeneric } from '../src/games/frame/registry'
 export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo' | (string & {})
 const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...Object.keys(ENGINES)]
 const MJ_RULES = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
