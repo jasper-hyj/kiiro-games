@@ -1,7 +1,7 @@
 import { registerStrings } from '../../i18n'
 // Reversi, Checkers, Go, Chinese Checkers, Hearts and Spades: [English, 繁體中文], then Japanese
 registerStrings({
-  plLocal: ['Same device', '同一裝置'], hubLocal: ['Same device', '同一裝置'],
+  plLocalTurn: ["{name}'s turn", '輪到 {name}'], plLocal: ['Same device', '同一裝置'],hubLocal: ['Same device', '同一裝置'],
   reversi: ['Reversi', '黑白棋'], reversiBlurb: ['Bracket the other colour to flip it. Most discs wins.', '夾住對方的棋子就能翻面，子多者勝。'],
   rvBlack: ['Black', '黑'], rvWhite: ['White', '白'], rvYouAre: ['You play {side}', '你執{side}'], rvPassed: ['No move: turn skipped', '無處可下：跳過回合'],
   rvHow: ['How to play Reversi', '黑白棋玩法'],
@@ -55,7 +55,7 @@ registerStrings({
   spR3: ['Your team makes its bid when your combined tricks reach your combined bids: 10 points per trick bid plus 1 per extra trick. Falling short loses 10 per trick bid.', '雙方合計墩數達到合計叫牌即成功：每叫一墩 10 分，多贏的每墩 1 分；沒達到則每叫一墩扣 10 分。'],
   spR4: ['Nil: take no tricks for +100, or −100 if you do.', '叫零：一墩都不贏得 +100，贏了任何一墩則 −100。'],
 }, {
-  plLocal: '同じ端末', hubLocal: '同じ端末',
+  plLocalTurn: '{name} の番です', plLocal: '同じ端末',hubLocal: '同じ端末',
   reversi: 'リバーシ', reversiBlurb: '相手の石を挟んでひっくり返します。多い方の勝ち。',
   rvBlack: '黒', rvWhite: '白', rvYouAre: 'あなたは{side}です', rvPassed: '打てる場所がなくパスしました',
   rvHow: 'リバーシの遊び方',

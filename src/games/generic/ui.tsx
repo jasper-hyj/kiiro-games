@@ -45,7 +45,7 @@ function GomokuBoard({ v, send }: BoardProps) {
   return (
     <div className="gmwrap">
       <div className="gmside" aria-live="polite">
-        {mine > 0 ? <span className="gmchip"><i className={'gmstone s' + mine} aria-hidden="true" />{t('gmYouAre', { side: sideName(mine) })}</span> : null}
+        {mine > 0 && !v.local ? <span className="gmchip"><i className={'gmstone s' + mine} aria-hidden="true" />{t('gmYouAre', { side: sideName(mine) })}</span> : null}
         {v.status === 'playing' && <span className="muted small"><i className={'gmstone s' + (v.turn === s.black ? 1 : 2)} aria-hidden="true" /> {sideName(v.turn === s.black ? 1 : 2)}</span>}
       </div>
       <svg className="gmboard" viewBox={`0 0 ${size} ${size}`} role="grid" aria-label={t('gomoku')}>
@@ -239,7 +239,7 @@ function ChessBoard({ v, send }: BoardProps) {
   const { t } = useLang()
   const s = v.state as { board: number[]; white: number; color: 1 | -1 | 0; toMove: 1 | -1; last: [number, number] | null; check: number; moves: string[]; targets: Record<string, string[]>; promos: string[]; end: { over: boolean; result: string } | null }
   const myTurn = v.status === 'playing' && v.turn === v.you
-  const flip = s.color === -1
+  const flip = !v.local && s.color === -1
   const [sel, setSel] = useState<string | null>(null)
   const [promo, setPromo] = useState<{ from: string; to: string } | null>(null)
   const [ask, setAsk] = useState(false)
@@ -262,7 +262,7 @@ function ChessBoard({ v, send }: BoardProps) {
   return (
     <div className="ch">
       <div className="gmside">
-        {s.color !== 0 && <span className="gmchip"><i className={'gmstone s' + (s.color === 1 ? 2 : 1)} aria-hidden="true" />{t('chYouAre', { side: side(s.color) })}</span>}
+        {s.color !== 0 && !v.local && <span className="gmchip"><i className={'gmstone s' + (s.color === 1 ? 2 : 1)} aria-hidden="true" />{t('chYouAre', { side: side(s.color) })}</span>}
         {v.status === 'playing' && <span className="muted small">{t('chToMove', { side: side(s.toMove) })}{s.check >= 0 ? ` · ${t('chCheck')}` : ''}</span>}
         {endText && <b>{endText}</b>}
       </div>
@@ -305,7 +305,7 @@ function XiangqiBoard({ v, send }: BoardProps) {
   const { t } = useLang()
   const s = v.state as { board: number[]; red: number; color: 1 | -1 | 0; toMove: 1 | -1; last: [number, number] | null; check: number; moves: string[]; targets: Record<string, number[]>; end: { over: boolean; result: string } | null }
   const myTurn = v.status === 'playing' && v.turn === v.you
-  const flip = s.color === -1
+  const flip = !v.local && s.color === -1
   const [sel, setSel] = useState<number | null>(null)
   const [ask, setAsk] = useState(false)
   useEffect(() => { setSel(null) }, [s.moves.length, v.game])
@@ -324,7 +324,7 @@ function XiangqiBoard({ v, send }: BoardProps) {
   return (
     <div className="ch">
       <div className="gmside">
-        {s.color !== 0 && <span className="gmchip"><i className={'xqdot ' + (s.color === 1 ? 'r' : 'b')} aria-hidden="true" />{t('chYouAre', { side: side(s.color) })}</span>}
+        {s.color !== 0 && !v.local && <span className="gmchip"><i className={'xqdot ' + (s.color === 1 ? 'r' : 'b')} aria-hidden="true" />{t('chYouAre', { side: side(s.color) })}</span>}
         {v.status === 'playing' && <span className="muted small">{t('chToMove', { side: side(s.toMove) })}{s.check >= 0 ? ` · ${t('chCheck')}` : ''}</span>}
         {endKey && <b>{t(endKey)}</b>}
       </div>

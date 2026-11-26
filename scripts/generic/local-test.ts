@@ -21,17 +21,41 @@ const page = async (path: string) => {
   const cells2 = await p.$$('.gmhit'); await cells2[0].click(); await sleep(200)
   const stones = await p.$$eval('.gmst', (e) => e.map((x) => x.getAttribute('class')))
   ok(stones.length === 2 && stones[0] !== stones[1], `gomoku: two people place black and white on one screen (${stones.join(' | ')})`)
-  ok((await p.$eval('.plline', (e) => e.textContent || '')).includes('Your turn'), 'gomoku: the line always says it is the viewer\'s turn')
+  ok(/Player [12].s turn/.test(await p.$eval('.plline', (e) => e.textContent || '')), 'gomoku: the line names whose turn it is')
   ok((await p.$eval('.k-title', (e) => e.textContent || '')).includes('Same device'), 'gomoku: the header says Same device')
 }
-// Checkers: red moves, then the table is shown for ivory
+// Checkers: after red moves it is ivory's turn and the board has not turned round
 {
   const p = await page('/checkers/local'); await p.waitForSelector('.ckboard')
+  const order = () => p.$$eval('.cksq', (e) => e.map((x) => x.getAttribute('aria-label')).join(';'))
+  const before = await order()
   const mover = await p.$$('.cksq.mv')
   await mover[0].click(); await sleep(150)
   const tgt = await p.$('.cksq.tgt'); await tgt!.click(); await sleep(400)
-  const youNow = await p.$eval('.gmchip', (e) => e.textContent || '')
-  ok(/Ivory/.test(youNow), `checkers: after red moves the table is shown for ivory (${youNow})`)
+  const now = await p.$eval('.gmchip', (e) => e.textContent || '')
+  ok(/Ivory to move/.test(now), `checkers: after red moves it is ivory to move (${now})`)
+  ok((await order()) === before, 'checkers: the board keeps its orientation')
+}
+// Chess: the same
+{
+  const p = await page('/chess/local'); await p.waitForSelector('.chsq')
+  const order = () => p.$$eval('.chsq', (e) => e.map((x) => (x.getAttribute('aria-label') || '').slice(0, 2)).join(''))
+  const before = await order()
+  const tap = (n: string) => p.evaluate((nm) => { (Array.from(document.querySelectorAll('.chsq')).find((e) => e.getAttribute('aria-label')?.startsWith(nm)) as HTMLElement).click() }, n)
+  await tap('e2'); await sleep(150); await tap('e4'); await sleep(400)
+  ok(/Black to move/.test(await p.$eval('.gmside', (e) => e.textContent || '')), 'chess: it is black to move')
+  ok((await order()) === before, 'chess: the board keeps its orientation')
+}
+// Xiangqi: red moves a soldier, the pieces stay where they are on screen
+{
+  const p = await page('/xiangqi/local'); await p.waitForSelector('.xqboard')
+  const spots = () => p.$$eval('.xqp', (e) => e.map((x) => `${x.getAttribute('class')?.includes(' r') ? 'r' : 'b'}:${Math.round(x.getBoundingClientRect().top)}`))
+  const redLow = (list: string[]) => { const avg = (c: string) => { const ys = list.filter((s) => s.startsWith(c)).map((s) => Number(s.slice(2))); return ys.reduce((a, b) => a + b, 0) / ys.length }; return avg('r') > avg('b') }
+  ok(redLow(await spots()), 'xiangqi: red starts at the bottom')
+  await p.evaluate(() => { const cells = Array.from(document.querySelectorAll('.xqcell.live')); (cells[0] as SVGElement).dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+  await sleep(200)
+  const target = await p.$('.xqtgt'); if (target) { await p.evaluate(() => { const t = document.querySelector('.xqtgt')!; (t.closest('.xqcell') ?? t.parentElement!).dispatchEvent(new MouseEvent('click', { bubbles: true })) }); await sleep(400) }
+  ok(redLow(await spots()), 'xiangqi: red is still at the bottom after a move')
 }
 // the hub offers it only for games with open information
 {

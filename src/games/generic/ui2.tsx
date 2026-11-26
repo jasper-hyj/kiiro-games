@@ -38,7 +38,7 @@ export function ReversiBoard({ v, send }: BoardProps) {
   return (
     <div className="gmwrap">
       <div className="gmside" aria-live="polite">
-        {mine > 0 && <span className="gmchip"><i className={'gmstone s' + (mine === 1 ? 1 : 2)} aria-hidden="true" />{t('rvYouAre', { side: side(mine) })}</span>}
+        {mine > 0 && (!v.local || v.status === 'playing') && <span className="gmchip"><i className={'gmstone s' + mine} aria-hidden="true" />{t(v.local ? 'chToMove' : 'rvYouAre', { side: side(mine) })}</span>}
         <span className="gmchip"><i className="gmstone s1" aria-hidden="true" />{s.counts[0]}</span>
         <span className="gmchip"><i className="gmstone s2" aria-hidden="true" />{s.counts[1]}</span>
       </div>
@@ -67,7 +67,7 @@ export function CheckersBoard({ v, send }: BoardProps) {
   useEffect(() => { setSel(null) }, [s.board.join(''), v.game])
   const froms = new Set(myTurn ? s.moves.map((m) => m.from) : [])
   const dests = sel === null ? [] : s.moves.filter((m) => m.from === sel)
-  const flip = side === 1
+  const flip = !v.local && side === 1
   const order = Array.from({ length: 64 }, (_, i) => (flip ? 63 - i : i))
   const tap = (i: number) => {
     if (!myTurn) return
@@ -79,7 +79,7 @@ export function CheckersBoard({ v, send }: BoardProps) {
   return (
     <div className="gmwrap">
       <div className="gmside" aria-live="polite">
-        {v.you >= 0 && <span className="gmchip"><i className={'ckdot p' + (side === 0 ? 1 : 3)} aria-hidden="true" />{t('ckYouAre', { side: side === 0 ? t('ckRed') : t('ckIvory') })}</span>}
+        {v.you >= 0 && (!v.local || v.status === 'playing') && <span className="gmchip"><i className={'ckdot p' + (side === 0 ? 1 : 3)} aria-hidden="true" />{t(v.local ? 'chToMove' : 'ckYouAre',{ side: side === 0 ? t('ckRed') : t('ckIvory') })}</span>}
         {mustCapture && <b>{t('ckMust')}</b>}
       </div>
       <div className="ckboard" role="grid" aria-label={t('checkers')}>
@@ -124,7 +124,7 @@ export function GoBoard({ v, send, name }: BoardProps) {
   return (
     <div className="gmwrap">
       <div className="gmside" aria-live="polite">
-        {mine > 0 && <span className="gmchip"><i className={'gmstone s' + mine} aria-hidden="true" />{t('goYouAre', { side: colourName(mine) })}</span>}
+        {mine > 0 && (!v.local || v.status === 'playing') && <span className="gmchip"><i className={'gmstone s' + mine} aria-hidden="true" />{t(v.local ? 'chToMove' : 'goYouAre',{ side: colourName(mine) })}</span>}
         <span className="muted small"><i className="gmstone s1" aria-hidden="true" /> {t('goCaptured', { n: s.caps[blackSeat] })} · <i className="gmstone s2" aria-hidden="true" /> {t('goCaptured', { n: s.caps[whiteSeat] })} · {t('goKomi', { n: s.komi })}</span>
       </div>
       <svg className="gmboard" viewBox={`0 0 ${size} ${size}`} role="grid" aria-label={t('go')}>
@@ -203,7 +203,7 @@ export function ChineseCheckersBoard({ v, send, name }: BoardProps) {
           )
         })}
       </svg>
-      <div className="chfoot">{myTurn && sel === null && <span className="muted small">{t('ccSelect')}</span>}{v.you >= 0 && <span className="muted small">{t('ccYou', { colour: t(CC_KEYS[s.camps[v.you]]) })}</span>}</div>
+      <div className="chfoot">{myTurn && sel === null && <span className="muted small">{t('ccSelect')}</span>}{v.you >= 0 && !v.local && <span className="muted small">{t('ccYou', { colour: t(CC_KEYS[s.camps[v.you]]) })}</span>}</div>
     </div>
   )
 }

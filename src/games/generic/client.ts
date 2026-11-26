@@ -4,7 +4,8 @@ import { getToken } from '../../account/api'
 import { ENGINES } from './registry'
 import type { PlayView } from './base'
 
-export type PlayViewX = PlayView & { signedIn: boolean; watching: number }
+/** `local`: two people share this device, so the board keeps one orientation and nobody is marked "you" */
+export type PlayViewX = PlayView & { signedIn: boolean; watching: number; local?: boolean }
 export type TalkMsg = { n: number; name: string; text: string }
 export interface PlayHandlers { onView(v: PlayViewX): void; onStatus(s: 'connecting' | 'open' | 'closed'): void; onError(m: string): void; onTalk?(m: TalkMsg): void; onTalkLog?(m: TalkMsg[]): void }
 export interface PlayConn { send(m: Record<string, unknown>): void; say?(text: string): void; close(): void }
@@ -44,8 +45,8 @@ export function connectLocalPlay(kind: string, id: string, name: string, h: Play
 }
 
 /**
- * Two people on one device: both seats are people. The screen always shows the table from the seat that is on turn, so "hand over the phone"
- * is all it takes; nothing is hidden in these games. Messages that are moves go to the seat on turn, everything else to the host.
+ * Two people on one device: both seats are people. The board never turns round (the players usually sit facing each other); nothing is hidden
+ * in these games. Messages that are moves go to the seat on turn, everything else to the host.
  */
 function connectSameDevice(kind: string, h: PlayHandlers, config: Record<string, unknown>): PlayConn {
   const g = ENGINES[kind]()
@@ -54,7 +55,7 @@ function connectSameDevice(kind: string, h: PlayHandlers, config: Record<string,
   g.join(host, 'Player 1'); g.join(second, 'Player 2')
   g.setConfig(host, { ...g.config, ...config, ranked: false })
   const viewer = () => (g.status === 'playing' && g.turn() >= 0 ? g.seats[g.turn()].id ?? host : host)
-  const push = () => h.onView({ ...g.view(viewer()), signedIn: false, watching: 0 })
+  const push = () => { const v = g.view(viewer()); h.onView({ ...v, seats: v.seats.map((s) => ({ ...s, me: false })), local: true, signedIn: false, watching: 0 }) }
   g.onChange(push)
   h.onStatus('open')
   g.start(host)
