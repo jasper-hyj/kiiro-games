@@ -1,5 +1,5 @@
 // Run: npx tsx scripts/generic/xq-test.ts   The Xiangqi rules: published perft counts from the start position, piece rules, mate/stalemate/flying general, and the computer opponent.
-import { bestMove, ending, fromFen, inCheck, key, legal, perft, play, startPos, toFen, START_FEN } from '../../src/games/xiangqi/rules'
+import { bestMove, ending, fromFen, inCheck, key, legal, perft, play, startPos, toFen } from '../../src/games/xiangqi/rules'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {

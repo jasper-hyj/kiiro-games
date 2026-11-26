@@ -3,13 +3,6 @@
     background: #6f8384;
   }
 }
-@media (max-height: 560px) {
-  .ccboard,
-  .rvboard,
-  .ckboard {
-    width: min(94vw, 480px, calc(100dvh - 110px));
-  }
-}
 
 /* ---- small phones: give the board and the hand the screen ---- */
 @media (max-width: 560px) {
@@ -55,20 +48,6 @@
   .play .br,
   .play .tk {
     gap: 6px;
-  }
-  .gmboard {
-    width: min(calc(100vw - 12px), calc(100dvh - 210px));
-  }
-  .chboard,
-  .ckboard,
-  .rvboard {
-    width: min(calc(100vw - 20px), calc(100dvh - 220px));
-  }
-  .xqboard {
-    width: min(calc(100vw - 12px), calc((100dvh - 200px) * 0.9));
-  }
-  .ccboard {
-    width: min(calc(100vw - 12px), calc((100dvh - 215px) * 0.9));
   }
   /* hands: bigger cards with a wider strip to touch; they wrap onto a second row */
   .tkcard .pkcard {
@@ -199,5 +178,106 @@
     min-height: 22px;
     min-width: 52px;
     font-size: 13px;
+  }
+}
+
+/* ---- how large the boards are, on every screen ----
+   A board is as wide as the screen allows and no taller than the room left for it (--board-h). */
+.play {
+  --board-h: calc(100dvh - 290px);
+}
+.play .gmboard,
+.play .chboard,
+.play .ckboard,
+.play .rvboard {
+  width: min(calc(100vw - 60px), 780px, max(240px, var(--board-h)));
+}
+.play .xqboard,
+.play .ccboard {
+  width: min(calc(100vw - 60px), 720px, max(220px, calc(var(--board-h) * 0.9)));
+}
+.chboard,
+.ckboard {
+  container-type: inline-size;
+}
+.chboard .chp {
+  font-size: 9.4cqw;
+}
+.ckboard .ckp {
+  font-size: 6cqw;
+}
+.play .chmoves {
+  max-width: min(94vw, 780px);
+}
+@media (max-width: 560px) {
+  .play {
+    --board-h: calc(100dvh - 215px);
+  }
+  .play .gmboard,
+  .play .chboard,
+  .play .ckboard,
+  .play .rvboard {
+    width: min(calc(100vw - 20px), max(240px, var(--board-h)));
+  }
+  .play .xqboard,
+  .play .ccboard {
+    width: min(calc(100vw - 14px), max(220px, calc(var(--board-h) * 0.9)));
+  }
+}
+/* held sideways (phones, small tablets, short windows): the board takes the full height, everything else stands beside it */
+@media (orientation: landscape) and (max-height: 860px) {
+  .play {
+    --board-h: calc(100dvh - 108px);
+    --side: clamp(160px, 24vw, 300px);
+  }
+  .play .kg-wrap.hdwrap:has(.gmboard, .chboard, .ckboard, .rvboard, .xqboard, .ccboard) {
+    display: grid;
+    grid-template-columns: var(--side) minmax(0, max-content);
+    grid-auto-rows: min-content;
+    justify-content: center;
+    align-content: start;
+    column-gap: 18px;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: max(6px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+  }
+  .play .kg-wrap.hdwrap:has(.gmboard, .chboard, .ckboard, .rvboard, .xqboard, .ccboard) > * {
+    grid-column: 1;
+    min-width: 0;
+  }
+  .play .kg-wrap.hdwrap > .gmwrap,
+  .play .kg-wrap.hdwrap > .ch {
+    grid-column: 2 !important;
+    grid-row: 1 / span 14;
+    align-self: start;
+    gap: 4px;
+  }
+  .play .kg-wrap.hdwrap:has(.gmboard, .chboard, .ckboard, .rvboard, .xqboard, .ccboard) .k-head {
+    flex-wrap: wrap;
+  }
+  .play .kg-wrap.hdwrap:has(.gmboard, .chboard, .ckboard, .rvboard, .xqboard, .ccboard) .plseats {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .play .gmboard,
+  .play .chboard,
+  .play .ckboard,
+  .play .rvboard {
+    width: min(calc(100vw - var(--side) - 66px), 780px, max(200px, var(--board-h)));
+  }
+  .play .xqboard,
+  .play .ccboard {
+    width: min(calc(100vw - var(--side) - 66px), 720px, max(190px, calc(var(--board-h) * 0.9)));
+  }
+  /* what stands above and below the board wraps to the board's width instead of widening the column */
+  .play .gmwrap > :not(svg, .ckboard, .rvboard),
+  .play .ch > :not(svg, .chboard) {
+    max-width: calc(100vw - var(--side) - 66px);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .play .ccboard {
+    width: min(calc(100vw - var(--side) - 66px), 720px, max(180px, calc((var(--board-h) - 24px) * 0.88)));
   }
 }

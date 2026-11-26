@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 /** dragging a hand tile upward discards it; a short drag does not */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 let fails = 0
 const check = (n: string, ok: boolean) => {

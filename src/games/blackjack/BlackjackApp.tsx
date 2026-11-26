@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTableSounds } from '../../ui/sound'
-import { readName, writeName } from '../shared/name'
+import { readName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
@@ -13,34 +13,17 @@ import { Hotkeys, Kbd, OutOfChips, RefillNotice, SeatChip, TableHeader } from '.
 import { roomUrl, route } from '../../route'
 import { Connecting, NoRoom } from '../../ui/components'
 import '../../room/strings'
-import { MIN_BETS } from './engine/table'
-import { Rules } from '../shared/Rules'
 import type { BjMsg, BlackjackView } from './net/protocol'
 import '../holdem/strings'
 import './strings'
 import '../holdem/holdem.css'
 import './blackjack.css'
 
-const load = (k: string, d = '') => {
-  try {
-    return localStorage.getItem(k) ?? d
-  } catch {
-    return d
-  }
-}
-const save = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v)
-  } catch {
-    /* ignore */
-  }
-}
 const fmt = (n: number) => n.toLocaleString()
 
 export default function BlackjackApp() {
-  const { t } = useLang()
   const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => readName(''))
+  const [name] = useState(() => readName(''))
   const [view, setView] = useState<BlackjackView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')

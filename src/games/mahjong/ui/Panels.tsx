@@ -1,6 +1,5 @@
 import { createPortal } from 'react-dom'
 import type { TableView } from '../engine/table'
-import { CHAT_KEYS } from '../engine/table'
 import { useLang } from '../../../i18n'
 import { yakuName } from '../strings'
 
@@ -110,18 +109,5 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
         </tbody>
       </table>
     </Modal>
-  )
-}
-
-export function ChatPicker({ onPick }: { onPick: (key: string) => void }) {
-  const { t } = useLang()
-  return (
-    <div className="chatpop">
-      {CHAT_KEYS.map((k) => (
-        <button key={k} className="chatbtn" onClick={() => onPick(k)}>
-          {EMOJI[k] ?? t('chat.' + k)}
-        </button>
-      ))}
-    </div>
   )
 }

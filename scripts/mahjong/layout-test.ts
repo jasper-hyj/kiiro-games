@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core'
 
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const WIDTHS = (process.env.WIDTHS ?? '320,360,375,390,414,480,540,600,640,700,768,820,900,1024,1180,1280,1366,1440,1600,1920,2560').split(',').map(Number)
 const HEIGHTS = (process.env.HEIGHTS ?? '568,640,700,768,800,900,1024,1080,1440').split(',').map(Number)

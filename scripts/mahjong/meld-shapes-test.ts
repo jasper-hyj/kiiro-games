@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 /** Every exposed meld in the stress table must show the right number of tiles and a sideways (called) tile; closed kans show two backs. */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 let bad = 0,
   n = 0

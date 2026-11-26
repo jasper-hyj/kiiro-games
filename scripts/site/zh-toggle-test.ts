@@ -39,6 +39,8 @@ const visit = async (label: string, url: string, wait: string, act?: (p: Page) =
   const p = await (await b.createBrowserContext()).newPage()
   await p.setViewport({ width: 1100, height: 900 })
   await p.evaluateOnNewDocument(() => {
+    if (sessionStorage.getItem('zh-start')) return // a reload keeps the choice made since
+    sessionStorage.setItem('zh-start', '1')
     localStorage.setItem('kiiro-lang', 'zh')
     localStorage.setItem('kiiro-zhs', '1')
   }) // start in Simplified

@@ -1,6 +1,5 @@
 import { rankOf, suitOf } from './cards'
 
-export const HAND_NAMES = ['High card', 'Pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush']
 const B = 13
 
 /** Score of exactly five cards: higher is better, equal means a split. Category in the top digit, tie-breaks below. */

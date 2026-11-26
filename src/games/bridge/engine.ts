@@ -15,7 +15,6 @@ export const BRIDGE_META: GameMeta = {
   fields: [],
   defaults: { ranked: false },
 }
-export const SEATS = ['S', 'W', 'N', 'E'] // seat 0 is South; the order is clockwise, partners sit opposite
 /** bid strains from low to high: clubs, diamonds, hearts, spades, no-trump (4) */
 const STRAIN_OF_SUIT = [3, 2, 1, 0] // Hold'em suit index -> strain
 const SUIT_OF_STRAIN = [3, 2, 1, 0]

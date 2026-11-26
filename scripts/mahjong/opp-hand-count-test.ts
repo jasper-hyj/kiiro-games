@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 /** An opponent never shows more face-down tiles than they can hold: handSize - 3 x melds, plus one only right after drawing. */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 let bad = 0,

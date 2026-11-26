@@ -90,8 +90,12 @@ async function main() {
   }
   await sleep(800)
   const seated = extra.filter((c) => lastView(c)?.you >= 0).length
-  const refused = extra.filter((c) => c.msgs.some((m) => m.t === 'error')).length
-  check(`room caps at the seat count (3p riichi: ${seated} extra seated, ${refused} refused)`, seated === 2 && refused === 8, `${seated}/${refused}`)
+  const watching = extra.filter((c) => lastView(c)?.you === -1).length
+  check(
+    `a full table seats nobody more, the rest watch (3p riichi: ${seated} extra seated, ${watching} watching)`,
+    seated === 2 && watching === 8,
+    `${seated}/${watching}`,
+  )
 
   // 4. flood
   for (let i = 0; i < 3000; i++) send(a, { t: 'chat', key: 'hello' })

@@ -8,12 +8,6 @@ import { ENGINES, isGeneric } from '../../src/games/frame/registry'
 import type { TurnGame } from '../../src/games/frame/base'
 
 type Conn = Connection<{ id?: string }>
-const clean = (s: unknown, n = 140) =>
-  String(s ?? '')
-    .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, n)
 
 /**
  * One table of any turn-based game on the shared frame (src/games/frame/base.ts): Gomoku, Yahtzee, Chess ...

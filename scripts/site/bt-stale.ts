@@ -23,8 +23,8 @@ p.on('pageerror', (e: unknown) => {
   console.log('PAGEERROR', (e as Error).message)
 })
 await p.goto(await tableUrl('bigtwo', {}), { waitUntil: 'networkidle0' })
-await p.waitForSelector('.hdform .hdbtn.primary')
-await p.click('.hdform .hdbtn.primary')
+await p.waitForSelector('.hdform .hdbtn.primary, .bthand .btcard') // a table made from a room starts by itself
+if (await p.$('.hdform .hdbtn.primary')) await p.click('.hdform .hdbtn.primary')
 await p.waitForSelector('.bthand .btcard')
 const myTurn = async () => {
   const t0 = Date.now()

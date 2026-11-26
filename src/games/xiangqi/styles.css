@@ -5,11 +5,6 @@
   touch-action: manipulation;
   filter: drop-shadow(0 10px 18px rgba(70, 50, 25, 0.35));
 }
-@media (max-height: 560px) {
-  .xqboard {
-    width: min(94vw, 520px, calc((100dvh - 110px) * 0.86));
-  }
-}
 .xqriver {
   fill: #5a3f1c;
   font: 600 0.5px var(--k-serif);

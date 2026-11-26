@@ -20,7 +20,7 @@ for (const [w, h, touch, label] of [
       localStorage.setItem('kiiro-hints', JSON.stringify(hh))
       ;(window as any).__name = (f: unknown) => f
     }, hints)
-    await p.goto('http://localhost:5199/?stress=min&hint=1&opp=1&players=4&rule=riichi', { waitUntil: 'networkidle0' })
+    await p.goto('http://localhost:5200/?stress=min&hint=1&opp=1&players=4&rule=riichi', { waitUntil: 'networkidle0' })
     await sleep(900)
     const shown = await p.evaluate(() => !!document.querySelector('.handbar .hint'))
     rects.push(

@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { readName, writeName } from '../shared/name'
+import { readName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
 import { getToken } from '../../account/api'
-import { Card } from '../holdem/ui/Cards'
 import { connectLocalBigTwo } from '../shared/localCash'
 import { connectCash, getClientId, type CashConn, type Status, type TalkMsg } from '../shared/cashClient'
-import { TalkBox } from '../shared/TalkBox'
 import { roomUrl, route } from '../../route'
 import { Connecting, NoRoom } from '../../ui/components'
 import '../../room/strings'
 import { BtTable } from './BtTable'
-import { Rules } from '../shared/Rules'
 import type { BigTwoView, BtMsg } from './net/protocol'
 import '../holdem/strings'
 import '../blackjack/strings'
@@ -20,25 +17,10 @@ import './strings'
 import '../holdem/holdem.css'
 import './bigtwo.css'
 
-const load = (k: string, d = '') => {
-  try {
-    return localStorage.getItem(k) ?? d
-  } catch {
-    return d
-  }
-}
-const save = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v)
-  } catch {
-    /* ignore */
-  }
-}
-
 export default function BigTwoApp() {
   const { t } = useLang()
-  const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => readName(''))
+  const { me, openSignIn } = useAccount()
+  const [name] = useState(() => readName(''))
   const [view, setView] = useState<BigTwoView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')

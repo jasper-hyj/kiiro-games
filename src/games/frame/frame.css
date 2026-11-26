@@ -52,11 +52,6 @@
   touch-action: manipulation;
   filter: drop-shadow(0 10px 18px rgba(70, 50, 25, 0.35));
 }
-@media (max-height: 560px) {
-  .gmboard {
-    width: min(94vw, 580px, calc(100dvh - 120px));
-  }
-}
 .gmwood {
   fill: #c79a58;
   stroke: #8d6a34;
@@ -103,9 +98,22 @@
   place-items: center;
 }
 
-.play .plundo {
-  justify-self: center;
+/* a compact pill, centred under the board (spelled out so every browser, Safari included, draws it the same) */
+:root:root .play button.plundo {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
   align-self: center;
-  margin: 4px auto 0;
-  display: flex;
+  justify-self: center;
+  gap: 8px;
+  width: auto;
+  height: 44px;
+  min-height: 44px;
+  margin: 6px auto 0;
+  padding: 0 18px;
+  line-height: 1;
+  white-space: nowrap;
 }

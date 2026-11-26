@@ -9,7 +9,7 @@ await p.evaluateOnNewDocument(() => {
   localStorage.setItem('kiiro-lang', 'en')
   ;(window as any).__name = (f: unknown) => f
 })
-await p.goto('http://localhost:5199/?solo=1&rule=taiwan&speed=0.5', { waitUntil: 'networkidle0' })
+await p.goto('http://localhost:5200/?solo=1&rule=taiwan&speed=0.5', { waitUntil: 'networkidle0' })
 let fails = 0,
   checked = 0
 const click = (s: string) => p.evaluate((x: string) => (document.querySelector(x) as HTMLElement | null)?.click(), s)

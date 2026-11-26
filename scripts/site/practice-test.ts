@@ -27,16 +27,6 @@ const open = async (path: string) => {
   await p.goto(BASE + path, { waitUntil: 'networkidle0' })
   return { p, net }
 }
-const clickText = (p: any, sel: string, text: string) =>
-  p.evaluate(
-    (s: string, t: string) => {
-      const el = Array.from(document.querySelectorAll(s)).find((e) => (e.textContent || '').includes(t)) as HTMLElement | undefined
-      el?.click()
-      return !!el
-    },
-    sel,
-    text,
-  )
 
 {
   // blackjack

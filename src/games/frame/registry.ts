@@ -47,5 +47,4 @@ export const METAS: Record<string, GameMeta> = {
   checkers: CHECKERS_META,
   reversi: REVERSI_META,
 }
-export const GENERIC_KINDS = Object.keys(ENGINES)
 export const isGeneric = (k: string) => k in ENGINES

@@ -15,10 +15,6 @@
  */
 import { GAMES, playsOnOneDevice, type GameKey } from './games/catalog'
 export { GAMES, type GameKey }
-export const MAHJONG_PATH = '/mahjong'
-export const HOLDEM_PATH = '/holdem'
-export const BLACKJACK_PATH = '/blackjack'
-export const BIGTWO_PATH = '/bigtwo'
 export const isGame = (s: string | null | undefined): s is GameKey => !!s && (GAMES as readonly string[]).includes(s)
 const isCode = (s: string | null | undefined): s is string => !!s && /^\d{4}$/.test(s)
 

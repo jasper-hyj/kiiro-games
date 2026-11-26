@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 /** Plays solo games and, every time the human can chi, clicks it and records what the board shows afterwards. */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const p = await b.newPage()

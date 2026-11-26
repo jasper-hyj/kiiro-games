@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 /** Plays a solo game for a while in several viewports and reports page errors / console errors (a crash blanks the screen). */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 let errors = 0

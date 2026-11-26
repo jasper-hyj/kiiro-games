@@ -33,7 +33,6 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
     score: number | null
   }
   const you = Math.max(0, v.you)
-  const pos = (seat: number) => (seat - you + 4) % 4 // 0 bottom, 1 left, 2 top, 3 right
   const seatName = (seat: number) => (seat === v.you ? t('brYou') : seat === (you + 2) % 4 && v.you >= 0 ? t('brPartner') : name(v.seats[seat].name))
   const dir = (seat: number) => t(BR_SEAT_KEYS[seat])
   const callText = (c: BrCall) =>

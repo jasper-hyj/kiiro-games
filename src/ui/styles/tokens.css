@@ -35,8 +35,7 @@
 }
 /* on the felt, the old light-on-dark colours apply */
 .k-felt,
-.kg-table,
-.k-onfelt {
+.kg-table {
   --k-ink: #f3ecdd;
   --k-mute: #c3c2b6;
   --k-ink-rgb: 243, 236, 221;

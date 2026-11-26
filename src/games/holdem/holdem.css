@@ -95,25 +95,11 @@
   background: rgba(var(--k-accent-rgb), 0.18);
   color: var(--ink);
 }
-.hdhead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  flex-wrap: wrap;
-  font-size: 14px;
-}
-.hdtools {
-  display: flex;
-  gap: 4px;
-}
+
 .hdbanner {
   margin: 6px 0;
 }
-.hdstatus {
-  margin-top: 40px;
-}
+
 .hdwrap {
   padding-bottom: 28px;
 }
@@ -230,10 +216,7 @@
   transform: translateX(-50%);
   box-shadow: 0 0 0 3px rgba(26, 33, 31, 0.9);
 }
-.hdseat.away .hdname {
-  text-decoration: line-through;
-  text-decoration-color: rgba(var(--k-ink-rgb), 0.3);
-}
+
 .hdhole {
   position: absolute;
   top: calc(var(--cw) * -1.4 - 18px);
@@ -245,17 +228,7 @@
 .hdseat.me .hdhole {
   --cw: 44px;
 }
-.hdname {
-  font-size: 13px;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  justify-content: center;
-}
+
 .hdbtn-d {
   font-style: normal;
   font-size: 10px;
@@ -269,10 +242,7 @@
   place-items: center;
   padding: 0 3px;
 }
-.hdstack {
-  font: 600 14px var(--sans, system-ui);
-  font-variant-numeric: tabular-nums;
-}
+
 .hdlast {
   font-size: 11px;
   color: var(--mute);
@@ -371,12 +341,7 @@
     width: 92px;
     padding: 6px 5px;
   }
-  .hdname {
-    font-size: 12px;
-  }
-  .hdstack {
-    font-size: 13px;
-  }
+
   .pkcard.small {
     --cw: 24px;
   }
@@ -418,9 +383,7 @@
   .hdlast {
     display: none;
   }
-  .hdhead {
-    padding: 4px 0;
-  }
+
   .hdbar {
     padding-top: 6px;
   }
@@ -466,12 +429,7 @@
     width: 80px;
     padding: 5px 3px;
   }
-  .hdname {
-    font-size: 11.5px;
-  }
-  .hdstack {
-    font-size: 12.5px;
-  }
+
   .pkcard.small {
     --cw: 22px;
   }

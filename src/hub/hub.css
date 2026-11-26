@@ -89,38 +89,8 @@
   margin: 0;
   max-width: 44ch;
 }
-.kg-cols {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 56px;
-  align-items: start;
-}
+
 @media (max-width: 760px) {
-  .kg-cols {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-}
-.kg-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px 48px;
-  align-items: end;
-  padding: 56px 0 40px;
-}
-.kg-hero .kg-join {
-  margin: 0;
-  width: 280px;
-}
-@media (max-width: 760px) {
-  .kg-hero {
-    grid-template-columns: 1fr;
-    padding: 36px 0 28px;
-  }
-  .kg-hero .kg-join {
-    width: 100%;
-    max-width: 360px;
-  }
   .kg-wrap {
     padding: 0 18px 48px;
   }
@@ -171,25 +141,7 @@
     background 0.2s,
     transform 0.2s;
 }
-.kg-art {
-  grid-area: art;
-  display: block;
-  margin-bottom: 18px;
-}
-.kg-art svg {
-  display: block;
-  width: 76px;
-  height: 57px;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.85;
-  transition:
-    opacity 0.2s,
-    transform 0.25s;
-}
+
 .kg-game b {
   grid-area: name;
   font: 600 19px var(--serif);
@@ -214,11 +166,7 @@ a.kg-game:focus-visible {
   transform: translateY(-2px);
   outline: none;
 }
-a.kg-game:hover .kg-art svg,
-a.kg-game:focus-visible .kg-art svg {
-  opacity: 1;
-  transform: translateX(3px);
-}
+
 a.kg-game:hover .kg-go {
   transform: translateX(3px);
 }
@@ -366,14 +314,6 @@ a.kg-game:hover .kg-go {
   cursor: default;
 }
 
-.kg-heroside {
-  display: grid;
-  gap: 18px;
-  justify-items: start;
-}
-.kg-hero .kg-heroside .kg-join {
-  margin: 0;
-}
 :root:root .kg a.kg-create {
   display: inline-flex;
   align-items: center;
@@ -392,15 +332,6 @@ a.kg-game:hover .kg-go {
 :root:root .kg a.kg-create:hover {
   background: var(--k-accent-hi);
   transform: translateY(-1px);
-}
-@media (max-width: 760px) {
-  .kg-heroside {
-    justify-items: stretch;
-  }
-  .kg-heroside .kg-create {
-    width: 100%;
-    box-sizing: border-box;
-  }
 }
 
 .kg-game {
@@ -508,23 +439,7 @@ a.kg-game:hover .kg-go {
     inset 0 18px 60px rgba(0, 0, 0, 0.22),
     0 22px 44px rgba(70, 50, 25, 0.3);
 }
-.kg-seats {
-  display: grid;
-  gap: 30px;
-  justify-items: center;
-}
-.kg-left > :nth-child(1) {
-  margin-left: 34px;
-}
-.kg-left > :nth-child(2) {
-  margin-left: -4px;
-}
-.kg-right > :nth-child(1) {
-  margin-right: -4px;
-}
-.kg-right > :nth-child(2) {
-  margin-right: 34px;
-}
+
 :root:root .kg-obj {
   display: grid;
   justify-items: center;
@@ -665,13 +580,7 @@ a.kg-game:hover .kg-go {
     order: -1;
     padding: 6px 4px 4px;
   }
-  .kg-seats {
-    gap: 18px;
-  }
-  .kg-left > *,
-  .kg-right > * {
-    margin: 0 !important;
-  }
+
   .kg-medal {
     width: 86px;
     height: 86px;
@@ -697,7 +606,7 @@ a.kg-game:hover .kg-go {
 
 /* many games: the table keeps its message on top and the games sit on a shelf of medals under it */
 .kg-hubtable {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   border-radius: 64px;
   padding: 44px 40px 48px;
   gap: 26px;

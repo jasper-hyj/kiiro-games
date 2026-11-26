@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fromRoom } from '../../shared/fromRoom'
-import { SoundSwitch } from '../../../ui/components'
+import { SoundSwitch } from '../../../ui/SoundSwitch'
 import '../../../room/strings'
 import type { TableView, PlayerView } from '../engine/table'
 import type { Meld } from '../engine/game'

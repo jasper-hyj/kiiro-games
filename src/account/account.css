@@ -99,18 +99,7 @@
   color: var(--k-bad);
   margin: 0;
 }
-.acnote {
-  position: fixed;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  z-index: 210;
-  padding: 0.7em 1.1em;
-  border-radius: 8px;
-  background: #3a3025;
-  color: #fbf5e6;
-  font: 400 14px var(--sans, system-ui);
-}
+
 .acrow {
   display: flex;
   gap: 10px;

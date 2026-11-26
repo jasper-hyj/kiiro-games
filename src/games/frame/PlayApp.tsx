@@ -22,7 +22,7 @@ import './strings'
 export default function PlayApp({ game }: { game: GenericGame }) {
   const { t } = useLang()
   const shown = useShownName()
-  const { me, openSignIn } = useAccount()
+  const { me } = useAccount()
   const where = route()
   const practice = where.page === 'practice'
   const code = where.page === 'table' ? where.code : null
@@ -236,7 +236,21 @@ export default function PlayApp({ game }: { game: GenericGame }) {
         <ui.Board v={v} send={send} name={shown} />
         {v.canUndo && (
           <button className="hdbtn plundo" onClick={() => conn.current?.undo?.()}>
-            ↶ {t('plUndo')}
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 7 4 12l5 5" />
+              <path d="M4 12h10a6 6 0 0 1 6 6" />
+            </svg>
+            <span>{t('plUndo')}</span>
           </button>
         )}
         {over && (

@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer-core'
 /** Visits every screen at many viewport sizes and languages and reports anything that overlaps:
  *  text over text, text under a control, control over control, and visible text that another element covers.
  *  (Tile art, pips and the table's rotated rivers are layered on purpose and are skipped.) */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const click = (p: any, s: string) => p.evaluate((x: string) => (document.querySelector(x) as HTMLElement | null)?.click(), s)

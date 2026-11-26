@@ -271,7 +271,6 @@ export function legal(p: Pos): Move[] {
     return !inCheck(q, p.turn)
   })
 }
-export const legalFrom = (p: Pos, from: number) => legal(p).filter((m) => m.from === from)
 
 /** a short move text for the history list (e4, Nf3, exd5, O-O, e8=Q+, Qh5#) */
 export function san(p: Pos, m: Move, all: Move[] = legal(p)): string {

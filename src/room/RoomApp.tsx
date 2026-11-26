@@ -68,7 +68,6 @@ export default function RoomApp() {
   const [view, setView] = useState<RoomView | null>(null)
   const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>('closed')
   const [error, setError] = useState('')
-  const [code, setCode] = useState('')
   const [talk, setTalk] = useState<TalkLine[]>([])
   const [copied, setCopied] = useState(false)
   const conn = useRef<RoomConn | null>(null)
@@ -248,8 +247,6 @@ export default function RoomApp() {
         <TableHeader
           title={`${t('rmName')} ${room}`}
           sub={`${view.members.length} ${t('rmPeople').toLowerCase()}`}
-          copied={copied}
-          onCopy={copy}
           onLeave={leave}
           leaveLabel={t('rmLeave')}
           status={status}
@@ -261,6 +258,19 @@ export default function RoomApp() {
         )}
         <div className="kg-table rmtable">
           <section>
+            <div className="rmcodecard">
+              <span className="rmcodelabel">{t('rmJoin')}</span>
+              <strong className="rmdigits" aria-label={room.split('').join(' ')}>
+                {room.split('').map((d, i) => (
+                  <b key={i} aria-hidden="true">
+                    {d}
+                  </b>
+                ))}
+              </strong>
+              <button className="hdbtn primary rmcopy" onClick={copy}>
+                {copied ? t('rmCopied') : t('rmCopy')}
+              </button>
+            </div>
             <h2>{t('rmPeople')}</h2>
             <ul className="rmpeople">
               {view.members.map((m, i) => (
@@ -302,6 +312,7 @@ export default function RoomApp() {
                 {t('rmIWatch')}
               </button>
             </div>
+            {view.game && view.game !== 'mahjong' && HOW[view.game] && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
           </section>
           <section>
             {view.host ? (
@@ -341,7 +352,6 @@ export default function RoomApp() {
                 )}
               </>
             )}
-            {view.game && view.game !== 'mahjong' && HOW[view.game] && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
             {view.launched && view.game && (
               <div className="rmrunning">
                 <p className="kg-note">{t('rmRunning')}</p>

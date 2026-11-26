@@ -9,7 +9,7 @@ await p.evaluateOnNewDocument(() => {
   localStorage.setItem('kiiro-lang', 'en')
   ;(window as any).__name = (f: unknown) => f
 })
-await p.goto('http://localhost:5199/?stress=full&players=4&rule=riichi', { waitUntil: 'networkidle0' })
+await p.goto('http://localhost:5200/?stress=full&players=4&rule=riichi', { waitUntil: 'networkidle0' })
 await sleep(800)
 let fails = 0
 const check = (n: string, ok: boolean, x = '') => {
@@ -32,7 +32,7 @@ await p.mouse.move(5, 5)
 await sleep(300)
 check('moving away clears it', (await hl()) === 0)
 // call buttons show no tile pictures; pointing at one lights up the tiles it would use
-await p.goto('http://localhost:5199/?stress=call&players=4&rule=taiwan', { waitUntil: 'networkidle0' })
+await p.goto('http://localhost:5200/?stress=call&players=4&rule=taiwan', { waitUntil: 'networkidle0' })
 await sleep(800)
 check('call buttons carry no tile pictures', (await p.evaluate(() => document.querySelectorAll('.actionpop .cbtn .mini').length)) === 0)
 const callBtns = await p.$$('.actionpop .cbtn.call')

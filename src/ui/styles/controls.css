@@ -123,17 +123,11 @@
 }
 
 /* panels: soft, rounded, no hard outlines */
-.k-panel {
-  background: var(--k-panel);
-  border-radius: var(--k-r);
-  box-shadow: var(--k-shadow-sm);
-}
 
 /* ---- input devices ---------------------------------------------------------
    Touch: 44px targets, no double-tap zoom, no text selection or long-press menus on game surfaces.
    Mouse: hover states only where hover exists. Keyboard: visible focus everywhere, shortcut hints on desktop. */
 .hd,
-.kgt-surface,
 .bttable,
 .bthand,
 .hdfelt,

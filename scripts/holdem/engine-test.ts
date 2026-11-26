@@ -57,10 +57,6 @@ const mk = (n = 3, stacks: number[] = [], cfg = { sb: 25, bb: 50, casual: false,
   t.autostart = true
   return { t, cash }
 }
-const deckFor = (hole: string[][], board: string[]) => {
-  // deal order: two rounds starting left of the button; the table pops from the end. Rig a stack so seat k gets hole[k].
-  return { hole, board }
-}
 const total = (t: PokerTable) => t.seats.reduce((a, s) => a + s.stack + (t.street === 'wait' || t.street === 'showdown' ? 0 : s.total), 0)
 
 // heads-up: button is the small blind and acts first before the flop

@@ -40,13 +40,6 @@ const waitMyTurn = async (p: Page, ms = 60000) => {
   }
   return false
 }
-const center = async (p: Page, sel: string) => {
-  const r = await p.$eval(sel, (e) => {
-    const b = e.getBoundingClientRect()
-    return { x: b.x + b.width / 2, y: b.y + b.height / 2 }
-  })
-  return r
-}
 const cardPoint = async (p: Page, i: number) =>
   p.evaluate((n: number) => {
     const e = document.querySelectorAll('.bthand .btcard')[n] as HTMLElement
@@ -58,8 +51,8 @@ const cardPoint = async (p: Page, i: number) =>
 for (const kind of ['mouse', 'touch'] as const) {
   const p = await page(kind === 'touch')
   await p.goto(await MK('bigtwo', {}), { waitUntil: 'networkidle0' })
-  await p.waitForSelector('.hdform .hdbtn.primary')
-  await p.click('.hdform .hdbtn.primary')
+  await p.waitForSelector('.hdform .hdbtn.primary, .bthand .btcard') // a table made from a room starts by itself
+  if (await p.$('.hdform .hdbtn.primary')) await p.click('.hdform .hdbtn.primary')
   await p.waitForSelector('.bthand .btcard')
   const mine = await waitMyTurn(p)
   ok(mine, `bigtwo (${kind}): my turn arrives`)
@@ -116,8 +109,8 @@ for (const kind of ['mouse', 'touch'] as const) {
   // keyboard only
   const p = await page()
   await p.goto(await MK('bigtwo', {}), { waitUntil: 'networkidle0' })
-  await p.waitForSelector('.hdform .hdbtn.primary')
-  await p.click('.hdform .hdbtn.primary')
+  await p.waitForSelector('.hdform .hdbtn.primary, .bthand .btcard') // a table made from a room starts by itself
+  if (await p.$('.hdform .hdbtn.primary')) await p.click('.hdform .hdbtn.primary')
   await p.waitForSelector('.bthand .btcard')
   ok(await waitMyTurn(p), 'bigtwo (keyboard): my turn arrives')
   const n0 = await count(p, '.bthand .btcard')

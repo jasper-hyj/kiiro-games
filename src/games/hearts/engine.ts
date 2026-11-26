@@ -199,7 +199,6 @@ export class Hearts extends TurnGame {
 
   // ---- the bot ----
   protected bot(seat: number) {
-    const hand = this.s.hands[seat]
     if (this.s.phase === 'pass') return this.doPass(seat, this.passChoice(seat))
     const ok = this.legal(seat)
     this.playCard(seat, this.choose(seat, ok))

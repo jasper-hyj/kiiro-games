@@ -10,7 +10,6 @@ export const MIN_BOARD_GAMES = 3
 export const GAME_UNIT: Record<string, number> = Object.fromEntries(CATALOG.map((g) => [g.id, g.unit]))
 export const BOARD_GAMES = Object.keys(GAME_UNIT)
 export const MAX_BONUS_PCT = 0.1
-export const GRANTS = ['start', 'bonus', 'floor', 'hold']
 
 export function seasonOf(ms = Date.now()): string {
   return new Date(ms).toISOString().slice(0, 7)

@@ -3,7 +3,6 @@ export const rankOf = (c: number) => c % 13
 export const suitOf = (c: number) => Math.floor(c / 13)
 export const RANKS = '23456789TJQKA'
 export const SUITS = '♠♥♦♣'
-export const cardName = (c: number) => RANKS[rankOf(c)] + SUITS[suitOf(c)]
 
 /** A fresh shuffled deck (Fisher-Yates driven by the platform's secure random numbers). */
 export function shuffled(rand: (n: number) => number = secureInt): number[] {

@@ -46,7 +46,7 @@ export default function MahjongApp() {
   const [guideOpen, setGuideOpen] = useState(false)
   const { me } = useAccount()
   const [name, setName] = useState(nameOrGuest)
-  const [config, setConfig] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
+  const [config] = useState<RoomConfig>(() => load('kiiro-config', DEFAULT_CONFIG))
   const [hints, setHints] = useState(() => load('kiiro-hints', false))
   const [talk, setTalk] = useState<{ n: number; name: string; text: string }[]>([])
   const watchOnly = isWatchOnly()

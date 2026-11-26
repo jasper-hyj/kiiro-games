@@ -18,12 +18,7 @@ The repository holds a hub (`src/hub`) and one folder per game under `src/games/
 | `npm run sim -- N rule rounds players`                  | N full bot-vs-bot games, point conservation                                                                                                                  |
 | `npx tsx scripts/mahjong/fuzz.ts [scenarios] [seconds]` | random settings × rules × player actions (valid and invalid) × disconnects/rejoins/late joins; checks tile uniqueness, hand sizes, points, hidden-hand leaks |
 | `npx tsx scripts/mahjong/layout-test.ts`                | worst-case table (`?stress=full/call/min`) at 200+ window sizes: overlaps, clipping, covered/overlapping buttons                                             |
-| `npx tsx scripts/mahjong/ui-test.ts`                    | real clicks/taps through every screen on 6 device profiles, EN + 繁中                                                                                        |
-| `npx tsx scripts/mahjong/online-ui-test.ts`             | two browsers: invite link, lobby, start, chat, play, refresh/rejoin (needs vite + `npm run party:dev`)                                                       |
 | `npx tsx scripts/mahjong/server-fuzz.ts`                | hostile WebSocket client against the real server                                                                                                             |
-| `npx tsx scripts/mahjong/game-test.ts`                  | full games to the game-over screen with real clicks/taps, all rulesets, desktop + touch phone                                                                |
-| `npx tsx scripts/mahjong/reconnect-test.ts`             | connection trouble in a live room: short drop (keeps seat), long outage (bot takes over), regain control                                                     |
-| `npx tsx scripts/mahjong/room-full-test.ts`             | five browsers: the 'room is full' screen and way back                                                                                                        |
 | `npx tsx scripts/mahjong/bot-strength.ts N [rule]`      | Normal vs Easy bot tournament (Normal wins clearly)                                                                                                          |
 
 ## Results of the last full test pass
@@ -61,7 +56,7 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 - No top bar: menus are full-screen; the table has a corner dock (burger) with auto options, hints, chat, history, shortcuts, language, leave.
 - Home is a step-by-step flow (start -> rules -> options -> name; friends skips options, join uses code -> name).
 - Table shows essentials only (hints off by default). Call buttons live in a reserved centered row above the hand. Results show headline + hand + scores with a Details toggle. Discard: double-tap or drag a tile upward.
-- Tests: `scripts/mahjong/orient-test.ts` and `scripts/mahjong/webkit-game-test.ts` run in WebKit/Chromium via Playwright (see their headers); `scripts/mahjong/flick-test.ts` covers drag-to-discard.
+- Tests: `scripts/mahjong/flick-test.ts` covers drag-to-discard.
 
 ## Added in the Nov 2026 pass
 
@@ -76,6 +71,6 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 ## Nov 2026 late pass
 
 - Layout is landscape-first: a scaled table (`Stage`) above a real-size hand bar (`.handbar`). Portrait phones get a rotate prompt. Hand tile size depends only on screen width and ruleset (never changes while playing). Rivers are Mahjong Soul style (7 per row x 3 rows hugging a square plate, turned toward each seat; "Upright rivers" setting).
-- Integrity audit (`src/games/mahjong/engine/audit.ts`) runs after every move; the menu shows its status. `scripts/mahjong/calls-test.ts` fuzzes every chi/pon/kan/ron offer (and refusal) over thousands of turns; `scripts/mahjong/special-hands.ts` and `scripts/mahjong/examples-test.ts` check special hands and the rulebook examples; `scripts/mahjong/whynot-test.ts`, `scripts/mahjong/coach-test.ts`, `scripts/mahjong/contrast-test.ts`, `scripts/mahjong/seating-test.ts` cover the newer features.
+- Integrity audit (`src/games/mahjong/engine/audit.ts`) runs after every move; the menu shows its status. `scripts/mahjong/calls-test.ts` fuzzes every chi/pon/kan/ron offer (and refusal) over thousands of turns; `scripts/mahjong/special-hands.ts` and `scripts/mahjong/examples-test.ts` check special hands and the rulebook examples; `scripts/mahjong/whynot-test.ts`, `scripts/mahjong/coach-test.ts`, `scripts/tools/contrast-audit.ts`, `scripts/mahjong/seating-test.ts` cover the newer features.
 - Beginner help: Coach (suggested move + reason), call tooltips, "why you cannot win" notices and per-wait reasons, guided practice game (`?tutorial=1`), full scoring breakdown (fu, base points, payments) on every win.
 - Not testable here: Firefox (its test browser will not launch in this environment), real iOS Safari/Android devices.

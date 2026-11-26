@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTableSounds } from '../../ui/sound'
-import { readName, writeName } from '../shared/name'
+import { readName } from '../shared/name'
 import { useLang } from '../../i18n'
 import { Bar } from '../../hub/Hub'
 import { useAccount } from '../../account/Account'
 import { getToken } from '../../account/api'
 import { api } from '../../account/api'
-import { BLINDS } from './engine/table'
 import { Card } from './ui/Cards'
-import { Rules } from '../shared/Rules'
 import { best, categoryOf } from './engine/eval'
 import { connectLocalHoldem } from '../shared/localCash'
 import { connectHoldem, getClientId, type HoldemView, type PokerConn, type Status } from './net/client'
@@ -21,20 +19,6 @@ import type { TalkMsg } from '../shared/cashClient'
 import './strings'
 import './holdem.css'
 
-const load = (k: string, d = '') => {
-  try {
-    return localStorage.getItem(k) ?? d
-  } catch {
-    return d
-  }
-}
-const save = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v)
-  } catch {
-    /* ignore */
-  }
-}
 const fmt = (n: number) => n.toLocaleString()
 /** where each seat sits on the table, as % of its box, going round from the bottom: you are always at the bottom */
 const SPOTS: Record<number, [number, number][]> = {
@@ -105,9 +89,8 @@ function useNarrow() {
 }
 
 export default function HoldemApp() {
-  const { t } = useLang()
   const { me, openSignIn, refresh } = useAccount()
-  const [name, setName] = useState(() => readName(''))
+  const [name] = useState(() => readName(''))
   const [view, setView] = useState<HoldemView | null>(null)
   const [status, setStatus] = useState<Status>('closed')
   const [error, setError] = useState('')

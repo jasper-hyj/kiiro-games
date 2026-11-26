@@ -1,7 +1,7 @@
 #!/bin/sh
 # Runs every engine-level test script and prints one result line each.
 cd "$(dirname "$0")/../.." || exit 1
-for s in test game-test calls-test sichuan-test special-hands mcr-test persist-test restart-test coach-test whynot-test win-test examples-test chi-pon-race-test concurrent-calls-test meld-view-test idle-test room-test fairness-test riichi-score-test; do
+for s in test calls-test sichuan-test special-hands mcr-test persist-test restart-test coach-test whynot-test win-test examples-test chi-pon-race-test concurrent-calls-test meld-view-test idle-test room-test fairness-test riichi-score-test; do
   f=scripts/mahjong/$s.ts
   [ -f "$f" ] || f=scripts/mahjong/$s.tsx
   npx tsx "$f" > "/tmp/suite-$s.log" 2>&1
