@@ -102,7 +102,7 @@ npm run test:browser     # pages in Chrome; needs the Worker and `npm run dev --
 npm run test:mahjong     # the full Mahjong engine suite (a few minutes)
 ```
 
-Browser tests use the local Google Chrome through `puppeteer-core`. Registration is limited per address, so many server test runs in an hour can fail until the local `throttle` table is cleared (`accounts/authz-test.ts` does that). Longer or special checks are run one at a time with `npx tsx scripts/...`, each file says how at the top: card fairness statistics (`site/fairness-test.ts`), playthroughs (`site/playthrough.ts`, `mahjong/playthrough.ts`), screen audits (`tools/layout-audit.ts`, `tools/touch-audit.ts`), and `live/live-e2e.ts` against the deployed site.
+Browser tests use the local Google Chrome through `puppeteer-core`. Registration is limited per address, so `test:server` clears the local `throttle` table before each test. Longer or special checks are run one at a time with `npx tsx scripts/...`, each file says how at the top: card fairness statistics (`site/fairness-test.ts`), playthroughs (`site/playthrough.ts`, `mahjong/playthrough.ts`), screen audits (`tools/layout-audit.ts`, `tools/touch-audit.ts`, `tools/contrast-audit.ts`), and `live/live-e2e.ts`, which starts every game on the deployed site.
 
 ## Deploy
 

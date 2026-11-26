@@ -35,7 +35,15 @@ const SUITES: Record<string, string[]> = {
     'blackjack/ws-test',
     'mahjong/room-test',
   ],
-  browser: ['site/room-e2e', 'site/url-test', 'site/codebox-test', 'site/reconnect-test', 'generic/local-test', 'generic/layout-check'],
+  browser: [
+    'site/room-e2e',
+    'site/url-test',
+    'site/codebox-test',
+    'site/reconnect-test',
+    'generic/local-test',
+    'generic/new-games-ui-test',
+    'generic/layout-check',
+  ],
 }
 
 const name = process.argv[2] || 'engine'
