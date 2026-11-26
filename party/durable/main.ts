@@ -1,20 +1,19 @@
-import { routePartykitRequest, Server, type Connection, type WSMessage } from 'partyserver'
-import { Table } from '../src/games/mahjong/engine/table'
-import type { ClientMsg, ServerMsg } from '../src/games/mahjong/net/protocol'
-import type { Env } from './d1'
-import { handleApi } from './api'
-import { userFromToken } from './auth'
-import { recordMatch, trimReplays } from './matches'
-import { hold, release } from './economy'
-import { PokerTable, DEFAULT_POKER, BLINDS } from '../src/games/holdem/engine/table'
-import { makeBlackjack } from '../src/games/blackjack/engine/table'
-import { BigTwoTable } from '../src/games/bigtwo/engine/table'
-import type { BtMsg } from '../src/games/bigtwo/net/protocol'
-import type { CashGame, HandRecord } from '../src/games/shared/cash'
-import type { PokerMsg, PokerServerMsg } from '../src/games/holdem/net/protocol'
+import { Server, type Connection, type WSMessage } from 'partyserver'
+import { AutoStart } from '../lib/autostart'
+import { TalkLog } from '../lib/talk'
+import { Table } from '../../src/games/mahjong/engine/table'
+import type { ClientMsg, ServerMsg } from '../../src/games/mahjong/net/protocol'
+import type { Env } from '../d1'
+import { userFromToken } from '../auth'
+import { recordMatch } from '../matches'
+import { hold, release } from '../economy'
+import { PokerTable, DEFAULT_POKER, BLINDS } from '../../src/games/holdem/engine/table'
+import { makeBlackjack } from '../../src/games/blackjack/engine/table'
+import { BigTwoTable } from '../../src/games/bigtwo/engine/table'
+import type { BtMsg } from '../../src/games/bigtwo/net/protocol'
+import type { CashGame, HandRecord } from '../../src/games/shared/cash'
+import type { PokerMsg, PokerServerMsg } from '../../src/games/holdem/net/protocol'
 
-export { Room } from './room'
-export { Play } from './play'
 export type Kind = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo'
 const CASH_KINDS: Kind[] = ['holdem', 'blackjack']
 /** most a player may take home from the house per day at Blackjack: keeps the leaderboard from being farmed against the dealer */
@@ -39,9 +38,7 @@ export class Main extends Server<Env> {
   /** cash-table sessions: client id -> ledger account and the reference that ties the buy-in to the cash-out */
   psess = new Map<string, { userId: string; ref: string; n: number }>()
   /** recent table chat for the card games (kept in memory only) */
-  private talkLog: { n: number; name: string; text: string }[] = []
-  private talkN = 0
-  private lastTalk = new Map<string, number>()
+  private chat = new TalkLog()
   /** people who are in the room watching, without a seat (Big Two, Mahjong): they see only what the table shows publicly and can read and write chat */
   private watchers = new Set<string>()
   private watching() {
@@ -67,26 +64,17 @@ export class Main extends Server<Env> {
    * A table prepared by its room: the room's host pressed Start, the room asked this table (over the internal route below) to
    * expect that game with those rules and that host. Whoever joins first creates it; nobody needs to carry settings in a URL.
    */
-  private auto: { expect: number; timer: ReturnType<typeof setTimeout> | null } | null = null
-  /** Start a room-made Mahjong / Big Two table when everyone from the room has sat down, or 6 seconds after the first of them did. */
+  private autoStart = new AutoStart()
+  /** start a room-made Mahjong or Big Two table once the room's players are seated (ranked tables wait for the host: their accounts are checked first) */
   private maybeAutoStart() {
-    const a = this.auto
-    if (!a) return
-    const go = () => {
-      if (a.timer) clearTimeout(a.timer)
-      this.auto = null
-      if (this.kind === 'mahjong' && this.table.status === 'lobby' && this.table.hostId && !this.table.config.ranked) {
-        this.table.start(this.table.hostId)
-        this.broadcastViews()
-      } else if (this.kind === 'bigtwo' && this.bt && this.bt.status === 'lobby' && this.bt.hostId && !this.bt.config.ranked) {
-        this.bt.start(this.bt.hostId)
-        this.broadcastViews()
-      }
-    }
-    const humans =
-      this.kind === 'mahjong' ? this.table.slots.filter((s) => s.id).length : this.kind === 'bigtwo' && this.bt ? this.bt.seats.filter((s) => s.id).length : 0
-    if (humans >= a.expect) return go()
-    if (humans > 0 && !a.timer) a.timer = setTimeout(go, 6000)
+    const t = this.kind === 'mahjong' ? this.table : this.kind === 'bigtwo' ? this.bt : null
+    if (!t) return
+    const seats = this.kind === 'mahjong' ? this.table.slots : this.bt!.seats
+    this.autoStart.check(seats.filter((x) => x.id).length, seats.length, () => {
+      if (t.status !== 'lobby' || !t.hostId || t.config.ranked) return
+      t.start(t.hostId)
+      this.broadcastViews()
+    })
   }
   private pending: { game: Kind; cfg: Record<string, unknown>; host: string; until: number; applied: boolean } | null = null
   private livePending() {
@@ -131,7 +119,8 @@ export class Main extends Server<Env> {
       this.pending = { game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3, applied: false }
       void this.store.put('pending', this.pending)
       // a table made from a room starts by itself once the room's players are seated (or after a short wait for stragglers): no second "start" step
-      this.auto = game === 'mahjong' || game === 'bigtwo' ? { expect: Math.max(1, Math.min(4, Math.floor(b.expect ?? 1))), timer: null } : null
+      if (game === 'mahjong' || game === 'bigtwo') this.autoStart.expect(b.expect)
+      else this.autoStart.cancel()
       return Response.json({ ok: true })
     }
     return new Response('Not found', { status: 404 })
@@ -549,17 +538,8 @@ export class Main extends Server<Env> {
     }
   }
 
-  /** Table chat: one message a second at most, 140 characters, plain text. */
+  /** table chat */
   private talk(id: string, sender: Connection<{ id?: string }>, raw: unknown) {
-    const text = String(raw ?? '')
-      .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 140)
-    if (!text) return
-    const now = Date.now()
-    if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.send(sender, { t: 'error', message: 'slow_down' })
-    this.lastTalk.set(id, now)
     const seatName =
       this.kind === 'bigtwo'
         ? this.bt?.seats.find((x) => x.id === id)?.name
@@ -567,13 +547,12 @@ export class Main extends Server<Env> {
           ? this.guestNames.get(id)
           : this.table.slots.find((x) => x.id === id)?.name
     const name = this.accounts.get(id)?.name ?? seatName ?? this.guestNames.get(id) ?? 'Player'
-    const msg = { n: ++this.talkN, name, text }
-    this.talkLog.push(msg)
-    if (this.talkLog.length > 40) this.talkLog.shift()
-    for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) c.send(JSON.stringify({ t: 'talk', msg }))
+    const msg = this.chat.say(id, name, raw)
+    if (msg === 'slow_down') return this.send(sender, { t: 'error', message: 'slow_down' })
+    if (msg) for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) c.send(JSON.stringify({ t: 'talk', msg }))
   }
   private sendTalkLog(conn: Connection) {
-    if (this.talkLog.length) conn.send(JSON.stringify({ t: 'talklog', msgs: this.talkLog }))
+    if (this.chat.messages.length) conn.send(JSON.stringify({ t: 'talklog', msgs: this.chat.messages }))
   }
   private async joinBigTwo(m: Extract<ClientMsg, { t: 'join' }>, sender: Connection<{ id?: string }>, create: boolean) {
     const b = this.bt!,
@@ -777,17 +756,4 @@ export class Main extends Server<Env> {
     }
     this.table.leave(id)
   }
-}
-
-export default {
-  /** daily: drop replay logs older than 90 days (summaries stay) */
-  async scheduled(_e: unknown, env: Env): Promise<void> {
-    if (env.DB) await trimReplays(env.DB)
-  },
-  async fetch(request: Request, env: Env): Promise<Response> {
-    if (new URL(request.url).pathname.endsWith('/__prepare')) return new Response('Not found', { status: 404 }) // only a room may prepare a table
-    const api = await handleApi(request, env)
-    if (api) return api
-    return (await routePartykitRequest(request, env as never)) || new Response('Kiiro Games server', { status: 200 })
-  },
 }

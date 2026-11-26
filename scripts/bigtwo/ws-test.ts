@@ -1,4 +1,5 @@
 export {}
+import { makeTable } from '../lib/table'
 import { chooseMove } from '../../src/games/bigtwo/engine/table'
 import { evalCombo } from '../../src/games/bigtwo/engine/combos'
 // Run: npx tsx scripts/bigtwo/ws-test.ts   (needs `wrangler dev` on :8787 with DEV_MODE=1)
@@ -63,7 +64,7 @@ const move = (c: ReturnType<typeof client>) => {
   else c.p({ k: 'play', cards: [v.hand[0]] })
 }
 
-let room = code()
+const room = await makeTable('bigtwo', {}, undefined, 3) // the room prepares the table
 const ta = await login(`ba${tag}@x.test`),
   tb = await login(`bb${tag}@x.test`)
 const a = client(room, 'a' + tag, 'A', { token: ta, create: true })

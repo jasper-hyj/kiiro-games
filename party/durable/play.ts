@@ -1,9 +1,11 @@
 import { Server, type Connection, type WSMessage } from 'partyserver'
-import type { Env } from './d1'
-import { userFromToken } from './auth'
-import { recordMatch } from './matches'
-import { ENGINES, isGeneric } from '../src/games/frame/registry'
-import type { TurnGame } from '../src/games/frame/base'
+import { AutoStart } from '../lib/autostart'
+import { TalkLog } from '../lib/talk'
+import type { Env } from '../d1'
+import { userFromToken } from '../auth'
+import { recordMatch } from '../matches'
+import { ENGINES, isGeneric } from '../../src/games/frame/registry'
+import type { TurnGame } from '../../src/games/frame/base'
 
 type Conn = Connection<{ id?: string }>
 const clean = (s: unknown, n = 140) =>
@@ -24,26 +26,17 @@ export class Play extends Server<Env> {
   private accounts = new Map<string, { userId: string; name: string }>()
   private watchers = new Set<string>()
   private names = new Map<string, string>()
-  private talkLog: { n: number; name: string; text: string }[] = []
-  private talkN = 0
-  private lastTalk = new Map<string, number>()
-  private auto: { expect: number; timer: ReturnType<typeof setTimeout> | null } | null = null
-  /** A table made from a room starts by itself once the room's players are seated, or 6 seconds after the first of them sat: no second "start" step. */
+  private chat = new TalkLog()
+  private autoStart = new AutoStart()
+  /** a table made from a room starts by itself (ranked tables wait for the host: their accounts are checked first) */
   private maybeAutoStart() {
-    const a = this.auto,
-      g = this.game
-    if (!a || !g) return
-    const go = () => {
-      if (a.timer) clearTimeout(a.timer)
-      this.auto = null
-      if (g.status === 'lobby' && g.hostId && !g.config.ranked) {
-        g.start(g.hostId)
-        this.pushViews()
-      }
-    }
-    const humans = g.seats.filter((s) => s.id).length
-    if (humans >= Math.min(a.expect, g.seats.length)) return go()
-    if (humans > 0 && !a.timer) a.timer = setTimeout(go, 6000)
+    const g = this.game
+    if (!g) return
+    this.autoStart.check(g.seats.filter((x) => x.id).length, g.seats.length, () => {
+      if (g.status !== 'lobby' || !g.hostId || g.config.ranked) return
+      g.start(g.hostId)
+      this.pushViews()
+    })
   }
   private pending: { game: string; cfg: Record<string, unknown>; host: string; until: number } | null = null
   private recorded: string | null = null
@@ -131,7 +124,7 @@ export class Play extends Server<Env> {
       this.kind = null
       this.pending = { game: b.game, cfg: b.cfg && typeof b.cfg === 'object' ? b.cfg : {}, host: b.host, until: Date.now() + 15 * 60e3 }
       void this.store.put('pending', this.pending)
-      this.auto = { expect: Math.max(1, Math.min(8, Math.floor(b.expect ?? 1))), timer: null }
+      this.autoStart.expect(b.expect)
       return Response.json({ ok: true })
     }
     return new Response('Not found', { status: 404 })
@@ -214,7 +207,7 @@ export class Play extends Server<Env> {
       this.applyPending(id)
       this.maybeAutoStart()
       this.pushViews()
-      if (this.talkLog.length) this.send(sender, { t: 'talklog', msgs: this.talkLog })
+      if (this.chat.messages.length) this.send(sender, { t: 'talklog', msgs: this.chat.messages })
       return
     }
     const id = sender.state?.id
@@ -262,16 +255,9 @@ export class Play extends Server<Env> {
   }
 
   private talk(id: string, sender: Conn, raw: unknown) {
-    const text = clean(raw)
-    if (!text) return
-    const now = Date.now()
-    if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.send(sender, { t: 'error', message: 'slow_down' })
-    this.lastTalk.set(id, now)
-    const name = this.accounts.get(id)?.name ?? this.names.get(id) ?? 'Player'
-    const msg = { n: ++this.talkN, name, text }
-    this.talkLog.push(msg)
-    if (this.talkLog.length > 40) this.talkLog.shift()
-    for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) this.send(c, { t: 'talk', msg })
+    const msg = this.chat.say(id, this.accounts.get(id)?.name ?? this.names.get(id) ?? 'Player', raw)
+    if (msg === 'slow_down') return this.send(sender, { t: 'error', message: 'slow_down' })
+    if (msg) for (const c of this.getConnections<{ id?: string }>()) if (c.state?.id) this.send(c, { t: 'talk', msg })
   }
 
   /** a finished game is saved once; competitive games move chips zero-sum between the signed-in humans (bots never move chips) */

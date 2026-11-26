@@ -1,11 +1,12 @@
 import { getServerByName, Server, type Connection, type WSMessage } from 'partyserver'
-import type { Env } from './d1'
-import { userFromToken } from './auth'
-import { BLINDS } from '../src/games/holdem/engine/table'
-import { MIN_BETS } from '../src/games/blackjack/engine/table'
-import { DEFAULT_CONFIG } from '../src/games/mahjong/engine/table'
+import { TalkLog, type TalkMessage } from '../lib/talk'
+import type { Env } from '../d1'
+import { userFromToken } from '../auth'
+import { BLINDS } from '../../src/games/holdem/engine/table'
+import { MIN_BETS } from '../../src/games/blackjack/engine/table'
+import { DEFAULT_CONFIG } from '../../src/games/mahjong/engine/table'
 
-import { ENGINES, isGeneric } from '../src/games/frame/registry'
+import { ENGINES, isGeneric } from '../../src/games/frame/registry'
 export type RoomGame = 'mahjong' | 'holdem' | 'blackjack' | 'bigtwo' | (string & {})
 const GAMES: RoomGame[] = ['mahjong', 'holdem', 'blackjack', 'bigtwo', ...Object.keys(ENGINES)]
 const MJ_RULES = ['taiwan', 'hk', 'riichi', 'mcr', 'sichuan']
@@ -30,9 +31,7 @@ export class Room extends Server<Env> {
   private cfg: Cfg = {}
   private launched = false
   private alive = 0
-  private talkLog: { n: number; name: string; text: string }[] = []
-  private talkN = 0
-  private lastTalk = new Map<string, number>()
+  private chat = new TalkLog()
   private store: { get<T>(k: string): Promise<T | undefined>; put(k: string, v: unknown): Promise<void> }
   private envv: Env
   constructor(ctx: ConstructorParameters<typeof Server>[0], env: Env) {
@@ -42,20 +41,19 @@ export class Room extends Server<Env> {
   }
 
   async onStart() {
-    const s = await this.store.get<{ hostId: string | null; game: RoomGame | null; cfg: Cfg; launched: boolean; alive: number; talk: Room['talkLog'] }>('room')
+    const s = await this.store.get<{ hostId: string | null; game: RoomGame | null; cfg: Cfg; launched: boolean; alive: number; talk: TalkMessage[] }>('room')
     if (s) {
       this.hostId = s.hostId
       this.game = s.game
       this.cfg = s.cfg ?? {}
       this.launched = !!s.launched
       this.alive = s.alive
-      this.talkLog = s.talk ?? []
-      this.talkN = this.talkLog.at(-1)?.n ?? 0
+      this.chat.restore(s.talk ?? [])
     }
   }
   private save() {
     this.alive = Date.now() + KEEP_MS
-    void this.store.put('room', { hostId: this.hostId, game: this.game, cfg: this.cfg, launched: this.launched, alive: this.alive, talk: this.talkLog })
+    void this.store.put('room', { hostId: this.hostId, game: this.game, cfg: this.cfg, launched: this.launched, alive: this.alive, talk: this.chat.messages })
   }
   private exists() {
     return this.members.size > 0 || this.alive > Date.now()
@@ -169,7 +167,7 @@ export class Room extends Server<Env> {
         this.game = null
         this.cfg = {}
         this.launched = false
-        this.talkLog = []
+        this.chat.clear()
         this.hostId = null
       } // an old, empty room code is reused as a fresh room
       const prev = this.members.get(id)
@@ -178,7 +176,7 @@ export class Room extends Server<Env> {
       if (!this.hostId || !this.members.has(this.hostId)) this.hostId = id
       this.save()
       this.pushViews()
-      if (this.talkLog.length) this.send(c, { t: 'talklog', msgs: this.talkLog })
+      if (this.chat.messages.length) this.send(c, { t: 'talklog', msgs: this.chat.messages })
       return
     }
     const id = c.state?.id
@@ -248,18 +246,9 @@ export class Room extends Server<Env> {
         return
       }
       case 'talk': {
-        const text = String(m.text ?? '')
-          .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 140)
-        if (!text) return
-        const now = Date.now()
-        if (now - (this.lastTalk.get(id) ?? 0) < 1000) return this.err(c, 'slow_down')
-        this.lastTalk.set(id, now)
-        const msg = { n: ++this.talkN, name: me.name, text }
-        this.talkLog.push(msg)
-        if (this.talkLog.length > 40) this.talkLog.shift()
+        const msg = this.chat.say(id, me.name, m.text)
+        if (msg === 'slow_down') return this.err(c, 'slow_down')
+        if (!msg) return
         this.save()
         for (const conn of this.getConnections<{ id?: string }>()) if (conn.state?.id) this.send(conn, { t: 'talk', msg })
         return

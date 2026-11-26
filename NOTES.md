@@ -65,7 +65,7 @@ Chinese Official / Guobiao (MCR, 81 fans), Sichuan "bloody" mahjong (108 tiles, 
 
 ## Added in the Nov 2026 pass
 
-- Rooms persist in Durable Object storage (`party/server.ts`, `Table.serialize/restore`, `Game.serialize/restore`); `scripts/persist-test.ts` and `scripts/restart-test.ts` cover it. Empty rooms are dropped from storage.
+- Rooms persist in Durable Object storage (`party/durable/main.ts`, `Table.serialize/restore`, `Game.serialize/restore`); `scripts/persist-test.ts` and `scripts/restart-test.ts` cover it. Empty rooms are dropped from storage.
 - Hand review (replay) after a finished game: `Game.replays` (a public snapshot per discard), shown only when the game is over (`src/games/mahjong/ui/Replay.tsx`).
 - Accessibility settings: reduce motion, larger text, upright discards (`src/settings.ts`).
 - Hard bots: dora/red-five aware, riichi vs dama decision. Measured +246 pts/seat/game against Normal over 150 Riichi games; no measurable gain in Taiwanese/Hong Kong (results there are mostly luck), so Hard behaves like Normal in those.

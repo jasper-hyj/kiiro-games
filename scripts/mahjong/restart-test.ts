@@ -1,7 +1,7 @@
 import { utimesSync } from 'node:fs'
 
 /** Room persistence against the real local server (`npm run party:dev` must be running): start a game, make the Worker
- *  reload (touching party/server.ts evicts the room object from memory), then rejoin with the same id. */
+ *  reload (touching party/durable/main.ts evicts the room object from memory), then rejoin with the same id. */
 const HOST = process.env.HOST ?? 'localhost:8787'
 let fails = 0
 const check = (n: string, ok: boolean, extra = '') => {
@@ -44,7 +44,7 @@ await sleep(1200) // let the room persist
 a.ws.close()
 await sleep(300)
 
-const f = new URL('../../party/server.ts', import.meta.url).pathname
+const f = new URL('../../party/durable/main.ts', import.meta.url).pathname
 const now = new Date()
 utimesSync(f, now, now) // make wrangler reload the worker => room object is rebuilt from storage
 await sleep(9000)

@@ -1,3 +1,4 @@
+import { makeTable } from '../lib/table'
 export {}
 // Run: npx tsx scripts/blackjack/ws-test.ts   (needs `wrangler dev` on :8787 with DEV_MODE=1)
 const API = 'http://localhost:8787/api'
@@ -50,10 +51,9 @@ function client(room: string, id: string, name: string, opts: { token?: string; 
   }
 }
 const tag = Math.random().toString(36).slice(2, 6)
-const code = () => String(1000 + Math.floor(Math.random() * 9000))
 
 // casual: a guest plays rounds against the dealer
-let room = code()
+let room = await makeTable('blackjack', { bb: 10, casual: true }) // the room prepares the table
 const g = client(room, 'g' + tag, 'Gus', { create: true, game: 'blackjack', pcfg: { bb: 10, casual: true } })
 await sleep(500)
 ok(g.view?.config?.bet === 10 && g.view?.config?.casual === true, 'blackjack room is created with the chosen minimum bet')
@@ -75,7 +75,7 @@ ok(['result', 'bet', 'wait'].includes(g.view?.phase), 'the round finishes after 
 g.close()
 
 // wrong game
-room = code()
+room = await makeTable('blackjack', { bb: 10, casual: true })
 const h = client(room, 'h' + tag, 'H', { create: true, game: 'blackjack', pcfg: { bb: 10, casual: true } })
 await sleep(400)
 const w = client(room, 'w' + tag, 'W', { game: 'holdem' })
@@ -86,7 +86,7 @@ w.close()
 
 // cash: bet from a real balance, leave, and the ledger and history agree
 const ta = await login(`bj${tag}@x.test`)
-room = code()
+room = await makeTable('blackjack', { bb: 10, casual: false })
 const a = client(room, 'a' + tag, 'A', { token: ta, create: true, game: 'blackjack', pcfg: { bb: 10, casual: false } })
 await sleep(500)
 const before = (await get('/me', ta)).balance
