@@ -896,3 +896,42 @@ body.has-kgchat .kg.hd .kg-wrap {
 .kgchat .kgfeed {
   padding-top: 8px;
 }
+
+/* eight seats on a phone: narrower seats and smaller board cards, so the two middle side seats clear the board */
+@media (max-width: 640px) {
+  .hd .hdfelt.hd8 {
+    min-height: 380px;
+    --cw: 29px;
+  }
+  .hd .hd8 .hdseat {
+    width: 76px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .hd .hd8 .hdseat .k-seatname {
+    font-size: 11px;
+  }
+  .hd .hd8 .hdhole {
+    --cw: 21px;
+  }
+  .hd .hd8 .hdseat.me {
+    width: 90px;
+  }
+  .hd .hd8 .hdseat.me .hdhole {
+    --cw: 34px;
+  }
+  .hd .hd8 .hdboard {
+    gap: 4px;
+  }
+  .hd .hd8 .hdcenter {
+    width: 62%;
+  }
+}
+@media (max-width: 340px) {
+  .hd .hdfelt.hd8 {
+    --cw: 22px;
+  }
+  .hd .hd8 .hdseat {
+    width: 66px;
+  }
+}

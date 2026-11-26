@@ -42,6 +42,7 @@ const SUITES: Record<string, string[]> = {
     'site/reconnect-test',
     'generic/local-test',
     'generic/new-games-ui-test',
+    'site/full-table-test',
     'generic/layout-check',
   ],
 }

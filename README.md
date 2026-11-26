@@ -89,7 +89,7 @@ Optional sign-in. Guests can play every casual game; nothing is saved for them.
 
 ## Notes per game
 
-- **Hold'em / Blackjack:** 6 seats. Casual tables use free stacks; cash tables buy in from the season balance and cash out on leaving (a daily alarm brings chips home if a table is evicted). Blackjack: six decks, dealer stands on all 17s, 3:2, double on any two, one split, dealer peeks; a day's net win at cash tables is capped (`BLACKJACK_DAILY_CAP` in `party/durable/main.ts`).
+- **Hold'em / Blackjack:** 8 seats. Casual tables use free stacks; cash tables buy in from the season balance and cash out on leaving (a daily alarm brings chips home if a table is evicted). Blackjack: six decks, dealer stands on all 17s, 3:2, double on any two, one split, dealer peeks; a day's net win at cash tables is capped (`BLACKJACK_DAILY_CAP` in `party/durable/main.ts`).
 - **Big Two:** 3 low, 2 high; diamonds, clubs, hearts, spades; a straight cannot include a 2; the 3 of diamonds opens.
 - **Mahjong:** coach, wait hints, auto-play options, hand review, rulebook with worked examples and a guided tutorial. Debug addresses: `/mahjong/practice?rule=riichi&players=3&speed=0.05`, `?stress=full`, `?tiles=1`. Design notes are in `NOTES.md`.
 

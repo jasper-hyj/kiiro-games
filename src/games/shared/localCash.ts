@@ -10,7 +10,7 @@ import type { CashConn, CashHandlers } from './cashClient'
 
 /** Offline practice: the same engines run inside the browser, with no server, no account and no chips. */
 export function connectLocalBlackjack(id: string, name: string, minBet: number, h: CashHandlers<BlackjackView>): CashConn<BjMsg> {
-  const t = new BlackjackTable({ bet: minBet, casual: true, maxSeats: 6 })
+  const t = new BlackjackTable({ bet: minBet, casual: true, maxSeats: 8 })
   const push = () => h.onView({ ...t.view(id), signedIn: false, balance: null })
   t.onChange(push)
   t.join(id)
@@ -59,7 +59,7 @@ export function connectLocalBigTwo(id: string, name: string, h: CashHandlers<Big
 
 /** Offline Hold'em: the real table engine in the browser, you and three bots. Free practice stacks, nothing is saved. */
 export function connectLocalHoldem(id: string, name: string, h: CashHandlers<HoldemView>): CashConn<PokerMsg> {
-  const t = new PokerTable({ sb: 25, bb: 50, casual: true, maxSeats: 6 })
+  const t = new PokerTable({ sb: 25, bb: 50, casual: true, maxSeats: 8 })
   t.resultMs = 3500
   const bots = ['bot-1', 'bot-2', 'bot-3']
   const timers = new Set<ReturnType<typeof setTimeout>>()

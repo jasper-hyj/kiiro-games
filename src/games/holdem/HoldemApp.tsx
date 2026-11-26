@@ -35,24 +35,48 @@ const save = (k: string, v: string) => {
   }
 }
 const fmt = (n: number) => n.toLocaleString()
-/** where each seat sits on the table, as % of its box: you are always at the bottom */
-const SPOTS: [number, number][] = [
-  [50, 90],
-  [13, 68],
-  [16, 22],
-  [50, 9],
-  [84, 22],
-  [87, 68],
-]
+/** where each seat sits on the table, as % of its box, going round from the bottom: you are always at the bottom */
+const SPOTS: Record<number, [number, number][]> = {
+  6: [
+    [50, 90],
+    [13, 68],
+    [16, 22],
+    [50, 9],
+    [84, 22],
+    [87, 68],
+  ],
+  8: [
+    [50, 90],
+    [18, 80],
+    [8, 49],
+    [18, 18],
+    [50, 9],
+    [82, 18],
+    [92, 49],
+    [82, 80],
+  ],
+}
 /** on phones the side seats move out of the way of the board cards */
-const PHONE_SPOTS: [number, number][] = [
-  [50, 92],
-  [13, 76],
-  [14, 19],
-  [50, 8],
-  [86, 19],
-  [87, 76],
-]
+const PHONE_SPOTS: Record<number, [number, number][]> = {
+  6: [
+    [50, 92],
+    [13, 76],
+    [14, 19],
+    [50, 8],
+    [86, 19],
+    [87, 76],
+  ],
+  8: [
+    [50, 93],
+    [13, 79],
+    [11, 52],
+    [13, 22],
+    [50, 8],
+    [87, 22],
+    [89, 52],
+    [87, 79],
+  ],
+}
 /** The felt's height in pixels, so seats can be kept inside it on a short phone. */
 function useHeight<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -202,7 +226,8 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
   const { t } = useLang()
   const narrow = useNarrow()
   const [feltRef, feltH] = useHeight<HTMLDivElement>()
-  const spots = narrow ? PHONE_SPOTS : SPOTS
+  // tables saved before there were eight seats still have six
+  const spots = (narrow ? PHONE_SPOTS : SPOTS)[(view?.seats.length ?? 8) > 6 ? 8 : 6]
   const [copied, setCopied] = useState(false)
   const [raise, setRaise] = useState(0)
   const [, tick] = useState(0)
@@ -307,7 +332,7 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
           </p>
         )}
 
-        <div ref={feltRef} className="hdfelt k-felt" role="group" aria-label={t('hdRoom')}>
+        <div ref={feltRef} className={'hdfelt k-felt' + (v.seats.length > 6 ? ' hd8' : '')} role="group" aria-label={t('hdRoom')}>
           <div className="hdcenter">
             <div className="hdpot">
               {t('hdPotLabel')} <b>{fmt(potNow)}</b>
@@ -349,9 +374,11 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
           {v.seats.map((s) => {
             const [x, y0] = spots[rel(s.seat) % spots.length]
             // on a short felt keep every seat (with the cards above it) inside the table
-            const low = !s.me && y0 > 50 // the lower side seats sit level with you, clear of the board cards
+            const low = !s.me && y0 > 60 // the lower side seats sit level with you, clear of the board cards
             const y = feltH < 440 ? (low ? 100 - (44 / feltH) * 100 : Math.max(((s.me ? 112 : 40) / feltH) * 100, Math.min(100 - (40 / feltH) * 100, y0))) : y0
-            const bx = x + (50 - x) * 0.32,
+            // the chips bet sit between the seat and the middle; with eight seats on a narrow table they move further in, clear of the seat
+            const pull = narrow && v.seats.length > 6 && x !== 50 ? 0.5 : 0.32
+            const bx = x + (50 - x) * pull,
               by = y + (50 - y) * 0.32
             const showCards = s.dealt && !s.folded && (s.me || feltH >= 440) // on a short table other players' card backs only take room
             const isTurn = v.toAct === s.seat && v.street !== 'showdown' && v.street !== 'wait'

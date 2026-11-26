@@ -282,3 +282,26 @@
     bottom: 0;
   }
 }
+
+/* up to eight players: on a phone three seats share a row */
+@media (max-width: 560px) {
+  .bjseats {
+    gap: 6px;
+  }
+  .bjseats:has(.bjseat:nth-child(5)) .bjseat {
+    flex: 0 0 calc((100% - 12px) / 3);
+    min-width: 0;
+    width: calc((100% - 12px) / 3);
+    padding: 6px 3px;
+  }
+  .bjseats:has(.bjseat:nth-child(5)) .bjcards.small {
+    --cw: 26px;
+    gap: 2px;
+  }
+  .bjseats:has(.bjseat:nth-child(5)) .bjinfo {
+    font-size: 11px;
+  }
+  .bjseats:has(.bjseat:nth-child(5)) .bjinfo b {
+    font-size: 13px;
+  }
+}

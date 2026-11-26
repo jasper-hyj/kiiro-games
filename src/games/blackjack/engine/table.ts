@@ -7,7 +7,7 @@ export interface BjConfig {
   casual: boolean
   maxSeats: number
 }
-export const DEFAULT_BJ: BjConfig = { bet: 10, casual: true, maxSeats: 6 }
+export const DEFAULT_BJ: BjConfig = { bet: 10, casual: true, maxSeats: 8 }
 const DECKS = 6
 
 /** Card value with aces high: 2-10 face value, J Q K = 10, A = 11. */
@@ -729,6 +729,6 @@ function shuffled2(cards: number[]): number[] {
 }
 
 export function makeBlackjack(bet: number | undefined, casual: boolean): BlackjackTable {
-  const t = new BlackjackTable({ bet: MIN_BETS.includes(bet ?? 0) ? bet! : DEFAULT_BJ.bet, casual, maxSeats: 6 })
+  const t = new BlackjackTable({ bet: MIN_BETS.includes(bet ?? 0) ? bet! : DEFAULT_BJ.bet, casual, maxSeats: DEFAULT_BJ.maxSeats })
   return t
 }

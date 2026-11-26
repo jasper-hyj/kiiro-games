@@ -259,7 +259,7 @@ export class Main extends Server<Env> {
       g = makeBlackjack(cfg?.bb, casual)
     } else {
       const blinds = BLINDS.find(([sb, bb]) => cfg && sb === cfg.sb && bb === cfg.bb) ?? [DEFAULT_POKER.sb, DEFAULT_POKER.bb]
-      const p = new PokerTable({ sb: blinds[0], bb: blinds[1], casual, maxSeats: 6 })
+      const p = new PokerTable({ sb: blinds[0], bb: blinds[1], casual, maxSeats: DEFAULT_POKER.maxSeats })
       p.turnTimerMs = 30000
       g = p
     }

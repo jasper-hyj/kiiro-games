@@ -26,12 +26,10 @@ p.on('pageerror', (e: unknown) => {
   console.log('PAGEERROR', (e as Error).message)
 })
 await p.goto('http://localhost:5200/', { waitUntil: 'networkidle0' })
-const link = await p.evaluate(() => {
-  const a = Array.from(document.querySelectorAll('a.kg-practice')).find((x) => (x as HTMLAnchorElement).href.includes('/holdem')) as
-    HTMLAnchorElement | undefined
-  return a?.getAttribute('href') ?? ''
-})
-ok(link.includes('practice=1'), "the hub's Hold'em card has a Practice link")
+await p.evaluate(() => (Array.from(document.querySelectorAll('.kg-obj')).find((e) => /Hold/.test(e.textContent || '')) as HTMLElement).click())
+await sleep(300)
+const link = await p.$eval('a.kg-practice', (a) => a.getAttribute('href') ?? '')
+ok(link === '/holdem/practice', "the hub offers Hold'em practice (" + link + ')')
 net.length = 0 // the hub itself asks the server for the leaderboard; practice must not
 await p.goto('http://localhost:5200' + link, { waitUntil: 'domcontentloaded' })
 await p.waitForSelector('.hdfelt', { timeout: 15000 })

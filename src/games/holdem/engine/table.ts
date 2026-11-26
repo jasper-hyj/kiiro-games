@@ -9,7 +9,7 @@ export interface PokerConfig {
   casual: boolean
   maxSeats: number
 }
-export const DEFAULT_POKER: PokerConfig = { sb: 25, bb: 50, casual: true, maxSeats: 6 }
+export const DEFAULT_POKER: PokerConfig = { sb: 25, bb: 50, casual: true, maxSeats: 8 }
 export const MIN_BUYIN_BB = 20
 export const MAX_BUYIN_BB = 100
 export const BLINDS: [number, number][] = [
