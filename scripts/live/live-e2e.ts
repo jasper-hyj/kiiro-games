@@ -33,10 +33,10 @@ await sleep(800)
 await p.screenshot({ path: `${out}/live-room.png` })
 for (const [label, sel] of [
   ['Texas', '.hdfelt'],
-  ['Big Two', '.btlobby'],
+  ['Big Two', '.btlobby, .bttable'],
   ['Blackjack', '.bjtable'],
-  ['Gomoku', '.btlobby'],
-  ['Chess', '.btlobby'],
+  ['Gomoku', '.btlobby, .plseats'],
+  ['Chess', '.btlobby, .plseats'],
 ] as const) {
   await p.evaluate((l: string) => {
     const el = Array.from(document.querySelectorAll('.rmgame')).find((e) => (e.textContent || '').includes(l)) as HTMLElement | undefined
