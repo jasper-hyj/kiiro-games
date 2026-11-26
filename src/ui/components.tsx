@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useLang } from '../i18n'
 import { newRoomUrl, type GameKey } from '../route'
 import { AccountChip } from '../account/Panels'
 import { SoundSwitch } from './SoundSwitch'
 import '../room/strings'
+import '../account/strings'
 
 /* ------------------------------------------------------------------ avatars */
 // warm, friendly colours (no green): amber, rose, lavender, sky, sand, coral
@@ -193,7 +195,10 @@ export interface ResultRow {
   me?: boolean
   detail?: ReactNode
 }
-/** The one end-of-round panel: who won, a row per player, what happens next. */
+/**
+ * The one end-of-round panel: who won, a row per player, what happens next. It floats over the middle of the table a moment after the last move,
+ * and can be closed to look at the final position.
+ */
 export function ResultPanel({
   title,
   rows,
@@ -207,37 +212,57 @@ export function ResultPanel({
   note?: ReactNode
   children?: ReactNode
 }) {
+  const { t } = useLang()
   const shown = useShownName()
-  const box = useRef<HTMLDivElement>(null)
-  // on a small screen the result may appear below the board: bring it into view
+  const [open, setOpen] = useState(false)
+  const [closed, setClosed] = useState(false)
   useEffect(() => {
-    const id = setTimeout(() => box.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350)
+    const id = setTimeout(() => setOpen(true), 700) // let the winning move be seen first
     return () => clearTimeout(id)
   }, [])
-  return (
-    <div ref={box} className="k-result" role="status" aria-live="polite">
-      <div className="k-resulttitle">{title}</div>
-      <ul className="k-rows">
-        {columns && (
-          <li className="k-rowhead">
-            <span>{columns[0]}</span>
-            <span>{columns[1]}</span>
-          </li>
-        )}
-        {rows.map((r, i) => (
-          <li key={i} className={'k-row' + (r.me ? ' me' : '')}>
-            <span className="k-rowname">
-              <Avatar name={shown(r.name)} size={22} />
-              {shown(r.name)}
-              {r.detail != null && <span className="k-rowdetail">{r.detail}</span>}
-            </span>
-            <span className={'k-rowval ' + (r.tone ?? 'flat')}>{r.value}</span>
-          </li>
-        ))}
-      </ul>
-      {note && <div className="k-resultnote">{note}</div>}
-      {children && <div className="k-resultactions">{children}</div>}
-    </div>
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setClosed(true)
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [])
+  if (!open) return null
+  // drawn on the page itself, so no table's own layout can push it about
+  return createPortal(
+    closed ? (
+      <button className="hdbtn primary k-resultpill" onClick={() => setClosed(false)}>
+        {t('kgShowResult')}
+      </button>
+    ) : (
+      <div className="k-resultlayer" onClick={(e) => e.target === e.currentTarget && setClosed(true)}>
+        <div className="k-result" role="dialog" aria-live="polite">
+          <button className="k-resultclose" onClick={() => setClosed(true)} aria-label={t('acClose')} title={t('acClose')}>
+            ×
+          </button>
+          <div className="k-resulttitle">{title}</div>
+          <ul className="k-rows">
+            {columns && (
+              <li className="k-rowhead">
+                <span>{columns[0]}</span>
+                <span>{columns[1]}</span>
+              </li>
+            )}
+            {rows.map((r, i) => (
+              <li key={i} className={'k-row' + (r.me ? ' me' : '')}>
+                <span className="k-rowname">
+                  <Avatar name={shown(r.name)} size={22} />
+                  {shown(r.name)}
+                  {r.detail != null && <span className="k-rowdetail">{r.detail}</span>}
+                </span>
+                <span className={'k-rowval ' + (r.tone ?? 'flat')}>{r.value}</span>
+              </li>
+            ))}
+          </ul>
+          {note && <div className="k-resultnote">{note}</div>}
+          {children && <div className="k-resultactions">{children}</div>}
+        </div>
+      </div>
+    ),
+    document.body,
   )
 }
 

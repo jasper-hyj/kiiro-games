@@ -123,3 +123,10 @@
 .gmlast {
   pointer-events: none;
 }
+
+/* the choice of table size in practice: a small switch in the middle */
+.play .plsize {
+  align-self: center;
+  justify-self: center;
+  width: min(300px, 100%);
+}

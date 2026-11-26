@@ -246,7 +246,16 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
               </SeatChip>
             ))}
           <div className="btcenter">
-            {v.status === 'over' && v.result ? (
+            <div className="btplay">{v.current ? v.current.cards.map((c) => <Card key={c} c={c} />) : <span className="pkslot" />}</div>
+            {v.current && (
+              <div className="muted small">
+                {shown(v.seats[v.current.seat].name)} · {curName}
+              </div>
+            )}
+            <div className={'hdmsg' + (myTurn ? ' mine' : '')} aria-live="polite">
+              {msg}
+            </div>
+            {v.status === 'over' && v.result && (
               <ResultPanel
                 title={t('btWins', { name: shown(v.seats[v.result.winner].name) })}
                 columns={[t('acPlayer'), t('btPoints')]}
@@ -265,18 +274,6 @@ export function BtTable({ v, status, room, error, send, talk, say, leave, me, op
                   </button>
                 )}
               </ResultPanel>
-            ) : (
-              <>
-                <div className="btplay">{v.current ? v.current.cards.map((c) => <Card key={c} c={c} />) : <span className="pkslot" />}</div>
-                {v.current && (
-                  <div className="muted small">
-                    {shown(v.seats[v.current.seat].name)} · {curName}
-                  </div>
-                )}
-                <div className={'hdmsg' + (myTurn ? ' mine' : '')} aria-live="polite">
-                  {msg}
-                </div>
-              </>
             )}
           </div>
         </div>

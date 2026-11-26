@@ -29,12 +29,20 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
     canX: boolean
     canXX: boolean
     counts: number[]
+    draw: { left: number; up: number } | null
+    drawn: number | null
     hands: number[][] | null
     score: number | null
   }
   const you = Math.max(0, v.you)
-  const seatName = (seat: number) => (seat === v.you ? t('brYou') : seat === (you + 2) % 4 && v.you >= 0 ? t('brPartner') : name(v.seats[seat].name))
-  const dir = (seat: number) => t(BR_SEAT_KEYS[seat])
+  const n = v.seats.length
+  const two = n === 2
+  const seatName = (seat: number) => (seat === v.you ? t('brYou') : !two && seat === (you + 2) % 4 && v.you >= 0 ? t('brPartner') : name(v.seats[seat].name))
+  // four players are known by their compass seat, two by their names
+  const dir = (seat: number) => (two ? seatName(seat) : t(BR_SEAT_KEYS[seat]))
+  /** the seat drawn at a place round the table: 0 near, 1 left, 2 far, 3 right */
+  const at = (p: number) => (two ? (you + p / 2) % 2 : (you + p) % 4)
+  const places = two ? [0, 2] : [0, 1, 2, 3]
   const callText = (c: BrCall) =>
     c.t === 'pass' ? (
       t('brPass')
@@ -50,14 +58,14 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
     )
   const sortHand = (cards: number[]) =>
     [...cards].sort((a, b) => [3, 2, 1, 0].indexOf(Math.floor(a / 13)) - [3, 2, 1, 0].indexOf(Math.floor(b / 13)) || (b % 13) - (a % 13))
-  const dummySeat = s.contract ? (s.contract.declarer + 2) % 4 : -1
+  const dummySeat = s.contract && !two ? (s.contract.declarer + 2) % 4 : -1
   const canPlay = (c: number) => s.canMove && s.legal.includes(c)
   const play = (c: number) => {
     if (canPlay(c)) send({ k: 'act', a: { card: c } })
   }
   const hands: Record<number, number[]> = { [you]: s.mine }
   if (s.dummy) hands[s.dummy.seat] = s.dummy.cards
-  if (s.hands) for (let i = 0; i < 4; i++) hands[i] = s.hands[i]
+  if (s.hands) for (let i = 0; i < n; i++) hands[i] = s.hands[i]
   const handRow = (seat: number, mine: boolean) => {
     const cs = sortHand(hands[seat] ?? [])
     const live = s.phase === 'play' && s.canMove && s.mover === seat
@@ -66,7 +74,7 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
         {cs.map((c) => (
           <button
             key={c}
-            className={'brcard' + (live && canPlay(c) ? ' ok' : '') + (live && !canPlay(c) ? ' dim' : '')}
+            className={'brcard' + (live && canPlay(c) ? ' ok' : '') + (live && !canPlay(c) ? ' dim' : '') + (c === s.drawn ? ' new' : '')}
             disabled={!(live && canPlay(c))}
             onClick={() => play(c)}
           >
@@ -77,7 +85,7 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
     )
   }
   const shownSeats = (p: number) => {
-    const seat = (you + p) % 4
+    const seat = at(p)
     return hands[seat] ? (
       handRow(seat, p === 0)
     ) : (
@@ -107,7 +115,9 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
         ? s.canMove
           ? s.mover === dummySeat && s.mover !== v.you
             ? t('brPlayDummy')
-            : t('brYourPlay')
+            : s.draw
+              ? t('brYourDraw')
+              : t('brYourPlay')
           : t('brWait', { name: dir(s.mover) })
         : ''
   const rows: { seat: number; call: BrCall | null }[][] = []
@@ -115,9 +125,11 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
     const cells: { seat: number; call: BrCall | null }[] = []
     for (let i = 0; i < s.dealer; i++) cells.push({ seat: i, call: null })
     for (const c of s.calls) cells.push(c)
-    for (let i = 0; i < cells.length; i += 4) rows.push(cells.slice(i, i + 4))
+    for (let i = 0; i < cells.length; i += n) rows.push(cells.slice(i, i + n))
   }
   const ourSide = (seat: number) => seat % 2 === you % 2
+  const score = (side: number, a: string | number) => (two ? `${seatName(side)}: ${a}` : side === 0 ? t('brTricksNS', { a }) : t('brTricksEW', { a }))
+  const columns = Array.from({ length: n }, (_, i) => i)
   const made = s.contract ? s.tricks[s.contract.declarer % 2] : 0
   return (
     <div className="br">
@@ -127,27 +139,27 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
             {t('brContract')}: {contractText} · {t('brDeclarer')} {dir(s.contract.declarer)}
           </span>
         )}
-        <span className="muted small">
-          {t('brTricksNS', { a: s.tricks[0] })} · {t('brTricksEW', { a: s.tricks[1] })}
-        </span>
+        <span className="muted small">{s.draw ? t('brDrawing') : `${score(0, s.tricks[0])} · ${score(1, s.tricks[1])}`}</span>
       </div>
       <div className="brline">{line}</div>
       {s.phase !== 'bid' || s.calls.length > 0 ? (
         <div className="brtable k-felt">
           <div className="brtop">
-            <b>{seatName((you + 2) % 4)}</b>
+            <b>{seatName(at(2))}</b>
             {s.phase === 'play' || s.phase === 'done' ? shownSeats(2) : null}
           </div>
-          <div className="brmid">
-            <div className="brside left">
-              <b>{seatName((you + 1) % 4)}</b>
-              {s.phase !== 'bid' ? shownSeats(1) : null}
-            </div>
+          <div className={'brmid' + (two ? ' two' : '')}>
+            {!two && (
+              <div className="brside left">
+                <b>{seatName(at(1))}</b>
+                {s.phase !== 'bid' ? shownSeats(1) : null}
+              </div>
+            )}
             <div className="brtrick">
               {s.phase === 'bid' ? (
-                <div className="brauction">
+                <div className={'brauction' + (two ? ' two' : '')}>
                   <div className="brahead">
-                    {[0, 1, 2, 3].map((i) => (
+                    {columns.map((i) => (
                       <b key={i} className={ourSide(i) ? 'us' : ''}>
                         {dir(i)}
                       </b>
@@ -155,7 +167,7 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
                   </div>
                   {rows.map((r, ri) => (
                     <div key={ri} className="brarow">
-                      {[0, 1, 2, 3].map((i) => (
+                      {columns.map((i) => (
                         <span key={i}>{r[i]?.call ? callText(r[i].call!) : ''}</span>
                       ))}
                     </div>
@@ -163,8 +175,8 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
                 </div>
               ) : (
                 <div className="brcross">
-                  {[2, 1, 3, 0].map((p) => {
-                    const seat = (you + p) % 4
+                  {places.map((p) => {
+                    const seat = at(p)
                     const x = s.trick.find((y) => y.seat === seat)
                     return (
                       <span key={p} className={'brslot p' + p}>
@@ -175,10 +187,18 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
                 </div>
               )}
             </div>
-            <div className="brside right">
-              <b>{seatName((you + 3) % 4)}</b>
-              {s.phase !== 'bid' ? shownSeats(3) : null}
-            </div>
+            {!two && (
+              <div className="brside right">
+                <b>{seatName(at(3))}</b>
+                {s.phase !== 'bid' ? shownSeats(3) : null}
+              </div>
+            )}
+            {s.draw && (
+              <div className="brstock">
+                <Card c={s.draw.up} />
+                <small>{t('brDrawLeft', { n: s.draw.left })}</small>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
@@ -227,7 +247,7 @@ export function BridgeBoard({ v, send, name }: BoardProps) {
             contract: `${s.contract.level}${STRAIN[s.contract.strain]}${s.contract.doubled === 1 ? ' X' : s.contract.doubled === 2 ? ' XX' : ''}`,
             declarer: dir(s.contract.declarer),
             made: made,
-            score: `${(s.score ?? 0) > 0 ? t('brTricksNS', { a: '+' + s.score }) : t('brTricksEW', { a: '+' + -(s.score ?? 0) })}`,
+            score: (s.score ?? 0) > 0 ? score(0, '+' + s.score) : score(1, '+' + -(s.score ?? 0)),
           })}
         </p>
       )}

@@ -54,8 +54,8 @@ export const GAME_UI: Record<GenericGame, GameUI> = {
   bridge: {
     name: 'bridge',
     blurb: 'bridgeBlurb',
-    settings: () => [],
-    help: { title: 'brHow', lines: ['brR1', 'brR2', 'brR3', 'brR4', 'brR5'] },
+    settings: (c) => [`${c.players ?? 4}`],
+    help: { title: 'brHow', lines: ['brR1', 'brR2', 'brR3', 'brR4', 'brR5', 'brR6'] },
     Board: BridgeBoard,
   },
   doudizhu: {

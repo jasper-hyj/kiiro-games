@@ -33,6 +33,8 @@ export default function PlayApp({ game }: { game: GenericGame }) {
   const [error, setError] = useState('')
   const [missing, setMissing] = useState('') // why there is no table to open
   const [talk, setTalk] = useState<TalkMsg[]>([])
+  // Bridge practice can be played by two as well as four
+  const [players, setPlayers] = useState(() => (new URLSearchParams(location.search).get('players') === '2' ? 2 : 4))
   const [copied, setCopied] = useState(false)
   const [, tick] = useState(0)
   const conn = useRef<PlayConn | null>(null)
@@ -67,15 +69,20 @@ export default function PlayApp({ game }: { game: GenericGame }) {
     [],
   )
 
-  const open = useCallback(() => {
-    conn.current?.close()
-    setView(null)
-    setTalk([])
-    const name = (me?.name || nameOrGuest()).slice(0, 16)
-    conn.current = practice
-      ? connectLocalPlay(game, getClientId(), name, handlers, game === 'yahtzee' ? { players: 2 } : {}, { local: where.page === 'practice' && !!where.local })
-      : connectPlay(game, code!, getClientId(), name, handlers, { watch: watchOnly })
-  }, [game, practice, code, watchOnly, me?.name, handlers])
+  const open = useCallback(
+    (seats = players) => {
+      conn.current?.close()
+      setView(null)
+      setTalk([])
+      const name = (me?.name || nameOrGuest()).slice(0, 16)
+      conn.current = practice
+        ? connectLocalPlay(game, getClientId(), name, handlers, game === 'yahtzee' ? { players: 2 } : game === 'bridge' ? { players: seats } : {}, {
+            local: where.page === 'practice' && !!where.local,
+          })
+        : connectPlay(game, code!, getClientId(), name, handlers, { watch: watchOnly })
+    },
+    [game, practice, code, watchOnly, me?.name, handlers],
+  )
   useEffect(() => {
     if (!conn.current && (practice || code)) open()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -223,6 +230,25 @@ export default function PlayApp({ game }: { game: GenericGame }) {
       <div className="kg-wrap hdwrap">
         {head(v)}
         <Hotkeys enabled={!!over && v.host} keys={{ enter: again }} />
+        {practice && game === 'bridge' && (
+          <div className="hdseg plsize" role="group" aria-label={t('brPlayers')}>
+            {[4, 2].map((k) => (
+              <button
+                key={k}
+                className={players === k ? 'on' : ''}
+                aria-pressed={players === k}
+                onClick={() => {
+                  if (k === players) return
+                  setPlayers(k)
+                  history.replaceState(null, '', k === 2 ? '?players=2' : location.pathname)
+                  open(k)
+                }}
+              >
+                {t('plPlayersN', { n: k })}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="plseats">
           {v.seats.map((s) => (
             <SeatChip

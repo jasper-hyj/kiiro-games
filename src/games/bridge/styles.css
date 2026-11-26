@@ -245,3 +245,32 @@
     min-width: 40px;
   }
 }
+
+/* two players: nobody at the sides; the pile being drawn from sits beside the trick */
+.brmid.two {
+  grid-template-columns: 1fr auto 1fr;
+}
+.brmid.two > .brtrick {
+  grid-column: 2;
+}
+.brstock {
+  grid-column: 3;
+  justify-self: center;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.brstock .pkcard {
+  box-shadow:
+    3px 3px 0 #7c3b2c,
+    5px 5px 0 #f1e6cb,
+    0 4px 10px rgba(40, 28, 12, 0.4);
+}
+:root:root .brauction.two .brahead,
+:root:root .brauction.two .brarow {
+  grid-template-columns: repeat(2, minmax(64px, 1fr));
+}
+:root:root .brcard.new .pkcard {
+  box-shadow: 0 0 0 2.5px var(--k-accent);
+}

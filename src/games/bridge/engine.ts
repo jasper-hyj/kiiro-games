@@ -4,23 +4,45 @@ import { rankOf as hRank, suitOf as hSuit } from '../holdem/engine/cards'
 /**
  * Contract Bridge, four players in two partnerships (South and North against West and East). One deal per game: an auction (bids from 1 club up to 7 no-trump, pass,
  * double, redouble), then thirteen tricks. The declarer plays both their own hand and the dummy's. Scored like duplicate bridge with nobody vulnerable.
+ * Two players ("honeymoon bridge"): 13 cards each and the same auction, with no dummy. Then thirteen drawing tricks, which do not count: the top card of the other
+ * 26 is shown, the winner of the trick takes it and the loser takes the unseen card under it. The thirteen tricks after that count towards the contract.
  * Cards are the same ids as Hold'em (0..51; the suit is 0 spades, 1 hearts, 2 diamonds, 3 clubs; the rank 0 is a deuce, 12 an ace).
  */
 export const BRIDGE_META: GameMeta = {
   kind: 'bridge',
-  minPlayers: 4,
+  minPlayers: 2,
   maxPlayers: 4,
-  variable: false,
+  variable: true,
   chipUnit: 0.4,
-  fields: [],
-  defaults: { ranked: false },
+  fields: [
+    {
+      key: 'players',
+      label: 'brPlayers',
+      options: [
+        [4, '4'],
+        [2, '2'],
+      ],
+    },
+  ],
+  defaults: { players: 4, ranked: false },
 }
 /** bid strains from low to high: clubs, diamonds, hearts, spades, no-trump (4) */
 const STRAIN_OF_SUIT = [3, 2, 1, 0] // Hold'em suit index -> strain
 const SUIT_OF_STRAIN = [3, 2, 1, 0]
 export const strainOf = (c: number) => STRAIN_OF_SUIT[hSuit(c)]
 const hcp = (h: number[]) => h.reduce((a, c) => a + Math.max(0, hRank(c) - 8), 0) // J=1 Q=2 K=3 A=4
-const side = (seat: number) => seat % 2 // 0: South and North, 1: West and East
+const side = (seat: number) => seat % 2 // 0: South and North (or the first of two players), 1: West and East
+const sortHand = (h: number[]) => h.sort((a, b) => strainOf(b) - strainOf(a) || hRank(b) - hRank(a))
+/** which of the cards on the table takes the trick (`trump` is a card suit, -1 for none) */
+function winnerOf(trick: { seat: number; card: number }[], trump: number) {
+  let best = trick[0]
+  for (const t of trick.slice(1)) {
+    const bs = hSuit(best.card),
+      ts = hSuit(t.card)
+    if (ts === bs ? hRank(t.card) > hRank(best.card) : ts === trump) best = t
+  }
+  return best
+}
 
 export type Call = { t: 'pass' } | { t: 'x' } | { t: 'xx' } | { t: 'bid'; level: number; strain: number }
 interface Contract {
@@ -42,6 +64,10 @@ interface State {
   tricks: number[]
   dummyOpen: boolean
   score: number
+  /** two players: the cards still to be drawn, the next one to be taken first */
+  stock: number[]
+  /** two players: the card each seat drew after the last drawing trick */
+  drawn: number[]
 }
 const level5 = (b: { level: number; strain: number }) => b.level * 5 + b.strain
 
@@ -86,6 +112,13 @@ export class Bridge extends TurnGame {
     tricks: [0, 0],
     dummyOpen: false,
     score: 0,
+    stock: [],
+    drawn: [],
+  }
+
+  private trumpSuit() {
+    const c = this.s.contract
+    return !c || c.strain === 4 ? -1 : SUIT_OF_STRAIN[c.strain]
   }
 
   protected begin() {
@@ -94,8 +127,9 @@ export class Bridge extends TurnGame {
       const j = Math.floor(Math.random() * (i + 1))
       ;[deck[i], deck[j]] = [deck[j], deck[i]]
     }
-    const hands = [0, 1, 2, 3].map((k) => deck.slice(k * 13, k * 13 + 13).sort((a, b) => strainOf(b) - strainOf(a) || hRank(b) - hRank(a)))
-    const dealer = (this.gameNo - 1) % 4
+    const n = this.size
+    const hands = Array.from({ length: n }, (_, k) => sortHand(deck.slice(k * 13, k * 13 + 13)))
+    const dealer = (this.gameNo - 1) % n
     this.s = {
       dealer,
       hands,
@@ -109,6 +143,8 @@ export class Bridge extends TurnGame {
       tricks: [0, 0],
       dummyOpen: false,
       score: 0,
+      stock: n === 2 ? deck.slice(26) : [],
+      drawn: [],
     }
   }
   turn() {
@@ -160,12 +196,13 @@ export class Bridge extends TurnGame {
       doubled: after.some((x) => x.call.t === 'xx') ? 2 : after.some((x) => x.call.t === 'x') ? 1 : 0,
     }
     s.phase = 'play'
-    s.leader = (first.seat + 1) % 4
+    s.leader = (first.seat + 1) % this.size
     s.turn = s.leader
   }
 
   protected act(seat: number, m: any): string | null {
     const s = this.s
+    const n = this.size
     if (s.phase === 'bid') {
       const who = s.turn
       const c = m?.call
@@ -185,22 +222,14 @@ export class Bridge extends TurnGame {
         call = { t: 'bid', level, strain }
       } else return 'bad_call'
       s.calls.push({ seat: who, call })
-      const n = s.calls.length
-      const passesEnd = (() => {
-        let k = 0
-        for (let i = n - 1; i >= 0 && s.calls[i].call.t === 'pass'; i--) k++
-        return k
-      })()
-      const anyBid = s.calls.some((x) => x.call.t === 'bid')
-      if (!anyBid && passesEnd >= 4) {
+      let passes = 0
+      for (let i = s.calls.length - 1; i >= 0 && s.calls[i].call.t === 'pass'; i--) passes++
+      // everyone passes a deal out; after a bid, everyone else passing ends the auction
+      if (passes >= (s.calls.some((x) => x.call.t === 'bid') ? n - 1 : n)) {
         this.finishAuction()
         return null
       }
-      if (anyBid && passesEnd >= 3) {
-        this.finishAuction()
-        return null
-      }
-      s.turn = (who + 1) % 4
+      s.turn = (who + 1) % n
       return null
     }
     // play: `seat` is whoever is moving; the card belongs to the hand whose turn it is
@@ -211,22 +240,23 @@ export class Bridge extends TurnGame {
     if (led >= 0 && hSuit(card) !== led && s.hands[who].some((x) => hSuit(x) === led)) return 'follow_suit'
     s.hands[who] = s.hands[who].filter((x) => x !== card)
     s.trick.push({ seat: who, card })
-    if (s.trick.length === 1 && s.last.length === 0 && s.tricks[0] + s.tricks[1] === 0) s.dummyOpen = true // the dummy goes down after the opening lead
-    if (s.trick.length < 4) {
-      s.turn = (who + 1) % 4
+    if (n === 4 && s.trick.length === 1 && s.last.length === 0 && s.tricks[0] + s.tricks[1] === 0) s.dummyOpen = true // the dummy goes down after the opening lead
+    if (s.trick.length < n) {
+      s.turn = (who + 1) % n
       return null
     }
     // the trick is complete
-    const trump = s.contract!.strain === 4 ? -1 : SUIT_OF_STRAIN[s.contract!.strain]
-    const ledSuit = hSuit(s.trick[0].card)
-    let best = s.trick[0]
-    for (const t of s.trick.slice(1)) {
-      const bs = hSuit(best.card),
-        ts = hSuit(t.card)
-      if (ts === bs ? hRank(t.card) > hRank(best.card) : ts === trump) best = t
-    }
-    void ledSuit
-    s.tricks[side(best.seat)]++
+    const best = winnerOf(s.trick, this.trumpSuit())
+    if (s.stock.length) {
+      // a drawing trick: it counts for nobody; the winner takes the card that was showing, the other the one under it
+      const [shown, hidden] = s.stock.splice(0, 2)
+      const loser = 1 - best.seat
+      s.drawn[best.seat] = shown
+      s.drawn[loser] = hidden
+      s.hands[best.seat].push(shown)
+      s.hands[loser].push(hidden)
+      s.hands.forEach(sortHand)
+    } else s.tricks[side(best.seat)]++
     s.last = s.trick
     s.trick = []
     s.leader = best.seat
@@ -308,6 +338,7 @@ export class Bridge extends TurnGame {
     const c = s.contract!
     const trump = c.strain === 4 ? -1 : SUIT_OF_STRAIN[c.strain]
     const bySuit = (su: number) => hand.filter((x) => hSuit(x) === su).sort((a, b) => hRank(b) - hRank(a))
+    if (s.stock.length) return this.drawBot(hand, trump)
     if (s.trick.length === 0) {
       // leading
       const suits = [0, 1, 2, 3].filter((su) => bySuit(su).length > 0)
@@ -327,18 +358,9 @@ export class Bridge extends TurnGame {
     }
     const led = hSuit(s.trick[0].card)
     const following = bySuit(led)
-    const win = (t: { seat: number; card: number }[]) => {
-      let best = t[0]
-      for (const x of t.slice(1)) {
-        const bs = hSuit(best.card),
-          ts = hSuit(x.card)
-        if (ts === bs ? hRank(x.card) > hRank(best.card) : ts === trump) best = x
-      }
-      return best
-    }
-    const cur = win(s.trick)
+    const cur = winnerOf(s.trick, trump)
     const partnerWinning = side(cur.seat) === side(seat)
-    const last = s.trick.length === 3
+    const last = s.trick.length === this.size - 1
     if (following.length) {
       if (partnerWinning && (last || hRank(cur.card) >= 11)) return following[following.length - 1]
       const beaters = following.filter((x) => hSuit(cur.card) === led && hRank(x) > hRank(cur.card))
@@ -357,6 +379,23 @@ export class Bridge extends TurnGame {
     const pool = others.length ? others : hand
     return pool.sort((a, b) => hRank(a) - hRank(b))[0]
   }
+  /** two players, drawing: fight for a good face-up card, otherwise throw the cheapest card and take the unseen one */
+  private drawBot(hand: number[], trump: number): number {
+    const s = this.s
+    const up = s.stock[0]
+    const want = hSuit(up) === trump || hRank(up) >= 9
+    const cheapFirst = (cards: number[]) => [...cards].sort((a, b) => Number(hSuit(a) === trump) - Number(hSuit(b) === trump) || hRank(a) - hRank(b))
+    if (!s.trick.length) {
+      const side = hand.filter((x) => hSuit(x) !== trump)
+      if (want && side.length) return [...side].sort((a, b) => hRank(b) - hRank(a))[0]
+      return cheapFirst(hand)[0]
+    }
+    const led = hSuit(s.trick[0].card)
+    const follow = hand.filter((x) => hSuit(x) === led)
+    const legal = cheapFirst(follow.length ? follow : hand)
+    const winning = legal.find((x) => winnerOf([s.trick[0], { seat: -1, card: x }], trump).seat === -1)
+    return want && winning !== undefined ? winning : legal[0]
+  }
   protected bot(seat: number) {
     const s = this.s
     if (s.phase === 'bid') {
@@ -372,7 +411,7 @@ export class Bridge extends TurnGame {
   protected gameView(seat: number) {
     const s = this.s
     const c = s.contract
-    const dummy = c ? (c.declarer + 2) % 4 : -1
+    const dummy = c && this.size === 4 ? (c.declarer + 2) % 4 : -1
     const showDummy = s.phase !== 'bid' && s.dummyOpen && dummy >= 0
     const mover = s.turn
     const canMove = seat >= 0 && this.status === 'playing' && this.controller(mover) === seat
@@ -390,7 +429,7 @@ export class Bridge extends TurnGame {
       trick: s.trick,
       last: s.last,
       tricks: s.tricks,
-      controls: seat >= 0 ? [seat, ...(c && seat === c.declarer && s.phase === 'play' ? [dummy] : [])] : [],
+      controls: seat >= 0 ? [seat, ...(c && dummy >= 0 && seat === c.declarer && s.phase === 'play' ? [dummy] : [])] : [],
       mover,
       canMove,
       legal: legalCards,
@@ -398,6 +437,9 @@ export class Bridge extends TurnGame {
       canX: seat >= 0 && s.phase === 'bid' && this.canX(s.turn),
       canXX: seat >= 0 && s.phase === 'bid' && this.canXX(s.turn),
       counts: s.hands.map((h) => h.length),
+      // two players: how many draws are left, the card being played for, and what this seat drew last
+      draw: s.phase === 'play' && s.stock?.length ? { left: s.stock.length / 2, up: s.stock[0] } : null,
+      drawn: seat >= 0 && s.phase === 'play' ? (s.drawn?.[seat] ?? null) : null,
       hands: s.phase === 'done' ? s.hands : null,
       score: s.phase === 'done' ? s.score : null,
     }
@@ -405,10 +447,11 @@ export class Bridge extends TurnGame {
   protected outcome(): Outcome | null {
     if (this.s.phase !== 'done') return null
     const ns = this.s.score
+    const four = this.size === 4
     return {
-      points: [ns, -ns, ns, -ns],
+      points: four ? [ns, -ns, ns, -ns] : [ns, -ns],
       winner: ns === 0 ? -1 : ns > 0 ? 0 : 1,
-      winners: ns === 0 ? undefined : ns > 0 ? [0, 2] : [1, 3],
+      winners: ns === 0 || !four ? undefined : ns > 0 ? [0, 2] : [1, 3],
       summary: { contract: this.s.contract, tricks: this.s.tricks, score: ns },
     }
   }
@@ -416,6 +459,6 @@ export class Bridge extends TurnGame {
     return this.s
   }
   protected loadState(s: State) {
-    this.s = s
+    this.s = { ...s, stock: s.stock ?? [], drawn: s.drawn ?? [] }
   }
 }

@@ -155,5 +155,58 @@ const call = (g: Bridge, c: any) => {
   ok(zero === done, 'every deal is zero-sum between the two sides')
   ok(played >= 25, `most deals are bid and played, not passed out (${played} of 60)`)
 }
+// two players: auction, thirteen drawing tricks, thirteen that count
+{
+  const two = () => {
+    const g = new Bridge().init()
+    g.botDelayMs = 1e9
+    g.turnTimerMs = 0
+    g.join('a', 'A')
+    g.setConfig('a', { players: 2 })
+    g.join('b', 'B')
+    g.start('a')
+    return g
+  }
+  const g = two()
+  const s = (g as any).s
+  ok(g.seats.length === 2 && s.hands.every((h: number[]) => h.length === 13) && s.stock.length === 26, 'two players: 13 cards each and 26 to draw from')
+  const first = s.turn,
+    other = 1 - first
+  const who = ['a', 'b']
+  g.message(who[first], { k: 'act', a: { call: { level: 1, strain: 4 } } })
+  g.message(who[other], { k: 'act', a: { call: 'pass' } })
+  ok(s.phase === 'play' && s.contract.declarer === first && s.leader === other, 'two players: one pass ends the auction; the other player leads')
+  const view = g.view(who[other]).state
+  ok(view.draw.left === 13 && view.draw.up === s.stock[0] && view.dummy === null, 'two players: the card to be won is shown, and there is no dummy')
+  ok(!('stock' in view) && view.hands === null, 'two players: the unseen cards stay unseen')
+  const [shown, hidden] = s.stock
+  s.hands[other] = [12, ...s.hands[other].slice(1)] // the ace of spades leads
+  s.hands[first] = [0, ...s.hands[first].slice(1).filter((c: number) => c >= 13)]
+  g.message(who[other], { k: 'act', a: { card: 12 } })
+  g.message(who[first], { k: 'act', a: { card: 0 } })
+  ok(s.hands[other].includes(shown) && s.hands[first].includes(hidden), 'two players: the winner takes the shown card, the loser the one under it')
+  ok(s.tricks[0] + s.tricks[1] === 0 && s.turn === other, 'two players: a drawing trick counts for nobody, and its winner leads')
+  ok(g.view(who[first]).state.drawn === hidden && g.view(who[other]).state.drawn === shown, 'two players: each sees only the card they drew')
+  let done = 0,
+    sound = 0
+  for (let n = 0; n < 60; n++) {
+    const h = two()
+    const t = (h as any).s
+    let guard = 0,
+      bad = false
+    while (h.status === 'playing' && guard++ < 400) {
+      h.assist(h.turn())
+      if (t.phase === 'play') {
+        const cards = [...t.hands.flat(), ...t.stock, ...t.trick.map((x: any) => x.card)]
+        if (new Set(cards).size !== cards.length) bad = true
+      }
+    }
+    if (h.status === 'over') {
+      done++
+      if (!bad && h.result!.points.length === 2 && h.result!.points[0] + h.result!.points[1] === 0 && (!t.contract || t.tricks[0] + t.tricks[1] === 13)) sound++
+    }
+  }
+  ok(done === 60 && sound === 60, `two players: 60 deals by the computer, each with 13 counting tricks and no card twice (${done}, ${sound})`)
+}
 console.log(fails ? `${fails} FAILED` : 'all passed')
 process.exit(fails ? 1 : 0)
