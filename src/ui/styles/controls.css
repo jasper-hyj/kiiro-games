@@ -1,0 +1,185 @@
+/* ---- buttons: one family everywhere (the older class names stay, they are just restyled) ---- */
+:root:root .hdbtn,
+:root:root .hdseg button,
+:root:root .hdpresets button,
+:root:root .acbox button,
+:root:root .adpage button,
+:root:root .adpage .btn,
+:root:root .acrow a {
+  font: 600 14px var(--k-sans);
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(var(--k-ink-rgb), 0.09);
+  color: var(--k-ink);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.12s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  :root:root .hdbtn:hover:not(:disabled),
+  :root:root .acbox button:hover:not(:disabled) {
+    background: rgba(var(--k-ink-rgb), 0.15);
+  }
+}
+:root:root .hdbtn:active:not(:disabled),
+:root:root .acbox button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+:root:root .hdbtn.primary,
+:root:root .acbox .primary,
+:root:root .adpage .primary,
+:root:root .kg-create,
+:root:root .kg-join button {
+  background: var(--k-accent);
+  color: var(--k-accent-ink);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(var(--k-accent-rgb), 0.22);
+}
+@media (hover: hover) {
+  :root:root .hdbtn.primary:hover:not(:disabled),
+  :root:root .acbox .primary:hover:not(:disabled),
+  :root:root .kg-create:hover {
+    background: var(--k-accent-hi);
+  }
+}
+:root:root .hdbtn:disabled,
+:root:root .acbox button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+:root:root .hdbtn:focus-visible,
+:root:root .hdseg button:focus-visible,
+:root:root .acbox button:focus-visible,
+:root:root .rmgame:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+}
+:root:root .hdlink,
+:root:root .acbox .ghost,
+:root:root .adpage .ghost {
+  background: none;
+  box-shadow: none;
+  color: var(--k-mute);
+}
+@media (hover: hover) {
+  :root:root .hdlink:hover,
+  :root:root .acbox .ghost:hover {
+    color: var(--k-ink);
+  }
+}
+
+/* segmented choices (casual/ranked, play/watch ...) */
+.hdseg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(var(--k-ink-rgb), 0.06);
+}
+:root:root .hdseg button {
+  flex: 1;
+  background: none;
+  color: var(--k-mute);
+  min-height: 38px;
+}
+:root:root .hdseg button.on {
+  background: var(--k-accent-soft);
+  color: var(--k-accent-hi);
+  box-shadow: inset 0 0 0 1.5px rgba(var(--k-accent-rgb), 0.5);
+}
+
+/* fields */
+:root:root .hd input[type="text"],
+:root:root .hd input:not([type]),
+:root:root .hd input[inputmode],
+:root:root .hd select,
+:root:root .acbox input,
+:root:root .adpage input,
+:root:root .kg-join input {
+  background: rgba(var(--k-ink-rgb), 0.06);
+  color: var(--k-ink);
+  border: 1px solid var(--k-line2);
+  border-radius: var(--k-r-sm);
+  padding: 0 14px;
+  min-height: 44px;
+  font: 400 15px var(--k-sans);
+}
+:root:root .hd input:focus-visible,
+:root:root .hd select:focus-visible,
+:root:root .acbox input:focus-visible,
+:root:root .kg-join input:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 1px;
+}
+:root:root .hd input[type="range"] {
+  accent-color: var(--k-accent);
+}
+
+/* panels: soft, rounded, no hard outlines */
+.k-panel {
+  background: var(--k-panel);
+  border-radius: var(--k-r);
+  box-shadow: var(--k-shadow-sm);
+}
+
+/* ---- input devices ---------------------------------------------------------
+   Touch: 44px targets, no double-tap zoom, no text selection or long-press menus on game surfaces.
+   Mouse: hover states only where hover exists. Keyboard: visible focus everywhere, shortcut hints on desktop. */
+.hd,
+.kgt-surface,
+.bttable,
+.bthand,
+.hdfelt,
+.bjtable {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.hd button,
+.hd a,
+.hd input[type="range"],
+.bjchips {
+  touch-action: manipulation;
+}
+/* the hand is dragged across to select cards: the page must not take that gesture over as a pan */
+.hd .bthand,
+.hd .bthand * {
+  touch-action: none;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--k-accent);
+  outline-offset: 2px;
+}
+.k-kbd {
+  display: none;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font: 600 11px var(--k-sans);
+  background: rgba(0, 0, 0, 0.18);
+  color: inherit;
+  opacity: 0.75;
+}
+@media (hover: hover) and (pointer: fine) {
+  .k-kbd {
+    display: inline-block;
+  }
+}
+@media (pointer: coarse) {
+  :root:root .hdbtn,
+  :root:root .hdseg button {
+    min-height: 48px;
+  }
+  .hdpresets button {
+    min-height: 40px;
+  }
+}

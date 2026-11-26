@@ -1,0 +1,169 @@
+/* Liar's Dice */
+.ld {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  width: 100%;
+}
+.ldplayers {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ldp {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(var(--k-ink-rgb), 0.06);
+  min-width: 84px;
+}
+.ldp.turn {
+  box-shadow: inset 0 0 0 2px var(--k-accent);
+}
+.ldp.out {
+  opacity: 0.45;
+}
+.ldp.me b {
+  color: var(--k-accent);
+}
+.ldcup {
+  display: flex;
+  gap: 3px;
+  min-height: 18px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--k-mute);
+}
+.ldcup i {
+  width: 10px;
+  height: 14px;
+  border-radius: 3px 3px 5px 5px;
+  background: linear-gradient(180deg, #c79a58, #8d6a34);
+}
+.ldbid {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 16px 28px;
+  border-radius: 24px;
+  min-width: min(380px, 92vw);
+  box-sizing: border-box;
+  text-align: center;
+}
+.ldbidline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 20px;
+}
+.ldbidline b {
+  font: 700 28px var(--k-serif);
+}
+.ldmini {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
+  padding: calc(var(--s, 36px) * 0.14);
+  box-sizing: border-box;
+  border-radius: 22%;
+  background: #f6f1e4;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+.ldmini i {
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  background: transparent;
+}
+.ldmini i.on {
+  background: #1a2036;
+}
+.ldmine {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.ldreveal {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--k-panel2);
+  box-shadow: inset 0 0 0 1px var(--k-line2);
+  max-width: min(560px, 94vw);
+}
+.ldrows {
+  display: grid;
+  gap: 4px;
+}
+.ldrow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.ldrow > span:last-child {
+  display: flex;
+  gap: 4px;
+}
+.ldr {
+  opacity: 0.5;
+}
+.ldr.hit {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(var(--k-accent-rgb), 0.8));
+}
+.ldctl {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.ldqty {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.ldqty b {
+  font: 700 28px var(--k-serif);
+  min-width: 40px;
+  text-align: center;
+}
+:root:root .ldqty button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 24px;
+  justify-content: center;
+  background: rgba(var(--k-ink-rgb), 0.12);
+}
+.ldfaces {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+:root:root .ldfaces button {
+  padding: 5px;
+  min-height: 0;
+  border-radius: 12px;
+  background: rgba(var(--k-ink-rgb), 0.07);
+}
+:root:root .ldfaces button.on {
+  box-shadow: inset 0 0 0 2.5px var(--k-accent);
+  background: rgba(var(--k-accent-rgb), 0.15);
+}
+.ldbtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

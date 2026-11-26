@@ -4,6 +4,7 @@ import { Hotkeys, Kbd } from '../../ui/components'
 import type { BoardProps } from '../frame/types'
 import { PIPS } from '../frame/dice'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Liar's Dice */
 function MiniDie({ n, size = 34 }: { n: number; size?: number }) {

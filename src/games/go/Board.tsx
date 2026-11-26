@@ -4,6 +4,7 @@ import { isTouchPrimary, Kbd } from '../../ui/components'
 import { Resign } from '../frame/Resign'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Go */
 export function GoBoard({ v, send, name }: BoardProps) {

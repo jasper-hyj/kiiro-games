@@ -5,6 +5,7 @@ import { Card } from '../holdem/ui/Cards'
 import { classify as ddClassify, beats as ddBeats } from './engine'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Dou Dizhu */
 /** a Dou Dizhu card id (suit * 13 + rank from 3 up; 52 and 53 are the jokers) as a card face */

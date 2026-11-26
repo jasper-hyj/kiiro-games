@@ -1,0 +1,104 @@
+/* turn-based games on the shared frame (src/games/generic) */
+.play .plseats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 4px 0 6px;
+}
+.play .plline {
+  text-align: center;
+  min-height: 24px;
+  margin: 4px 0 8px;
+}
+.gmwrap {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.gmside {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.gmchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(var(--k-ink-rgb), 0.09);
+  font-weight: 600;
+  font-size: 14px;
+}
+.gmstone {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: -2px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.gmstone.s1 {
+  background: radial-gradient(circle at 35% 30%, #5a5f6e, #11141c);
+}
+.gmstone.s2 {
+  background: radial-gradient(circle at 35% 30%, #fff, #c9cbd4);
+}
+.gmboard {
+  width: min(94vw, 580px, calc(100dvh - 300px));
+  height: auto;
+  touch-action: manipulation;
+  filter: drop-shadow(0 10px 18px rgba(70, 50, 25, 0.35));
+}
+@media (max-height: 560px) {
+  .gmboard {
+    width: min(94vw, 580px, calc(100dvh - 120px));
+  }
+}
+.gmwood {
+  fill: #c79a58;
+  stroke: #8d6a34;
+  stroke-width: 0.08;
+}
+.gmline {
+  stroke: #5a3f1c;
+  stroke-width: 0.05;
+}
+.gmstar {
+  fill: #5a3f1c;
+}
+.gmhit {
+  fill: transparent;
+  cursor: pointer;
+}
+.gmst.s1 {
+  fill: #14171f;
+}
+.gmst.s2 {
+  fill: #f4f1ea;
+  stroke: #a9a49a;
+  stroke-width: 0.03;
+}
+.gmst {
+  filter: drop-shadow(0 0.04px 0.05px rgba(0, 0, 0, 0.55));
+}
+.gmghost.s1 {
+  fill: rgba(20, 23, 31, 0.55);
+}
+.gmghost.s2 {
+  fill: rgba(244, 241, 234, 0.7);
+}
+.gmlast {
+  fill: var(--k-accent);
+}
+.gmwin .gmst {
+  stroke: var(--k-accent);
+  stroke-width: 0.1;
+}
+.gmconfirm {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+}

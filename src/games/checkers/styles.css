@@ -1,0 +1,88 @@
+.ckboard {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(94vw, 480px, calc(100dvh - 300px));
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 6px #6b4a2a,
+    0 12px 26px rgba(70, 50, 25, 0.35);
+}
+:root:root .cksq {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  min-height: 0;
+  background: #e8d3a8;
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+:root:root .cksq.dark {
+  background: #8a5a3a;
+}
+:root:root .cksq:not(:disabled) {
+  cursor: pointer;
+}
+:root:root .cksq.last {
+  background: #c99b4e;
+}
+:root:root .cksq.sel {
+  box-shadow: inset 0 0 0 4px #e8b66a;
+}
+.cksq.tgt::after {
+  content: "";
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(243, 236, 221, 0.7);
+  position: absolute;
+}
+.ckp {
+  display: grid;
+  place-items: center;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: min(5vw, 26px);
+  line-height: 1;
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.18);
+  position: relative;
+  z-index: 1;
+}
+.ckp.p1,
+.ckp.p2 {
+  background: radial-gradient(circle at 35% 30%, #d4705a, #9c3f2b);
+  color: #f6dcc9;
+}
+.ckp.p3,
+.ckp.p4 {
+  background: radial-gradient(circle at 35% 30%, #fffaf0, #d8ccae);
+  color: #6b4a2a;
+}
+.cksq.mv:not(.sel) .ckp {
+  box-shadow:
+    0 0 0 3px rgba(232, 182, 106, 0.7),
+    0 3px 5px rgba(0, 0, 0, 0.45);
+}
+.ckdot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: -2px;
+}
+.ckdot.p1 {
+  background: #b5523a;
+}
+.ckdot.p3 {
+  background: #f1e6cb;
+  box-shadow: inset 0 0 0 1px #9b8f7a;
+}

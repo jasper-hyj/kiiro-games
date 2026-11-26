@@ -1,0 +1,52 @@
+.ccseats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ccseats .gmchip.turn {
+  box-shadow: inset 0 0 0 2px var(--k-accent);
+}
+.ccseats small {
+  color: var(--k-mute);
+  font-weight: 500;
+}
+.ccdot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35);
+}
+.ccboard {
+  width: min(100%, 540px, calc((100dvh - 290px) * 0.88));
+  height: auto;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 35%, #d2a768, #b98d57);
+  box-shadow:
+    0 0 0 5px #8a6a42,
+    0 12px 26px rgba(70, 50, 25, 0.35);
+  touch-action: manipulation;
+}
+.cchole {
+  fill: rgba(70, 45, 20, 0.38);
+}
+.ccmarble {
+  stroke: rgba(0, 0, 0, 0.4);
+  stroke-width: 0.06;
+  filter: drop-shadow(0 0.05px 0.06px rgba(0, 0, 0, 0.5));
+}
+.ccmarble.light {
+  stroke: #8a7a60;
+}
+.ccmarble.sel {
+  stroke: #fff6d8;
+  stroke-width: 0.16;
+}
+.ccdest {
+  fill: #fff6d8;
+  opacity: 0.95;
+}
+.cclive {
+  cursor: pointer;
+}

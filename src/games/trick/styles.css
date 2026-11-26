@@ -1,0 +1,192 @@
+/* Hearts and Spades */
+.tk {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+  --cw: 46px;
+}
+.tkinfo {
+  min-height: 18px;
+  text-align: center;
+}
+.tkcenter {
+  text-align: center;
+  margin: 0;
+}
+.tktable {
+  position: relative;
+  width: min(560px, 100%);
+  height: min(300px, 62vw);
+  border-radius: 26px;
+  box-sizing: border-box;
+}
+.tkseat {
+  position: absolute;
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: rgba(26, 33, 31, 0.8);
+  font-size: 12px;
+  text-align: center;
+  max-width: 34%;
+}
+.tkseat b {
+  font-size: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tkseat span {
+  color: var(--k-mute);
+}
+.tkseat.turn {
+  box-shadow:
+    0 0 0 2px var(--k-accent),
+    0 0 14px rgba(232, 182, 106, 0.4);
+}
+.tkt {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tkl {
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.tkr {
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.tkmid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.tkhint {
+  max-width: 40%;
+  text-align: center;
+  color: var(--k-mute);
+  font-size: 14px;
+}
+.tkcross {
+  display: grid;
+  grid-template-areas: ". t ." "l . r" ". b .";
+  gap: 2px 14px;
+  justify-items: center;
+  align-items: center;
+  margin-top: 12px;
+}
+.tkslot {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+}
+.tkslot.r2 {
+  grid-area: t;
+}
+.tkslot.r1 {
+  grid-area: l;
+}
+.tkslot.r3 {
+  grid-area: r;
+}
+.tkslot.r0 {
+  grid-area: b;
+}
+.tkslot .pkcard,
+.tkslot .pkslot {
+  --cw: 38px;
+}
+.tkmine {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: 100%;
+}
+.tkhand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(100%, 760px);
+  padding: 14px 24px 6px 0;
+}
+:root:root .tkcard {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 -24px 8px 0;
+  min-height: 0;
+  cursor: default;
+  position: relative;
+  transition: transform 0.14s;
+}
+:root:root .tkcard.ok {
+  cursor: pointer;
+  transform: translateY(-8px);
+  z-index: 2;
+  filter: drop-shadow(0 0 7px rgba(var(--k-accent-rgb), 0.55));
+}
+:root:root .tkcard.dim {
+  filter: brightness(0.7);
+}
+:root:root .tkcard.sel {
+  transform: translateY(-20px);
+  z-index: 3;
+  filter: drop-shadow(0 0 8px rgba(var(--k-accent-rgb), 0.8));
+}
+@media (hover: hover) {
+  :root:root .tkcard.ok:hover {
+    transform: translateY(-16px);
+    z-index: 3;
+  }
+}
+.tkcard .pkcard {
+  --cw: 46px;
+  width: 46px;
+  height: 64px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 5px 0 0 6px;
+  box-sizing: border-box;
+}
+.tkcard .pkcard b {
+  font-size: 17px;
+  line-height: 1;
+}
+.tkcard .pkcard i {
+  font-size: 16px;
+  line-height: 1;
+}
+@media (max-width: 520px) {
+  .tkcard .pkcard {
+    --cw: 40px;
+    width: 40px;
+    height: 56px;
+    padding-left: 4px;
+  }
+  :root:root .tkcard {
+    margin-right: -22px;
+  }
+  .tkseat {
+    padding: 4px 7px;
+  }
+}
+.tkbids {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  width: min(420px, 100%);
+}
+:root:root .tkbids .hdbtn {
+  padding: 0;
+  min-width: 0;
+  justify-content: center;
+}

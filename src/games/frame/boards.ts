@@ -1,6 +1,7 @@
 import type { GenericGame } from './kinds'
 import type { GameUI } from './types'
 import './strings'
+import './frame.css'
 import { GomokuBoard } from '../gomoku/Board'
 import { CrazyBoard } from '../crazyeights/Board'
 import { YahtzeeBoard } from '../yahtzee/Board'
@@ -15,6 +16,8 @@ import { GoBoard } from '../go/Board'
 import { ChineseCheckersBoard } from '../chinesecheckers/Board'
 import { HeartsBoard } from '../hearts/Board'
 import { SpadesBoard } from '../spades/Board'
+// after every game's own styles: the small-phone sizing
+import './phone.css'
 
 /** Every turn-based game's screen. A new game is added here, in registry.ts (rules) and in kinds.ts (its id). */
 export const GAME_UI: Record<GenericGame, GameUI> = {

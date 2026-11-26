@@ -1,5 +1,6 @@
 import { Card } from '../holdem/ui/Cards'
 import type { BoardProps } from '../frame/types'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Hearts and Spades share one table */
 export function Trick({ v, cards, you }: { v: BoardProps['v']; cards: { seat: number; card: number }[]; you: number }) {

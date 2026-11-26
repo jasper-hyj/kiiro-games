@@ -1,0 +1,11 @@
+.gomark {
+  opacity: 0.85;
+}
+.gomark.s1 {
+  fill: #1d1f26;
+}
+.gomark.s2 {
+  fill: #f4efe3;
+  stroke: #8a7a60;
+  stroke-width: 0.04;
+}

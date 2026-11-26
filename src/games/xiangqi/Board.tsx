@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLang } from '../../i18n'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Xiangqi */
 const XQ_RED = ['', '帥', '仕', '相', '傌', '俥', '炮', '兵'],

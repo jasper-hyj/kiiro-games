@@ -3,6 +3,7 @@ import { useLang } from '../../i18n'
 import { Resign } from '../frame/Resign'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Checkers */
 export function CheckersBoard({ v, send }: BoardProps) {

@@ -3,6 +3,7 @@ import { useLang } from '../../i18n'
 import { HOLES } from './engine'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Chinese Checkers */
 const CC_COLOURS = ['#b5523a', '#d9a73c', '#4f6d8f', '#8a5a83', '#34363f', '#f1e6cb']

@@ -2,6 +2,7 @@ import { useLang } from '../../i18n'
 import { Card } from '../holdem/ui/Cards'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Bridge */
 const STRAIN = ['♣', '♦', '♥', '♠', 'NT']

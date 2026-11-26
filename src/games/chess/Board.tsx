@@ -3,6 +3,7 @@ import { useLang } from '../../i18n'
 import { name as sqName } from './rules'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Chess */
 const GLYPH = ['', '♟', '♞', '♝', '♜', '♛', '♚']

@@ -5,6 +5,7 @@ import { CATS } from './engine'
 import type { BoardProps } from '../frame/types'
 import { PIPS } from '../frame/dice'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Yahtzee */
 function Die({ n, held, live, onClick }: { n: number; held: boolean; live: boolean; onClick(): void }) {

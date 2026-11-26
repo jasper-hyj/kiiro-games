@@ -5,6 +5,7 @@ import { Card } from '../holdem/ui/Cards'
 import { rankOf, suitOf, SUITS } from '../holdem/engine/cards'
 import type { BoardProps } from '../frame/types'
 import './strings'
+import './styles.css'
 
 /* ---------------------------------------------------------------- Crazy Eights */
 const SUIT_RED = [false, true, true, false]

@@ -1,0 +1,76 @@
+/* Kiiro design system: one cozy, clean look for the hub, rooms, accounts and every game.
+   Lamplit navy, cream text, a soft amber accent (never green), round shapes, gentle shadows.
+   Tokens are --k-*; the shell classes (.kg, .acmodal ...) map them onto the short names the older styles use. */
+:root {
+  /* paper and board: warm cardstock, ink-brown text, muted ochre / brick accents, felt and wood for the tables */
+  --k-bg: #ece3cf;
+  --k-bg2: #e4d9c0;
+  --k-panel: #f6f0e1;
+  --k-panel2: #efe6d1;
+  --k-felt: #4b5d5e;
+  --k-felt2: #33423f;
+  --k-ink: #3a3025;
+  --k-mute: #7a6d5a;
+  --k-faint: #9b8f7a;
+  --k-ink-rgb: 58, 48, 37;
+  --k-line: rgba(58, 48, 37, 0.14);
+  --k-line2: rgba(58, 48, 37, 0.24);
+  --k-accent: #a9552f;
+  --k-accent-hi: #8f4423;
+  --k-accent-ink: #fbf5e6;
+  --k-accent-soft: rgba(169, 85, 47, 0.13);
+  --k-accent-rgb: 169, 85, 47;
+  --k-silver: #5d6b78;
+  --k-bad: #a3392f;
+  --k-good: #3f6283;
+  --k-r: 14px;
+  --k-r-sm: 10px;
+  --k-r-lg: 22px;
+  --k-shadow: 0 8px 22px rgba(70, 50, 25, 0.16);
+  --k-shadow-sm: 0 2px 6px rgba(70, 50, 25, 0.14);
+  --k-glow: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255, 250, 235, 0.7), transparent 65%);
+  --k-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .27  0 0 0 0 .17  0 0 0 .55 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  --k-sans: "Instrument Sans", system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "LXGW WenKai TC", sans-serif;
+  --k-serif: "Fraunces", "LXGW WenKai TC", "Zen Antique", "Songti TC", Georgia, serif;
+}
+/* on the felt, the old light-on-dark colours apply */
+.k-felt,
+.kg-table,
+.k-onfelt {
+  --k-ink: #f3ecdd;
+  --k-mute: #c3c2b6;
+  --k-ink-rgb: 243, 236, 221;
+  --k-line: rgba(var(--k-ink-rgb), 0.14);
+  --k-line2: rgba(var(--k-ink-rgb), 0.24);
+  --k-accent: #e8b66a;
+  --k-accent-hi: #f1c885;
+  --k-accent-ink: #2a1b07;
+  --k-accent-soft: rgba(var(--k-accent-rgb), 0.16);
+  --k-accent-rgb: 232, 182, 106;
+  --ink: var(--k-ink);
+  --mute: var(--k-mute);
+  --line: var(--k-line);
+  --accent: var(--k-accent);
+  color: var(--k-ink);
+}
+
+/* every page of the shell shares the tokens under their short names */
+.kg,
+.acmodal,
+.accorner,
+.kgchat {
+  --bg: var(--k-bg);
+  --panel: var(--k-panel);
+  --panel2: var(--k-panel2);
+  --ink: var(--k-ink);
+  --mute: var(--k-mute);
+  --line: var(--k-line);
+  --accent: var(--k-accent);
+  --felt: var(--k-felt);
+  --felt2: var(--k-felt2);
+}
+.kg {
+  background: var(--k-glow), var(--k-grain), var(--k-bg);
+  color: var(--k-ink);
+  font-family: var(--k-sans);
+}

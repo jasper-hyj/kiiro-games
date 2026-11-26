@@ -1,0 +1,154 @@
+/* Dou Dizhu */
+.dd {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+}
+.ddseats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ddp {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(var(--k-ink-rgb), 0.06);
+  min-width: 96px;
+}
+.ddp.turn {
+  box-shadow: inset 0 0 0 2px var(--k-accent);
+}
+.ddp.me b {
+  color: var(--k-accent);
+}
+.ddcount {
+  font: 600 12px var(--k-sans);
+  color: var(--k-mute);
+}
+.ddcrown {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  color: var(--k-accent);
+  font-size: 20px;
+}
+.ddbottom {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.ddrow {
+  display: flex;
+}
+.ddrow .pkcard {
+  margin-left: -10px;
+}
+.ddrow .pkcard:first-child {
+  margin-left: 0;
+}
+.ddtable {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 14px 18px;
+  border-radius: 24px;
+  min-width: min(560px, 94vw);
+  box-sizing: border-box;
+  min-height: 92px;
+}
+.ddplays {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ddplay {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 70px;
+}
+.ddbid,
+.ddbtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ddctl {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.ddhand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(98vw, 880px);
+  padding: 16px 0 8px;
+}
+:root:root .ddcard {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 -26px 8px 0;
+  cursor: pointer;
+  transition: transform 0.14s;
+  position: relative;
+  min-height: 0;
+}
+:root:root .ddcard.sel {
+  transform: translateY(-16px);
+  filter: drop-shadow(0 0 8px rgba(var(--k-accent-rgb), 0.7));
+  z-index: 2;
+}
+/* the cards in the hand have a fixed size, so the overlap always leaves a corner of every card visible */
+.ddhand .pkcard {
+  --cw: 46px;
+  width: 46px;
+  height: 64px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 5px 0 0 6px;
+  box-sizing: border-box;
+}
+.ddhand .pkcard b {
+  font-size: 17px;
+  line-height: 1;
+}
+.ddhand .pkcard i {
+  font-size: 16px;
+  line-height: 1;
+}
+@media (max-width: 520px) {
+  .ddhand .pkcard {
+    --cw: 42px;
+    width: 42px;
+    height: 59px;
+    padding-left: 4px;
+  }
+  :root:root .ddcard {
+    margin-right: -24px;
+  }
+}
+.pkcard.joker {
+  background: #f6f1e4;
+  color: #1a2036;
+}
+.pkcard.joker.big {
+  color: #c2394d;
+}
+.pkcard.joker b {
+  font-size: 22px;
+}
+.pkcard.joker i {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  font-style: normal;
+}

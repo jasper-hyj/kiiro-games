@@ -1,0 +1,247 @@
+/* Bridge */
+.br {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+}
+.brline {
+  min-height: 22px;
+  font-weight: 600;
+  color: var(--k-accent-hi);
+  text-align: center;
+}
+.brred {
+  color: #e0657a;
+}
+.brtable {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 14px 16px;
+  border-radius: 26px;
+  width: min(720px, 96vw);
+  box-sizing: border-box;
+}
+.brtop,
+.brside {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  align-content: start;
+}
+.brmid {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(180px, 2fr) minmax(70px, 1fr);
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+.brhand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+.brside .brhand {
+  flex-direction: column;
+  align-items: center;
+}
+.brside .brhand .brcard {
+  margin: 0 0 -38px;
+}
+:root:root .brcard {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 -26px 6px 0;
+  min-height: 0;
+  cursor: default;
+  position: relative;
+  transition: transform 0.14s;
+}
+:root:root .brcard.ok {
+  cursor: pointer;
+  transform: translateY(-10px);
+  filter: drop-shadow(0 0 8px rgba(var(--k-accent-rgb), 0.6));
+  z-index: 2;
+}
+:root:root .brcard.dim {
+  filter: brightness(0.65);
+}
+.brhand .pkcard {
+  --cw: 44px;
+  width: 44px;
+  height: 62px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 5px 0 0 6px;
+  box-sizing: border-box;
+}
+.brhand .pkcard b {
+  font-size: 16px;
+  line-height: 1;
+}
+.brhand .pkcard i {
+  font-size: 15px;
+  line-height: 1;
+}
+.brcross {
+  display: grid;
+  grid-template-areas: ". p2 ." "p1 . p3" ". p0 .";
+  gap: 6px 14px;
+  justify-items: center;
+}
+.brslot {
+  min-width: 44px;
+  min-height: 62px;
+  display: grid;
+  place-items: center;
+}
+.brslot.p0 {
+  grid-area: p0;
+}
+.brslot.p1 {
+  grid-area: p1;
+}
+.brslot.p2 {
+  grid-area: p2;
+}
+.brslot.p3 {
+  grid-area: p3;
+}
+.brslot .pkcard {
+  --cw: 44px;
+  width: 44px;
+  height: 62px;
+}
+.brauction {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+  min-width: 200px;
+}
+.brahead,
+.brarow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  text-align: center;
+  gap: 4px;
+}
+.brahead b {
+  font: 600 12px var(--k-sans);
+  color: var(--k-mute);
+}
+.brahead b.us {
+  color: var(--k-accent);
+}
+.brbox {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.brgrid {
+  display: grid;
+  gap: 4px;
+}
+.brrow {
+  display: flex;
+  gap: 4px;
+}
+:root:root .brrow button {
+  min-width: 52px;
+  min-height: 40px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 0;
+  background: rgba(var(--k-ink-rgb), 0.1);
+  color: var(--k-ink);
+  font: 700 16px var(--k-sans);
+  cursor: pointer;
+  justify-content: center;
+}
+:root:root .brrow button.brred {
+  color: #e8788c;
+}
+:root:root .brrow button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.brbtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.brmine {
+  display: grid;
+  justify-items: center;
+}
+@media (max-width: 520px) {
+  .brhand .pkcard,
+  .brslot .pkcard {
+    --cw: 36px;
+    width: 36px;
+    height: 51px;
+    padding-left: 4px;
+  }
+  .brhand .pkcard b {
+    font-size: 14px;
+  }
+  :root:root .brcard {
+    margin-right: -22px;
+  }
+  .brside .brhand .brcard {
+    margin-bottom: -32px;
+  }
+  .brmid {
+    grid-template-columns: minmax(46px, 1fr) minmax(150px, 3fr) minmax(46px, 1fr);
+  }
+  .brrow button {
+    min-width: 44px;
+  }
+}
+
+.brbacks {
+  display: flex;
+}
+.brbacks .pkcard {
+  margin-left: -16px;
+}
+.brbacks .pkcard:first-child {
+  margin-left: 0;
+}
+.brside .brbacks {
+  flex-direction: column;
+}
+.brside .brbacks .pkcard {
+  margin-left: 0;
+  margin-top: -30px;
+}
+.brside .brbacks .pkcard:first-child {
+  margin-top: 0;
+}
+
+.ddhand {
+  padding-right: 26px;
+}
+@media (max-width: 380px) {
+  .yzdice {
+    padding: 14px 8px;
+    min-width: 0;
+    width: 100%;
+  }
+  .yzrow {
+    gap: 5px;
+  }
+  :root:root .yzdie {
+    width: 44px;
+    height: 44px;
+    padding: 5px;
+  }
+  .yzsheet th,
+  .yzsheet td {
+    padding: 4px 6px;
+    min-width: 40px;
+  }
+}
