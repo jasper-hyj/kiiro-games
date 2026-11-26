@@ -80,7 +80,11 @@ export class Hearts extends TurnGame {
       scores: [0, 0, 0, 0],
       moon: -1,
     }
-    if (this.s.phase === 'play') this.startPlay()
+    if (this.s.phase === 'play') return this.startPlay()
+    // the computer's seats choose straight away; people choose in any order
+    this.seats.forEach((seat, i) => {
+      if (seat.bot) this.doPass(i, this.passChoice(i))
+    })
   }
   private startPlay() {
     this.s.phase = 'play'
@@ -93,6 +97,12 @@ export class Hearts extends TurnGame {
   }
 
   // ---- passing ----
+  protected simultaneous() {
+    return this.s.phase === 'pass'
+  }
+  protected mayAct(seat: number) {
+    return this.s.phase === 'pass' && !this.s.picked[seat]
+  }
   private doPass(seat: number, cards: number[]) {
     this.s.picked[seat] = cards
     const next = this.s.picked.findIndex((p) => !p)
@@ -128,6 +138,7 @@ export class Hearts extends TurnGame {
   }
   protected act(seat: number, m: any): string | null {
     if (this.s.phase === 'pass') {
+      if (this.s.picked[seat]) return 'bad_move'
       const cards = Array.isArray(m?.pass) ? m.pass.map(Number) : []
       if (cards.length !== 3 || new Set(cards).size !== 3 || !cards.every((c: number) => this.s.hands[seat].includes(c))) return 'bad_move'
       this.doPass(seat, cards)
@@ -171,21 +182,25 @@ export class Hearts extends TurnGame {
     this.s.scores = moon >= 0 ? t.map((_, i) => (i === moon ? 0 : 26)) : t.slice()
   }
 
+  /** which three cards the computer gives away: the ones most likely to cost it points */
+  private passChoice(seat: number): number[] {
+    const hand = this.s.hands[seat]
+    const spadesLow = hand.filter((c) => suitOf(c) === SPADES && rankOf(c) < QUEEN).length
+    const risk = (c: number) => {
+      const r = rankOf(c),
+        su = suitOf(c)
+      if (c === QS) return spadesLow < 3 ? 100 : 5
+      if (su === SPADES && r > QUEEN) return spadesLow < 3 ? 60 + r : 0
+      if (su === HEARTS) return 20 + r * 2
+      return r + (hand.filter((x) => suitOf(x) === su).length <= 3 ? 10 : 0)
+    }
+    return [...hand].sort((a, b) => risk(b) - risk(a) + (Math.random() - 0.5)).slice(0, 3)
+  }
+
   // ---- the bot ----
   protected bot(seat: number) {
     const hand = this.s.hands[seat]
-    if (this.s.phase === 'pass') {
-      const spadesLow = hand.filter((c) => suitOf(c) === SPADES && rankOf(c) < QUEEN).length
-      const risk = (c: number) => {
-        const r = rankOf(c),
-          su = suitOf(c)
-        if (c === QS) return spadesLow < 3 ? 100 : 5
-        if (su === SPADES && r > QUEEN) return spadesLow < 3 ? 60 + r : 0
-        if (su === HEARTS) return 20 + r * 2
-        return r + (hand.filter((x) => suitOf(x) === su).length <= 3 ? 10 : 0)
-      }
-      return this.doPass(seat, [...hand].sort((a, b) => risk(b) - risk(a) + (Math.random() - 0.5)).slice(0, 3))
-    }
+    if (this.s.phase === 'pass') return this.doPass(seat, this.passChoice(seat))
     const ok = this.legal(seat)
     this.playCard(seat, this.choose(seat, ok))
   }
@@ -251,7 +266,7 @@ export class Hearts extends TurnGame {
       best = Math.min(...sc)
     const winners = sc.map((v, i) => (v === best ? i : -1)).filter((i) => i >= 0)
     const avg = sc.reduce((a, b) => a + b, 0) / 4
-    return { points: sc.map((v) => avg - v), winner: winners.length === 1 ? winners[0] : -1, summary: { scores: sc, moon: this.s.moon } }
+    return { points: sc.map((v) => avg - v), winner: winners.length === 1 ? winners[0] : -1, winners, summary: { scores: sc, moon: this.s.moon } }
   }
   protected saveState() {
     return this.s

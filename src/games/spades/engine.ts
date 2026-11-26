@@ -257,7 +257,12 @@ export class Spades extends TurnGame {
     if (this.s.phase !== 'done') return null
     const [a, b] = this.s.team
     const points = [(a - b) / 2, (b - a) / 2, (a - b) / 2, (b - a) / 2]
-    return { points, winner: a === b ? -1 : a > b ? 0 : 1, summary: { team: this.s.team, detail: this.s.detail } }
+    return {
+      points,
+      winners: a === b ? undefined : a > b ? [0, 2] : [1, 3],
+      winner: a === b ? -1 : a > b ? 0 : 1,
+      summary: { team: this.s.team, detail: this.s.detail },
+    }
   }
   protected saveState() {
     return this.s

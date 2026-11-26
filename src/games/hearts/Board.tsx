@@ -27,7 +27,8 @@ export function HeartsBoard({ v, send, name }: BoardProps) {
   useEffect(() => {
     setSel([])
   }, [s.phase, s.tricks, v.game])
-  const passing = s.phase === 'pass' && myTurn
+  const passing = s.phase === 'pass' && v.status === 'playing' && v.you >= 0 && !s.picked[v.you]
+  const waiting = s.phase === 'pass' && v.you >= 0 && s.picked[v.you]
   const toggle = (c: number) => setSel((a) => (a.includes(c) ? a.filter((x) => x !== c) : a.length < 3 ? [...a, c] : a))
   const dirKey = ['htLeft', 'htRight', 'htAcross', 'htKeep'][s.dir]
   const showTrick = s.trick.length ? s.trick : (s.last ?? [])
@@ -39,7 +40,9 @@ export function HeartsBoard({ v, send, name }: BoardProps) {
       </div>
       <div className="tktable k-felt">
         <Around v={v} name={name} extra={(seat) => t('htPoints', { n: s.phase === 'done' ? s.scores[seat] : s.taken[seat] })} />
-        <div className="tkmid">{s.phase === 'pass' ? <span className="tkhint">{t('htPick')}</span> : <Trick v={v} cards={showTrick} you={v.you} />}</div>
+        <div className="tkmid">
+          {s.phase === 'pass' ? <span className="tkhint">{t(waiting ? 'htWaiting' : 'htPick')}</span> : <Trick v={v} cards={showTrick} you={v.you} />}
+        </div>
       </div>
       {s.phase === 'play' && s.trick.length === 0 && s.last && (
         <p className="muted small tkcenter">{t('htLast', { name: name(v.seats[s.lastWinner].name) })}</p>

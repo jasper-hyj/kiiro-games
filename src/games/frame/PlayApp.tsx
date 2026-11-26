@@ -140,7 +140,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
 
   const v = view
   const watcher = v.you < 0
-  const myTurn = v.status === 'playing' && (v.actor ?? v.turn) === v.you
+  const myTurn = v.status === 'playing' && (v.anyTurn || (v.actor ?? v.turn) === v.you)
   const secs = left.current ? Math.max(0, Math.ceil((left.current - Date.now()) / 1000)) : null
   const line =
     v.status === 'playing'
@@ -227,7 +227,13 @@ export default function PlayApp({ game }: { game: GenericGame }) {
         <ui.Board v={v} send={send} name={shown} />
         {over && (
           <ResultPanel
-            title={v.result!.winner >= 0 ? t('plWins', { name: shown(v.seats[v.result!.winner].name) }) : t('plDraw')}
+            title={
+              (v.result!.winners?.length ?? 0) > 1
+                ? t('plWinsMany', { names: v.result!.winners!.map((i) => shown(v.seats[i].name)).join(' & ') })
+                : v.result!.winner >= 0
+                  ? t('plWins', { name: shown(v.seats[v.result!.winner].name) })
+                  : t('plDraw')
+            }
             columns={[t('acPlayer'), t('plScore')]}
             rows={v.seats.map((s) => ({
               name: s.name,

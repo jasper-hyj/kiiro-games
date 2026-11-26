@@ -37,6 +37,8 @@ export interface GameMeta {
 }
 export interface Outcome {
   points: number[]
+  /** every winning seat, when more than one wins (partners, farmers, a tie for first) */
+  winners?: number[]
   winner: number
   summary?: unknown
 }
@@ -52,6 +54,8 @@ export interface PlayView {
   timeLeft: number | null
   /** who makes the move for the seat on turn (the same seat, except when a partner plays for it) */
   actor: number
+  /** this seat may act now although it is not "the" seat on turn (everyone moves at once) */
+  anyTurn: boolean
   state: any
   result: Outcome | null
 }
@@ -229,6 +233,10 @@ export abstract class TurnGame {
   protected simultaneous() {
     return false
   }
+  /** in a simultaneous step: does this seat still have something to do? */
+  protected mayAct(_seat: number): boolean {
+    return false
+  }
 
   start(id: string): string | null {
     if (this.status === 'playing' || id !== this.hostId) return null
@@ -332,6 +340,7 @@ export abstract class TurnGame {
       game: this.gameNo,
       seats: this.seats.map((s, i) => ({ seat: i, name: s.name, bot: s.bot, connected: s.connected, empty: !s.id && !s.bot, me: i === you })),
       turn: this.status === 'playing' ? this.turn() : -1,
+      anyTurn: this.status === 'playing' && you >= 0 && this.simultaneous() && this.mayAct(you),
       actor: this.status === 'playing' && this.turn() >= 0 ? this.controller(this.turn()) : -1,
       timeLeft: this.deadline && this.status === 'playing' && !this.seats[this.controller(this.turn())]?.bot ? Math.max(0, this.deadline - Date.now()) : null,
       // a copy, so a view never shares arrays with the live game (matters in practice mode, where the engine runs in the page)

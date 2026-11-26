@@ -406,7 +406,12 @@ export class Bridge extends TurnGame {
   protected outcome(): Outcome | null {
     if (this.s.phase !== 'done') return null
     const ns = this.s.score
-    return { points: [ns, -ns, ns, -ns], winner: ns === 0 ? -1 : ns > 0 ? 0 : 1, summary: { contract: this.s.contract, tricks: this.s.tricks, score: ns } }
+    return {
+      points: [ns, -ns, ns, -ns],
+      winner: ns === 0 ? -1 : ns > 0 ? 0 : 1,
+      winners: ns === 0 ? undefined : ns > 0 ? [0, 2] : [1, 3],
+      summary: { contract: this.s.contract, tricks: this.s.tricks, score: ns },
+    }
   }
   protected saveState() {
     return this.s

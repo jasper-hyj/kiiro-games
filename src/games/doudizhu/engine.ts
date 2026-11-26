@@ -385,7 +385,8 @@ export class DouDizhu extends TurnGame {
     const spring = landlordWins ? s.played.every((p, i) => i === s.landlord || p === 0) : s.played[s.landlord] === 1
     const unit = Math.max(1, s.high) * 2 ** (s.bombs + (spring ? 1 : 0))
     const points = [0, 1, 2].map((i) => (i === s.landlord ? (landlordWins ? 2 * unit : -2 * unit) : landlordWins ? -unit : unit))
-    return { points, winner: s.winner, summary: { landlord: s.landlord, bid: s.high, bombs: s.bombs, spring } }
+    const winners = landlordWins ? [s.landlord] : [0, 1, 2].filter((i) => i !== s.landlord)
+    return { points, winners, winner: s.winner, summary: { landlord: s.landlord, bid: s.high, bombs: s.bombs, spring } }
   }
   protected saveState() {
     return this.s

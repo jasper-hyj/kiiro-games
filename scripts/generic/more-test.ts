@@ -296,6 +296,38 @@ const msg = (g: any, id: string, a: unknown) => g.message(id, { k: 'act', a })
   ok(!(h as any).legal(next).includes(QS), 'hearts: no Queen of Spades on the first trick when another card is possible')
 }
 
+// ---- passing happens at once; partnership results name both winners
+{
+  const g = new Hearts().init()
+  g.botDelayMs = 600000
+  g.turnTimerMs = 0
+  g.join('a', 'A')
+  g.join('b', 'B')
+  g.start('a')
+  const s = (g as any).s
+  ok(s.picked[2] && s.picked[3] && !s.picked[0] && !s.picked[1], 'hearts: computer seats have chosen already, people have not')
+  ok(g.view('a').anyTurn === true && g.view('b').anyTurn === true, 'hearts: both people may pass now')
+  const three = (seat: number) => (g as any).s.hands[seat].slice(0, 3)
+  const bCards = three(1)
+  ok(msg(g, 'b', { pass: bCards }) === null, 'hearts: the second seat may pass first')
+  ok(g.view('b').anyTurn === false && msg(g, 'b', { pass: three(1) }) === 'bad_move', 'hearts: and only once')
+  ok(msg(g, 'a', { pass: three(0) }) === null && (g as any).s.phase === 'play', 'hearts: play starts when everyone has passed')
+  ok(
+    (g as any).s.hands.every((h: number[]) => h.length === 13),
+    'hearts: still 13 cards each',
+  )
+  g.dispose()
+}
+{
+  const g = start(new Spades().init(), 1) as Spades
+  const s = (g as any).s
+  s.bids = [1, 5, 1, 5]
+  s.won = [5, 2, 4, 2]
+  ;(g as any).settle()
+  const r = (g as any).outcome()
+  ok(r.winners.join() === '0,2', `spades: both partners are named as winners (${r.winners})`)
+}
+
 // ---- Spades
 {
   let done = 0
