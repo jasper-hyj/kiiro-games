@@ -12,7 +12,7 @@
   text-align: center;
 }
 .brred {
-  color: #e0657a;
+  color: #a8323a;
 }
 .brtable {
   display: grid;
@@ -161,7 +161,7 @@
   justify-content: center;
 }
 :root:root .brrow button.brred {
-  color: #e8788c;
+  color: #a8323a;
 }
 :root:root .brrow button:disabled {
   opacity: 0.3;

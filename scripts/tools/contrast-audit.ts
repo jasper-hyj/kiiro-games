@@ -1,8 +1,9 @@
 import puppeteer from 'puppeteer-core'
 
+// Run: npx tsx scripts/tools/contrast-audit.ts [site|mahjong]   (vite on :5200)
 /** Finds text that is hard to read: every visible text node's colour is compared with the first reasonably opaque
  *  background behind it (gradients use their first/last stop). Anything below a contrast ratio of 3 is reported. */
-const BASE = process.env.BASE ?? 'http://localhost:5199'
+const BASE = process.env.BASE ?? 'http://localhost:5200'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] })
 const probe = () => {
@@ -30,8 +31,8 @@ const probe = () => {
       const cs = getComputedStyle(e)
       const bi = cs.backgroundImage
       const stops = bi.match(/rgba?\([^)]+\)/g)
-      if (stops && stops.length) {
-        const cols = stops.map((s) => parse(s)!).filter(Boolean)
+      if (stops && stops.some((s) => (parse(s)?.[3] ?? 0) > 0)) {
+        const cols = stops.map((s) => parse(s)!).filter((c) => c && c[3] > 0)
         const avg: [number, number, number, number] = [0, 0, 0, 0]
         for (const c of cols) {
           avg[0] += c[0]
@@ -49,9 +50,9 @@ const probe = () => {
         if (bc[3] > 0.9) break
       }
     }
-    let r = 6,
-      g = 10,
-      bl = 24 // the page is near-black navy
+    let r = 236,
+      g = 227,
+      bl = 207 // the page is cream paper
     for (const l of layers.reverse()) {
       r = l[0] * l[3] + r * (1 - l[3])
       g = l[1] * l[3] + g * (1 - l[3])
@@ -66,7 +67,7 @@ const probe = () => {
   while ((n = walker.nextNode())) {
     const t = (n.textContent ?? '').trim()
     const el = n.parentElement
-    if (!t || !el) continue
+    if (!t || !el || el.closest('button:disabled, [aria-hidden=true]')) continue
     const r = el.getBoundingClientRect()
     if (r.width < 2 || r.height < 2) continue
     const cs = getComputedStyle(el)
@@ -92,7 +93,7 @@ const probe = () => {
   return bad
 }
 let total = 0
-const run = async (label: string, url: string, w: number, h: number, steps?: (p: any) => Promise<void>) => {
+const run = async (label: string, url: string, w: number, h: number, steps?: (p: any) => Promise<unknown>) => {
   const p = await b.newPage()
   await p.setViewport({ width: w, height: h })
   await p.evaluateOnNewDocument(() => {
@@ -110,56 +111,77 @@ const run = async (label: string, url: string, w: number, h: number, steps?: (p:
   await p.close()
 }
 const click = (p: any, sel: string) => p.evaluate((s: string) => (document.querySelector(s) as HTMLElement | null)?.click(), sel)
-await run('home', '/mahjong', 1100, 700)
-await run('rules step', '/mahjong', 1100, 700, async (p) => {
-  await click(p, '.btn.gold.big')
-  await sleep(500)
-})
-await run('options step', '/mahjong', 1100, 700, async (p) => {
-  await click(p, '.btn.gold.big')
-  await sleep(500)
-  await click(p, 'button.rule')
-  await sleep(500)
-})
-await run('name step', '/mahjong', 1100, 700, async (p) => {
-  await click(p, '.btn.gold.big')
-  await sleep(500)
-  await click(p, 'button.rule')
-  await sleep(500)
-  await click(p, '.btn.big')
-  await sleep(500)
-})
-for (const rule of ['taiwan', 'riichi', 'sichuan']) {
-  await run(`table ${rule}`, `/?stress=full&players=4&rule=${rule}`, 1280, 720)
-  await run(`table call ${rule}`, `/?stress=call&players=4&rule=${rule}`, 1280, 720)
-}
-await run('dock open', '/?stress=full&players=4&rule=riichi', 1280, 720, async (p) => {
-  await click(p, '.dock summary')
-  await sleep(300)
-})
-await run('rules reference', '/?stress=full&players=4&rule=riichi', 1280, 720, async (p) => {
-  await click(p, '.dock summary')
-  await sleep(200)
-  await click(p, '.dockpanel .rulesbtn')
-  await sleep(400)
-})
-await run('sichuan swap', '/?stress=swap&players=4&rule=sichuan', 1280, 720)
-await run('sichuan void', '/?stress=void&players=4&rule=sichuan', 1280, 720)
-await run('solo result', '/?solo=1&rule=taiwan&speed=0.02', 1280, 720, async (p) => {
-  for (let i = 0; i < 500 && !(await p.$('.overlay .modal')); i++) {
-    if (await p.$('.cbtn.ron')) await click(p, '.cbtn.ron')
-    else if (await p.$('.cbtn.pass')) await click(p, '.cbtn.pass')
-    else {
-      const t = await p.$$('.handrow .tile.clickable')
-      if (t.length) {
-        await t[t.length - 1].click()
-        await sleep(40)
-        await click(p, '.handrow .tile.sel')
-      }
-    }
-    await sleep(50)
+const only = process.argv[2]
+const site = [
+  '/',
+  '/room',
+  '/admin',
+  ...[
+    'holdem',
+    'blackjack',
+    'bigtwo',
+    'gomoku',
+    'crazyeights',
+    'yahtzee',
+    'liarsdice',
+    'chess',
+    'xiangqi',
+    'doudizhu',
+    'bridge',
+    'hearts',
+    'spades',
+    'go',
+    'checkers',
+    'reversi',
+    'chinesecheckers',
+  ].map((g) => '/' + g + '/practice'),
+]
+if (only !== 'mahjong')
+  for (const path of site) {
+    await run('desk ' + path, path, 1100, 760, () => sleep(1500))
+    await run('phone ' + path, path, 390, 844, () => sleep(1500))
   }
-})
+if (only !== 'site') {
+  const mj = '/mahjong/practice'
+  await run('guide', '/mahjong/tutorial', 1100, 760, () => sleep(1500))
+  for (const rule of ['taiwan', 'riichi', 'sichuan', 'hk', 'mcr']) {
+    await run('table ' + rule, mj + '?stress=full&players=4&rule=' + rule, 1280, 720)
+    await run('calls ' + rule, mj + '?stress=call&players=4&rule=' + rule, 1280, 720)
+    await run('phone table ' + rule, mj + '?stress=full&players=4&rule=' + rule, 390, 844)
+  }
+  for (const [w, h] of [
+    [1280, 720],
+    [390, 844],
+  ] as const) {
+    await run('menu ' + w, mj + '?stress=full&players=4&rule=riichi', w, h, async (p) => {
+      await click(p, '.dock summary')
+      await sleep(300)
+    })
+    await run('rules reference ' + w, mj + '?stress=full&players=4&rule=riichi', w, h, async (p) => {
+      await click(p, '.dock summary')
+      await sleep(200)
+      await click(p, '.dockpanel .rulesbtn')
+      await sleep(500)
+    })
+  }
+  await run('sichuan swap', mj + '?stress=swap&players=4&rule=sichuan', 1280, 720)
+  await run('sichuan void', mj + '?stress=void&players=4&rule=sichuan', 1280, 720)
+  await run('solo result', mj + '?rule=taiwan&speed=0.02', 1280, 720, async (p) => {
+    for (let i = 0; i < 700 && !(await p.$('.overlay .modal')); i++) {
+      if (await p.$('.cbtn.ron')) await click(p, '.cbtn.ron')
+      else if (await p.$('.cbtn.pass')) await click(p, '.cbtn.pass')
+      else {
+        const t = await p.$$('.handrow .tile.clickable')
+        if (t.length) {
+          await t[t.length - 1].click()
+          await sleep(40)
+          await click(p, '.handrow .tile.sel')
+        }
+      }
+      await sleep(50)
+    }
+  })
+}
 await b.close()
 console.log(total ? `\n${total} low-contrast text items` : '\nno low-contrast text found')
 process.exit(total ? 1 : 0)

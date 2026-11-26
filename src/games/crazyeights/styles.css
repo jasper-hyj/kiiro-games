@@ -56,10 +56,11 @@
   filter: drop-shadow(0 0 12px rgba(var(--k-accent-rgb), 0.6));
 }
 .c8count {
+  color: #3a3025;
   position: absolute;
   top: 4px;
   right: -4px;
-  background: var(--k-panel);
+  background: #f6f0e1;
   border-radius: 999px;
   padding: 1px 8px;
   font: 600 12px var(--k-sans);

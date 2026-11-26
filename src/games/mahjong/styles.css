@@ -2,7 +2,7 @@
   --surface2: #ece9de;
   --line: rgba(20, 24, 28, 0.12);
   --ink: #1d2026;
-  --muted: #667085;
+  --muted: #797468;
   --good: #1f8a5f;
   --danger: #d63a3a;
   --cols: 17;
@@ -126,7 +126,7 @@ html[data-tiles="japanese"] .tile .white-dragon,
 html[data-tiles="auto"][data-rule="riichi"] .tile .white-dragon {
   width: 54%;
   height: 60%;
-  border: calc(var(--tw) * 0.035) solid #7b8fb3;
+  border: calc(var(--tw) * 0.035) solid #9c9486;
   border-radius: calc(var(--tw) * 0.05);
   box-shadow: none;
 }
@@ -1230,7 +1230,7 @@ kbd {
   color: #a06a00;
 }
 .modal .dorabox.ura .dlabel {
-  color: #6b3fa0;
+  color: #746e63;
 }
 
 /* compact centre box; the dora panel lives in the free corner beside the left pond, so ponds keep their size */
