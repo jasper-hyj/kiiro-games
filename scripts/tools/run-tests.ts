@@ -45,6 +45,7 @@ const SUITES: Record<string, string[]> = {
     'generic/new-games-ui-test',
     'site/full-table-test',
     'site/chat-clear-test',
+    'site/hover-flicker-test',
     'generic/layout-check',
   ],
 }

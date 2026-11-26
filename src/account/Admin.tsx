@@ -1,3 +1,4 @@
+import { useLang } from '../i18n'
 import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
 import { useAccount } from './Account'
@@ -42,6 +43,7 @@ const Shell = ({ children }: { children?: React.ReactNode }) => (
 )
 
 export default function Admin() {
+  const { t } = useLang()
   const { me, ready, available, openSignIn } = useAccount()
   const [tab, setTabState] = useState<Tab>(() => {
     const r = route()
@@ -84,7 +86,7 @@ export default function Admin() {
   if (!available)
     return (
       <Shell>
-        <h1>Admin</h1>
+        <h1>{t('adTitle')}</h1>
         <p className="kg-note">Accounts are not configured on this site.</p>
       </Shell>
     )
@@ -92,10 +94,10 @@ export default function Admin() {
   if (!me)
     return (
       <Shell>
-        <h1>Admin</h1>
+        <h1>{t('adTitle')}</h1>
         <div>
           <button className="primary" onClick={openSignIn}>
-            Sign in
+            {t('acSignIn')}
           </button>
         </div>
       </Shell>
@@ -103,14 +105,14 @@ export default function Admin() {
   if (!me.admin)
     return (
       <Shell>
-        <h1>Admin</h1>
+        <h1>{t('adTitle')}</h1>
         <p className="kg-note">{`This account (${me.username ? '@' + me.username : me.name}) is not an admin. An existing admin can make this account an admin from Admin → Users. The first admin is set once in the database (see the README), or by the Worker's ADMIN_USERS setting (Cloudflare, not Vercel).`}</p>
       </Shell>
     )
 
   return (
     <Shell>
-      <h1>Admin</h1>
+      <h1>{t('adTitle')}</h1>
       <nav className="adtabs">
         {(['overview', 'users', 'matches', 'ledger', 'audit'] as Tab[]).map((x) => (
           <button

@@ -31,7 +31,7 @@ function useSmall() {
 
 /** what the chat must not lie on: everything that can be tapped, and every piece of a game that has to be seen */
 const KEEP_CLEAR =
-  'button, a, input, select, .tile, .pkcard, .k-seat, .chip, .statusbar, .gmchip, .plline, .rmdigits, .rmpeople li, .yzsheet, .k-result, .cgrid, .dock summary, .roomchip, .rulechip, .connbadge, svg[role=grid], [role=grid], .gmboard, .xqboard, .ccboard, .hdcenter, .bjdealer, .btcenter, .tkcross, .ddtable, .brtable, .c8table, .yzdice, .ldbid'
+  'button, a, input, select, .tile, .pkcard, .k-seat, .chip, .statusbar, .gmchip, .plline, .rmdigits, .rmpeople li, .yzsheet, .k-result, .cgrid, .dock summary, .roomchip, .rulechip, .connbadge, svg[role=grid], [role=grid], summary, .rmcodecard, .rmrename, .rm h2, .rm .kg-note, .gmboard, .xqboard, .ccboard, .hdcenter, .bjdealer, .btcenter, .tkcross, .ddtable, .brtable, .c8table, .yzdice, .ldbid'
 function obstacles(self: Element): DOMRect[] {
   const out: DOMRect[] = []
   for (const e of document.querySelectorAll(KEEP_CLEAR)) {
@@ -64,11 +64,19 @@ function apply(c: HTMLElement, at: { x: number; b: number }) {
   c.style.setProperty('--lift', at.b + 'px')
 }
 
-export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) => void }) {
+export function TalkBox({
+  lines,
+  say,
+  inline,
+}: {
+  lines: TalkMsg[]
+  say: (text: string) => void
+  /** part of the page (the room), not floating over a game */ inline?: boolean
+}) {
   const { t } = useLang()
   const small = useSmall()
   const [crowded, setCrowded] = useState(false) // the full box found no empty spot on this screen
-  const compact = small || crowded
+  const compact = !inline && (small || crowded)
   const [open, setOpen] = useState(false)
   const [seenN, setSeenN] = useState(0)
   const lastN = lines.length ? lines[lines.length - 1].n : 0
@@ -77,6 +85,14 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
   }, [open, lastN])
   const unread = compact && !open ? lines.filter((l) => l.n > seenN).length : 0
   const [text, setText] = useState('')
+  // one message a second: someone quicker than that is told right by the chat line, and keeps what they typed
+  const sentAt = useRef(0)
+  const [tooFast, setTooFast] = useState(0)
+  useEffect(() => {
+    if (!tooFast) return
+    const id = setTimeout(() => setTooFast(0), 1800)
+    return () => clearTimeout(id)
+  }, [tooFast])
   const [focus, setFocus] = useState(false)
   const [, tick] = useState(0)
   const input = useRef<HTMLInputElement>(null)
@@ -91,6 +107,7 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
   const state = useRef({ compact, open })
   state.current = { compact, open }
   useEffect(() => {
+    if (inline) return
     // find a spot where nothing of the game is underneath, and stay there while it stays empty
     let spot: { x: number; b: number } | null = null
     let roomFor = 0 // how long the full box would have fitted again
@@ -149,7 +166,7 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
   return (
     <div
       ref={box}
-      className={'kgchat' + (focus ? ' on' : '') + (compact ? (open ? ' compact open' : ' compact') : '')}
+      className={'kgchat' + (inline ? ' inline' : '') + (focus ? ' on' : '') + (compact ? (open ? ' compact open' : ' compact') : '')}
       role="log"
       aria-live="polite"
       aria-label={t('talkTitle')}
@@ -168,15 +185,22 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
             </div>
           ))}
         </div>
+        {tooFast > 0 && (
+          <div className="kgnote" role="status">
+            {t('talkSlow')}
+          </div>
+        )}
         <form
           className="kgin"
           onSubmit={(e) => {
             e.preventDefault()
             const x = text.trim()
-            if (x) {
-              say(x)
-              setText('')
-            }
+            if (!x) return
+            if (Date.now() - sentAt.current < 1100) return setTooFast(Date.now())
+            sentAt.current = Date.now()
+            setTooFast(0)
+            say(x)
+            setText('')
           }}
         >
           <span className="kgtag">{t('talkTable')}</span>

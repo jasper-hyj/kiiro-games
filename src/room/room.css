@@ -437,3 +437,22 @@
     padding-inline: 12px;
   }
 }
+
+/* the room's chat sits in the people column, under the how-to-play */
+.rm .kgchat.inline {
+  position: static;
+  width: 100%;
+  margin-top: 16px;
+  z-index: auto;
+}
+.rm .kgchat.inline .kgin {
+  height: 44px;
+  opacity: 1;
+}
+.rm .kgchat.inline .kgfeed .kgline {
+  display: block;
+  opacity: 1;
+}
+body.has-kgchat .kg.rm .kg-room {
+  padding-bottom: 32px;
+}

@@ -54,7 +54,7 @@
   background: none;
   border: 0;
   padding: 0;
-  margin: 0 -26px 6px 0;
+  margin: 0 -20px 6px 0;
   min-height: 0;
   cursor: default;
   position: relative;
@@ -189,7 +189,7 @@
     font-size: 14px;
   }
   :root:root .brcard {
-    margin-right: -22px;
+    margin-right: -18px;
   }
   .brside .brhand .brcard {
     margin-bottom: -32px;

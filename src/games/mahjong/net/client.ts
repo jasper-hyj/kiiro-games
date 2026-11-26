@@ -193,7 +193,7 @@ export function connectRemote(room: string, id: string, name: string, h: Handler
       h.onLatency?.(Date.now() - m.ts)
     } else if (m.t === 'talk') h.onTalk?.(m.msg)
     else if (m.t === 'talklog') h.onTalkLog?.(m.msgs)
-    else h.onError(m.message)
+    else if (m.message !== 'slow_down') h.onError(m.message) // the chat says so itself
   })
   return {
     send: (m) => ws.send(JSON.stringify(m)),

@@ -521,3 +521,19 @@
     text-align: left;
   }
 }
+
+/* language, inside the account dialogs */
+.acbox .kg-lang {
+  justify-content: center;
+}
+:root:root .acbox .kg-lang button {
+  min-height: 36px;
+  min-width: 44px;
+  background: transparent;
+  color: var(--k-mute);
+  box-shadow: none;
+}
+:root:root .acbox .kg-lang button.on {
+  background: var(--k-accent);
+  color: var(--k-accent-ink);
+}

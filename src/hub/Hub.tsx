@@ -1,4 +1,5 @@
 import { useLang } from '../i18n'
+import { LangSwitch } from '../ui/LangSwitch'
 import { useState } from 'react'
 import { localUrl, newRoomUrl, practiceUrl, roomUrl } from '../route'
 import { CATALOG, playsOnOneDevice, type GameKey } from '../games/catalog'
@@ -11,7 +12,6 @@ import '../games/strings'
 
 /** Shared top bar: wordmark, language, account. Used by the hub and the admin page. */
 export function Bar() {
-  const { lang, setLang, simplified, setSimplified } = useLang()
   return (
     <div className="kg-bar">
       <a className="kg-brand" href="/">
@@ -19,32 +19,7 @@ export function Bar() {
         <span className="kg-brandname">Kiiro Games</span>
       </a>
       <div className="kg-tools">
-        <div className="kg-lang" role="group" aria-label="Language">
-          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>
-            EN
-          </button>
-          <button
-            className={lang === 'zh' && !simplified ? 'on' : ''}
-            onClick={() => {
-              setLang('zh')
-              setSimplified(false)
-            }}
-          >
-            繁
-          </button>
-          <button
-            className={lang === 'zh' && simplified ? 'on' : ''}
-            onClick={() => {
-              setLang('zh')
-              setSimplified(true)
-            }}
-          >
-            简
-          </button>
-          <button className={lang === 'ja' ? 'on' : ''} onClick={() => setLang('ja')}>
-            日
-          </button>
-        </div>
+        <LangSwitch />
         <AccountChip />
       </div>
     </div>

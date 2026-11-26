@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LangSwitch } from '../ui/LangSwitch'
 import { createPortal } from 'react-dom'
 import { useLang } from '../i18n'
 import { api, ApiError, type BoardRow } from './api'
@@ -192,6 +193,7 @@ export function Profile({ onClose }: { onClose(): void }) {
             {t('acMore')}
           </button>
         )}
+        <LangSwitch />
         <div className="acrow">
           {me.admin && (
             <a className="ghost" href="/admin">

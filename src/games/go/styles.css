@@ -9,3 +9,6 @@
   stroke: #8a7a60;
   stroke-width: 0.04;
 }
+.gomark {
+  pointer-events: none;
+}

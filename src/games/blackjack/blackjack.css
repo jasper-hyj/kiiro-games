@@ -186,6 +186,17 @@
     transform: translateY(-3px);
   }
 }
+/* what lifts under the pointer keeps hold of the strip it left, or it would drop, lift again and flash */
+@media (hover: hover) {
+  :root:root .bjchip:not(:disabled):hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 5px;
+  }
+}
 :root:root .bjchip:active:not(:disabled) {
   transform: scale(0.94);
 }
@@ -209,7 +220,7 @@
   .bjseat {
     min-width: 44%;
     max-width: none;
-    flex: 1 1 44%;
+    flex: 0 1 44%;
   }
   .bjtable {
     padding: 14px 8px 16px;

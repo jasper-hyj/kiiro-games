@@ -94,6 +94,7 @@ export default function RoomApp() {
         location.href = gameUrl(roomRef.current!, g)
       },
       onError: (m: string) => {
+        if (m === 'slow_down') return // the chat says so itself, next to the line being typed
         if (m === 'code_taken' && retry.current) {
           retry.current()
           return
@@ -313,6 +314,7 @@ export default function RoomApp() {
               </button>
             </div>
             {view.game && view.game !== 'mahjong' && HOW[view.game] && <HowTo title={HOW[view.game].title} lines={HOW[view.game].lines} />}
+            <TalkBox inline lines={talk} say={(x) => conn.current?.say(x)} />
           </section>
           <section>
             {view.host ? (
@@ -367,7 +369,6 @@ export default function RoomApp() {
             )}
           </section>
         </div>
-        <TalkBox lines={talk} say={(x) => conn.current?.say(x)} />
       </main>
     </div>
   )

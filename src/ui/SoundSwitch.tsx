@@ -3,7 +3,7 @@ import { setMuted, useMuted } from './sound'
 import '../room/strings'
 
 /** the mute switch for the table sounds */
-export function SoundSwitch({ className = 'k-ghost k-helpbtn k-sound', labelled }: { className?: string; labelled?: boolean }) {
+export function SoundSwitch({ className = 'k-ghost k-iconbtn k-sound', labelled }: { className?: string; labelled?: boolean }) {
   const { t } = useLang()
   const muted = useMuted()
   return (

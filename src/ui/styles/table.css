@@ -209,6 +209,17 @@
     0 2px 5px rgba(40, 28, 12, 0.4);
 }
 
+/* the corner of a card in a hand: rank and suit share one narrow column, so the suit sits centred under its rank */
+:root:root :is(.btcard, .c8card, .tkcard, .brhand, .ddhand) .pkcard:not(.joker) {
+  align-items: flex-start;
+  padding-left: calc(var(--cw, 46px) * 0.04);
+}
+:root:root :is(.btcard, .c8card, .tkcard, .brhand, .ddhand) .pkcard:not(.joker) :is(b, i) {
+  width: calc(var(--cw, 46px) * 0.5);
+  text-align: center;
+  letter-spacing: -0.03em;
+}
+
 /* ---- action bar: the one place every game puts what you can do ---- */
 .hdbar {
   background: none;
@@ -325,7 +336,8 @@
   text-align: left;
 }
 /* the (?) button: the same round, quiet look as the back button, with the question mark centred */
-:root:root .k-ghost.k-helpbtn {
+:root:root .k-ghost.k-helpbtn,
+:root:root .k-ghost.k-iconbtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -337,7 +349,8 @@
   line-height: 1;
 }
 @media (hover: hover) {
-  :root:root .k-ghost.k-helpbtn:hover {
+  :root:root .k-ghost.k-helpbtn:hover,
+  :root:root .k-ghost.k-iconbtn:hover {
     background: rgba(var(--k-ink-rgb), 0.14);
   }
 }
@@ -592,7 +605,8 @@
   .k-tools {
     gap: 2px;
   }
-  :root:root .k-ghost.k-helpbtn {
+  :root:root .k-ghost.k-helpbtn,
+  :root:root .k-ghost.k-iconbtn {
     width: 32px;
     min-height: 36px;
   }
@@ -602,4 +616,10 @@
   .k-head .k-title {
     font-size: 14px;
   }
+}
+
+/* errors written on the felt are light, not the dark red used on paper */
+.kg-table .acerr,
+.k-felt .acerr {
+  color: #ffd0c8;
 }

@@ -208,8 +208,14 @@ export function ResultPanel({
   children?: ReactNode
 }) {
   const shown = useShownName()
+  const box = useRef<HTMLDivElement>(null)
+  // on a small screen the result may appear below the board: bring it into view
+  useEffect(() => {
+    const id = setTimeout(() => box.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350)
+    return () => clearTimeout(id)
+  }, [])
   return (
-    <div className="k-result" role="status" aria-live="polite">
+    <div ref={box} className="k-result" role="status" aria-live="polite">
       <div className="k-resulttitle">{title}</div>
       <ul className="k-rows">
         {columns && (

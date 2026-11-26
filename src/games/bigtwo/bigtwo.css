@@ -132,7 +132,7 @@
   position: relative;
 }
 .bthand-row + .bthand-row {
-  margin-top: calc(var(--cw) * -0.6);
+  margin-top: calc(var(--cw) * -0.36);
   z-index: 2;
 } /* the second row overlaps the bottom of the first, so every rank corner stays visible */
 :root:root .btcard {
@@ -173,6 +173,17 @@
 @media (hover: hover) {
   :root:root .btcard:not(:disabled):not(.sel):hover {
     transform: translateY(calc(var(--cw) * -0.1));
+  }
+}
+/* what lifts under the pointer keeps hold of the strip it left, or it would drop, lift again and flash */
+@media (hover: hover) {
+  :root:root .btcard:not(:disabled):not(.sel):hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: calc(var(--cw) * 0.12);
   }
 }
 :root:root .btcard:disabled {

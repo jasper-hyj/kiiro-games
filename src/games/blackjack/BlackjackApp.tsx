@@ -45,6 +45,7 @@ export default function BlackjackApp() {
       onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
       onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
       onError: (m: string) => {
+        if (m === 'slow_down') return // the chat says so itself, next to the line being typed
         if (m.startsWith('wrong_game:')) {
           setError('rmCodeClash')
           return

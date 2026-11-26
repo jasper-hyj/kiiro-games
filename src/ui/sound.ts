@@ -1,6 +1,6 @@
 /**
  * Small table sounds made on the spot with Web Audio (no files to load): a wooden click when something is played, two notes when it becomes your
- * turn, and a short phrase when a game ends. One switch mutes them all and is remembered. Phones also give a short buzz for "your turn".
+ * turn, and a short phrase when a game ends. They start off; one switch turns them all on or off and is remembered. Phones also give a short buzz for "your turn".
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
@@ -9,9 +9,9 @@ export type Cue = 'move' | 'turn' | 'win' | 'lose' | 'draw'
 const KEY = 'kiiro-sound'
 let muted = (() => {
   try {
-    return localStorage.getItem(KEY) === 'off'
+    return localStorage.getItem(KEY) !== 'on' // silent until someone switches sound on
   } catch {
-    return false
+    return true
   }
 })()
 const listeners = new Set<() => void>()

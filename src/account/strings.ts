@@ -47,6 +47,7 @@ export const ACCOUNT_STRINGS: Record<string, [string, string]> = {
   acRename: ['Display name', '顯示名稱'],
   acSave: ['Save', '儲存'],
   acAdmin: ['Admin page', '管理頁面'],
+  adTitle: ['Admin', '管理'],
   acRankedOpt: ['Competitive (play chips)', '競技（遊戲籌碼）'],
   acRankedOff: ['Casual', '休閒'],
   acRankedHint: [
@@ -154,6 +155,7 @@ registerStrings(
     acRename: '表示名',
     acSave: '保存',
     acAdmin: '管理ページ',
+    adTitle: '管理',
     acRankedOpt: '対戦（プレイ用チップ）',
     acRankedOff: 'カジュアル',
     acRankedHint: '全員がログイン済みの2人以上が必要です。終了時にチップがプレイヤー間で移動します。CPUはチップを得も失いもしません。',

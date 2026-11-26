@@ -5867,3 +5867,19 @@ input * {
     display: none;
   }
 }
+
+/* narrow phones: the opposite player's row is drawn a little smaller and ends before the menu button in the corner */
+@media (max-width: 640px) and (orientation: portrait) {
+  .app.game .board .seat.top {
+    box-sizing: border-box;
+    zoom: 0.82;
+    padding-right: 74px;
+    padding-left: 4px;
+  }
+}
+
+/* the score never sits against the rim of its pill */
+.board .chip,
+.infoleft .chip {
+  padding-right: max(9px, 0.6em);
+}

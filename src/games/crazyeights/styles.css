@@ -144,6 +144,17 @@
     z-index: 3;
   }
 }
+/* what lifts under the pointer keeps hold of the strip it left, or it would drop, lift again and flash */
+@media (hover: hover) {
+  :root:root .c8card.ok:hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 18px;
+  }
+}
 .c8suits {
   display: flex;
   gap: 12px;

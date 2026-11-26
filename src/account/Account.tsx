@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { LangSwitch } from '../ui/LangSwitch'
 import { useLang } from '../i18n'
 import { accountsAvailable, api, ApiError, getToken, setToken, type Me } from './api'
 import './strings'
@@ -297,6 +298,7 @@ function SignIn({ onClose, onDone }: { onClose(): void; onDone(): void }) {
           </>
         )}
         <p className="muted small">{t('acNoChips')}</p>
+        <LangSwitch />
         <button className="ghost" onClick={onClose}>
           {t('acGuest')}
         </button>

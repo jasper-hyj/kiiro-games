@@ -315,6 +315,7 @@ a.kg-game:hover .kg-go {
 }
 
 :root:root .kg a.kg-create {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -332,6 +333,15 @@ a.kg-game:hover .kg-go {
 :root:root .kg a.kg-create:hover {
   background: var(--k-accent-hi);
   transform: translateY(-1px);
+}
+/* what lifts under the pointer keeps hold of the strip it left, or it would drop, lift again and flash */
+:root:root .kg a.kg-create:hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 3px;
 }
 
 .kg-game {

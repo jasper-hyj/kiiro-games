@@ -141,6 +141,17 @@ html[data-tiles="auto"][data-rule="riichi"] .tile .white-dragon {
     transform: translateY(calc(var(--tw) * -0.12));
   }
 }
+/* what lifts under the pointer keeps hold of the strip it left, or it would drop, lift again and flash */
+@media (hover: hover) {
+  .tile.clickable:not(.sel):hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: calc(var(--tw) * 0.14);
+  }
+}
 .tile.sel {
   transform: translateY(calc(var(--tw) * -0.28));
 }

@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core'
 import { tableUrl } from '../lib/table'
-// Run: npx tsx scripts/site/chat-clear-test.ts [outDir]   (wrangler :8787 + vite :5200) On real tables and the room, on phones, tablets and a desktop:
+// Run: npx tsx scripts/site/chat-clear-test.ts [outDir]   (wrangler :8787 + vite :5200) On real tables, on phones, tablets and a desktop:
 // the chat (button or box) must not lie on any tile, card, board, seat or button.
 const out = process.argv[2] || '/tmp'
 const only = process.argv[3]?.split(',')
@@ -42,7 +42,6 @@ const TABLES: [string, object, string][] = [
   ['chinesecheckers', {}, '.ccboard'],
   ['yahtzee', {}, '.yzsheet'],
   ['liarsdice', {}, '.ld'],
-  ['room', {}, '.rmpeople'],
 ]
 const probe = `(() => {
   const chat = document.querySelector('.kgchat')

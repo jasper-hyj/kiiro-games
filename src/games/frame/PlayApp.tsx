@@ -31,6 +31,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
   const [view, setView] = useState<PlayViewX | null>(null)
   const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>('closed')
   const [error, setError] = useState('')
+  const [missing, setMissing] = useState('') // why there is no table to open
   const [talk, setTalk] = useState<TalkMsg[]>([])
   const [copied, setCopied] = useState(false)
   const [, tick] = useState(0)
@@ -48,12 +49,14 @@ export default function PlayApp({ game }: { game: GenericGame }) {
       onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
       onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
       onError: (m: string) => {
+        if (m === 'slow_down') return // the chat says so itself, next to the line being typed
         if (m.startsWith('wrong_game:')) {
           setError('rmCodeClash')
           return
         }
         setError(m)
         if (m === 'room_not_found') {
+          setMissing(m)
           conn.current?.close()
           conn.current = null
           setView(null)
@@ -116,7 +119,7 @@ export default function PlayApp({ game }: { game: GenericGame }) {
     }
   }
 
-  if (!practice && !code) return <NoRoom game={game} />
+  if (!practice && (!code || missing)) return <NoRoom game={game} error={missing || undefined} />
   const head = (v?: PlayViewX | null) => (
     <>
       <TableHeader

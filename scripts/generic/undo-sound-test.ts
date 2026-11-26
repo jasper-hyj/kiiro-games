@@ -58,6 +58,10 @@ const cues = (p: Page) => p.evaluate(() => ((window as unknown as { __cues?: str
   // whichever colour I have, wait for my turn
   for (let i = 0; i < 20 && !(await p.$('.chsq:not(:disabled)')); i++) await sleep(300)
   const before = await pieces(p)
+  const soundOn = () => p.$eval('.k-sound', (e) => e.getAttribute('aria-pressed') === 'true')
+  ok(!(await soundOn()) && (await cues(p)) === '', 'sound: off for a new visitor, nothing played')
+  await p.click('.k-sound')
+  ok(await soundOn(), 'sound: the switch turns it on')
   ok(!(await p.$('.plundo')), 'practice: nothing to undo before I have moved')
   const white = (await p.$eval('.gmside', (e) => e.textContent || '')).includes('You play White')
   await square(p, white ? 'e2' : 'e7')
@@ -80,7 +84,11 @@ const cues = (p: Page) => p.evaluate(() => ((window as unknown as { __cues?: str
   ok((await cues(p)).length === n, 'sound: muted, nothing more is played')
   await p.reload({ waitUntil: 'domcontentloaded' })
   await p.waitForSelector('.k-sound')
-  ok((await p.$eval('.k-sound', (e) => e.getAttribute('aria-pressed'))) === 'false', 'sound: the mute switch is remembered')
+  ok(!(await soundOn()), 'sound: off is remembered')
+  await p.click('.k-sound')
+  await p.reload({ waitUntil: 'domcontentloaded' })
+  await p.waitForSelector('.k-sound')
+  ok(await soundOn(), 'sound: on is remembered too')
   await p.browserContext().close()
 }
 // same device: one move at a time

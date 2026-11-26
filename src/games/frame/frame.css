@@ -117,3 +117,9 @@
   line-height: 1;
   white-space: nowrap;
 }
+
+/* what is only drawn on top of a point never takes the pointer away from it: no flashing under a resting mouse, and the second tap lands */
+.gmghost,
+.gmlast {
+  pointer-events: none;
+}

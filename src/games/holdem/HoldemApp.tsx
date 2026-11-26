@@ -111,6 +111,7 @@ export default function HoldemApp() {
       onTalk: (m: TalkMsg) => setTalk((l) => [...l.filter((x) => x.n !== m.n), m].slice(-60)),
       onTalkLog: (ms: TalkMsg[]) => setTalk(ms),
       onError: (m: string) => {
+        if (m === 'slow_down') return // the chat says so itself, next to the line being typed
         if (m.startsWith('wrong_game:')) {
           setError('rmCodeClash')
           return
@@ -371,8 +372,9 @@ function Table({ view, status, room, error, send, talk, say, leave, me, openSign
             if (narrow && !s.me && feltH >= 440 && y0 < 12) y = Math.max(y0, (78 / feltH) * 100)
             // the chips bet sit between the seat and the middle; with eight seats on a narrow table they move further in, clear of the seat
             const pull = narrow && v.seats.length > 6 && x !== 50 ? 0.5 : 0.32
-            const bx = x + (50 - x) * pull,
-              by = y + (50 - y) * 0.32
+            const top = x === 50 && y < 50 // its chips go to the side: the pot is straight below it
+            const bx = top ? 72 : x + (50 - x) * pull,
+              by = top ? y + 4 : y + (50 - y) * 0.32
             const showCards = s.dealt && !s.folded && (s.me || feltH >= 440) // on a short table other players' card backs only take room
             const isTurn = v.toAct === s.seat && v.street !== 'showdown' && v.street !== 'wait'
             const won = v.result?.won[s.seat] ?? 0
