@@ -44,6 +44,7 @@ const SUITES: Record<string, string[]> = {
     'generic/undo-sound-test',
     'generic/new-games-ui-test',
     'site/full-table-test',
+    'site/chat-clear-test',
     'generic/layout-check',
   ],
 }

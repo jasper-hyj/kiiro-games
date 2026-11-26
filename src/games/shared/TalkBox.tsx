@@ -16,9 +16,9 @@ const FADE_MS = 7000
  * the last few lines are always visible and dim when nothing new has arrived; Enter jumps to the input, Escape leaves it.
  * Clicks pass through the feed, so it never blocks the table.
  */
-/** True on a small phone screen, where a permanent chat block would sit on the table. */
-function useCompact() {
-  const q = '(max-width: 640px) and (max-height: 760px)'
+/** True on phones, tablets held upright and short windows, where a permanent chat block would sit on the game. */
+function useSmall() {
+  const q = '(max-width: 900px), (max-height: 760px)'
   const [c, setC] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(q).matches)
   useEffect(() => {
     const m = matchMedia(q)
@@ -29,9 +29,46 @@ function useCompact() {
   return c
 }
 
+/** what the chat must not lie on: everything that can be tapped, and every piece of a game that has to be seen */
+const KEEP_CLEAR =
+  'button, a, input, select, .tile, .pkcard, .k-seat, .chip, .statusbar, .gmchip, .plline, .rmdigits, .rmpeople li, .yzsheet, .k-result, .cgrid, .dock summary, .roomchip, .rulechip, .connbadge, svg[role=grid], [role=grid], .gmboard, .xqboard, .ccboard, .hdcenter, .bjdealer, .btcenter, .tkcross, .ddtable, .brtable, .c8table, .yzdice, .ldbid'
+function obstacles(self: Element): DOMRect[] {
+  const out: DOMRect[] = []
+  for (const e of document.querySelectorAll(KEEP_CLEAR)) {
+    if (self.contains(e)) continue
+    const r = e.getBoundingClientRect()
+    if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > innerHeight) continue
+    if (getComputedStyle(e).visibility === 'hidden') continue
+    out.push(r)
+  }
+  return out
+}
+const MARGIN = 2
+function covers(taken: DOMRect[], at: { x: number; b: number }, w: number, h: number): boolean {
+  const left = at.x - MARGIN,
+    right = at.x + w + MARGIN,
+    bottom = innerHeight - at.b + MARGIN,
+    top = innerHeight - at.b - h - MARGIN
+  return top < 0 || at.x < 0 || at.x + w > innerWidth || taken.some((r) => r.left < right && r.right > left && r.top < bottom && r.bottom > top)
+}
+/** the lowest empty place along the left edge, then the right edge */
+function freeSpot(taken: DOMRect[], w: number, h: number): { x: number; b: number } | null {
+  for (let b = 8; b < innerHeight - h; b += 6)
+    for (const x of [4, innerWidth - w - 4]) {
+      if (!covers(taken, { x, b }, w, h)) return { x, b }
+    }
+  return null
+}
+function apply(c: HTMLElement, at: { x: number; b: number }) {
+  c.style.left = at.x + 'px'
+  c.style.setProperty('--lift', at.b + 'px')
+}
+
 export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) => void }) {
   const { t } = useLang()
-  const compact = useCompact()
+  const small = useSmall()
+  const [crowded, setCrowded] = useState(false) // the full box found no empty spot on this screen
+  const compact = small || crowded
   const [open, setOpen] = useState(false)
   const [seenN, setSeenN] = useState(0)
   const lastN = lines.length ? lines[lines.length - 1].n : 0
@@ -51,41 +88,51 @@ export function TalkBox({ lines, say }: { lines: TalkMsg[]; say: (text: string) 
     const id = setInterval(() => tick((x) => x + 1), 1000)
     return () => clearInterval(id)
   }, [])
+  const state = useRef({ compact, open })
+  state.current = { compact, open }
   useEffect(() => {
-    // sit above whatever would be under it in the bottom-left corner (action bar, your hand or seat, bet chips), and nowhere else
+    // find a spot where nothing of the game is underneath, and stay there while it stays empty
+    let spot: { x: number; b: number } | null = null
+    let roomFor = 0 // how long the full box would have fitted again
     const place = () => {
       const c = box.current
       if (!c) return
-      const r0 = c.getBoundingClientRect()
-      const w = r0.width || 330,
-        h = r0.height || 60
-      const base = Math.max(10, parseFloat(getComputedStyle(c).getPropertyValue('--base')) || 10)
-      const els = Array.from(
-        document.querySelectorAll('.hdbar button, .hdbar input, .bthand, .bt-me, .hdseat:not(.empty), .bjseat, .bjchips, .bjchip, .btseat'),
-      )
-        .map((e) => e.getBoundingClientRect())
-        .filter((r) => r.height > 0 && r.right >= 0 && r.left <= w + 22)
-      // lift above whatever is under the chat, and keep lifting while the new spot is covered too
-      let need = 0
-      for (let i = 0; i < 8; i++) {
-        const top = innerHeight - base - need - h - 6,
-          bottom = innerHeight - base - need
-        const hit = els.filter((r) => r.bottom > top && r.top < bottom)
-        if (!hit.length) break
-        need = innerHeight - Math.min(...hit.map((r) => r.top)) + 8 - base
+      if (state.current.compact && state.current.open) {
+        // opened on purpose: it may lie over the table until it is closed again
+        c.style.removeProperty('left')
+        c.style.setProperty('--lift', '0px')
+        return
       }
-      c.style.setProperty('--lift', Math.max(0, need) + 'px')
+      const r = c.getBoundingClientRect()
+      const w = r.width || (state.current.compact ? 44 : 330),
+        h = r.height || (state.current.compact ? 44 : 60)
+      const taken = obstacles(c)
+      if (spot && !covers(taken, spot, w, h)) return apply(c, spot)
+      const found = freeSpot(taken, w, h)
+      if (!state.current.compact) {
+        if (!found || found.b > innerHeight * 0.3) {
+          roomFor = 0
+          return setCrowded(true)
+        }
+      } else if (!small) {
+        // on a large screen the full box comes back once there has been room for it for a while
+        const full = freeSpot(taken, 330, 90)
+        roomFor = full && full.b <= innerHeight * 0.2 ? roomFor + 1 : 0
+        if (roomFor > 12) return setCrowded(false)
+      }
+      spot = found ?? { x: 8, b: 8 }
+      apply(c, spot)
     }
     document.body.classList.add('has-kgchat') // lobby pages scroll: they get room at the bottom so nothing is stuck under the chat
     place()
-    const id = setInterval(place, 100)
+    const id = setInterval(place, 250)
     addEventListener('resize', place)
     return () => {
       clearInterval(id)
       removeEventListener('resize', place)
       document.body.classList.remove('has-kgchat')
     }
-  }, [])
+  }, [small, compact])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Enter' || e.isComposing) return

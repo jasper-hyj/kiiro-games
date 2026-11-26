@@ -485,7 +485,7 @@
 .kgchat {
   position: fixed;
   left: max(10px, env(safe-area-inset-left));
-  bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--lift, 0px));
+  bottom: var(--lift, max(10px, env(safe-area-inset-bottom)));
   width: min(330px, calc(100vw - 20px));
   z-index: 40;
   display: grid;
@@ -901,4 +901,18 @@ body.has-kgchat .kg.hd .kg-wrap {
 }
 .hd .hdseat .k-seatname span:last-child {
   min-width: 0;
+}
+
+/* the small chat button stays available on very short screens (the full box hides there) */
+.kgchat.compact {
+  display: grid;
+}
+
+/* the narrowest phones: a smaller chat button fits beside a centred table */
+@media (max-width: 360px) {
+  .kgchat-pill {
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
+  }
 }

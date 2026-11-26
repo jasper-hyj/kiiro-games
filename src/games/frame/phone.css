@@ -281,3 +281,10 @@
     width: min(calc(100vw - var(--side) - 66px), 720px, max(180px, calc((var(--board-h) - 24px) * 0.88)));
   }
 }
+
+/* the smallest phones keep a strip under the board for the chat button */
+@media (max-width: 360px) and (max-height: 600px) {
+  .play {
+    --board-h: calc(100dvh - 262px);
+  }
+}

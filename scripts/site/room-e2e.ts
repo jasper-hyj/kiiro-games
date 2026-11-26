@@ -109,6 +109,8 @@ for (const [game, label, rules, expectPath, readySel] of [
   await clickText(guest, '.rmmode button', 'I will watch')
   await sleep(400)
   ok((await host.$eval('.rmpeople', (e) => e.textContent || '')).includes('Watching'), `${game}: the host sees the guest chose to watch`)
+  // on small screens the chat is a button until it is opened
+  if (await guest.$('.kgchat-pill')) await guest.click('.kgchat-pill')
   await guest.focus('.kgin input')
   await guest.type('.kgin input', 'hello room')
   await guest.keyboard.press('Enter')

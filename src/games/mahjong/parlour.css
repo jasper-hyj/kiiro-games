@@ -5860,3 +5860,10 @@ input * {
   align-items: center;
   gap: 8px;
 }
+
+/* narrow phones: the room code lives in the table menu, so it never lies over the opponent's tiles */
+@media (max-width: 640px) {
+  .app.game .roomchip {
+    display: none;
+  }
+}
