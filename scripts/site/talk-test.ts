@@ -1,5 +1,6 @@
 export {}
 // Run: npx tsx scripts/site/talk-test.ts   (needs `wrangler dev` on :8787)
+import { freeCode } from '../lib/table'
 let fails = 0
 const ok = (c: boolean, m: string) => {
   if (!c) {
@@ -8,7 +9,6 @@ const ok = (c: boolean, m: string) => {
   } else console.log('ok  ', m)
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const code = () => String(1000 + Math.floor(Math.random() * 9000))
 function client(room: string, id: string, name: string, game: string, create = false) {
   const ws = new WebSocket(`ws://localhost:8787/parties/main/${room}`)
   const talk: any[] = []
@@ -33,7 +33,7 @@ function client(room: string, id: string, name: string, game: string, create = f
 }
 const tag = Math.random().toString(36).slice(2, 5)
 for (const game of ['blackjack', 'holdem', 'bigtwo']) {
-  const room = code()
+  const room = await freeCode()
   const a = client(room, 'a' + tag, 'Ann', game, true)
   await sleep(500)
   const b = client(room, 'b' + tag, 'Ben', game)

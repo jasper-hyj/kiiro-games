@@ -52,7 +52,6 @@ function client(room: string, id: string, name: string, opts: { token?: string; 
   }
 }
 const tag = Math.random().toString(36).slice(2, 6)
-const code = () => String(1000 + Math.floor(Math.random() * 9000))
 // the same simple strategy the bots use, driven from the client side
 const move = (c: ReturnType<typeof client>) => {
   const v = c.view

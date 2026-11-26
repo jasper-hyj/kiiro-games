@@ -46,6 +46,8 @@ if (!suite) {
 }
 const failed: string[] = []
 for (const test of suite) {
+  // the local test database limits sign-ups per hour; tests register fresh players, so start each server test with a clean slate
+  if (name === 'server') spawnSync('npx', ['wrangler', 'd1', 'execute', 'kiiro-games', '--local', '--command', 'DELETE FROM throttle'], { encoding: 'utf8' })
   const started = Date.now()
   const run = spawnSync('npx', ['tsx', `scripts/${test}.ts`], { encoding: 'utf8', env: { GAMES: '5', ...process.env } })
   const ok = run.status === 0 && !/^FAIL /m.test(run.stdout)

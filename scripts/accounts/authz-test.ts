@@ -1,6 +1,7 @@
 // Run: npx tsx scripts/accounts/authz-test.ts   (needs `wrangler dev` on :8787 and the local migrations applied)
 // Authentication (who are you) and authorization (what may you do) end to end: sessions, logout, bans, expiry, every protected
 // route with and without a token, admin-only routes, who may read a match, and that secrets never leave the server.
+import { freeCode } from '../lib/table'
 import { execSync } from 'node:child_process'
 const API = process.env.API ?? 'http://localhost:8787/api'
 let fails = 0
@@ -272,7 +273,7 @@ const join = async (code: string, token: string | null, extra: Record<string, un
   return { ws, got }
 }
 {
-  const code = String(1000 + Math.floor(Math.random() * 9000))
+  const code = await freeCode()
   const g = await join(code, 'f'.repeat(64))
   const v = g.got.find((m) => m.t === 'pview')?.view
   ok(!!v && v.signedIn === false, 'a forged token joins a table as a guest, not as an account')
@@ -283,7 +284,7 @@ const join = async (code: string, token: string | null, extra: Record<string, un
     'and cannot sit at a cash table',
   )
   g.ws.close()
-  const code2 = String(1000 + Math.floor(Math.random() * 9000))
+  const code2 = await freeCode()
   const h = await join(code2, a.token)
   ok(h.got.find((m) => m.t === 'pview')?.view?.signedIn === true, 'a real token joins as the signed-in account')
   h.ws.send(JSON.stringify({ t: 'p', m: { k: 'sit', buyin: 99999999 } }))

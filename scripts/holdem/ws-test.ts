@@ -1,5 +1,6 @@
 export {}
 // Run: npx tsx scripts/holdem/ws-test.ts   (needs `wrangler dev` on :8787 with DEV_MODE=1)
+import { freeCode } from '../lib/table'
 const API = 'http://localhost:8787/api'
 const post = async (p: string, b: unknown, tok?: string) =>
   (
@@ -51,10 +52,9 @@ function client(room: string, id: string, name: string, opts: { token?: string; 
   }
 }
 const tag = Math.random().toString(36).slice(2, 6)
-const code = () => String(1000 + Math.floor(Math.random() * 9000))
 
 // 1. casual table: guests play, nothing touches the ledger
-let room = code()
+let room = await freeCode()
 const g1 = client(room, 'g1' + tag, 'Ann', { create: true, game: 'holdem', pcfg: { sb: 25, bb: 50, casual: true } })
 await sleep(500)
 const g2 = client(room, 'g2' + tag, 'Ben', { game: 'holdem' })
@@ -83,7 +83,7 @@ wrong.close()
 // 2. cash table: needs sign-in, buy-in comes off the balance, cash-out returns it
 const ta = await login(`ha${tag}@x.test`),
   tb = await login(`hb${tag}@x.test`)
-room = code()
+room = await freeCode()
 const guest = client(room, 'gx' + tag, 'Gus', { create: true, game: 'holdem', pcfg: { sb: 25, bb: 50, casual: false } })
 await sleep(500)
 guest.p({ k: 'sit', buyin: 2000 })
@@ -91,7 +91,7 @@ await sleep(400)
 ok(guest.errors.includes('signin_required'), 'a guest cannot sit at a cash table')
 guest.close()
 await sleep(200)
-room = code()
+room = await freeCode()
 const a = client(room, 'a' + tag, 'A', { token: ta, create: true, game: 'holdem', pcfg: { sb: 25, bb: 50, casual: false } })
 await sleep(500)
 const b = client(room, 'b' + tag, 'B', { token: tb, game: 'holdem' })

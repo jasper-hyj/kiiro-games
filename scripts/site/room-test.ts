@@ -1,5 +1,6 @@
 export {}
 // Run: npx tsx scripts/site/room-test.ts   (needs `wrangler dev` on :8787)
+import { freeCode } from '../lib/table'
 // Rooms: create a room, choose a game and rules, members choose play or watch, the host starts, everyone gets sent to the table.
 let fails = 0
 const ok = (c: boolean, m: string) => {
@@ -9,7 +10,6 @@ const ok = (c: boolean, m: string) => {
   } else console.log('ok  ', m)
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const code = () => String(1000 + Math.floor(Math.random() * 9000))
 function member(room: string, id: string, name: string, create = false) {
   const ws = new WebSocket(`ws://localhost:8787/parties/room/${room}`)
   const c = {
@@ -33,8 +33,8 @@ function member(room: string, id: string, name: string, create = false) {
   return c
 }
 const tag = Math.random().toString(36).slice(2, 5)
-const room = code()
-const nf = member(code() + '0', 'x' + tag, 'Nobody')
+const room = await freeCode()
+const nf = member((await freeCode()) + '0', 'x' + tag, 'Nobody')
 await sleep(500)
 ok(nf.errors.includes('room_not_found'), 'joining a room that does not exist is refused')
 const host = member(room, 'h' + tag, 'Host', true)

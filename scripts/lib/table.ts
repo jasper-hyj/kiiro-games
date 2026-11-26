@@ -7,7 +7,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 const API = process.env.API ?? WS.replace(/^ws/, 'http') + '/api'
 /** a four-digit code no table is using (the site does the same check before it opens a room) */
-async function freeCode(): Promise<string> {
+export async function freeCode(): Promise<string> {
   for (let i = 0; i < 30; i++) {
     const code = String(1000 + Math.floor(Math.random() * 9000))
     try {
